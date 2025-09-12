@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Separação de Cargas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #212529;
+        }
+        .card {
+            background-color: #2b3035;
+            border: 1px solid #495057;
+        }
+        .accordion-button {
+            background-color: #343a40;
+            color: #f8f9fa;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .accordion-body {
+            background-color: #2b3035;
+        }
+        .table-striped>tbody>tr:nth-of-type(odd)>* {
+            --bs-table-accent-bg: var(--bs-table-striped-bg);
+        }
+        .status-message {
+            min-height: 24px; /* Prevent layout shift */
+        }
+        @media print {
+            body {
+                background-color: #fff; /* White background for printing */
+                color: #000; /* Black text for printing */
+            }
+            .container, .card, .accordion-item, .accordion-body {
+                background-color: #fff !important;
+                color: #000 !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            /* Hide elements not relevant for printing */
+            .d-flex.align-items-center.mb-3, /* Title and truck icon */
+            .card.p-3.mb-4.shadow-sm, /* Input form */
+            button, /* All buttons */
+            .status-message, /* Status messages */
+            .card-subtitle, /* Subtitles */
+            .accordion-button.collapsed, /* Collapsed accordion buttons */
+            .accordion-collapse.collapse { /* Collapsed accordion content */
+                display: none !important;
+            }
+            /* Ensure tables are visible and well-formatted */
+            .table-responsive {
+                overflow: visible !important;
+            }
+            table, th, td {
+                border: 1px solid #dee2e6 !important;
+                color: #000 !important;
+            }
+            h3, h4, h5 {
+                color: #000 !important;
+                margin-top: 1rem;
+                margin-bottom: 0.5rem;
+            }
+            /* Ensure all accordion content is visible when printing */
+            .accordion-collapse {
+                display: block !important;
+            }
+            .accordion-button {
+                display: block !important; /* Make accordion headers visible */
+                background-color: #f8f9fa !important; /* Light background for headers */
+                color: #000 !important;
+                border: 1px solid #dee2e6 !important;
+                margin-bottom: 0.5rem;
+            }
+            .accordion-button strong, .accordion-button .badge {
+                color: #000 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4 mb-4">
+        <div class="d-flex align-items-center mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-truck me-3" viewBox="0 0 16 16"><path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-4 0a1 1 0 0 1-1-1V3.5ZM1.5 3a.5.5 0 0 0-.5.5V11h.5a1 1 0 0 1 1 1 1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V3.5a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 .5.5v.364c-.606.252-1.134.63-1.562 1.136l-1.48-1.85A.5.5 0 0 0 9.02 3H1.5Zm3 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm9 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></svg>
+            <h1 class="mb-0">Dashboard de Separação de Cargas</h1>
+        </div>
+
+        <div class="card p-3 mb-4 shadow-sm">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <label for="fileInput" class="form-label fw-bold">1. Selecione a Planilha:</label>
+                    <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv">
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">2. Defina a Faixa de Rotas (Opcional):</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="rotaInicialInput" placeholder="Rota Inicial">
+                        <input type="text" class="form-control" id="rotaFinalInput" placeholder="Rota Final">
+                    </div>
+                </div>
+                <div class="col-md-3 align-self-end">
+                    <button class="btn btn-primary w-100" id="processarBtn" onclick="processar()" disabled>3. Processar Cargas</button>
+                </div>
+            </div>
+            <div id="status" class="mt-2 status-message"></div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h2 class="card-title h5">Resultados das Cargas "Toco"</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Grupos de cargas onde a Coluna4/5 contém "TOCO" e o CF se repete.</p>
+                        <div id="resultado-toco"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h2 class="card-title h5">Resultados Gerais</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos que não são 'Toco', agrupados por rota.</p>
+                        <div id="resultado-geral"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h2 class="card-title h5">Separação para Fiorino (Rota 11101)</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Separa pedidos da Rota 11101 em cargas de Fiorino (máx. 500kg e 1.5 cubagem).</p>
+                        <button class="btn btn-success mt-2" onclick="separarFiorino()">Separar Cargas para Fiorino</button>
+                        <button class="btn btn-info mt-2 ms-2" onclick="window.print()">Imprimir Resultados</button>
+                        <div id="resultado-fiorino" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script>
+        let planilhaData = [];
+        let pedidosGeraisAtuais = []; // New global variable
+        const fileInput = document.getElementById('fileInput');
+        const processarBtn = document.getElementById('processarBtn');
+        const statusDiv = document.getElementById('status');
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            statusDiv.innerHTML = '<p class="text-info">Carregando planilha...</p>';
+            processarBtn.disabled = true;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    let headerRowIndex = -1, headers = [];
+                    for (let i = 0; i < rawData.length; i++) {
+                        const row = rawData[i];
+                        if (row && row.includes('Cod_Rota')) { // Finds header row
+                            headerRowIndex = i;
+                            headers = row.map(h => String(h).trim());
+                            break;
+                        }
+                    }
+                    if (headerRowIndex === -1) throw new Error("Não foi possível encontrar a linha de cabeçalho com 'Cod_Rota'.");
+                    const dataRows = rawData.slice(headerRowIndex + 1);
+                    planilhaData = dataRows.map(row => {
+                        const pedido = {};
+                        headers.forEach((header, i) => { if (header) { pedido[header] = row[i] !== undefined ? row[i] : ''; } });
+                        return pedido;
+                    });
+                    statusDiv.innerHTML = `<p class="text-success">Planilha "${file.name}" carregada. ${planilhaData.length} linhas prontas para processar.</p>`;
+                    processarBtn.disabled = false;
+                } catch (error) {
+                    statusDiv.innerHTML = `<p class="text-danger"><strong>Erro ao ler o arquivo:</strong> ${error.message}</p>`;
+                    console.error(error);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function processar() {
+            const resultadoGeralDiv = document.getElementById('resultado-geral');
+            const resultadoTocoDiv = document.getElementById('resultado-toco');
+            try {
+                if (planilhaData.length === 0) {
+                    statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
+                    return;
+                }
+                const rotaInicialInput = document.getElementById('rotaInicialInput').value;
+                const rotaFinalInput = document.getElementById('rotaFinalInput').value;
+                resultadoGeralDiv.innerHTML = '';
+                resultadoTocoDiv.innerHTML = '';
+
+                // Universal Filter
+                const pedidos = planilhaData.filter(p => String(p.Coluna4) != '500');
+
+                // Toco Logic
+                const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
+                const cfCounts = {};
+                const isNumeric = (str) => /^\d+$/.test(str);
+                pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(String(p.CF))) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
+                const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
+                const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
+                const gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
+                    const cf = p.CF;
+                    if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; }
+                    acc[cf].pedidos.push(p);
+                    const quilos = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                    acc[cf].totalKg += quilos;
+                    return acc;
+                }, {});
+                displayToco(resultadoTocoDiv, gruposToco);
+
+                // General Logic
+                const tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
+                const clientesComBloqueio = new Set();
+                const clientesSemBloqueio = new Set();
+                pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
+                const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
+                const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 11101;
+                const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 11731;
+                const pedidosGeraisFiltrados = pedidos.filter(p => {
+                    if (tocoPedidoIds.has(String(p.Num_Pedido))) return false;
+                    const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
+                    if (!(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return false;
+                    if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return false;
+                    if (clientesParaRemover.has(String(p.Cliente))) return false;
+                    return true;
+                });
+                pedidosGeraisAtuais = pedidosGeraisFiltrados; // Store filtered data
+                const gruposGerais = pedidosGeraisFiltrados.reduce((acc, p) => {
+                    const rota = p.Cod_Rota;
+                    if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; }
+                    acc[rota].pedidos.push(p);
+                    const quilos = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                    acc[rota].totalKg += quilos;
+                    return acc;
+                }, {});
+                displayGerais(resultadoGeralDiv, gruposGerais);
+            } catch (error) {
+                statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`;
+                console.error(error);
+            }
+        }
+
+        function createTable(pedidos, columnsToDisplay) {
+            if (!pedidos || pedidos.length === 0) return '';
+            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF']; // Default columns
+            let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped"><thead><tr>';
+            colunasExibir.forEach(c => table += `<th>${c}</th>`);
+            table += '</tr></thead><tbody>';
+            pedidos.forEach(p => {
+                table += '<tr>';
+                colunasExibir.forEach(c => table += `<td>${p[c] === undefined || p[c] === null ? '' : p[c]}</td>`);
+                table += '</tr>';
+            });
+            table += '</tbody></table></div>';
+            return table;
+        }
+
+        function displayGerais(div, grupos) {
+            if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhum pedido geral encontrado.</div>'; return; }
+            let accordionHtml = '<div class="accordion accordion-flush" id="accordionGeral">';
+            Object.keys(grupos).sort().forEach((rota, index) => {
+                const grupo = grupos[rota];
+                const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                accordionHtml += `
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingGeral${index}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}">
+                                <strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2">${grupo.pedidos.length} pedidos</span> <span class="badge bg-info ms-2">${totalKgFormatado} kg</span>
+                            </button>
+                        </h2>
+                        <div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div>
+                    </div>`;
+            });
+            accordionHtml += '</div>';
+            div.innerHTML = accordionHtml;
+        }
+
+        function separarFiorino() {
+            const resultadoFiorinoDiv = document.getElementById('resultado-fiorino');
+            resultadoFiorinoDiv.innerHTML = ''; // Clear previous results
+
+            if (planilhaData.length === 0) {
+                resultadoFiorinoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado. Por favor, selecione e processe uma planilha primeiro.</p>';
+                return;
+            }
+
+            const MAX_KG_FIORINO_HARD_LIMIT = 570;
+            const MAX_CUBAGEM_FIORINO = 1.5;
+            const MAX_KG_VAN = 1500;
+            const MAX_CUBAGEM_VAN = 5.0;
+
+            let fiorinoEligiblePedidos = [];
+            let unassignedPedidos = []; // For orders that can't fit in Fiorinos (individual or client group too large)
+
+            // Group pedidos by client for Rota 11101
+            const pedidosRota11101 = pedidosGeraisAtuais.filter(p => String(p.Cod_Rota) === '11101');
+
+            const clientGroups = pedidosRota11101.reduce((acc, pedido) => {
+                const cliente = pedido.Cliente;
+                if (!acc[cliente]) {
+                    acc[cliente] = {
+                        pedidos: [],
+                        totalKg: 0,
+                        totalCubagem: 0
+                    };
+                }
+                acc[cliente].pedidos.push(pedido);
+                acc[cliente].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                acc[cliente].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+                return acc;
+            }, {});
+
+            // Determine eligibility for Fiorino or unassigned
+            Object.values(clientGroups).forEach(group => {
+                // Check if any individual order in the group exceeds Fiorino limits
+                const individualOrderTooLarge = group.pedidos.some(p =>
+                    (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) > MAX_KG_FIORINO_HARD_LIMIT ||
+                    (parseFloat(String(p.Cubagem).replace(',', '.')) || 0) > MAX_CUBAGEM_FIORINO
+                );
+
+                // If the entire client group is too large for a Fiorino, or any individual order is too large
+                if (individualOrderTooLarge || group.totalKg > MAX_KG_FIORINO_HARD_LIMIT || group.totalCubagem > MAX_CUBAGEM_FIORINO) {
+                    unassignedPedidos = unassignedPedidos.concat(group.pedidos);
+                } else {
+                    fiorinoEligiblePedidos = fiorinoEligiblePedidos.concat(group.pedidos);
+                }
+            });
+
+            if (fiorinoEligiblePedidos.length === 0 && unassignedPedidos.length === 0) {
+                resultadoFiorinoDiv.innerHTML = '<p class="text-info">Nenhum pedido encontrado para a Rota 11101 nas filtragens gerais que se encaixe nos limites de peso e cubagem para Fiorino.</p>';
+                return;
+            }
+
+            let fiorinoLoads = [];
+            let currentFiorino = { pedidos: [], totalKg: 0, totalCubagem: 0, numero: 1 };
+
+            // Sort fiorinoEligiblePedidos by weight (descending) for packing
+            fiorinoEligiblePedidos.sort((a, b) => {
+                const kgA = parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0;
+                const kgB = parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0;
+                return kgB - kgA;
+            });
+
+            // Keep track of orders already assigned to a Fiorino
+            const assignedPedidoIds = new Set();
+
+            fiorinoEligiblePedidos.forEach(pedido => {
+                if (assignedPedidoIds.has(String(pedido.Num_Pedido))) {
+                    return; // Skip if already assigned
+                }
+
+                const clientePedidos = fiorinoEligiblePedidos.filter(p => String(p.Cliente) === String(pedido.Cliente) && !assignedPedidoIds.has(String(p.Num_Pedido)));
+
+                let clientGroupKg = 0;
+                let clientGroupCubagem = 0;
+                clientePedidos.forEach(p => {
+                    clientGroupKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                    clientGroupCubagem += parseFloat(String(p.Cubagem).replace(',', '.')) || 0;
+                });
+
+                // Check if adding this entire client group exceeds limits for current Fiorino
+                if (currentFiorino.totalCubagem + clientGroupCubagem > MAX_CUBAGEM_FIORINO || currentFiorino.totalKg + clientGroupKg > MAX_KG_FIORINO_HARD_LIMIT) {
+                    // Current Fiorino is full, push it if it contains orders
+                    if (currentFiorino.pedidos.length > 0) {
+                        fiorinoLoads.push(currentFiorino);
+                    }
+                    // Start a new one
+                    currentFiorino = { pedidos: [], totalKg: 0, totalCubagem: 0, numero: fiorinoLoads.length + 1 };
+                }
+
+                // Add entire client group to current Fiorino
+                clientePedidos.forEach(p => {
+                    currentFiorino.pedidos.push(p);
+                    currentFiorino.totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                    currentFiorino.totalCubagem += parseFloat(String(p.Cubagem).replace(',', '.')) || 0;
+                    assignedPedidoIds.add(String(p.Num_Pedido));
+                });
+            });
+
+            // Push the last Fiorino load if it contains orders
+            if (currentFiorino.pedidos.length > 0) {
+                fiorinoLoads.push(currentFiorino);
+            }
+
+            // --- NEW LOGIC FOR HANDLING UNDERWEIGHT FIORINOS AND VAN ---
+            const MIN_KG_FOR_FIORINO = 330;
+            let finalFiorinoLoads = [];
+            let leftoverPedidosFromFiorinos = []; // Orders from underweight Fiorinos
+
+            // Separate valid loads from underweight loads
+            fiorinoLoads.forEach(fiorino => {
+                if (fiorino.totalKg < MIN_KG_FOR_FIORINO) {
+                    leftoverPedidosFromFiorinos = leftoverPedidosFromFiorinos.concat(fiorino.pedidos);
+                } else {
+                    finalFiorinoLoads.push(fiorino);
+                }
+            });
+
+            // Attempt to repack leftoverPedidosFromFiorinos
+            if (leftoverPedidosFromFiorinos.length > 0) {
+                // Sort leftoverPedidosFromFiorinos by weight (descending) for repacking
+                leftoverPedidosFromFiorinos.sort((a, b) => {
+                    const kgA = parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0;
+                    const kgB = parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0;
+                    return kgB - kgA;
+                });
+
+                let currentLeftoverFiorino = { pedidos: [], totalKg: 0, totalCubagem: 0, numero: finalFiorinoLoads.length + 1 };
+                leftoverPedidosFromFiorinos.forEach(pedido => {
+                    const pedidoKg = parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                    const pedidoCubagem = parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+
+                    // Check if adding this order exceeds limits for current Fiorino
+                    if (currentLeftoverFiorino.totalCubagem + pedidoCubagem > MAX_CUBAGEM_FIORINO || currentLeftoverFiorino.totalKg + pedidoKg > MAX_KG_FIORINO_HARD_LIMIT) {
+                        // If currentLeftoverFiorino is not empty and meets the minimum weight, push it
+                        if (currentLeftoverFiorino.pedidos.length > 0 && currentLeftoverFiorino.totalKg >= MIN_KG_FOR_FIORINO) {
+                            finalFiorinoLoads.push(currentLeftoverFiorino);
+                        } else {
+                            // If it doesn't meet minimum weight, add its orders to unassigned
+                            unassignedPedidos = unassignedPedidos.concat(currentLeftoverFiorino.pedidos);
+                        }
+                        // Start a new one
+                        currentLeftoverFiorino = { pedidos: [], totalKg: 0, totalCubagem: 0, numero: finalFiorinoLoads.length + 1 };
+                    }
+
+                    currentLeftoverFiorino.pedidos.push(pedido);
+                    currentLeftoverFiorino.totalKg += pedidoKg;
+                    currentLeftoverFiorino.totalCubagem += pedidoCubagem;
+                });
+
+                // Push the last leftover Fiorino load if it contains orders and meets the minimum weight
+                if (currentLeftoverFiorino.pedidos.length > 0 && currentLeftoverFiorino.totalKg >= MIN_KG_FOR_FIORINO) {
+                    finalFiorinoLoads.push(currentLeftoverFiorino);
+                } else {
+                    // If it doesn't meet minimum weight, add its orders to unassigned
+                    unassignedPedidos = unassignedPedidos.concat(currentLeftoverFiorino.pedidos);
+                }
+            }
+
+            // Re-number the Fiorino loads for display
+            finalFiorinoLoads.forEach((fiorino, index) => {
+                fiorino.numero = index + 1;
+            });
+
+            // --- NEW LOGIC FOR VAN PACKING ---
+            let vanLoads = [];
+            let currentVan = { pedidos: [], totalKg: 0, totalCubagem: 0, numero: 1 };
+            let trulyUnassignedPedidos = []; // Orders that don't fit in any van
+
+            // Group unassignedPedidos by client for van packing
+            const unassignedClientGroups = unassignedPedidos.reduce((acc, pedido) => {
+                const cliente = pedido.Cliente;
+                if (!acc[cliente]) {
+                    acc[cliente] = {
+                        pedidos: [],
+                        totalKg: 0,
+                        totalCubagem: 0
+                    };
+                }
+                acc[cliente].pedidos.push(pedido);
+                acc[cliente].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                acc[cliente].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+                return acc;
+            }, {});
+
+            // Convert client groups object to an array for sorting
+            let unassignedClientGroupsArray = Object.values(unassignedClientGroups);
+
+            // Sort client groups by total weight (descending) for packing
+            unassignedClientGroupsArray.sort((a, b) => {
+                return b.totalKg - a.totalKg;
+            });
+
+            unassignedClientGroupsArray.forEach(clientGroup => {
+                // Check if the clientGroup itself is too large for an empty van
+                if (clientGroup.totalCubagem > MAX_CUBAGEM_VAN || clientGroup.totalKg > MAX_KG_VAN) {
+                    trulyUnassignedPedidos = trulyUnassignedPedidos.concat(clientGroup.pedidos);
+                    return; // Skip to the next clientGroup
+                }
+
+                // Check if adding this entire client group exceeds limits for current Van
+                if (currentVan.totalCubagem + clientGroup.totalCubagem > MAX_CUBAGEM_VAN || currentVan.totalKg + clientGroup.totalKg > MAX_KG_VAN) {
+                    // Current Van is full, push it if it contains orders
+                    if (currentVan.pedidos.length > 0) {
+                        vanLoads.push(currentVan);
+                    }
+                    // Start a new one
+                    currentVan = { pedidos: [], totalKg: 0, totalCubagem: 0, numero: vanLoads.length + 1 };
+                }
+
+                // Add entire client group to current Van
+                currentVan.pedidos = currentVan.pedidos.concat(clientGroup.pedidos);
+                currentVan.totalKg += clientGroup.totalKg;
+                currentVan.totalCubagem += clientGroup.totalCubagem;
+            });
+
+            // Push the last Van load if it contains orders
+            if (currentVan.pedidos.length > 0) {
+                vanLoads.push(currentVan);
+            } else {
+                // If it doesn't meet minimum weight, add its orders to trulyUnassignedPedidos
+                trulyUnassignedPedidos = trulyUnassignedPedidos.concat(currentVan.pedidos);
+            }
+
+            // Re-number the Van loads for display
+            vanLoads.forEach((van, index) => {
+                van.numero = index + 1;
+            });
+
+            // Calculate total weight of truly unassigned pedidos
+            let totalKgTrulyUnassigned = trulyUnassignedPedidos.reduce((sum, pedido) => sum + (parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0), 0);
+
+            // Display results
+            let html = `<h3>${finalFiorinoLoads.length} Carga(s) de Fiorino para a Rota 11101:</h3>`;
+            finalFiorinoLoads.forEach(fiorino => {
+                const totalKgFormatado = fiorino.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const totalCubagemFormatado = fiorino.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                html += `
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            Fiorino ${fiorino.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} cubagem
+                        </div>
+                        <div class="card-body">
+                            ${createTable(fiorino.pedidos)}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Display van information
+            if (vanLoads.length > 0) {
+                html += `<h3 class="mt-4">${vanLoads.length} Carga(s) de Van:</h3>`;
+                vanLoads.forEach(van => {
+                    const totalKgFormatado = van.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const totalCubagemFormatado = van.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                    html += `
+                        <div class="card mb-3">
+                            <div class="card-header bg-success text-white">
+                                Van ${van.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} cubagem
+                            </div>
+                            <div class="card-body">
+                                ${createTable(van.pedidos)}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            if (totalKgTrulyUnassigned > 0) {
+                html += `<h4 class="mt-4">Pedidos restantes (não couberam em Fiorinos ou Vans): ${totalKgTrulyUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h4>`;
+                html += `
+                    <div class="card mb-3">
+                        <div class="card-header bg-danger text-white">
+                            Detalhes dos Pedidos Restantes
+                        </div>
+                        <div class="card-body">
+                            ${createTable(trulyUnassignedPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])} 
+                        </div>
+                    </div>
+                `;
+            }
+
+            resultadoFiorinoDiv.innerHTML = html;
+        }
+
+        function displayToco(div, grupos) {
+            if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhuma carga toco encontrada.</div>'; return; }
+            let accordionHtml = '<div class="accordion accordion-flush" id="accordionToco">';
+            Object.keys(grupos).sort().forEach((cf, index) => {
+                const grupo = grupos[cf];
+                const pedidos = grupo.pedidos;
+                const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                accordionHtml += `
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingToco${index}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}">
+                                <strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2">${pedidos.length} pedidos</span> <span class="badge bg-info ms-2">${totalKgFormatado} kg</span>
+                            </button>
+                        </h2>
+                        <div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body">${createTable(pedidos)}</div></div>
+                    </div>`;
+            });
+            accordionHtml += '</div>';
+            div.innerHTML = accordionHtml;
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
