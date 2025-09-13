@@ -133,6 +133,18 @@
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
+                        <h2 class="card-title h5">Resultados Cargas 3/4</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Cargas formadas a partir de um pedido muito grande.</p>
+                        <div id="resultado-tres-quartos"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
                         <h2 class="card-title h5">Separação de Cargas (Fiorino)</h2>
                         <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Fiorino para separar as cargas.</p>
                         
@@ -223,6 +235,7 @@
         function processar() {
             const resultadoGeralDiv = document.getElementById('resultado-geral');
             const resultadoTocoDiv = document.getElementById('resultado-toco');
+            const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
             try {
                 if (planilhaData.length === 0) {
                     statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
@@ -232,6 +245,7 @@
                 const rotaFinalInput = document.getElementById('rotaFinalInput').value;
                 resultadoGeralDiv.innerHTML = '';
                 resultadoTocoDiv.innerHTML = '';
+                resultadoTresQuartosDiv.innerHTML = '';
 
                 const pedidos = planilhaData.filter(p => String(p.Coluna4) != '500');
 
@@ -261,7 +275,7 @@
                     if (tocoPedidoIds.has(String(p.Num_Pedido))) return false;
                     if (['21', '23', '17'].includes(String(p.Coluna4))) return false;
                     const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
-                    if ((rotaAtualNum === 11311 || rotaAtualNum === 11521) && isNumeric(String(p.CF))) {
+                    if ((rotaAtualNum === 11311 || rotaAtualNum === 11521 || rotaAtualNum === 11361) && isNumeric(String(p.CF))) {
                         return false;
                     }
                     if (!(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return false;
@@ -269,8 +283,62 @@
                     if (clientesParaRemover.has(String(p.Cliente))) return false;
                     return true;
                 });
-                pedidosGeraisAtuais = pedidosGeraisFiltrados;
-                const gruposGerais = pedidosGeraisFiltrados.reduce((acc, p) => {
+
+                let tresQuartosLoads = [];
+                const MIN_KG_3_4 = 2300;
+                const MAX_KG_3_4 = 4100;
+                const LARGE_ORDER_KG = 1700;
+
+                const largeOrdersByRoute = pedidosGeraisFiltrados.reduce((acc, p) => {
+                    const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                    if (peso >= LARGE_ORDER_KG) {
+                        const rota = p.Cod_Rota;
+                        if (!acc[rota]) acc[rota] = [];
+                        acc[rota].push(p);
+                    }
+                    return acc;
+                }, {});
+
+                const pedidosEmCargas3_4 = new Set();
+
+                Object.keys(largeOrdersByRoute).forEach(rota => {
+                    const largeOrders = largeOrdersByRoute[rota];
+                    if (largeOrders.length === 1) {
+                        const largeOrder = largeOrders[0];
+                        if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
+
+                        let newLoad = {
+                            pedidos: [largeOrder],
+                            totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0,
+                            rota: rota
+                        };
+
+                        const otherOrdersInRoute = pedidosGeraisFiltrados
+                            .filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido)
+                            .sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
+
+                        for (const order of otherOrdersInRoute) {
+                            if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue;
+                            const orderKg = parseFloat(String(order.Quilos_Saldo).replace(',', '.')) || 0;
+                            if (newLoad.totalKg + orderKg <= MAX_KG_3_4) {
+                                newLoad.pedidos.push(order);
+                                newLoad.totalKg += orderKg;
+                            }
+                        }
+
+                        if (newLoad.totalKg >= MIN_KG_3_4) {
+                            tresQuartosLoads.push(newLoad);
+                            newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido));
+                        }
+                    }
+                });
+
+                tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
+                displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
+
+                pedidosGeraisAtuais = pedidosGeraisFiltrados.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
+                
+                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
                     const rota = p.Cod_Rota;
                     if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; }
                     acc[rota].pedidos.push(p);
@@ -278,6 +346,7 @@
                     return acc;
                 }, {});
                 displayGerais(resultadoGeralDiv, gruposGerais);
+
             } catch (error) {
                 statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`;
                 console.error(error);
@@ -319,6 +388,28 @@
             div.innerHTML = accordionHtml;
         }
 
+        function displayTresQuartos(div, loads) {
+            if (loads.length === 0) {
+                div.innerHTML = '<div class="text-center p-3">Nenhuma carga 3/4 formada.</div>';
+                return;
+            }
+            let html = '';
+            loads.forEach(load => {
+                const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                html += `
+                    <div class="card mb-3">
+                        <div class="card-header bg-warning text-dark">
+                            Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg
+                        </div>
+                        <div class="card-body">
+                            ${createTable(load.pedidos)}
+                        </div>
+                    </div>
+                `;
+            });
+            div.innerHTML = html;
+        }
+
         function separarCargasFiorino(routeOrRoutes, divId, title) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '';
@@ -337,15 +428,16 @@
             const MAX_CUBAGEM_VAN = 5.50;
 
             const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
-            const muffatoGroupName = 'IRMAOS MUFFATO S.A';
+            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
+            const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
 
             let packableItems = [];
-            const otherPedidos = pedidosRota.filter(p => !p.Nome_Cliente || p.Nome_Cliente.toUpperCase().trim() !== muffatoGroupName);
-            const muffatoPedidos = pedidosRota.filter(p => p.Nome_Cliente && p.Nome_Cliente.toUpperCase().trim() === muffatoGroupName);
+            const otherPedidos = pedidosRota.filter(p => !isSpecialClient(p));
+            const specialPedidos = pedidosRota.filter(p => isSpecialClient(p));
 
-            muffatoPedidos.forEach(pedido => {
+            specialPedidos.forEach(pedido => {
                 packableItems.push({
-                    isMuffato: true,
+                    isSpecial: true,
                     pedidos: [pedido],
                     totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
                     totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
@@ -355,7 +447,7 @@
             const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
                 const clienteId = pedido.Cliente;
                 if (!acc[clienteId]) {
-                    acc[clienteId] = { isMuffato: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                    acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
                 }
                 acc[clienteId].pedidos.push(pedido);
                 return acc;
@@ -380,12 +472,12 @@
 
                 let placed = false;
                 for (const fiorino of fiorinoLoads) {
-                    const muffatoCountInFiorino = fiorino.pedidos.filter(p => p.Nome_Cliente && p.Nome_Cliente.toUpperCase().trim() === muffatoGroupName).length;
-                    const muffatoOrdersInItem = item.isMuffato ? item.pedidos.length : 0;
+                    const specialCountInFiorino = fiorino.pedidos.filter(p => isSpecialClient(p)).length;
+                    const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
 
                     if ( (fiorino.totalKg + item.totalKg <= MAX_KG_FIORINO) &&
                          (fiorino.totalCubagem + item.totalCubagem <= MAX_CUBAGEM_FIORINO) &&
-                         (muffatoCountInFiorino + muffatoOrdersInItem <= 2) )
+                         (specialCountInFiorino + specialOrdersInItem <= 2) )
                     {
                         fiorino.pedidos.push(...item.pedidos);
                         fiorino.totalKg += item.totalKg;
@@ -512,7 +604,7 @@
                 accordionHtml += `
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingToco${index}">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}">
                                 <strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2">${pedidos.length} pedidos</span> <span class="badge bg-info ms-2">${totalKgFormatado} kg</span>
                             </button>
                         </h2>
