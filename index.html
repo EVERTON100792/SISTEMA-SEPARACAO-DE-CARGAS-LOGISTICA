@@ -199,40 +199,49 @@
                     statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
                     return;
                 }
+                const rotaInicialInput = document.getElementById('rotaInicialInput').value;
+                const rotaFinalInput = document.getElementById('rotaFinalInput').value;
                 resultadoGeralDiv.innerHTML = '';
                 resultadoTocoDiv.innerHTML = '';
 
-                const pedidosFiltrados = planilhaData.filter(p => {
-                    const coluna4 = parseInt(String(p.Coluna4), 10);
-                    if (coluna4 === 21) {
-                        return true; // Inclui se Coluna4 for 21
-                    }
+                // Universal Filter
+                const pedidos = planilhaData.filter(p => String(p.Coluna4) != '500');
 
-                    const rota = parseInt(String(p.Cod_Rota), 10);
-                    // Assumindo que o tipo de carga está na Coluna5.
-                    const carga = p.Coluna5; 
+                // Toco Logic
+                const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
+                const cfCounts = {};
+                const isNumeric = (str) => /^\d+$/.test(str);
+                pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(String(p.CF))) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
+                const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
+                const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
+                const gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
+                    const cf = p.CF;
+                    if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; }
+                    acc[cf].pedidos.push(p);
+                    const quilos = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                    acc[cf].totalKg += quilos;
+                    return acc;
+                }, {});
+                displayToco(resultadoTocoDiv, gruposToco);
 
-                    if (
-                        (rota >= 1 && rota <= 9999 && carga === 'Toco') ||
-                        (rota >= 1001 && rota <= 1999 && carga === 'Truck') ||
-                        (rota >= 2000 && rota <= 2999 && carga === 'Carreta') ||
-                        (rota >= 3000 && rota <= 3999 && carga === 'Vanderleia') ||
-                        (rota >= 4000 && rota <= 4999 && carga === 'Bitrem')
-                    ) {
-                        return true;
-                    }
-                    return false;
-                }).map(p => {
-                    const rota = parseInt(String(p.Cod_Rota), 10);
-                    if (rota === 11311 || rota === 11521) {
-                        // Cria um novo objeto para não modificar o original em planilhaData
-                        return { ...p, CF: '' }; 
-                    }
-                    return p;
+                // General Logic
+                const tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
+                const clientesComBloqueio = new Set();
+                const clientesSemBloqueio = new Set();
+                pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
+                const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
+                const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 11101;
+                const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 11731;
+                const pedidosGeraisFiltrados = pedidos.filter(p => {
+                    if (tocoPedidoIds.has(String(p.Num_Pedido))) return false;
+                    const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
+                    if (!(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return false;
+                    if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return false;
+                    if (clientesParaRemover.has(String(p.Cliente))) return false;
+                    return true;
                 });
-
-                // Agrupa todos os pedidos filtrados por rota
-                const gruposGerais = pedidosFiltrados.reduce((acc, p) => {
+                pedidosGeraisAtuais = pedidosGeraisFiltrados; // Store filtered data
+                const gruposGerais = pedidosGeraisFiltrados.reduce((acc, p) => {
                     const rota = p.Cod_Rota;
                     if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; }
                     acc[rota].pedidos.push(p);
@@ -240,10 +249,7 @@
                     acc[rota].totalKg += quilos;
                     return acc;
                 }, {});
-
                 displayGerais(resultadoGeralDiv, gruposGerais);
-                resultadoTocoDiv.innerHTML = '<div class="text-center p-3">A lógica de "Toco" foi integrada aos resultados gerais.</div>';
-
             } catch (error) {
                 statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`;
                 console.error(error);
