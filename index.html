@@ -234,6 +234,7 @@
                 const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 11731;
                 const pedidosGeraisFiltrados = pedidos.filter(p => {
                     if (tocoPedidoIds.has(String(p.Num_Pedido))) return false;
+                    if (String(p.Coluna4) == '21') return false;
                     const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
                     if (!(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return false;
                     if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return false;
