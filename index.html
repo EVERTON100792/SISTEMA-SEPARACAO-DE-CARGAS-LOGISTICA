@@ -128,26 +128,55 @@
                 </div>
             </div>
         </div>
-    </div>
 
         <div class="row">
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h2 class="card-title h5">Separação para Fiorino (Rota 11101)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Separa pedidos da Rota 11101 em cargas de Fiorino (máx. 500kg e 1.5 cubagem).</p>
-                        <button class="btn btn-success mt-2" onclick="separarFiorino()">Separar Cargas para Fiorino</button>
-                        <button class="btn btn-info mt-2 ms-2" onclick="window.print()">Imprimir Resultados</button>
-                        <div id="resultado-fiorino" class="mt-3"></div>
+                        <h2 class="card-title h5">Separação de Cargas (Fiorino)</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Fiorino para separar as cargas.</p>
+                        
+                        <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11101', 'resultado-fiorino-geral', 'Rota 11101')">Rota 11101</button>
+                        <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11301', 'resultado-fiorino-geral', 'Rota 11301')">Rota 11301</button>
+                        <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11311', 'resultado-fiorino-geral', 'Rota 11311')">Rota 11311</button>
+                        <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11561', 'resultado-fiorino-geral', 'Rota 11561')">Rota 11561</button>
+                        <button class="btn btn-success mt-2" onclick="separarCargasFiorino(['11721', '11731'], 'resultado-fiorino-geral', 'Rotas 11721 & 11731')">Rotas 11721 & 11731</button>
+                        
+                        <div id="resultado-fiorino-geral" class="mt-3"></div>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                 <button class="btn btn-info mt-2" onclick="window.print()">Imprimir Todos os Resultados</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
         let planilhaData = [];
-        let pedidosGeraisAtuais = []; // New global variable
+        let pedidosGeraisAtuais = [];
+
+        const distanciasCidades = {
+            'LONDRINA': 25,
+            'CAMBE': 15,
+            'ARAPONGAS': 10,
+            'APUCARANA': 30,
+            'MARINGA': 65,
+            'IBIPORA': 40,
+            'SERTANOPOLIS': 60,
+            'JATAIZINHO': 50,
+            'CORNELIO PROCOPIO': 85,
+            'BANDEIRANTES': 115,
+            'SANTA MARIANA': 100,
+            'JANDAIA DO SUL': 45,
+            'MANDAGUARI': 80,
+            'PORECATU': 85,
+            'PARANAPOEMA': 130
+        };
+
         const fileInput = document.getElementById('fileInput');
         const processarBtn = document.getElementById('processarBtn');
         const statusDiv = document.getElementById('status');
@@ -168,7 +197,7 @@
                     let headerRowIndex = -1, headers = [];
                     for (let i = 0; i < rawData.length; i++) {
                         const row = rawData[i];
-                        if (row && row.includes('Cod_Rota')) { // Finds header row
+                        if (row && row.includes('Cod_Rota')) {
                             headerRowIndex = i;
                             headers = row.map(h => String(h).trim());
                             break;
@@ -204,10 +233,8 @@
                 resultadoGeralDiv.innerHTML = '';
                 resultadoTocoDiv.innerHTML = '';
 
-                // Universal Filter
                 const pedidos = planilhaData.filter(p => String(p.Coluna4) != '500');
 
-                // Toco Logic
                 const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                 const cfCounts = {};
                 const isNumeric = (str) => /^\d+$/.test(str);
@@ -218,13 +245,11 @@
                     const cf = p.CF;
                     if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; }
                     acc[cf].pedidos.push(p);
-                    const quilos = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                    acc[cf].totalKg += quilos;
+                    acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
                     return acc;
                 }, {});
                 displayToco(resultadoTocoDiv, gruposToco);
 
-                // General Logic
                 const tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
                 const clientesComBloqueio = new Set();
                 const clientesSemBloqueio = new Set();
@@ -235,24 +260,21 @@
                 const pedidosGeraisFiltrados = pedidos.filter(p => {
                     if (tocoPedidoIds.has(String(p.Num_Pedido))) return false;
                     if (['21', '23', '17'].includes(String(p.Coluna4))) return false;
-
                     const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
                     if ((rotaAtualNum === 11311 || rotaAtualNum === 11521) && isNumeric(String(p.CF))) {
                         return false;
                     }
-
                     if (!(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return false;
                     if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return false;
                     if (clientesParaRemover.has(String(p.Cliente))) return false;
                     return true;
                 });
-                pedidosGeraisAtuais = pedidosGeraisFiltrados; // Store filtered data
+                pedidosGeraisAtuais = pedidosGeraisFiltrados;
                 const gruposGerais = pedidosGeraisFiltrados.reduce((acc, p) => {
                     const rota = p.Cod_Rota;
                     if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; }
                     acc[rota].pedidos.push(p);
-                    const quilos = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                    acc[rota].totalKg += quilos;
+                    acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
                     return acc;
                 }, {});
                 displayGerais(resultadoGeralDiv, gruposGerais);
@@ -264,7 +286,7 @@
 
         function createTable(pedidos, columnsToDisplay) {
             if (!pedidos || pedidos.length === 0) return '';
-            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF']; // Default columns
+            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
             let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped"><thead><tr>';
             colunasExibir.forEach(c => table += `<th>${c}</th>`);
             table += '</tr></thead><tbody>';
@@ -297,251 +319,147 @@
             div.innerHTML = accordionHtml;
         }
 
-        function separarFiorino() {
-            const resultadoFiorinoDiv = document.getElementById('resultado-fiorino');
-            resultadoFiorinoDiv.innerHTML = ''; // Clear previous results
-
+        function separarCargasFiorino(routeOrRoutes, divId, title) {
+            const resultadoDiv = document.getElementById(divId);
+            resultadoDiv.innerHTML = '';
             if (planilhaData.length === 0) {
-                resultadoFiorinoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado. Por favor, selecione e processe uma planilha primeiro.</p>';
+                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
                 return;
             }
 
-            const MAX_KG_FIORINO_HARD_LIMIT = 570;
+            const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
+            
+            const MAX_KG_FIORINO = 570;
             const MAX_CUBAGEM_FIORINO = 1.5;
-            const MAX_KG_VAN = 1500;
-            const MAX_CUBAGEM_VAN = 5.0;
+            const MIN_KG_FIORINO = 330;
+            const MIN_KG_VAN = 1040;
+            const MAX_KG_VAN = 1550;
+            const MAX_CUBAGEM_VAN = 5.50;
 
-            let fiorinoEligiblePedidos = [];
-            let unassignedPedidos = []; // For orders that can't fit in Fiorinos (individual or client group too large)
+            const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
+            const muffatoGroupName = 'IRMAOS MUFFATO S.A';
 
-            // Group pedidos by client for Rota 11101
-            const pedidosRota11101 = pedidosGeraisAtuais.filter(p => String(p.Cod_Rota) === '11101');
+            let packableItems = [];
+            const otherPedidos = pedidosRota.filter(p => !p.Nome_Cliente || p.Nome_Cliente.toUpperCase().trim() !== muffatoGroupName);
+            const muffatoPedidos = pedidosRota.filter(p => p.Nome_Cliente && p.Nome_Cliente.toUpperCase().trim() === muffatoGroupName);
 
-            const clientGroups = pedidosRota11101.reduce((acc, pedido) => {
-                const cliente = pedido.Cliente;
-                if (!acc[cliente]) {
-                    acc[cliente] = {
-                        pedidos: [],
-                        totalKg: 0,
-                        totalCubagem: 0
-                    };
-                }
-                acc[cliente].pedidos.push(pedido);
-                acc[cliente].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                acc[cliente].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
-                return acc;
-            }, {});
-
-            // Determine eligibility for Fiorino or unassigned
-            Object.values(clientGroups).forEach(group => {
-                // Check if any individual order in the group exceeds Fiorino limits
-                const individualOrderTooLarge = group.pedidos.some(p =>
-                    (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) > MAX_KG_FIORINO_HARD_LIMIT ||
-                    (parseFloat(String(p.Cubagem).replace(',', '.')) || 0) > MAX_CUBAGEM_FIORINO
-                );
-
-                // If the entire client group is too large for a Fiorino, or any individual order is too large
-                if (individualOrderTooLarge || group.totalKg > MAX_KG_FIORINO_HARD_LIMIT || group.totalCubagem > MAX_CUBAGEM_FIORINO) {
-                    unassignedPedidos = unassignedPedidos.concat(group.pedidos);
-                } else {
-                    fiorinoEligiblePedidos = fiorinoEligiblePedidos.concat(group.pedidos);
-                }
+            muffatoPedidos.forEach(pedido => {
+                packableItems.push({
+                    isMuffato: true,
+                    pedidos: [pedido],
+                    totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
+                    totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
+                });
             });
 
-            if (fiorinoEligiblePedidos.length === 0 && unassignedPedidos.length === 0) {
-                resultadoFiorinoDiv.innerHTML = '<p class="text-info">Nenhum pedido encontrado para a Rota 11101 nas filtragens gerais que se encaixe nos limites de peso e cubagem para Fiorino.</p>';
-                return;
-            }
+            const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
+                const clienteId = pedido.Cliente;
+                if (!acc[clienteId]) {
+                    acc[clienteId] = { isMuffato: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                }
+                acc[clienteId].pedidos.push(pedido);
+                return acc;
+            }, {});
+            
+            Object.values(otherClientGroupsMap).forEach(group => {
+                group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+                packableItems.push(group);
+            });
+
+            packableItems.sort((a, b) => b.totalKg - a.totalKg);
 
             let fiorinoLoads = [];
-            let currentFiorino = { pedidos: [], totalKg: 0, totalCubagem: 0, numero: 1 };
+            let leftoverItems = [];
 
-            // Sort fiorinoEligiblePedidos by weight (descending) for packing
-            fiorinoEligiblePedidos.sort((a, b) => {
-                const kgA = parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0;
-                const kgB = parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0;
-                return kgB - kgA;
-            });
-
-            // Keep track of orders already assigned to a Fiorino
-            const assignedPedidoIds = new Set();
-
-            fiorinoEligiblePedidos.forEach(pedido => {
-                if (assignedPedidoIds.has(String(pedido.Num_Pedido))) {
-                    return; // Skip if already assigned
+            packableItems.forEach(item => {
+                if (item.totalKg > MAX_KG_FIORINO || item.totalCubagem > MAX_CUBAGEM_FIORINO) {
+                    leftoverItems.push(item);
+                    return;
                 }
 
-                const clientePedidos = fiorinoEligiblePedidos.filter(p => String(p.Cliente) === String(pedido.Cliente) && !assignedPedidoIds.has(String(p.Num_Pedido)));
+                let placed = false;
+                for (const fiorino of fiorinoLoads) {
+                    const muffatoCountInFiorino = fiorino.pedidos.filter(p => p.Nome_Cliente && p.Nome_Cliente.toUpperCase().trim() === muffatoGroupName).length;
+                    const muffatoOrdersInItem = item.isMuffato ? item.pedidos.length : 0;
 
-                let clientGroupKg = 0;
-                let clientGroupCubagem = 0;
-                clientePedidos.forEach(p => {
-                    clientGroupKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                    clientGroupCubagem += parseFloat(String(p.Cubagem).replace(',', '.')) || 0;
-                });
-
-                // Check if adding this entire client group exceeds limits for current Fiorino
-                if (currentFiorino.totalCubagem + clientGroupCubagem > MAX_CUBAGEM_FIORINO || currentFiorino.totalKg + clientGroupKg > MAX_KG_FIORINO_HARD_LIMIT) {
-                    // Current Fiorino is full, push it if it contains orders
-                    if (currentFiorino.pedidos.length > 0) {
-                        fiorinoLoads.push(currentFiorino);
+                    if ( (fiorino.totalKg + item.totalKg <= MAX_KG_FIORINO) &&
+                         (fiorino.totalCubagem + item.totalCubagem <= MAX_CUBAGEM_FIORINO) &&
+                         (muffatoCountInFiorino + muffatoOrdersInItem <= 2) )
+                    {
+                        fiorino.pedidos.push(...item.pedidos);
+                        fiorino.totalKg += item.totalKg;
+                        fiorino.totalCubagem += item.totalCubagem;
+                        placed = true;
+                        break;
                     }
-                    // Start a new one
-                    currentFiorino = { pedidos: [], totalKg: 0, totalCubagem: 0, numero: fiorinoLoads.length + 1 };
                 }
 
-                // Add entire client group to current Fiorino
-                clientePedidos.forEach(p => {
-                    currentFiorino.pedidos.push(p);
-                    currentFiorino.totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                    currentFiorino.totalCubagem += parseFloat(String(p.Cubagem).replace(',', '.')) || 0;
-                    assignedPedidoIds.add(String(p.Num_Pedido));
-                });
+                if (!placed) {
+                    fiorinoLoads.push({
+                        pedidos: [...item.pedidos],
+                        totalKg: item.totalKg,
+                        totalCubagem: item.totalCubagem,
+                    });
+                }
             });
 
-            // Push the last Fiorino load if it contains orders
-            if (currentFiorino.pedidos.length > 0) {
-                fiorinoLoads.push(currentFiorino);
-            }
-
-            // --- NEW LOGIC FOR HANDLING UNDERWEIGHT FIORINOS AND VAN ---
-            const MIN_KG_FOR_FIORINO = 330;
             let finalFiorinoLoads = [];
-            let leftoverPedidosFromFiorinos = []; // Orders from underweight Fiorinos
-
-            // Separate valid loads from underweight loads
+            let unplacedFromMinRule = [];
             fiorinoLoads.forEach(fiorino => {
-                if (fiorino.totalKg < MIN_KG_FOR_FIORINO) {
-                    leftoverPedidosFromFiorinos = leftoverPedidosFromFiorinos.concat(fiorino.pedidos);
-                } else {
+                if (fiorino.totalKg >= MIN_KG_FIORINO) {
                     finalFiorinoLoads.push(fiorino);
-                }
-            });
-
-            // Attempt to repack leftoverPedidosFromFiorinos
-            if (leftoverPedidosFromFiorinos.length > 0) {
-                // Sort leftoverPedidosFromFiorinos by weight (descending) for repacking
-                leftoverPedidosFromFiorinos.sort((a, b) => {
-                    const kgA = parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0;
-                    const kgB = parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0;
-                    return kgB - kgA;
-                });
-
-                let currentLeftoverFiorino = { pedidos: [], totalKg: 0, totalCubagem: 0, numero: finalFiorinoLoads.length + 1 };
-                leftoverPedidosFromFiorinos.forEach(pedido => {
-                    const pedidoKg = parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                    const pedidoCubagem = parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
-
-                    // Check if adding this order exceeds limits for current Fiorino
-                    if (currentLeftoverFiorino.totalCubagem + pedidoCubagem > MAX_CUBAGEM_FIORINO || currentLeftoverFiorino.totalKg + pedidoKg > MAX_KG_FIORINO_HARD_LIMIT) {
-                        // If currentLeftoverFiorino is not empty and meets the minimum weight, push it
-                        if (currentLeftoverFiorino.pedidos.length > 0 && currentLeftoverFiorino.totalKg >= MIN_KG_FOR_FIORINO) {
-                            finalFiorinoLoads.push(currentLeftoverFiorino);
-                        } else {
-                            // If it doesn't meet minimum weight, add its orders to unassigned
-                            unassignedPedidos = unassignedPedidos.concat(currentLeftoverFiorino.pedidos);
-                        }
-                        // Start a new one
-                        currentLeftoverFiorino = { pedidos: [], totalKg: 0, totalCubagem: 0, numero: finalFiorinoLoads.length + 1 };
-                    }
-
-                    currentLeftoverFiorino.pedidos.push(pedido);
-                    currentLeftoverFiorino.totalKg += pedidoKg;
-                    currentLeftoverFiorino.totalCubagem += pedidoCubagem;
-                });
-
-                // Push the last leftover Fiorino load if it contains orders and meets the minimum weight
-                if (currentLeftoverFiorino.pedidos.length > 0 && currentLeftoverFiorino.totalKg >= MIN_KG_FOR_FIORINO) {
-                    finalFiorinoLoads.push(currentLeftoverFiorino);
                 } else {
-                    // If it doesn't meet minimum weight, add its orders to unassigned
-                    unassignedPedidos = unassignedPedidos.concat(currentLeftoverFiorino.pedidos);
+                    unplacedFromMinRule.push(...fiorino.pedidos);
                 }
-            }
-
-            // Re-number the Fiorino loads for display
-            finalFiorinoLoads.forEach((fiorino, index) => {
-                fiorino.numero = index + 1;
             });
 
-            // --- NEW LOGIC FOR VAN PACKING ---
-            let vanLoads = [];
-            let currentVan = { pedidos: [], totalKg: 0, totalCubagem: 0, numero: 1 };
-            let trulyUnassignedPedidos = []; // Orders that don't fit in any van
-
-            // Group unassignedPedidos by client for van packing
-            const unassignedClientGroups = unassignedPedidos.reduce((acc, pedido) => {
-                const cliente = pedido.Cliente;
-                if (!acc[cliente]) {
-                    acc[cliente] = {
-                        pedidos: [],
-                        totalKg: 0,
-                        totalCubagem: 0
-                    };
-                }
-                acc[cliente].pedidos.push(pedido);
-                acc[cliente].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                acc[cliente].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
-                return acc;
-            }, {});
-
-            // Convert client groups object to an array for sorting
-            let unassignedClientGroupsArray = Object.values(unassignedClientGroups);
-
-            // Sort client groups by total weight (descending) for packing
-            unassignedClientGroupsArray.sort((a, b) => {
-                return b.totalKg - a.totalKg;
-            });
-
-            unassignedClientGroupsArray.forEach(clientGroup => {
-                // Check if the clientGroup itself is too large for an empty van
-                if (clientGroup.totalCubagem > MAX_CUBAGEM_VAN || clientGroup.totalKg > MAX_KG_VAN) {
-                    trulyUnassignedPedidos = trulyUnassignedPedidos.concat(clientGroup.pedidos);
-                    return; // Skip to the next clientGroup
-                }
-
-                // Check if adding this entire client group exceeds limits for current Van
-                if (currentVan.totalCubagem + clientGroup.totalCubagem > MAX_CUBAGEM_VAN || currentVan.totalKg + clientGroup.totalKg > MAX_KG_VAN) {
-                    // Current Van is full, push it if it contains orders
-                    if (currentVan.pedidos.length > 0) {
-                        vanLoads.push(currentVan);
-                    }
-                    // Start a new one
-                    currentVan = { pedidos: [], totalKg: 0, totalCubagem: 0, numero: vanLoads.length + 1 };
-                }
-
-                // Add entire client group to current Van
-                currentVan.pedidos = currentVan.pedidos.concat(clientGroup.pedidos);
-                currentVan.totalKg += clientGroup.totalKg;
-                currentVan.totalCubagem += clientGroup.totalCubagem;
-            });
-
-            // Push the last Van load if it contains orders
-            if (currentVan.pedidos.length > 0) {
-                vanLoads.push(currentVan);
-            } else {
-                // If it doesn't meet minimum weight, add its orders to trulyUnassignedPedidos
-                trulyUnassignedPedidos = trulyUnassignedPedidos.concat(currentVan.pedidos);
-            }
-
-            // Re-number the Van loads for display
-            vanLoads.forEach((van, index) => {
-                van.numero = index + 1;
-            });
-
-            // Calculate total weight of truly unassigned pedidos
-            let totalKgTrulyUnassigned = trulyUnassignedPedidos.reduce((sum, pedido) => sum + (parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0), 0);
-
-            // Display results
-            let html = `<h3>${finalFiorinoLoads.length} Carga(s) de Fiorino para a Rota 11101:</h3>`;
             finalFiorinoLoads.forEach(fiorino => {
+                let maxDist = 0;
+                const cities = new Set(fiorino.pedidos.map(p => p.Cidade.toUpperCase().trim()));
+                for (const city of cities) {
+                    const dist = distanciasCidades[city] || 0;
+                    if (dist > maxDist) {
+                        maxDist = dist;
+                    }
+                }
+                fiorino.distancia = maxDist * 2; // Round trip
+            });
+
+            finalFiorinoLoads.sort((a, b) => b.distancia - a.distancia);
+            finalFiorinoLoads.forEach((f, index) => f.numero = index + 1);
+
+            let leftoverPedidos = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
+            
+            let vanLoad = null;
+            let trulyUnassignedPedidos = [];
+            const totalLeftoverKg = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+            const totalLeftoverCubagem = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+
+            if (totalLeftoverKg >= MIN_KG_VAN && totalLeftoverKg <= MAX_KG_VAN && totalLeftoverCubagem <= MAX_CUBAGEM_VAN) {
+                vanLoad = {
+                    pedidos: leftoverPedidos,
+                    totalKg: totalLeftoverKg,
+                    totalCubagem: totalLeftoverCubagem,
+                    numero: 1
+                };
+            } else {
+                trulyUnassignedPedidos = leftoverPedidos;
+            }
+
+            let html = `<h3>${finalFiorinoLoads.length} Carga(s) de Fiorino para ${title}:</h3>`;
+            if (finalFiorinoLoads.length === 0) {
+                html += '<p>Nenhuma carga de Fiorino foi formada.</p>';
+            }
+            finalFiorinoLoads.forEach((fiorino, index) => {
                 const totalKgFormatado = fiorino.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const totalCubagemFormatado = fiorino.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const distanciaFormatada = fiorino.distancia > 0 ? `(Aprox. ${fiorino.distancia} km)` : '';
 
                 html += `
                     <div class="card mb-3">
                         <div class="card-header bg-primary text-white">
-                            Fiorino ${fiorino.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} cubagem
+                            Fiorino ${fiorino.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} cubagem ${distanciaFormatada}
                         </div>
                         <div class="card-body">
                             ${createTable(fiorino.pedidos)}
@@ -550,41 +468,38 @@
                 `;
             });
 
-            // Display van information
-            if (vanLoads.length > 0) {
-                html += `<h3 class="mt-4">${vanLoads.length} Carga(s) de Van:</h3>`;
-                vanLoads.forEach(van => {
-                    const totalKgFormatado = van.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    const totalCubagemFormatado = van.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-                    html += `
-                        <div class="card mb-3">
-                            <div class="card-header bg-success text-white">
-                                Van ${van.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} cubagem
-                            </div>
-                            <div class="card-body">
-                                ${createTable(van.pedidos)}
-                            </div>
+            if (vanLoad) {
+                html += `<h3 class="mt-4">1 Carga de Van:</h3>`;
+                const totalKgFormatado = vanLoad.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const totalCubagemFormatado = vanLoad.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                html += `
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            Van 1 - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} cubagem
                         </div>
-                    `;
-                });
+                        <div class="card-body">
+                            ${createTable(vanLoad.pedidos)}
+                        </div>
+                    </div>
+                `;
             }
 
-            if (totalKgTrulyUnassigned > 0) {
-                html += `<h4 class="mt-4">Pedidos restantes (não couberam em Fiorinos ou Vans): ${totalKgTrulyUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h4>`;
+            if (trulyUnassignedPedidos.length > 0) {
+                const totalKgUnassigned = trulyUnassignedPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                html += `<h4 class="mt-4">Pedidos restantes (não couberam em Fiorinos ou Vans): ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h4>`;
                 html += `
                     <div class="card mb-3">
                         <div class="card-header bg-danger text-white">
                             Detalhes dos Pedidos Restantes
                         </div>
                         <div class="card-body">
-                            ${createTable(trulyUnassignedPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])} 
+                            ${createTable(trulyUnassignedPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}
                         </div>
                     </div>
                 `;
             }
-
-            resultadoFiorinoDiv.innerHTML = html;
+            
+            resultadoDiv.innerHTML = html;
         }
 
         function displayToco(div, grupos) {
@@ -597,7 +512,7 @@
                 accordionHtml += `
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingToco${index}">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}">
                                 <strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2">${pedidos.length} pedidos</span> <span class="badge bg-info ms-2">${totalKgFormatado} kg</span>
                             </button>
                         </h2>
