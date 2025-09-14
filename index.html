@@ -224,11 +224,13 @@
         let gruposToco = {};
 
         const distanciasCidades = {
+            // Distâncias estimadas em km de Rolândia.
+            // Estes valores são aproximados e podem precisar de ajuste.
             'LONDRINA': 25,
             'CAMBE': 15,
             'ARAPONGAS': 10,
             'APUCARANA': 30,
-            'MARINGA': 65,
+            'MARINGA': 60, // Atualizado de 65 para 60 com base na pesquisa
             'IBIPORA': 40,
             'SERTANOPOLIS': 60,
             'JATAIZINHO': 50,
@@ -238,7 +240,68 @@
             'JANDAIA DO SUL': 45,
             'MANDAGUARI': 80,
             'PORECATU': 85,
-            'PARANAPOEMA': 130
+            'PARANAPOEMA': 130,
+            'ITAMBARACA': 85, // Adicionado com base na solicitação do usuário
+            'CURITIBA': 400,
+            'PONTA GROSSA': 300,
+            'IMBAU': 200,
+            'ORTIGUEIRA': 180,
+            'MAUA DA SERRA': 100,
+            'CALIFORNIA': 50,
+            'CAMPO LARGO': 380,
+            'SAO JOSE DOS PINHAIS': 420,
+            'FOZ DO IGUACU': 550,
+            'COLOMBO': 410,
+            'GUARAPUAVA': 350,
+            'PARANAGUA': 450,
+            'TOLEDO': 400,
+            'PINHAIS': 400,
+            'ARAUCARIA': 400,
+            'UMUARAMA': 250,
+            'PARANAVAI': 150,
+            'FRANCISCO BELTRAO': 450,
+            'CAMPO MOURAO': 180,
+            'SARANDI': 70,
+            'PATO BRANCO': 400,
+            'TELEMACO BORBA': 250,
+            'CASTRO': 300,
+            'IRATI': 350,
+            'UNIAO DA VITORIA': 450,
+            'PRUDENTOPOLIS': 300,
+            'MARECHAL CANDIDO RONDON': 400,
+            'SANTO ANTONIO DA PLATINA': 150,
+            'LAPA': 400,
+            'PALMAS': 450,
+            'SAO MATEUS DO SUL': 400,
+            'JACAREZINHO': 150,
+            'MEDIANEIRA': 500,
+            'PAICANDU': 70,
+            'GUARATUBA': 500,
+            'JAGUARIAIVA': 200,
+            'RIO BRANCO DO SUL': 400,
+            'PALMEIRA': 350,
+            'QUEDAS DO IGUACU': 450,
+            'LARANJEIRAS DO SUL': 350,
+            'GUAIRA': 300,
+            'GOIOERE': 150,
+            'IBAITI': 150,
+            'PALOTINA': 350,
+            'IMBITUVA': 300,
+            'ARAPOTI': 200,
+            'NOVA ESPERANCA': 100,
+            'RESERVA': 200,
+            'ASTORGA': 50,
+            'CAMBARA': 100,
+            'CAMPO MAGRO': 400,
+            'PIRAI DO SUL': 250,
+            'MATINHOS': 500,
+            'ITAPERUCU': 400,
+            'CORONEL VIVIDA': 400,
+            'ANDIRA': 100,
+            'MANDIRITUBA': 400,
+            'CRUZEIRO DO OESTE': 200,
+            'SANTA TEREZINHA DE ITAIPU': 550,
+            'SENGES': 200,
         };
 
         const fileInput = document.getElementById('fileInput');
@@ -283,6 +346,27 @@
             };
             reader.readAsArrayBuffer(file);
         });
+
+        function calculateEstimatedDistance(pedidos) {
+            const uniqueCities = new Set();
+            pedidos.forEach(p => {
+                if (p.Cidade) {
+                    uniqueCities.add(String(p.Cidade).toUpperCase().trim());
+                }
+            });
+
+            let totalDistance = 0;
+            uniqueCities.forEach(city => {
+                if (distanciasCidades[city]) {
+                    totalDistance += distanciasCidades[city];
+                } else {
+                    console.warn(`Distância para a cidade '${city}' não encontrada.`);
+                    // Optionally, handle unknown cities, e.g., assign a default distance or alert the user
+                }
+            });
+            // Assuming round trip from origin to each city and back
+            return totalDistance * 1.50;
+        }
 
         function processar() {
             const resultadoGeralDiv = document.getElementById('resultado-geral');
@@ -888,7 +972,13 @@
                 }
             });
 
-            finalFiorinoLoads.forEach((fiorino, index) => { fiorino.numero = index + 1; });
+            finalFiorinoLoads.forEach((fiorino, index) => { 
+                fiorino.numero = index + 1;
+                fiorino.estimatedDistance = calculateEstimatedDistance(fiorino.pedidos); // Calculate estimated distance
+            });
+
+            // Sort finalFiorinoLoads by estimatedDistance for "best load" indication
+            finalFiorinoLoads.sort((a, b) => a.estimatedDistance - b.estimatedDistance);
 
             let leftoverPedidos = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             
@@ -903,10 +993,11 @@
             finalFiorinoLoads.forEach((fiorino, index) => {
                 const totalKgFormatado = fiorino.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const totalCubagemFormatado = fiorino.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const estimatedDistanceFormatted = fiorino.estimatedDistance.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
                 html += `
                     <div class="card mb-3">
                         <div class="card-header bg-success text-white">
-                            Fiorino ${fiorino.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³
+                            Fiorino ${fiorino.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³ (Distância Estimada: ${estimatedDistanceFormatted} km)
                         </div>
                         <div class="card-body">
                             ${createTable(fiorino.pedidos)}
@@ -1130,7 +1221,7 @@
             
             let contentToPrint = '<h3>Cargas de Van Concluídas</h3>';
             completedLoadsHeaders.forEach(header => {
-                // Ensure it's not a fallback from fiorino section
+                // Ensure it\'s not a fallback from fiorino section
                 if(header.closest('#resultado-fiorino-geral')) return;
                 contentToPrint += header.closest('.card.mb-3').outerHTML;
             });
