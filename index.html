@@ -30,6 +30,15 @@
         .status-message {
             min-height: 24px; /* Prevent layout shift */
         }
+
+        .btn-success, .btn-primary, .btn-warning {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn-success:hover, .btn-primary:hover, .btn-warning:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
         @media print {
             body {
                 background-color: #fff; /* White background for printing */
@@ -109,33 +118,12 @@
         </div>
 
         <div class="row">
-            <div class="col-lg-6 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <h2 class="card-title h5">Resultados das Cargas "Toco"</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Grupos de cargas onde a Coluna4/5 contém "TOCO" e o CF se repete.</p>
-                        <div id="resultado-toco"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5">Resultados Gerais</h2>
                         <p class="card-subtitle mb-2 text-body-secondary small">Pedidos que não são 'Toco', agrupados por rota.</p>
                         <div id="resultado-geral"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-lg-12 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <h2 class="card-title h5">Resultados Cargas 3/4</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Cargas formadas a partir de um pedido muito grande.</p>
-                        <div id="resultado-tres-quartos"></div>
                     </div>
                 </div>
             </div>
@@ -159,6 +147,69 @@
                 </div>
             </div>
         </div>
+
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h2 class="card-title h5">Separação de Cargas (Van)</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Van para separar as cargas.</p>
+                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11102', 'resultado-van-geral', 'Rota 11102')">Rota 11102</button>
+                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11331', 'resultado-van-geral', 'Rota 11331')">Rota 11331</button>
+                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11341', 'resultado-van-geral', 'Rota 11341')">Rota 11341</button>
+                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11342', 'resultado-van-geral', 'Rota 11342')">Rota 11342</button>
+                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11351', 'resultado-van-geral', 'Rota 11351')">Rota 11351</button>
+                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11521', 'resultado-van-geral', 'Rota 11521')">Rota 11521</button>
+                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11531', 'resultado-van-geral', 'Rota 11531')">Rota 11531</button>
+                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11551', 'resultado-van-geral', 'Rota 11551')">Rota 11551</button>
+                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11571', 'resultado-van-geral', 'Rota 11571')">Rota 11571</button>
+                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11701', 'resultado-van-geral', 'Rota 11701')">Rota 11701</button>
+                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11711', 'resultado-van-geral', 'Rota 11711')">Rota 11711</button>
+                        <div id="resultado-van-geral" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h2 class="card-title h5">Separação de Cargas (3/4)</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de 3/4 para separar as cargas.</p>
+                        <button class="btn btn-warning mt-2" onclick="separarCargas34('11361', 'resultado-34-geral', 'Rota 11361')">Rota 11361</button>
+                        <button class="btn btn-warning mt-2" onclick="separarCargas34(['11501', '11502', '11511'], 'resultado-34-geral', 'Rotas 11501, 11502 & 11511')">Rotas 11501, 11502 & 11511</button>
+                        <button class="btn btn-warning mt-2" onclick="separarCargas34('11541', 'resultado-34-geral', 'Rota 11541')">Rota 11541</button>
+                        <div id="resultado-34-geral" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h2 class="card-title h5">Resultados Cargas 3/4 (Automático)</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Cargas formadas a partir de um pedido muito grande.</p>
+                        <div id="resultado-tres-quartos"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h2 class="card-title h5">Resultados das Cargas "Toco"</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Grupos de cargas onde a Coluna4/5 contém "TOCO" e o CF se repete.</p>
+                        <div id="resultado-toco"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-lg-12 mb-4">
                  <button class="btn btn-info mt-2" onclick="window.print()">Imprimir Todos os Resultados</button>
@@ -170,6 +221,7 @@
     <script>
         let planilhaData = [];
         let pedidosGeraisAtuais = [];
+        let gruposToco = {};
 
         const distanciasCidades = {
             'LONDRINA': 25,
@@ -255,7 +307,7 @@
                 pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(String(p.CF))) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
                 const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
                 const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
-                const gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
+                gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
                     const cf = p.CF;
                     if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; }
                     acc[cf].pedidos.push(p);
@@ -393,7 +445,10 @@
                 div.innerHTML = '<div class="text-center p-3">Nenhuma carga 3/4 formada.</div>';
                 return;
             }
-            let html = '';
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2">
+                            <h3 class="mb-0">Resultados Cargas 3/4 (Automático):</h3>
+                            ${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargasTresQuartosAutomatico('${div.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Concluídas</button>` : ''}
+                        </div>`;
             loads.forEach(load => {
                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 html += `
@@ -410,6 +465,336 @@
             div.innerHTML = html;
         }
 
+        function separarCargas34(routeOrRoutes, divId, title) {
+            const resultadoDiv = document.getElementById(divId);
+            resultadoDiv.innerHTML = '';
+            if (planilhaData.length === 0) {
+                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
+                return;
+            }
+
+            const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
+            
+            const MIN_KG_3_4 = 2300;
+            const MAX_KG_3_4 = 4100;
+
+            const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
+            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
+            const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
+
+            let packableItems = [];
+            const otherPedidos = pedidosRota.filter(p => !isSpecialClient(p));
+            const specialPedidos = pedidosRota.filter(p => isSpecialClient(p));
+
+            specialPedidos.forEach(pedido => {
+                packableItems.push({
+                    isSpecial: true,
+                    pedidos: [pedido],
+                    totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
+                    totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
+                });
+            });
+
+            const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
+                const clienteId = pedido.Cliente;
+                if (!acc[clienteId]) {
+                    acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                }
+                acc[clienteId].pedidos.push(pedido);
+                return acc;
+            }, {});
+            
+            Object.values(otherClientGroupsMap).forEach(group => {
+                group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+                packableItems.push(group);
+            });
+
+            packableItems.sort((a, b) => b.totalKg - a.totalKg);
+
+            let tresQuartosLoads = [];
+            let leftoverItems = [];
+
+            packableItems.forEach(item => {
+                if (item.totalKg > MAX_KG_3_4) {
+                    leftoverItems.push(item);
+                    return;
+                }
+
+                let placed = false;
+                for (const load of tresQuartosLoads) {
+                    const specialCountInLoad = load.pedidos.filter(p => isSpecialClient(p)).length;
+                    const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
+
+                    if ( (load.totalKg + item.totalKg <= MAX_KG_3_4) &&
+                         (specialCountInLoad + specialOrdersInItem <= 2) )
+                    {
+                        load.pedidos.push(...item.pedidos);
+                        load.totalKg += item.totalKg;
+                        load.totalCubagem += item.totalCubagem;
+                        placed = true;
+                        break;
+                    }
+                }
+
+                if (!placed) {
+                    tresQuartosLoads.push({
+                        pedidos: [...item.pedidos],
+                        totalKg: item.totalKg,
+                        totalCubagem: item.totalCubagem,
+                    });
+                }
+            });
+
+            let finalLoads = [];
+            let unplacedFromMinRule = [];
+            tresQuartosLoads.forEach(load => {
+                if (load.totalKg >= MIN_KG_3_4) {
+                    finalLoads.push(load);
+                } else {
+                    unplacedFromMinRule.push(...load.pedidos);
+                }
+            });
+
+            finalLoads.forEach((load, index) => { load.numero = index + 1; });
+
+            let leftoverPedidos = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
+            
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2">
+                            <h3 class="mb-0">${finalLoads.length} Carga(s) de 3/4 para ${title}:</h3>
+                            ${finalLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargas34('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Concluídas</button>` : ''}
+                        </div>`;
+
+            if (finalLoads.length === 0) {
+                html += '<p>Nenhuma carga de 3/4 foi formada.</p>';
+            }
+            finalLoads.forEach(load => {
+                const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                html += `
+                    <div class="card mb-3">
+                        <div class="card-header bg-warning text-dark">
+                            Carga 3/4 #${load.numero} - Total: ${totalKgFormatado} kg
+                        </div>
+                        <div class="card-body">
+                            ${createTable(load.pedidos)}
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (leftoverPedidos.length > 0) {
+                const totalKgUnassigned = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                html += `<h4 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h4>`;
+                html += `
+                    <div class="card mb-3">
+                        <div class="card-header bg-danger text-white">
+                            Detalhes dos Pedidos Restantes
+                        </div>
+                        <div class="card-body">
+                            ${createTable(leftoverPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            resultadoDiv.innerHTML = html;
+        }
+
+        function separarCargasVan(routeOrRoutes, divId, title) {
+            const resultadoDiv = document.getElementById(divId);
+            resultadoDiv.innerHTML = '';
+            if (planilhaData.length === 0) {
+                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
+                return;
+            }
+
+            const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
+            
+            const MIN_KG_VAN = 1100;
+            const MAX_KG_VAN = 1560;
+            const MAX_CUBAGEM_VAN = 5.0;
+
+            const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
+            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
+            const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
+
+            let packableItems = [];
+            const otherPedidos = pedidosRota.filter(p => !isSpecialClient(p));
+            const specialPedidos = pedidosRota.filter(p => isSpecialClient(p));
+
+            specialPedidos.forEach(pedido => {
+                packableItems.push({
+                    isSpecial: true,
+                    pedidos: [pedido],
+                    totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
+                    totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
+                });
+            });
+
+            const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
+                const clienteId = pedido.Cliente;
+                if (!acc[clienteId]) {
+                    acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                }
+                acc[clienteId].pedidos.push(pedido);
+                return acc;
+            }, {});
+            
+            Object.values(otherClientGroupsMap).forEach(group => {
+                group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+                packableItems.push(group);
+            });
+
+            packableItems.sort((a, b) => b.totalKg - a.totalKg);
+
+            let vanLoads = [];
+            let leftoverItems = [];
+
+            packableItems.forEach(item => {
+                if (item.totalKg > MAX_KG_VAN || item.totalCubagem > MAX_CUBAGEM_VAN) {
+                    leftoverItems.push(item);
+                    return;
+                }
+
+                let placed = false;
+                for (const van of vanLoads) {
+                    const specialCountInVan = van.pedidos.filter(p => isSpecialClient(p)).length;
+                    const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
+
+                    if ( (van.totalKg + item.totalKg <= MAX_KG_VAN) &&
+                         (van.totalCubagem + item.totalCubagem <= MAX_CUBAGEM_VAN) &&
+                         (specialCountInVan + specialOrdersInItem <= 2) )
+                    {
+                        van.pedidos.push(...item.pedidos);
+                        van.totalKg += item.totalKg;
+                        van.totalCubagem += item.totalCubagem;
+                        placed = true;
+                        break;
+                    }
+                }
+
+                if (!placed) {
+                    vanLoads.push({
+                        pedidos: [...item.pedidos],
+                        totalKg: item.totalKg,
+                        totalCubagem: item.totalCubagem,
+                    });
+                }
+            });
+
+            let finalVanLoads = [];
+            let unplacedFromMinRule = [];
+            vanLoads.forEach(van => {
+                if (van.totalKg >= MIN_KG_VAN) {
+                    finalVanLoads.push(van);
+                } else {
+                    unplacedFromMinRule.push(...van.pedidos);
+                }
+            });
+
+            finalVanLoads.forEach((van, index) => { van.numero = index + 1; });
+
+            let leftoverPedidos = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
+            
+            let tresQuartosLoads = [];
+            if (finalVanLoads.length === 0 && leftoverPedidos.length > 0) {
+                const MIN_KG_3_4 = 2300;
+                const MAX_KG_3_4 = 4100;
+                const LARGE_ORDER_KG = 1700;
+
+                const largeOrders = leftoverPedidos.filter(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= LARGE_ORDER_KG);
+                
+                if (largeOrders.length === 1) {
+                    const largeOrder = largeOrders[0];
+                    let newLoad = {
+                        pedidos: [largeOrder],
+                        totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0,
+                        rota: largeOrder.Cod_Rota,
+                        numero: 1
+                    };
+
+                    const otherOrders = leftoverPedidos
+                        .filter(p => p.Num_Pedido !== largeOrder.Num_Pedido)
+                        .sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
+
+                    for (const order of otherOrders) {
+                        const orderKg = parseFloat(String(order.Quilos_Saldo).replace(',', '.')) || 0;
+                        if (newLoad.totalKg + orderKg <= MAX_KG_3_4) {
+                            newLoad.pedidos.push(order);
+                            newLoad.totalKg += orderKg;
+                        }
+                    }
+
+                    if (newLoad.totalKg >= MIN_KG_3_4) {
+                        tresQuartosLoads.push(newLoad);
+                        const usedPedidos = new Set(newLoad.pedidos.map(p => p.Num_Pedido));
+                        leftoverPedidos = leftoverPedidos.filter(p => !usedPedidos.has(p.Num_Pedido));
+                    }
+                }
+            }
+
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2">
+                            <h3 class="mb-0">${finalVanLoads.length} Carga(s) de Van para ${title}:</h3>
+                            ${finalVanLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargasVan('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Concluídas</button>` : ''}
+                        </div>`;
+
+            if (finalVanLoads.length === 0) {
+                html += '<p>Nenhuma carga de Van foi formada.</p>';
+            }
+            finalVanLoads.forEach(van => {
+                const totalKgFormatado = van.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const totalCubagemFormatado = van.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                html += `
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            Van ${van.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³
+                        </div>
+                        <div class="card-body">
+                            ${createTable(van.pedidos)}
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (tresQuartosLoads.length > 0) {
+                html += `<div class="d-flex justify-content-between align-items-center mb-2">
+                                <h3 class="mb-0">1 Carga de 3/4 (Fallback da Van):</h3>
+                                <button class="btn btn-sm btn-outline-warning" onclick="imprimirCargas34Fallback('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Cargas 3/4 (Fallback)</button>
+                            </div>`;
+                tresQuartosLoads.forEach(load => {
+                    const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    html += `
+                        <div class="card mb-3">
+                            <div class="card-header bg-warning text-dark">
+                                Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg
+                            </div>
+                            <div class="card-body">
+                                ${createTable(load.pedidos)}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            if (leftoverPedidos.length > 0) {
+                const totalKgUnassigned = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                html += `<h4 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h4>`;
+                html += `
+                    <div class="card mb-3">
+                        <div class="card-header bg-danger text-white">
+                            Detalhes dos Pedidos Restantes
+                        </div>
+                        <div class="card-body">
+                            ${createTable(leftoverPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            resultadoDiv.innerHTML = html;
+        }
+
         function separarCargasFiorino(routeOrRoutes, divId, title) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '';
@@ -423,9 +808,6 @@
             const MAX_KG_FIORINO = 570;
             const MAX_CUBAGEM_FIORINO = 1.5;
             const MIN_KG_FIORINO = 330;
-            const MIN_KG_VAN = 1040;
-            const MAX_KG_VAN = 1550;
-            const MAX_CUBAGEM_VAN = 5.50;
 
             const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
@@ -506,52 +888,25 @@
                 }
             });
 
-            finalFiorinoLoads.forEach(fiorino => {
-                let maxDist = 0;
-                const cities = new Set(fiorino.pedidos.map(p => p.Cidade.toUpperCase().trim()));
-                for (const city of cities) {
-                    const dist = distanciasCidades[city] || 0;
-                    if (dist > maxDist) {
-                        maxDist = dist;
-                    }
-                }
-                fiorino.distancia = maxDist * 2; // Round trip
-            });
-
-            finalFiorinoLoads.sort((a, b) => b.distancia - a.distancia);
-            finalFiorinoLoads.forEach((f, index) => f.numero = index + 1);
+            finalFiorinoLoads.forEach((fiorino, index) => { fiorino.numero = index + 1; });
 
             let leftoverPedidos = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             
-            let vanLoad = null;
-            let trulyUnassignedPedidos = [];
-            const totalLeftoverKg = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-            const totalLeftoverCubagem = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2">
+                            <h3 class="mb-0">${finalFiorinoLoads.length} Carga(s) de Fiorino para ${title}:</h3>
+                            ${finalFiorinoLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargas('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Concluídas</button>` : ''}
+                        </div>`;
 
-            if (totalLeftoverKg >= MIN_KG_VAN && totalLeftoverKg <= MAX_KG_VAN && totalLeftoverCubagem <= MAX_CUBAGEM_VAN) {
-                vanLoad = {
-                    pedidos: leftoverPedidos,
-                    totalKg: totalLeftoverKg,
-                    totalCubagem: totalLeftoverCubagem,
-                    numero: 1
-                };
-            } else {
-                trulyUnassignedPedidos = leftoverPedidos;
-            }
-
-            let html = `<h3>${finalFiorinoLoads.length} Carga(s) de Fiorino para ${title}:</h3>`;
             if (finalFiorinoLoads.length === 0) {
                 html += '<p>Nenhuma carga de Fiorino foi formada.</p>';
             }
             finalFiorinoLoads.forEach((fiorino, index) => {
                 const totalKgFormatado = fiorino.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const totalCubagemFormatado = fiorino.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const distanciaFormatada = fiorino.distancia > 0 ? `(Aprox. ${fiorino.distancia} km)` : '';
-
                 html += `
                     <div class="card mb-3">
-                        <div class="card-header bg-primary text-white">
-                            Fiorino ${fiorino.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} cubagem ${distanciaFormatada}
+                        <div class="card-header bg-success text-white">
+                            Fiorino ${fiorino.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³
                         </div>
                         <div class="card-body">
                             ${createTable(fiorino.pedidos)}
@@ -560,32 +915,126 @@
                 `;
             });
 
-            if (vanLoad) {
-                html += `<h3 class="mt-4">1 Carga de Van:</h3>`;
-                const totalKgFormatado = vanLoad.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const totalCubagemFormatado = vanLoad.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                html += `
-                    <div class="card mb-3">
-                        <div class="card-header bg-success text-white">
-                            Van 1 - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} cubagem
-                        </div>
-                        <div class="card-body">
-                            ${createTable(vanLoad.pedidos)}
-                        </div>
-                    </div>
-                `;
+            // *** START: Fallback logic for Van from Fiorino leftovers ***
+            let vanLoadsFromLeftovers = [];
+            if (leftoverPedidos.length > 0) {
+                const MIN_KG_VAN = 1100;
+                const MAX_KG_VAN = 1560;
+                const MAX_CUBAGEM_VAN = 5.0;
+
+                let packableItemsVan = [];
+                const otherPedidosVan = leftoverPedidos.filter(p => !isSpecialClient(p));
+                const specialPedidosVan = leftoverPedidos.filter(p => isSpecialClient(p));
+
+                specialPedidosVan.forEach(pedido => {
+                    packableItemsVan.push({
+                        isSpecial: true,
+                        pedidos: [pedido],
+                        totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
+                        totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
+                    });
+                });
+
+                const otherClientGroupsMapVan = otherPedidosVan.reduce((acc, pedido) => {
+                    const clienteId = pedido.Cliente;
+                    if (!acc[clienteId]) {
+                        acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                    }
+                    acc[clienteId].pedidos.push(pedido);
+                    return acc;
+                }, {});
+                
+                Object.values(otherClientGroupsMapVan).forEach(group => {
+                    group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                    group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+                    packableItemsVan.push(group);
+                });
+
+                packableItemsVan.sort((a, b) => b.totalKg - a.totalKg);
+
+                let potentialVanLoads = [];
+                let leftoverItemsVan = [];
+
+                packableItemsVan.forEach(item => {
+                    if (item.totalKg > MAX_KG_VAN || item.totalCubagem > MAX_CUBAGEM_VAN) {
+                        leftoverItemsVan.push(item);
+                        return;
+                    }
+
+                    let placed = false;
+                    for (const van of potentialVanLoads) {
+                        const specialCountInVan = van.pedidos.filter(p => isSpecialClient(p)).length;
+                        const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
+
+                        if ( (van.totalKg + item.totalKg <= MAX_KG_VAN) &&
+                             (van.totalCubagem + item.totalCubagem <= MAX_CUBAGEM_VAN) &&
+                             (specialCountInVan + specialOrdersInItem <= 2) )
+                        {
+                            van.pedidos.push(...item.pedidos);
+                            van.totalKg += item.totalKg;
+                            van.totalCubagem += item.totalCubagem;
+                            placed = true;
+                            break;
+                        }
+                    }
+
+                    if (!placed) {
+                        potentialVanLoads.push({
+                            pedidos: [...item.pedidos],
+                            totalKg: item.totalKg,
+                            totalCubagem: item.totalCubagem,
+                        });
+                    }
+                });
+
+                let unplacedFromMinRuleVan = [];
+                potentialVanLoads.forEach(van => {
+                    if (van.totalKg >= MIN_KG_VAN) {
+                        vanLoadsFromLeftovers.push(van);
+                    } else {
+                        unplacedFromMinRuleVan.push(...van.pedidos);
+                    }
+                });
+
+                if (vanLoadsFromLeftovers.length > 0) {
+                    const usedPedidos = new Set(vanLoadsFromLeftovers.flatMap(l => l.pedidos).map(p => p.Num_Pedido));
+                    leftoverPedidos = leftoverItemsVan.flatMap(item => item.pedidos).concat(unplacedFromMinRuleVan).filter(p => !usedPedidos.has(p.Num_Pedido));
+                }
             }
 
-            if (trulyUnassignedPedidos.length > 0) {
-                const totalKgUnassigned = trulyUnassignedPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                html += `<h4 class="mt-4">Pedidos restantes (não couberam em Fiorinos ou Vans): ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h4>`;
+            if (vanLoadsFromLeftovers.length > 0) {
+                html += `<div class="d-flex justify-content-between align-items-center mb-2">
+                                <h3 class="mb-0 text-info">Carga de Van (Fallback da Fiorino):</h3>
+                                <button class="btn btn-sm btn-outline-info" onclick="imprimirCargasVanFallback('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Cargas Van (Fallback)</button>
+                            </div>`;
+                vanLoadsFromLeftovers.forEach((van, index) => {
+                    van.numero = index + 1;
+                    const totalKgFormatado = van.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const totalCubagemFormatado = van.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    html += `
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                Van ${van.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³
+                            </div>
+                            <div class="card-body">
+                                ${createTable(van.pedidos)}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            // *** END: Fallback logic ***
+
+            if (leftoverPedidos.length > 0) {
+                const totalKgUnassigned = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                html += `<h4 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h4>`;
                 html += `
                     <div class="card mb-3">
                         <div class="card-header bg-danger text-white">
                             Detalhes dos Pedidos Restantes
                         </div>
                         <div class="card-body">
-                            ${createTable(trulyUnassignedPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}
+                            ${createTable(leftoverPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}
                         </div>
                     </div>
                 `;
@@ -608,11 +1057,328 @@
                                 <strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2">${pedidos.length} pedidos</span> <span class="badge bg-info ms-2">${totalKgFormatado} kg</span>
                             </button>
                         </h2>
-                        <div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body">${createTable(pedidos)}</div></div>
+                        <div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body">
+                            <button class="btn btn-sm btn-outline-info mb-3" onclick="imprimirTocoIndividual('${cf}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir esta Carga Toco</button>
+                            ${createTable(pedidos)}</div></div>
                     </div>`;
             });
             accordionHtml += '</div>';
             div.innerHTML = accordionHtml;
+        }
+
+        function imprimirCargas(divId) {
+            const divToPrint = document.getElementById(divId);
+            if (!divToPrint) return;
+
+            const completedLoadsHeaders = divToPrint.querySelectorAll('.card-header.bg-success');
+            if (completedLoadsHeaders.length === 0) {
+                alert("Nenhuma carga de Fiorino concluída para imprimir.");
+                return;
+            }
+
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>Imprimir Cargas de Fiorino Concluídas</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .card { break-inside: avoid; margin-bottom: 1rem; }
+                .card-header { background-color: #198754 !important; color: #fff !important; }
+                .table-responsive { overflow: visible !important; }
+                table, th, td { border: 1px solid #dee2e6 !important; }
+                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
+            `);
+            printWindow.document.write('</style></head><body>');
+            
+            let contentToPrint = '<h3>Cargas de Fiorino Concluídas</h3>';
+            completedLoadsHeaders.forEach(header => {
+                contentToPrint += header.closest('.card.mb-3').outerHTML;
+            });
+
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { 
+                printWindow.print(); 
+                printWindow.close(); 
+            }, 500);
+        }
+
+        function imprimirCargasVan(divId) {
+            const divToPrint = document.getElementById(divId);
+            if (!divToPrint) return;
+
+            const completedLoadsHeaders = divToPrint.querySelectorAll('.card-header.bg-info');
+            if (completedLoadsHeaders.length === 0) {
+                alert("Nenhuma carga de Van concluída para imprimir.");
+                return;
+            }
+
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>Imprimir Cargas de Van Concluídas</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .card { break-inside: avoid; margin-bottom: 1rem; }
+                .card-header { background-color: #0dcaf0 !important; color: #fff !important; }
+                .table-responsive { overflow: visible !important; }
+                table, th, td { border: 1px solid #dee2e6 !important; }
+                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
+            `);
+            printWindow.document.write('</style></head><body>');
+            
+            let contentToPrint = '<h3>Cargas de Van Concluídas</h3>';
+            completedLoadsHeaders.forEach(header => {
+                // Ensure it's not a fallback from fiorino section
+                if(header.closest('#resultado-fiorino-geral')) return;
+                contentToPrint += header.closest('.card.mb-3').outerHTML;
+            });
+
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { 
+                printWindow.print(); 
+                printWindow.close(); 
+            }, 500);
+        }
+
+        function imprimirCargas34(divId) {
+            const divToPrint = document.getElementById(divId);
+            if (!divToPrint) return;
+
+            const completedLoadsHeaders = divToPrint.querySelectorAll('.card-header.bg-warning');
+            if (completedLoadsHeaders.length === 0) {
+                alert("Nenhuma carga de 3/4 concluída para imprimir.");
+                return;
+            }
+
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>Imprimir Cargas de 3/4 Concluídas</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .card { break-inside: avoid; margin-bottom: 1rem; }
+                .card-header { background-color: #ffc107 !important; color: #000 !important; }
+                .table-responsive { overflow: visible !important; }
+                table, th, td { border: 1px solid #dee2e6 !important; }
+                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
+            `);
+            printWindow.document.write('</style></head><body>');
+            
+            let contentToPrint = '<h3>Cargas de 3/4 Concluídas</h3>';
+            completedLoadsHeaders.forEach(header => {
+                contentToPrint += header.closest('.card.mb-3').outerHTML;
+            });
+
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { 
+                printWindow.print(); 
+                printWindow.close(); 
+            }, 500);
+        }
+
+        function imprimirCargasTresQuartosAutomatico(divId) {
+            const divToPrint = document.getElementById(divId);
+            if (!divToPrint) return;
+
+            const completedLoadsHeaders = divToPrint.querySelectorAll('.card-header.bg-warning');
+            if (completedLoadsHeaders.length === 0) {
+                alert("Nenhuma carga 3/4 automática concluída para imprimir.");
+                return;
+            }
+
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>Imprimir Cargas 3/4 Automáticas Concluídas</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .card { break-inside: avoid; margin-bottom: 1rem; }
+                .card-header { background-color: #ffc107 !important; color: #000 !important; }
+                .table-responsive { overflow: visible !important; }
+                table, th, td { border: 1px solid #dee2e6 !important; }
+                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
+            `);
+            printWindow.document.write('</style></head><body>');
+            
+            let contentToPrint = '<h3>Cargas de 3/4 Automáticas Concluídas</h3>';
+            completedLoadsHeaders.forEach(header => {
+                contentToPrint += header.closest('.card.mb-3').outerHTML;
+            });
+
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { 
+                printWindow.print(); 
+                printWindow.close(); 
+            }, 500);
+        }
+
+        function imprimirCargasVanFallback(divId) {
+            const divToPrint = document.getElementById(divId);
+            if (!divToPrint) return;
+
+            // Select only the cards within the fallback van section
+            const fallbackVanSection = divToPrint.querySelector('h3.text-info');
+            if (!fallbackVanSection) {
+                alert("Nenhuma carga de Van (Fallback da Fiorino) para imprimir.");
+                return;
+            }
+            
+            let contentToPrint = '';
+            let currentElement = fallbackVanSection.closest('div.d-flex').nextElementSibling; // Start from the first card after the header
+
+            while (currentElement && currentElement.classList.contains('card')) {
+                contentToPrint += currentElement.outerHTML;
+                currentElement = currentElement.nextElementSibling;
+            }
+
+            if (contentToPrint === '') {
+                alert("Nenhuma carga de Van (Fallback da Fiorino) para imprimir.");
+                return;
+            }
+
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>Imprimir Cargas de Van (Fallback da Fiorino)</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .card { break-inside: avoid; margin-bottom: 1rem; }
+                .card-header { background-color: #0dcaf0 !important; color: #fff !important; }
+                .table-responsive { overflow: visible !important; }
+                table, th, td { border: 1px solid #dee2e6 !important; }
+                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
+            `);
+            printWindow.document.write('</style></head><body>');
+            
+            printWindow.document.body.innerHTML = '<h3>Cargas de Van (Fallback da Fiorino)</h3>' + contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { 
+                printWindow.print(); 
+                printWindow.close(); 
+            }, 500);
+        }
+
+        function imprimirCargas34Fallback(divId) {
+            const divToPrint = document.getElementById(divId);
+            if (!divToPrint) return;
+
+            // Select only the cards within the fallback 3/4 section
+            const fallback34Section = divToPrint.querySelector('h3:contains("Carga de 3/4 (Fallback da Van)")');
+            if (!fallback34Section) {
+                alert("Nenhuma carga de 3/4 (Fallback da Van) para imprimir.");
+                return;
+            }
+            
+            let contentToPrint = '';
+            let currentElement = fallback34Section.closest('div.d-flex').nextElementSibling; // Start from the first card after the header
+
+            while (currentElement && currentElement.classList.contains('card')) {
+                contentToPrint += currentElement.outerHTML;
+                currentElement = currentElement.nextElementSibling;
+            }
+
+            if (contentToPrint === '') {
+                alert("Nenhuma carga de 3/4 (Fallback da Van) para imprimir.");
+                return;
+            }
+
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>Imprimir Cargas de 3/4 (Fallback da Van)</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .card { break-inside: avoid; margin-bottom: 1rem; }
+                .card-header { background-color: #ffc107 !important; color: #000 !important; }
+                .table-responsive { overflow: visible !important; }
+                table, th, td { border: 1px solid #dee2e6 !important; }
+                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
+            `);
+            printWindow.document.write('</style></head><body>');
+            
+            printWindow.document.body.innerHTML = '<h3>Cargas de 3/4 (Fallback da Van)</h3>' + contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { 
+                printWindow.print(); 
+                printWindow.close(); 
+            }, 500);
+        }
+
+        function imprimirCargasToco() {
+            const divToPrint = document.getElementById('resultado-toco');
+            if (!divToPrint) return;
+
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>Imprimir Cargas "Toco"</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .accordion-item { break-inside: avoid; margin-bottom: 1rem; }
+                .accordion-button { background-color: #f8f9fa !important; color: #000 !important; border: 1px solid #dee2e6 !important; }
+                .accordion-body { background-color: #fff !important; }
+                .table-responsive { overflow: visible !important; }
+                table, th, td { border: 1px solid #dee2e6 !important; }
+                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
+            `);
+            printWindow.document.write('</style></head><body>');
+            
+            let contentToPrint = '<h3>Cargas "Toco"</h3>';
+            contentToPrint += divToPrint.innerHTML;
+
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { 
+                printWindow.print(); 
+                printWindow.close(); 
+            }, 500);
+        }
+
+        function imprimirTocoIndividual(cf) {
+            if (!gruposToco[cf]) {
+                alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`);
+                return;
+            }
+
+            const grupo = gruposToco[cf];
+            const pedidos = grupo.pedidos;
+            const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>Imprimir Carga Toco CF: ' + cf + '</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .card { break-inside: avoid; margin-bottom: 1rem; }
+                .card-header { background-color: #f8f9fa !important; color: #000 !important; border: 1px solid #dee2e6 !important; }
+                .table-responsive { overflow: visible !important; }
+                table, th, td { border: 1px solid #dee2e6 !important; }
+                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
+            `);
+            printWindow.document.write('</style></head><body>');
+            
+            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>`;
+            contentToPrint += createTable(pedidos); // Reusing createTable function
+
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { 
+                printWindow.print(); 
+                printWindow.close(); 
+            }, 500);
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
