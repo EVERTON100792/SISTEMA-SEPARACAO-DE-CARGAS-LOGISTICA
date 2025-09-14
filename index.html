@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Separação de Cargas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
             background-color: #212529;
@@ -123,6 +124,11 @@
                     <div class="card-body">
                         <h2 class="card-title h5">Resultados Gerais</h2>
                         <p class="card-subtitle mb-2 text-body-secondary small">Pedidos que não são 'Toco', agrupados por rota.</p>
+                        <div class="input-group mb-3">
+                            <input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar por Nº do Pedido...">
+                            <button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()">Buscar</button>
+                        </div>
+                        <div id="search-result" class="mb-3"></div>
                         <div id="resultado-geral"></div>
                     </div>
                 </div>
@@ -222,6 +228,8 @@
         let planilhaData = [];
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
+        let pedidosPrioritarios = [];
+        let tocoPedidoIds = new Set();
 
         const distanciasCidades = {
             // Distâncias estimadas em km de Rolândia.
@@ -368,6 +376,114 @@
             return totalDistance * 1.50;
         }
 
+        function buscarPedido() {
+            const searchInput = document.getElementById('pedidoSearchInput').value.trim();
+            const searchResultDiv = document.getElementById('search-result');
+            searchResultDiv.innerHTML = '';
+            if (!searchInput) return;
+
+            if (planilhaData.length === 0) {
+                searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>';
+                return;
+            }
+
+            let pedidoEncontrado = null;
+            let local = 'Não encontrado';
+            let accordionId = '';
+
+            // 1. Search in Resultados Gerais
+            pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
+            if (pedidoEncontrado) {
+                local = 'Resultados Gerais';
+                accordionId = 'accordionGeral';
+            }
+
+            // 2. Search in Toco
+            if (!pedidoEncontrado) {
+                for (const cf in gruposToco) {
+                    pedidoEncontrado = gruposToco[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
+                    if (pedidoEncontrado) {
+                        local = `Cargas "Toco" (CF: ${cf})`;
+                        accordionId = 'accordionToco';
+                        break;
+                    }
+                }
+            }
+            
+            // 3. Search in the original data to see if it was filtered out
+            if (!pedidoEncontrado) {
+                const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
+                if (originalPedido) {
+                    pedidoEncontrado = originalPedido; // Use for display
+                    if (tocoPedidoIds.has(String(originalPedido.Num_Pedido))) {
+                        local = 'Filtrado (pertence a um grupo Toco)';
+                    } else if (['21', '23', '17'].includes(String(originalPedido.Coluna4))) {
+                        local = 'Filtrado (Coluna4 é 21, 23, ou 17)';
+                    } else if (String(originalPedido['BLOQ.']) === 'C' || String(originalPedido['BLOQ.']) === 'V') {
+                        local = 'Filtrado (Bloqueio C ou V)';
+                    } else {
+                        local = 'Filtrado (outro motivo, verifique filtros de rota ou cliente)';
+                    }
+                }
+            }
+
+            if (pedidoEncontrado) {
+                let buttons = '';
+                if (local === 'Resultados Gerais') {
+                    const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
+                    buttons = `
+                        <button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>
+                            ${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}
+                        </button>
+                        <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">
+                            Destacar na Lista
+                        </button>
+                    `;
+                } else if (accordionId) {
+                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">
+                        Destacar na Lista
+                    </button>`;
+                }
+
+                searchResultDiv.innerHTML = `
+                    <div class="alert alert-info">
+                        <h5>Pedido ${searchInput} encontrado!</h5>
+                        <p class="mb-1"><strong>Local:</strong> ${local}</p>
+                        <p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br>
+                           <strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>
+                        ${buttons ? `<div class="mt-2">${buttons}</div>` : ''}
+                    </div>
+                `;
+            } else {
+                searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>';
+            }
+        }
+
+        function priorizarPedido(numPedido) {
+            if (!pedidosPrioritarios.includes(numPedido)) {
+                pedidosPrioritarios.push(numPedido);
+                buscarPedido(); 
+            }
+        }
+
+        function highlightPedido(numPedido) {
+            const row = document.getElementById(`pedido-${numPedido}`);
+            if (row) {
+                row.classList.toggle('table-info');
+
+                if (row.classList.contains('table-info')) {
+                    const collapseEl = row.closest('.accordion-collapse');
+                    if (collapseEl && !collapseEl.classList.contains('show')) {
+                        bootstrap.Collapse.getOrCreateInstance(collapseEl).show();
+                    }
+                    
+                    setTimeout(() => {
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 350);
+                }
+            }
+        }
+
         function processar() {
             const resultadoGeralDiv = document.getElementById('resultado-geral');
             const resultadoTocoDiv = document.getElementById('resultado-toco');
@@ -400,7 +516,7 @@
                 }, {});
                 displayToco(resultadoTocoDiv, gruposToco);
 
-                const tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
+                tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
                 const clientesComBloqueio = new Set();
                 const clientesSemBloqueio = new Set();
                 pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
@@ -496,7 +612,7 @@
             colunasExibir.forEach(c => table += `<th>${c}</th>`);
             table += '</tr></thead><tbody>';
             pedidos.forEach(p => {
-                table += '<tr>';
+                table += `<tr id="pedido-${p.Num_Pedido}">`;
                 colunasExibir.forEach(c => table += `<td>${p[c] === undefined || p[c] === null ? '' : p[c]}</td>`);
                 table += '</tr>';
             });
@@ -594,7 +710,13 @@
                 packableItems.push(group);
             });
 
-            packableItems.sort((a, b) => b.totalKg - a.totalKg);
+            const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
+            const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
+
+            priorityItems.sort((a, b) => b.totalKg - a.totalKg);
+            regularItems.sort((a, b) => b.totalKg - a.totalKg);
+
+            packableItems = [...priorityItems, ...regularItems];
 
             let tresQuartosLoads = [];
             let leftoverItems = [];
@@ -633,7 +755,8 @@
             let finalLoads = [];
             let unplacedFromMinRule = [];
             tresQuartosLoads.forEach(load => {
-                if (load.totalKg >= MIN_KG_3_4) {
+                const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+                if (hasPriority || load.totalKg >= MIN_KG_3_4) {
                     finalLoads.push(load);
                 } else {
                     unplacedFromMinRule.push(...load.pedidos);
@@ -654,10 +777,12 @@
             }
             finalLoads.forEach(load => {
                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+                const priorityBadge = isPriorityLoad ? '<span class="badge bg-dark ms-3">PRIORIDADE</span>' : '';
                 html += `
-                    <div class="card mb-3">
+                    <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
                         <div class="card-header bg-warning text-dark">
-                            Carga 3/4 #${load.numero} - Total: ${totalKgFormatado} kg
+                            Carga 3/4 #${load.numero} - Total: ${totalKgFormatado} kg ${priorityBadge}
                         </div>
                         <div class="card-body">
                             ${createTable(load.pedidos)}
@@ -770,7 +895,8 @@
             let finalVanLoads = [];
             let unplacedFromMinRule = [];
             vanLoads.forEach(van => {
-                if (van.totalKg >= MIN_KG_VAN) {
+                const hasPriority = van.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+                if (hasPriority || van.totalKg >= MIN_KG_VAN) {
                     finalVanLoads.push(van);
                 } else {
                     unplacedFromMinRule.push(...van.pedidos);
@@ -829,10 +955,12 @@
             finalVanLoads.forEach(van => {
                 const totalKgFormatado = van.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const totalCubagemFormatado = van.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const isPriorityLoad = van.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+                const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
                 html += `
-                    <div class="card mb-3">
+                    <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
                         <div class="card-header bg-info text-white">
-                            Van ${van.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³
+                            Van ${van.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³ ${priorityBadge}
                         </div>
                         <div class="card-body">
                             ${createTable(van.pedidos)}
@@ -841,25 +969,115 @@
                 `;
             });
 
-            if (tresQuartosLoads.length > 0) {
+            // *** START: Fallback logic for Van from Fiorino leftovers ***
+            let vanLoadsFromLeftovers = [];
+            if (leftoverPedidos.length > 0) {
+                const MIN_KG_VAN = 1100;
+                const MAX_KG_VAN = 1560;
+                const MAX_CUBAGEM_VAN = 5.0;
+
+                let packableItemsVan = [];
+                const otherPedidosVan = leftoverPedidos.filter(p => !isSpecialClient(p));
+                const specialPedidosVan = leftoverPedidos.filter(p => isSpecialClient(p));
+
+                specialPedidosVan.forEach(pedido => {
+                    packableItemsVan.push({
+                        isSpecial: true,
+                        pedidos: [pedido],
+                        totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
+                        totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
+                    });
+                });
+
+                const otherClientGroupsMapVan = otherPedidosVan.reduce((acc, pedido) => {
+                    const clienteId = pedido.Cliente;
+                    if (!acc[clienteId]) {
+                        acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                    }
+                    acc[clienteId].pedidos.push(pedido);
+                    return acc;
+                }, {});
+                
+                Object.values(otherClientGroupsMapVan).forEach(group => {
+                    group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                    group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+                    packableItemsVan.push(group);
+                });
+
+                packableItemsVan.sort((a, b) => b.totalKg - a.totalKg);
+
+                let potentialVanLoads = [];
+                let leftoverItemsVan = [];
+
+                packableItemsVan.forEach(item => {
+                    if (item.totalKg > MAX_KG_VAN || item.totalCubagem > MAX_CUBAGEM_VAN) {
+                        leftoverItemsVan.push(item);
+                        return;
+                    }
+
+                    let placed = false;
+                    for (const van of potentialVanLoads) {
+                        const specialCountInVan = van.pedidos.filter(p => isSpecialClient(p)).length;
+                        const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
+
+                        if ( (van.totalKg + item.totalKg <= MAX_KG_VAN) &&
+                             (van.totalCubagem + item.totalCubagem <= MAX_CUBAGEM_VAN) &&
+                             (specialCountInVan + specialOrdersInItem <= 2) )
+                        {
+                            van.pedidos.push(...item.pedidos);
+                            van.totalKg += item.totalKg;
+                            van.totalCubagem += item.totalCubagem;
+                            placed = true;
+                            break;
+                        }
+                    }
+
+                    if (!placed) {
+                        potentialVanLoads.push({
+                            pedidos: [...item.pedidos],
+                            totalKg: item.totalKg,
+                            totalCubagem: item.totalCubagem,
+                        });
+                    }
+                });
+
+                let unplacedFromMinRuleVan = [];
+                potentialVanLoads.forEach(van => {
+                    if (van.totalKg >= MIN_KG_VAN) {
+                        vanLoadsFromLeftovers.push(van);
+                    } else {
+                        unplacedFromMinRuleVan.push(...van.pedidos);
+                    }
+                });
+
+                if (vanLoadsFromLeftovers.length > 0) {
+                    const usedPedidos = new Set(vanLoadsFromLeftovers.flatMap(l => l.pedidos).map(p => p.Num_Pedido));
+                    leftoverPedidos = leftoverItemsVan.flatMap(item => item.pedidos).concat(unplacedFromMinRuleVan).filter(p => !usedPedidos.has(p.Num_Pedido));
+                }
+            }
+
+            if (vanLoadsFromLeftovers.length > 0) {
                 html += `<div class="d-flex justify-content-between align-items-center mb-2">
-                                <h3 class="mb-0">1 Carga de 3/4 (Fallback da Van):</h3>
-                                <button class="btn btn-sm btn-outline-warning" onclick="imprimirCargas34Fallback('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Cargas 3/4 (Fallback)</button>
+                                <h3 class="mb-0 text-info">Carga de Van (Fallback da Fiorino):</h3>
+                                <button class="btn btn-sm btn-outline-info" onclick="imprimirCargasVanFallback('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Cargas Van (Fallback)</button>
                             </div>`;
-                tresQuartosLoads.forEach(load => {
-                    const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                vanLoadsFromLeftovers.forEach((van, index) => {
+                    van.numero = index + 1;
+                    const totalKgFormatado = van.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const totalCubagemFormatado = van.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     html += `
                         <div class="card mb-3">
-                            <div class="card-header bg-warning text-dark">
-                                Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg
+                            <div class="card-header bg-info text-white">
+                                Van ${van.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³
                             </div>
                             <div class="card-body">
-                                ${createTable(load.pedidos)}
+                                ${createTable(van.pedidos)}
                             </div>
                         </div>
                     `;
                 });
             }
+            // *** END: Fallback logic ***
 
             if (leftoverPedidos.length > 0) {
                 const totalKgUnassigned = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
@@ -965,7 +1183,8 @@
             let finalFiorinoLoads = [];
             let unplacedFromMinRule = [];
             fiorinoLoads.forEach(fiorino => {
-                if (fiorino.totalKg >= MIN_KG_FIORINO) {
+                const hasPriority = fiorino.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+                if (hasPriority || fiorino.totalKg >= MIN_KG_FIORINO) {
                     finalFiorinoLoads.push(fiorino);
                 } else {
                     unplacedFromMinRule.push(...fiorino.pedidos);
@@ -994,10 +1213,12 @@
                 const totalKgFormatado = fiorino.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const totalCubagemFormatado = fiorino.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const estimatedDistanceFormatted = fiorino.estimatedDistance.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                const isPriorityLoad = fiorino.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+                const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
                 html += `
-                    <div class="card mb-3">
+                    <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
                         <div class="card-header bg-success text-white">
-                            Fiorino ${fiorino.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³ (Distância Estimada: ${estimatedDistanceFormatted} km)
+                            Fiorino ${fiorino.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³ (Distância Estimada: ${estimatedDistanceFormatted} km) ${priorityBadge}
                         </div>
                         <div class="card-body">
                             ${createTable(fiorino.pedidos)}
