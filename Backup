@@ -6,7 +6,11 @@
     <title>Dashboard de Separação de Cargas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCTOoSIYhPcFu8EUwULBa4vlW53LMSkOsI&libraries=routes"></script>
+
     <style>
+        /* ... (todo o seu CSS continua o mesmo) ... */
         body {
             background-color: #212529;
         }
@@ -52,6 +56,7 @@
                 box-shadow: none !important;
             }
             /* Hide elements not relevant for printing */
+            .no-print,
             .d-flex.align-items-center.mb-3, /* Title and truck icon */
             .card.p-3.mb-4.shadow-sm, /* Input form */
             button, /* All buttons */
@@ -69,7 +74,7 @@
                 border: 1px solid #dee2e6 !important;
                 color: #000 !important;
             }
-            h3, h4, h5 {
+            h1, h2, h3, h4, h5 {
                 color: #000 !important;
                 margin-top: 1rem;
                 margin-bottom: 0.5rem;
@@ -89,6 +94,17 @@
                 color: #000 !important;
             }
         }
+        #drop-zone-text {
+            border: 2px dashed #495057;
+            border-radius: .25rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        }
+        #drop-zone.border-primary #drop-zone-text {
+            border-color: #0d6efd;
+        }
     </style>
 </head>
 <body>
@@ -98,11 +114,15 @@
             <h1 class="mb-0">Dashboard de Separação de Cargas</h1>
         </div>
 
-        <div class="card p-3 mb-4 shadow-sm">
+        <div class="card p-3 mb-4 shadow-sm no-print" id="drop-zone">
             <div class="row g-3 align-items-center">
                 <div class="col-md-4">
-                    <label for="fileInput" class="form-label fw-bold">1. Selecione a Planilha:</label>
-                    <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv">
+                    <label for="fileInput" class="form-label fw-bold">1. Arraste e solte a planilha ou clique para selecionar:</label>
+                    <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv" style="display: none;">
+                    <div id="drop-zone-text" class="text-center p-5 border-2 border-dashed rounded-3">
+                        <p>Arraste e solte o arquivo aqui</p>
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">Selecionar Arquivo</button>
+                    </div>
                 </div>
                 <div class="col-md-5">
                     <label class="form-label fw-bold">2. Defina a Faixa de Rotas (Opcional):</label>
@@ -118,13 +138,91 @@
             <div id="status" class="mt-2 status-message"></div>
         </div>
 
+        <div class="card p-3 mb-4 shadow-sm no-print">
+            <h2 class="card-title h5">Configurações de Veículos</h2>
+            <p class="card-subtitle mb-3 text-body-secondary small">Defina as capacidades de peso e cubagem para cada tipo de veículo. Suas configurações serão salvas automaticamente.</p>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="fiorinoMaxCapacity" class="form-label">Fiorino - Peso Máx (kg)</label>
+                    <input type="number" class="form-control config-input" id="fiorinoMaxCapacity" value="570" step="10">
+                </div>
+                <div class="col-md-3">
+                    <label for="fiorinoMinCapacity" class="form-label">Fiorino - Peso Mín (kg)</label>
+                    <input type="number" class="form-control config-input" id="fiorinoMinCapacity" value="330" step="10">
+                </div>
+                <div class="col-md-3">
+                    <label for="fiorinoCubage" class="form-label">Fiorino - Cubagem Máx (m³)</label>
+                    <input type="number" class="form-control config-input" id="fiorinoCubage" value="1.5" step="0.1">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-secondary w-100" id="resetFiorino">Reset Fiorino</button>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="vanMaxCapacity" class="form-label">Van - Peso Máx (kg)</label>
+                    <input type="number" class="form-control config-input" id="vanMaxCapacity" value="1560" step="10">
+                </div>
+                <div class="col-md-3">
+                    <label for="vanMinCapacity" class="form-label">Van - Peso Mín (kg)</label>
+                    <input type="number" class="form-control config-input" id="vanMinCapacity" value="1100" step="10">
+                </div>
+                <div class="col-md-3">
+                    <label for="vanCubage" class="form-label">Van - Cubagem Máx (m³)</label>
+                    <input type="number" class="form-control config-input" id="vanCubage" value="5.0" step="0.1">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-secondary w-100" id="resetVan">Reset Van</button>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="tresQuartosMaxCapacity" class="form-label">3/4 - Peso Máx (kg)</label>
+                    <input type="number" class="form-control config-input" id="tresQuartosMaxCapacity" value="4100" step="10">
+                </div>
+                <div class="col-md-3">
+                    <label for="tresQuartosMinCapacity" class="form-label">3/4 - Peso Mín (kg)</label>
+                    <input type="number" class="form-control config-input" id="tresQuartosMinCapacity" value="2300" step="10">
+                </div>
+                <div class="col-md-3">
+                    <label for="tresQuartosCubage" class="form-label">3/4 - Cubagem Máx (m³)</label>
+                    <input type="number" class="form-control config-input" id="tresQuartosCubage" value="15.0" step="0.1">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-secondary w-100" id="resetTresQuartos">Reset 3/4</button>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="tocoMaxCapacity" class="form-label">Toco - Peso Máx (kg)</label>
+                    <input type="number" class="form-control config-input" id="tocoMaxCapacity" value="8500" step="10">
+                </div>
+                <div class="col-md-3">
+                    <label for="tocoMinCapacity" class="form-label">Toco - Peso Mín (kg)</label>
+                    <input type="number" class="form-control config-input" id="tocoMinCapacity" value="5000" step="10">
+                </div>
+                <div class="col-md-3">
+                    <label for="tocoCubage" class="form-label">Toco - Cubagem Máx (m³)</label>
+                    <input type="number" class="form-control config-input" id="tocoCubage" value="30.0" step="0.1">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-secondary w-100" id="resetToco">Reset Toco</button>
+                </div>
+            </div>
+            <div class="mt-3 d-flex justify-content-end">
+                <button class="btn btn-success me-2" id="saveConfig">Salvar Configurações</button>
+                <button class="btn btn-danger" id="resetAllConfigs">Resetar Todas</button>
+            </div>
+             <div id="configStatus" class="mt-2 status-message"></div>
+        </div>
+
         <div class="row">
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h2 class="card-title h5">Resultados Gerais</h2>
+                        <div class="d-flex justify-content-between align-items-center">
+                             <h2 class="card-title h5">Resultados Gerais</h2>
+                             <button class="btn btn-sm btn-outline-light no-print" onclick="window.print()">🖨️ Imprimir Tudo</button>
+                        </div>
                         <p class="card-subtitle mb-2 text-body-secondary small">Pedidos que não são 'Toco', agrupados por rota.</p>
-                        <div class="input-group mb-3">
+                        <div class="input-group mb-3 no-print">
                             <input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar por Nº do Pedido...">
                             <button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()">Buscar</button>
                         </div>
@@ -142,11 +240,13 @@
                         <h2 class="card-title h5">Separação de Cargas (Fiorino)</h2>
                         <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Fiorino para separar as cargas.</p>
                         
-                        <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11101', 'resultado-fiorino-geral', 'Rota 11101')">Rota 11101</button>
-                        <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11301', 'resultado-fiorino-geral', 'Rota 11301')">Rota 11301</button>
-                        <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11311', 'resultado-fiorino-geral', 'Rota 11311')">Rota 11311</button>
-                        <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11561', 'resultado-fiorino-geral', 'Rota 11561')">Rota 11561</button>
-                        <button class="btn btn-success mt-2" onclick="separarCargasFiorino(['11721', '11731'], 'resultado-fiorino-geral', 'Rotas 11721 & 11731')">Rotas 11721 & 11731</button>
+                        <div class="no-print">
+                            <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11101', 'resultado-fiorino-geral', 'Rota 11101')">Rota 11101</button>
+                            <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11301', 'resultado-fiorino-geral', 'Rota 11301')">Rota 11301</button>
+                            <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11311', 'resultado-fiorino-geral', 'Rota 11311')">Rota 11311</button>
+                            <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11561', 'resultado-fiorino-geral', 'Rota 11561')">Rota 11561</button>
+                            <button class="btn btn-success mt-2" onclick="separarCargasFiorino(['11721', '11731'], 'resultado-fiorino-geral', 'Rotas 11721 & 11731')">Rotas 11721 & 11731</button>
+                        </div>
                         
                         <div id="resultado-fiorino-geral" class="mt-3"></div>
                     </div>
@@ -160,17 +260,19 @@
                     <div class="card-body">
                         <h2 class="card-title h5">Separação de Cargas (Van)</h2>
                         <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Van para separar as cargas.</p>
-                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11102', 'resultado-van-geral', 'Rota 11102')">Rota 11102</button>
-                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11331', 'resultado-van-geral', 'Rota 11331')">Rota 11331</button>
-                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11341', 'resultado-van-geral', 'Rota 11341')">Rota 11341</button>
-                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11342', 'resultado-van-geral', 'Rota 11342')">Rota 11342</button>
-                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11351', 'resultado-van-geral', 'Rota 11351')">Rota 11351</button>
-                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11521', 'resultado-van-geral', 'Rota 11521')">Rota 11521</button>
-                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11531', 'resultado-van-geral', 'Rota 11531')">Rota 11531</button>
-                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11551', 'resultado-van-geral', 'Rota 11551')">Rota 11551</button>
-                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11571', 'resultado-van-geral', 'Rota 11571')">Rota 11571</button>
-                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11701', 'resultado-van-geral', 'Rota 11701')">Rota 11701</button>
-                        <button class="btn btn-primary mt-2" onclick="separarCargasVan('11711', 'resultado-van-geral', 'Rota 11711')">Rota 11711</button>
+                        <div class="no-print">
+                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11102', 'resultado-van-geral', 'Rota 11102')">Rota 11102</button>
+                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11331', 'resultado-van-geral', 'Rota 11331')">Rota 11331</button>
+                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11341', 'resultado-van-geral', 'Rota 11341')">Rota 11341</button>
+                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11342', 'resultado-van-geral', 'Rota 11342')">Rota 11342</button>
+                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11351', 'resultado-van-geral', 'Rota 11351')">Rota 11351</button>
+                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11521', 'resultado-van-geral', 'Rota 11521')">Rota 11521</button>
+                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11531', 'resultado-van-geral', 'Rota 11531')">Rota 11531</button>
+                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11551', 'resultado-van-geral', 'Rota 11551')">Rota 11551</button>
+                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11571', 'resultado-van-geral', 'Rota 11571')">Rota 11571</button>
+                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11701', 'resultado-van-geral', 'Rota 11701')">Rota 11701</button>
+                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11711', 'resultado-van-geral', 'Rota 11711')">Rota 11711</button>
+                        </div>
                         <div id="resultado-van-geral" class="mt-3"></div>
                     </div>
                 </div>
@@ -183,9 +285,11 @@
                     <div class="card-body">
                         <h2 class="card-title h5">Separação de Cargas (3/4)</h2>
                         <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de 3/4 para separar as cargas.</p>
-                        <button class="btn btn-warning mt-2" onclick="separarCargas34('11361', 'resultado-34-geral', 'Rota 11361')">Rota 11361</button>
-                        <button class="btn btn-warning mt-2" onclick="separarCargas34(['11501', '11502', '11511'], 'resultado-34-geral', 'Rotas 11501, 11502 & 11511')">Rotas 11501, 11502 & 11511</button>
-                        <button class="btn btn-warning mt-2" onclick="separarCargas34('11541', 'resultado-34-geral', 'Rota 11541')">Rota 11541</button>
+                        <div class="no-print">
+                            <button class="btn btn-warning mt-2" onclick="separarCargas34('11361', 'resultado-34-geral', 'Rota 11361')">Rota 11361</button>
+                            <button class="btn btn-warning mt-2" onclick="separarCargas34(['11501', '11502', '11511'], 'resultado-34-geral', 'Rotas 11501, 11502 & 11511')">Rotas 11501, 11502 & 11511</button>
+                            <button class="btn btn-warning mt-2" onclick="separarCargas34('11541', 'resultado-34-geral', 'Rota 11541')">Rota 11541</button>
+                        </div>
                         <div id="resultado-34-geral" class="mt-3"></div>
                     </div>
                 </div>
@@ -215,109 +319,159 @@
                 </div>
             </div>
         </div>
-
-        <div class="row">
-            <div class="col-lg-12 mb-4">
-                 <button class="btn btn-info mt-2" onclick="window.print()">Imprimir Todos os Resultados</button>
-            </div>
-        </div>
     </div>
+
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
+        // *** INÍCIO DA NOVA FUNÇÃO PARA CÁLCULO DE DISTÂNCIA VIA API ***
+        // Armazena as cargas finalizadas para que a função da API possa acessá-las
+        let CargasFiorinoFinalizadas = new Map();
+
+        async function calculateApiDistance(loadId) {
+            const resultSpan = document.getElementById(`dist-${loadId}`);
+            const loadData = CargasFiorinoFinalizadas.get(loadId);
+
+            if (!loadData) {
+                resultSpan.textContent = "Erro: Carga não encontrada.";
+                return;
+            }
+
+            resultSpan.innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculando...`;
+
+            const uniqueCities = [...new Set(loadData.pedidos.map(p => String(p.Cidade).toUpperCase().trim()))];
+            if (uniqueCities.length === 0) {
+                resultSpan.textContent = "Nenhuma cidade encontrada.";
+                return;
+            }
+
+            const directionsService = new google.maps.DirectionsService();
+            const origin = 'Rolândia, PR, Brasil';
+            const destination = 'Rolândia, PR, Brasil';
+            const waypoints = uniqueCities.map(city => ({ location: `${city}, PR, Brasil`, stopover: true }));
+
+            try {
+                const response = await directionsService.route({
+                    origin: origin,
+                    destination: destination,
+                    waypoints: waypoints,
+                    optimizeWaypoints: true,
+                    travelMode: google.maps.TravelMode.DRIVING,
+                });
+                
+                let totalDistance = 0;
+                response.routes[0].legs.forEach(leg => {
+                    totalDistance += leg.distance.value;
+                });
+
+                const totalKm = (totalDistance / 1000).toFixed(1);
+                resultSpan.innerHTML = `<strong>Distância Otimizada: ${totalKm} km</strong>`;
+
+            } catch (e) {
+                console.error("Erro na API de Direções:", e);
+                resultSpan.textContent = "Erro ao calcular rota.";
+                 if (e.code === 'ZERO_RESULTS') {
+                    resultSpan.textContent = "Rota não encontrada (verifique cidades).";
+                 } else if (e.code === 'REQUEST_DENIED') {
+                    resultSpan.innerHTML = `<strong>Erro: Chave de API inválida ou não configurada.</strong>`;
+                 }
+            }
+        }
+        // *** FIM DA NOVA FUNÇÃO ***
+
         let planilhaData = [];
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
         let pedidosPrioritarios = [];
         let tocoPedidoIds = new Set();
 
-        const distanciasCidades = {
-            // Distâncias estimadas em km de Rolândia.
-            // Estes valores são aproximados e podem precisar de ajuste.
-            'LONDRINA': 25,
-            'CAMBE': 15,
-            'ARAPONGAS': 10,
-            'APUCARANA': 30,
-            'MARINGA': 60, // Atualizado de 65 para 60 com base na pesquisa
-            'IBIPORA': 40,
-            'SERTANOPOLIS': 60,
-            'JATAIZINHO': 50,
-            'CORNELIO PROCOPIO': 85,
-            'BANDEIRANTES': 115,
-            'SANTA MARIANA': 100,
-            'JANDAIA DO SUL': 45,
-            'MANDAGUARI': 80,
-            'PORECATU': 85,
-            'PARANAPOEMA': 130,
-            'ITAMBARACA': 85, // Adicionado com base na solicitação do usuário
-            'CURITIBA': 400,
-            'PONTA GROSSA': 300,
-            'IMBAU': 200,
-            'ORTIGUEIRA': 180,
-            'MAUA DA SERRA': 100,
-            'CALIFORNIA': 50,
-            'CAMPO LARGO': 380,
-            'SAO JOSE DOS PINHAIS': 420,
-            'FOZ DO IGUACU': 550,
-            'COLOMBO': 410,
-            'GUARAPUAVA': 350,
-            'PARANAGUA': 450,
-            'TOLEDO': 400,
-            'PINHAIS': 400,
-            'ARAUCARIA': 400,
-            'UMUARAMA': 250,
-            'PARANAVAI': 150,
-            'FRANCISCO BELTRAO': 450,
-            'CAMPO MOURAO': 180,
-            'SARANDI': 70,
-            'PATO BRANCO': 400,
-            'TELEMACO BORBA': 250,
-            'CASTRO': 300,
-            'IRATI': 350,
-            'UNIAO DA VITORIA': 450,
-            'PRUDENTOPOLIS': 300,
-            'MARECHAL CANDIDO RONDON': 400,
-            'SANTO ANTONIO DA PLATINA': 150,
-            'LAPA': 400,
-            'PALMAS': 450,
-            'SAO MATEUS DO SUL': 400,
-            'JACAREZINHO': 150,
-            'MEDIANEIRA': 500,
-            'PAICANDU': 70,
-            'GUARATUBA': 500,
-            'JAGUARIAIVA': 200,
-            'RIO BRANCO DO SUL': 400,
-            'PALMEIRA': 350,
-            'QUEDAS DO IGUACU': 450,
-            'LARANJEIRAS DO SUL': 350,
-            'GUAIRA': 300,
-            'GOIOERE': 150,
-            'IBAITI': 150,
-            'PALOTINA': 350,
-            'IMBITUVA': 300,
-            'ARAPOTI': 200,
-            'NOVA ESPERANCA': 100,
-            'RESERVA': 200,
-            'ASTORGA': 50,
-            'CAMBARA': 100,
-            'CAMPO MAGRO': 400,
-            'PIRAI DO SUL': 250,
-            'MATINHOS': 500,
-            'ITAPERUCU': 400,
-            'CORONEL VIVIDA': 400,
-            'ANDIRA': 100,
-            'MANDIRITUBA': 400,
-            'CRUZEIRO DO OESTE': 200,
-            'SANTA TEREZINHA DE ITAIPU': 550,
-            'SENGES': 200,
+        const defaultConfigs = {
+            fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.5,
+            vanMaxCapacity: 1560, vanMinCapacity: 1100, vanCubage: 5.0,
+            tresQuartosMaxCapacity: 4100, tresQuartosMinCapacity: 2300, tresQuartosCubage: 15.0,
+            tocoMaxCapacity: 8500, tocoMinCapacity: 5000, tocoCubage: 30.0
         };
 
+        function saveConfigurations() {
+            const configStatus = document.getElementById('configStatus');
+            try {
+                const configs = {};
+                Object.keys(defaultConfigs).forEach(key => { configs[key] = document.getElementById(key).value; });
+                localStorage.setItem('vehicleConfigs', JSON.stringify(configs));
+                configStatus.innerHTML = '<p class="text-success">Configurações salvas com sucesso!</p>';
+                setTimeout(() => { configStatus.innerHTML = ''; }, 3000);
+            } catch (error) {
+                configStatus.innerHTML = '<p class="text-danger">Erro ao salvar as configurações.</p>';
+            }
+        }
+
+        function loadConfigurations() {
+            const savedConfigs = localStorage.getItem('vehicleConfigs');
+            const configs = savedConfigs ? JSON.parse(savedConfigs) : defaultConfigs;
+            Object.keys(configs).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) { element.value = configs[key]; }
+            });
+        }
+        
+        function resetFiorino() {
+            document.getElementById('fiorinoMaxCapacity').value = defaultConfigs.fiorinoMaxCapacity;
+            document.getElementById('fiorinoMinCapacity').value = defaultConfigs.fiorinoMinCapacity;
+            document.getElementById('fiorinoCubage').value = defaultConfigs.fiorinoCubage;
+            saveConfigurations();
+        }
+        function resetVan() {
+            document.getElementById('vanMaxCapacity').value = defaultConfigs.vanMaxCapacity;
+            document.getElementById('vanMinCapacity').value = defaultConfigs.vanMinCapacity;
+            document.getElementById('vanCubage').value = defaultConfigs.vanCubage;
+            saveConfigurations();
+        }
+        function resetTresQuartos() {
+            document.getElementById('tresQuartosMaxCapacity').value = defaultConfigs.tresQuartosMaxCapacity;
+            document.getElementById('tresQuartosMinCapacity').value = defaultConfigs.tresQuartosMinCapacity;
+            document.getElementById('tresQuartosCubage').value = defaultConfigs.tresQuartosCubage;
+            saveConfigurations();
+        }
+        function resetToco() {
+            document.getElementById('tocoMaxCapacity').value = defaultConfigs.tocoMaxCapacity;
+            document.getElementById('tocoMinCapacity').value = defaultConfigs.tocoMinCapacity;
+            document.getElementById('tocoCubage').value = defaultConfigs.tocoCubage;
+            saveConfigurations();
+        }
+        function resetAll() {
+            Object.keys(defaultConfigs).forEach(key => { document.getElementById(key).value = defaultConfigs[key]; });
+            saveConfigurations();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfigurations();
+            document.getElementById('saveConfig').addEventListener('click', saveConfigurations);
+            document.getElementById('resetFiorino').addEventListener('click', resetFiorino);
+            document.getElementById('resetVan').addEventListener('click', resetVan);
+            document.getElementById('resetTresQuartos').addEventListener('click', resetTresQuartos);
+            document.getElementById('resetToco').addEventListener('click', resetToco);
+            document.getElementById('resetAllConfigs').addEventListener('click', resetAll);
+        });
+
+        const rotaVeiculoMap = {
+            '11101': 'Fiorino', '11301': 'Fiorino', '11311': 'Fiorino', '11561': 'Fiorino', '11721': 'Fiorino', '11731': 'Fiorino',
+            '11102': 'Van', '11331': 'Van', '11341': 'Van', '11342': 'Van', '11351': 'Van', '11521': 'Van', '11531': 'Van', '11551': 'Van', '11571': 'Van', '11701': 'Van', '11711': 'Van',
+            '11361': '3/4', '11501': '3/4', '11502': '3/4', '11511': '3/4', '11541': '3/4',
+        };
+        
         const fileInput = document.getElementById('fileInput');
         const processarBtn = document.getElementById('processarBtn');
         const statusDiv = document.getElementById('status');
+        const dropZone = document.getElementById('drop-zone');
+        const dropZoneText = document.getElementById('drop-zone-text');
+        const isNumeric = (str) => str && /^\d+$/.test(String(str).trim());
 
-        fileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
+        fileInput.addEventListener('change', (event) => { handleFile(event.target.files[0]); });
+        dropZone.addEventListener('dragover', (event) => { event.stopPropagation(); event.preventDefault(); dropZone.classList.add('border-primary'); });
+        dropZone.addEventListener('dragleave', (event) => { event.stopPropagation(); event.preventDefault(); dropZone.classList.remove('border-primary'); });
+        dropZone.addEventListener('drop', (event) => { event.stopPropagation(); event.preventDefault(); dropZone.classList.remove('border-primary'); handleFile(event.dataTransfer.files[0]); });
+
+        function handleFile(file) {
             if (!file) return;
             statusDiv.innerHTML = '<p class="text-info">Carregando planilha...</p>';
             processarBtn.disabled = true;
@@ -332,48 +486,20 @@
                     let headerRowIndex = -1, headers = [];
                     for (let i = 0; i < rawData.length; i++) {
                         const row = rawData[i];
-                        if (row && row.includes('Cod_Rota')) {
-                            headerRowIndex = i;
-                            headers = row.map(h => String(h).trim());
-                            break;
-                        }
+                        if (row && row.includes('Cod_Rota')) { headerRowIndex = i; headers = row.map(h => String(h).trim()); break; }
                     }
                     if (headerRowIndex === -1) throw new Error("Não foi possível encontrar a linha de cabeçalho com 'Cod_Rota'.");
                     const dataRows = rawData.slice(headerRowIndex + 1);
-                    planilhaData = dataRows.map(row => {
-                        const pedido = {};
-                        headers.forEach((header, i) => { if (header) { pedido[header] = row[i] !== undefined ? row[i] : ''; } });
-                        return pedido;
-                    });
-                    statusDiv.innerHTML = `<p class="text-success">Planilha "${file.name}" carregada. ${planilhaData.length} linhas prontas para processar.</p>`;
+                    planilhaData = dataRows.map(row => { const pedido = {}; headers.forEach((header, i) => { if (header) { pedido[header] = row[i] !== undefined ? row[i] : ''; } }); return pedido; });
+                    statusDiv.innerHTML = `<p class="text-success">Planilha \"${file.name}\" carregada. ${planilhaData.length} linhas prontas para processar.</p>`;
                     processarBtn.disabled = false;
+                    dropZoneText.innerHTML = `<p>Arquivo \"${file.name}\" carregado.</p><button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">Selecionar Outro Arquivo</button>`;
                 } catch (error) {
                     statusDiv.innerHTML = `<p class="text-danger"><strong>Erro ao ler o arquivo:</strong> ${error.message}</p>`;
                     console.error(error);
                 }
             };
             reader.readAsArrayBuffer(file);
-        });
-
-        function calculateEstimatedDistance(pedidos) {
-            const uniqueCities = new Set();
-            pedidos.forEach(p => {
-                if (p.Cidade) {
-                    uniqueCities.add(String(p.Cidade).toUpperCase().trim());
-                }
-            });
-
-            let totalDistance = 0;
-            uniqueCities.forEach(city => {
-                if (distanciasCidades[city]) {
-                    totalDistance += distanciasCidades[city];
-                } else {
-                    console.warn(`Distância para a cidade '${city}' não encontrada.`);
-                    // Optionally, handle unknown cities, e.g., assign a default distance or alert the user
-                }
-            });
-            // Assuming round trip from origin to each city and back
-            return totalDistance * 1.50;
         }
 
         function buscarPedido() {
@@ -382,48 +508,29 @@
             searchResultDiv.innerHTML = '';
             if (!searchInput) return;
 
-            if (planilhaData.length === 0) {
-                searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>';
-                return;
-            }
+            if (planilhaData.length === 0) { searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>'; return; }
 
-            let pedidoEncontrado = null;
-            let local = 'Não encontrado';
-            let accordionId = '';
+            let pedidoEncontrado = null; let local = 'Não encontrado'; let accordionId = '';
 
-            // 1. Search in Resultados Gerais
             pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
-            if (pedidoEncontrado) {
-                local = 'Resultados Gerais';
-                accordionId = 'accordionGeral';
-            }
+            if (pedidoEncontrado) { local = 'Resultados Gerais'; accordionId = 'accordionGeral'; }
 
-            // 2. Search in Toco
             if (!pedidoEncontrado) {
                 for (const cf in gruposToco) {
                     pedidoEncontrado = gruposToco[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
-                    if (pedidoEncontrado) {
-                        local = `Cargas "Toco" (CF: ${cf})`;
-                        accordionId = 'accordionToco';
-                        break;
-                    }
+                    if (pedidoEncontrado) { local = `Cargas "Toco" (CF: ${cf})`; accordionId = 'accordionToco'; break; }
                 }
             }
             
-            // 3. Search in the original data to see if it was filtered out
             if (!pedidoEncontrado) {
                 const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                 if (originalPedido) {
-                    pedidoEncontrado = originalPedido; // Use for display
-                    if (tocoPedidoIds.has(String(originalPedido.Num_Pedido))) {
-                        local = 'Filtrado (pertence a um grupo Toco)';
-                    } else if (['21', '23', '17'].includes(String(originalPedido.Coluna4))) {
-                        local = 'Filtrado (Coluna4 é 21, 23, ou 17)';
-                    } else if (String(originalPedido['BLOQ.']) === 'C' || String(originalPedido['BLOQ.']) === 'V') {
-                        local = 'Filtrado (Bloqueio C ou V)';
-                    } else {
-                        local = 'Filtrado (outro motivo, verifique filtros de rota ou cliente)';
-                    }
+                    pedidoEncontrado = originalPedido;
+                    if (tocoPedidoIds.has(String(originalPedido.Num_Pedido))) { local = 'Filtrado (pertence a um grupo Toco)'; }
+                    else if (isNumeric(originalPedido.CF)) { local = 'Filtrado (possui CF numérico)'; }
+                    else if (['21', '23', '17'].includes(String(originalPedido.Coluna4))) { local = 'Filtrado (Coluna4 é 21, 23, ou 17)'; } 
+                    else if (String(originalPedido['BLOQ.']) === 'C' || String(originalPedido['BLOQ.']) === 'V') { local = 'Filtrado (Bloqueio C ou V)'; } 
+                    else { local = 'Filtrado (outro motivo, verifique filtros)'; }
                 }
             }
 
@@ -431,55 +538,25 @@
                 let buttons = '';
                 if (local === 'Resultados Gerais') {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
-                    buttons = `
-                        <button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>
-                            ${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}
-                        </button>
-                        <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">
-                            Destacar na Lista
-                        </button>
-                    `;
+                    buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
+                               <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">
-                        Destacar na Lista
-                    </button>`;
+                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
-
-                searchResultDiv.innerHTML = `
-                    <div class="alert alert-info">
-                        <h5>Pedido ${searchInput} encontrado!</h5>
-                        <p class="mb-1"><strong>Local:</strong> ${local}</p>
-                        <p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br>
-                           <strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>
-                        ${buttons ? `<div class="mt-2">${buttons}</div>` : ''}
-                    </div>
-                `;
-            } else {
-                searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>';
-            }
+                searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
+            } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
         }
 
-        function priorizarPedido(numPedido) {
-            if (!pedidosPrioritarios.includes(numPedido)) {
-                pedidosPrioritarios.push(numPedido);
-                buscarPedido(); 
-            }
-        }
+        function priorizarPedido(numPedido) { if (!pedidosPrioritarios.includes(numPedido)) { pedidosPrioritarios.push(numPedido); buscarPedido(); } }
 
         function highlightPedido(numPedido) {
             const row = document.getElementById(`pedido-${numPedido}`);
             if (row) {
                 row.classList.toggle('table-info');
-
                 if (row.classList.contains('table-info')) {
                     const collapseEl = row.closest('.accordion-collapse');
-                    if (collapseEl && !collapseEl.classList.contains('show')) {
-                        bootstrap.Collapse.getOrCreateInstance(collapseEl).show();
-                    }
-                    
-                    setTimeout(() => {
-                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 350);
+                    if (collapseEl && !collapseEl.classList.contains('show')) { bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); }
+                    setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350);
                 }
             }
         }
@@ -489,120 +566,75 @@
             const resultadoTocoDiv = document.getElementById('resultado-toco');
             const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
             try {
-                if (planilhaData.length === 0) {
-                    statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
-                    return;
-                }
-                const rotaInicialInput = document.getElementById('rotaInicialInput').value;
-                const rotaFinalInput = document.getElementById('rotaFinalInput').value;
-                resultadoGeralDiv.innerHTML = '';
-                resultadoTocoDiv.innerHTML = '';
-                resultadoTresQuartosDiv.innerHTML = '';
+                if (planilhaData.length === 0) { statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return; }
+                const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
+                resultadoGeralDiv.innerHTML = ''; resultadoTocoDiv.innerHTML = ''; resultadoTresQuartosDiv.innerHTML = '';
 
                 const pedidos = planilhaData.filter(p => String(p.Coluna4) != '500');
 
                 const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                 const cfCounts = {};
-                const isNumeric = (str) => /^\d+$/.test(str);
-                pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(String(p.CF))) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
+                pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
                 const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
                 const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
                 gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
                     const cf = p.CF;
-                    if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; }
-                    acc[cf].pedidos.push(p);
-                    acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                    return acc;
+                    if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; } acc[cf].pedidos.push(p); acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
                 }, {});
                 displayToco(resultadoTocoDiv, gruposToco);
 
                 tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
-                const clientesComBloqueio = new Set();
-                const clientesSemBloqueio = new Set();
+                const clientesComBloqueio = new Set(); const clientesSemBloqueio = new Set();
                 pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
                 const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
-                const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 11101;
-                const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 11731;
+                const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
+                
                 const pedidosGeraisFiltrados = pedidos.filter(p => {
                     if (tocoPedidoIds.has(String(p.Num_Pedido))) return false;
                     if (['21', '23', '17'].includes(String(p.Coluna4))) return false;
+                    if (isNumeric(p.CF)) { return false; }
                     const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
-                    if ((rotaAtualNum === 11311 || rotaAtualNum === 11521 || rotaAtualNum === 11361) && isNumeric(String(p.CF))) {
-                        return false;
-                    }
-                    if (!(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return false;
+                    if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return false;
                     if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return false;
                     if (clientesParaRemover.has(String(p.Cliente))) return false;
                     return true;
                 });
 
                 let tresQuartosLoads = [];
-                const MIN_KG_3_4 = 2300;
-                const MAX_KG_3_4 = 4100;
+                const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value) || defaultConfigs.tresQuartosMinCapacity;
+                const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value) || defaultConfigs.tresQuartosMaxCapacity;
                 const LARGE_ORDER_KG = 1700;
 
                 const largeOrdersByRoute = pedidosGeraisFiltrados.reduce((acc, p) => {
                     const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                    if (peso >= LARGE_ORDER_KG) {
-                        const rota = p.Cod_Rota;
-                        if (!acc[rota]) acc[rota] = [];
-                        acc[rota].push(p);
-                    }
-                    return acc;
+                    if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } return acc;
                 }, {});
-
                 const pedidosEmCargas3_4 = new Set();
-
                 Object.keys(largeOrdersByRoute).forEach(rota => {
                     const largeOrders = largeOrdersByRoute[rota];
                     if (largeOrders.length === 1) {
-                        const largeOrder = largeOrders[0];
-                        if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
-
-                        let newLoad = {
-                            pedidos: [largeOrder],
-                            totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0,
-                            rota: rota
-                        };
-
-                        const otherOrdersInRoute = pedidosGeraisFiltrados
-                            .filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido)
-                            .sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
-
+                        const largeOrder = largeOrders[0]; if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
+                        let newLoad = { pedidos: [largeOrder], totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0, rota: rota };
+                        const otherOrdersInRoute = pedidosGeraisFiltrados.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
                         for (const order of otherOrdersInRoute) {
                             if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue;
                             const orderKg = parseFloat(String(order.Quilos_Saldo).replace(',', '.')) || 0;
-                            if (newLoad.totalKg + orderKg <= MAX_KG_3_4) {
-                                newLoad.pedidos.push(order);
-                                newLoad.totalKg += orderKg;
-                            }
+                            if (newLoad.totalKg + orderKg <= MAX_KG_3_4) { newLoad.pedidos.push(order); newLoad.totalKg += orderKg; }
                         }
-
-                        if (newLoad.totalKg >= MIN_KG_3_4) {
-                            tresQuartosLoads.push(newLoad);
-                            newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido));
-                        }
+                        if (newLoad.totalKg >= MIN_KG_3_4) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); }
                     }
                 });
-
                 tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
                 displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
 
                 pedidosGeraisAtuais = pedidosGeraisFiltrados.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
                 
                 const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
-                    const rota = p.Cod_Rota;
-                    if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; }
-                    acc[rota].pedidos.push(p);
-                    acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                    return acc;
+                    const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
                 }, {});
                 displayGerais(resultadoGeralDiv, gruposGerais);
 
-            } catch (error) {
-                statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`;
-                console.error(error);
-            }
+            } catch (error) { statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; console.error(error); }
         }
 
         function createTable(pedidos, columnsToDisplay) {
@@ -611,11 +643,7 @@
             let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped"><thead><tr>';
             colunasExibir.forEach(c => table += `<th>${c}</th>`);
             table += '</tr></thead><tbody>';
-            pedidos.forEach(p => {
-                table += `<tr id="pedido-${p.Num_Pedido}">`;
-                colunasExibir.forEach(c => table += `<td>${p[c] === undefined || p[c] === null ? '' : p[c]}</td>`);
-                table += '</tr>';
-            });
+            pedidos.forEach(p => { table += `<tr id="pedido-${p.Num_Pedido}">`; colunasExibir.forEach(c => table += `<td>${p[c] === undefined || p[c] === null ? '' : p[c]}</td>`); table += '</tr>'; });
             table += '</tbody></table></div>';
             return table;
         }
@@ -626,58 +654,35 @@
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                accordionHtml += `
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingGeral${index}">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}">
-                                <strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2">${grupo.pedidos.length} pedidos</span> <span class="badge bg-info ms-2">${totalKgFormatado} kg</span>
-                            </button>
-                        </h2>
-                        <div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div>
-                    </div>`;
+                const veiculo = rotaVeiculoMap[rota] || 'Toco';
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota} (${veiculo})</strong> &nbsp; <span class="badge bg-secondary ms-2">${grupo.pedidos.length} pedidos</span> <span class="badge bg-info ms-2">${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
             });
-            accordionHtml += '</div>';
-            div.innerHTML = accordionHtml;
+            accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
         function displayTresQuartos(div, loads) {
-            if (loads.length === 0) {
-                div.innerHTML = '<div class="text-center p-3">Nenhuma carga 3/4 formada.</div>';
-                return;
-            }
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2">
-                            <h3 class="mb-0">Resultados Cargas 3/4 (Automático):</h3>
-                            ${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargasTresQuartosAutomatico('${div.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Concluídas</button>` : ''}
-                        </div>`;
+            if (loads.length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhuma carga 3/4 formada.</div>'; return; }
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${div.id}', 'Cargas 3/4 (Automático)', 'bg-warning', 'text-dark')">🖨️ Imprimir Concluídas</button>` : ''}</div>`;
             loads.forEach(load => {
                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                html += `
-                    <div class="card mb-3">
-                        <div class="card-header bg-warning text-dark">
-                            Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg
-                        </div>
-                        <div class="card-body">
-                            ${createTable(load.pedidos)}
-                        </div>
-                    </div>
-                `;
+                html += `<div class="card mb-3"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
             });
             div.innerHTML = html;
         }
 
-        function separarCargas34(routeOrRoutes, divId, title) {
+        function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '';
             if (planilhaData.length === 0) {
-                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
-                return;
+                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return;
             }
 
             const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
-            
-            const MIN_KG_3_4 = 2300;
-            const MAX_KG_3_4 = 4100;
 
+            const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value) || defaultConfigs[`${vehicleType}MinCapacity`];
+            const MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value) || defaultConfigs[`${vehicleType}MaxCapacity`];
+            const MAX_CUBAGEM = parseFloat(document.getElementById(`${vehicleType}Cubage`).value) || defaultConfigs[`${vehicleType}Cubage`];
+            
             const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
@@ -686,22 +691,10 @@
             const otherPedidos = pedidosRota.filter(p => !isSpecialClient(p));
             const specialPedidos = pedidosRota.filter(p => isSpecialClient(p));
 
-            specialPedidos.forEach(pedido => {
-                packableItems.push({
-                    isSpecial: true,
-                    pedidos: [pedido],
-                    totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
-                    totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
-                });
-            });
+            specialPedidos.forEach(pedido => { packableItems.push({ isSpecial: true, pedidos: [pedido], totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0, totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0, }); });
 
             const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
-                const clienteId = pedido.Cliente;
-                if (!acc[clienteId]) {
-                    acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
-                }
-                acc[clienteId].pedidos.push(pedido);
-                return acc;
+                const clienteId = pedido.Cliente; if (!acc[clienteId]) { acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 }; } acc[clienteId].pedidos.push(pedido); return acc;
             }, {});
             
             Object.values(otherClientGroupsMap).forEach(group => {
@@ -712,985 +705,159 @@
 
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
-
-            priorityItems.sort((a, b) => b.totalKg - a.totalKg);
-            regularItems.sort((a, b) => b.totalKg - a.totalKg);
-
+            priorityItems.sort((a, b) => b.totalKg - a.totalKg); regularItems.sort((a, b) => b.totalKg - a.totalKg);
             packableItems = [...priorityItems, ...regularItems];
 
-            let tresQuartosLoads = [];
-            let leftoverItems = [];
-
+            let loads = []; let leftoverItems = [];
             packableItems.forEach(item => {
-                if (item.totalKg > MAX_KG_3_4) {
-                    leftoverItems.push(item);
-                    return;
-                }
-
+                if (item.totalKg > MAX_KG || item.totalCubagem > MAX_CUBAGEM) { leftoverItems.push(item); return; }
                 let placed = false;
-                for (const load of tresQuartosLoads) {
-                    const specialCountInLoad = load.pedidos.filter(p => isSpecialClient(p)).length;
-                    const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
-
-                    if ( (load.totalKg + item.totalKg <= MAX_KG_3_4) &&
-                         (specialCountInLoad + specialOrdersInItem <= 2) )
-                    {
-                        load.pedidos.push(...item.pedidos);
-                        load.totalKg += item.totalKg;
-                        load.totalCubagem += item.totalCubagem;
-                        placed = true;
-                        break;
+                for (const load of loads) {
+                    const specialCountInLoad = load.pedidos.filter(p => isSpecialClient(p)).length; const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
+                    if ((load.totalKg + item.totalKg <= MAX_KG) && (load.totalCubagem + item.totalCubagem <= MAX_CUBAGEM) && (specialCountInLoad + specialOrdersInItem <= 2)) {
+                        load.pedidos.push(...item.pedidos); load.totalKg += item.totalKg; load.totalCubagem += item.totalCubagem; placed = true; break;
                     }
                 }
-
-                if (!placed) {
-                    tresQuartosLoads.push({
-                        pedidos: [...item.pedidos],
-                        totalKg: item.totalKg,
-                        totalCubagem: item.totalCubagem,
-                    });
-                }
+                if (!placed) { loads.push({ pedidos: [...item.pedidos], totalKg: item.totalKg, totalCubagem: item.totalCubagem, }); }
             });
 
-            let finalLoads = [];
-            let unplacedFromMinRule = [];
-            tresQuartosLoads.forEach(load => {
+            let finalLoads = []; let unplacedFromMinRule = [];
+            loads.forEach(load => {
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                if (hasPriority || load.totalKg >= MIN_KG_3_4) {
-                    finalLoads.push(load);
-                } else {
-                    unplacedFromMinRule.push(...load.pedidos);
-                }
+                if (hasPriority || load.totalKg >= MIN_KG) { finalLoads.push(load); } else { unplacedFromMinRule.push(...load.pedidos); }
             });
-
             finalLoads.forEach((load, index) => { load.numero = index + 1; });
+            
+            if (vehicleType === 'fiorino') {
+                CargasFiorinoFinalizadas.clear();
+                finalLoads.forEach(load => {
+                    const loadId = `fiorino-${title.replace(/\s+/g, '-')}-${load.numero}`;
+                    load.id = loadId;
+                    CargasFiorinoFinalizadas.set(loadId, load);
+                });
+            }
 
             let leftoverPedidos = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2">
-                            <h3 class="mb-0">${finalLoads.length} Carga(s) de 3/4 para ${title}:</h3>
-                            ${finalLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargas34('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Concluídas</button>` : ''}
-                        </div>`;
+            const vehicleInfo = {
+                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white' },
+                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white' },
+                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark' }
+            };
+            const vInfo = vehicleInfo[vehicleType];
 
-            if (finalLoads.length === 0) {
-                html += '<p>Nenhuma carga de 3/4 foi formada.</p>';
-            }
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${finalLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${finalLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}', '${vInfo.colorClass}', '${vInfo.textColor}')">🖨️ Imprimir Concluídas</button>` : ''}</div>`;
+            if (finalLoads.length === 0) { html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; }
+            
             finalLoads.forEach(load => {
                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                const priorityBadge = isPriorityLoad ? '<span class="badge bg-dark ms-3">PRIORIDADE</span>' : '';
+                const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
+                
+                // *** ADICIONADO: Botão e local para exibir a distância da API ***
+                let fiorinoDistanceHtml = '';
+                if (vehicleType === 'fiorino') {
+                    fiorinoDistanceHtml = `
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
+                           <span id="dist-${load.id}"></span>
+                           <button class="btn btn-outline-info btn-sm no-print" onclick="calculateApiDistance('${load.id}')">📍 Calcular KM</button>
+                        </div>`;
+                }
+
                 html += `
                     <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
-                        <div class="card-header bg-warning text-dark">
-                            Carga 3/4 #${load.numero} - Total: ${totalKgFormatado} kg ${priorityBadge}
+                        <div class="card-header ${vInfo.colorClass} ${vInfo.textColor}">
+                            ${vInfo.name} #${load.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³ ${priorityBadge}
                         </div>
                         <div class="card-body">
                             ${createTable(load.pedidos)}
+                            ${fiorinoDistanceHtml}
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
-
             if (leftoverPedidos.length > 0) {
                 const totalKgUnassigned = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                html += `<h4 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h4>`;
-                html += `
-                    <div class="card mb-3">
-                        <div class="card-header bg-danger text-white">
-                            Detalhes dos Pedidos Restantes
-                        </div>
-                        <div class="card-body">
-                            ${createTable(leftoverPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}
-                        </div>
-                    </div>
-                `;
+                html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(leftoverPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}</div></div>`;
             }
-            
             resultadoDiv.innerHTML = html;
         }
 
-        function separarCargasVan(routeOrRoutes, divId, title) {
-            const resultadoDiv = document.getElementById(divId);
-            resultadoDiv.innerHTML = '';
-            if (planilhaData.length === 0) {
-                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
-                return;
-            }
-
-            const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
-            
-            const MIN_KG_VAN = 1100;
-            const MAX_KG_VAN = 1560;
-            const MAX_CUBAGEM_VAN = 5.0;
-
-            const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
-            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
-            const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
-
-            let packableItems = [];
-            const otherPedidos = pedidosRota.filter(p => !isSpecialClient(p));
-            const specialPedidos = pedidosRota.filter(p => isSpecialClient(p));
-
-            specialPedidos.forEach(pedido => {
-                packableItems.push({
-                    isSpecial: true,
-                    pedidos: [pedido],
-                    totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
-                    totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
-                });
-            });
-
-            const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
-                const clienteId = pedido.Cliente;
-                if (!acc[clienteId]) {
-                    acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
-                }
-                acc[clienteId].pedidos.push(pedido);
-                return acc;
-            }, {});
-            
-            Object.values(otherClientGroupsMap).forEach(group => {
-                group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
-                packableItems.push(group);
-            });
-
-            packableItems.sort((a, b) => b.totalKg - a.totalKg);
-
-            let vanLoads = [];
-            let leftoverItems = [];
-
-            packableItems.forEach(item => {
-                if (item.totalKg > MAX_KG_VAN || item.totalCubagem > MAX_CUBAGEM_VAN) {
-                    leftoverItems.push(item);
-                    return;
-                }
-
-                let placed = false;
-                for (const van of vanLoads) {
-                    const specialCountInVan = van.pedidos.filter(p => isSpecialClient(p)).length;
-                    const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
-
-                    if ( (van.totalKg + item.totalKg <= MAX_KG_VAN) &&
-                         (van.totalCubagem + item.totalCubagem <= MAX_CUBAGEM_VAN) &&
-                         (specialCountInVan + specialOrdersInItem <= 2) )
-                    {
-                        van.pedidos.push(...item.pedidos);
-                        van.totalKg += item.totalKg;
-                        van.totalCubagem += item.totalCubagem;
-                        placed = true;
-                        break;
-                    }
-                }
-
-                if (!placed) {
-                    vanLoads.push({
-                        pedidos: [...item.pedidos],
-                        totalKg: item.totalKg,
-                        totalCubagem: item.totalCubagem,
-                    });
-                }
-            });
-
-            let finalVanLoads = [];
-            let unplacedFromMinRule = [];
-            vanLoads.forEach(van => {
-                const hasPriority = van.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                if (hasPriority || van.totalKg >= MIN_KG_VAN) {
-                    finalVanLoads.push(van);
-                } else {
-                    unplacedFromMinRule.push(...van.pedidos);
-                }
-            });
-
-            finalVanLoads.forEach((van, index) => { van.numero = index + 1; });
-
-            let leftoverPedidos = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
-            
-            let tresQuartosLoads = [];
-            if (finalVanLoads.length === 0 && leftoverPedidos.length > 0) {
-                const MIN_KG_3_4 = 2300;
-                const MAX_KG_3_4 = 4100;
-                const LARGE_ORDER_KG = 1700;
-
-                const largeOrders = leftoverPedidos.filter(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= LARGE_ORDER_KG);
-                
-                if (largeOrders.length === 1) {
-                    const largeOrder = largeOrders[0];
-                    let newLoad = {
-                        pedidos: [largeOrder],
-                        totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0,
-                        rota: largeOrder.Cod_Rota,
-                        numero: 1
-                    };
-
-                    const otherOrders = leftoverPedidos
-                        .filter(p => p.Num_Pedido !== largeOrder.Num_Pedido)
-                        .sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
-
-                    for (const order of otherOrders) {
-                        const orderKg = parseFloat(String(order.Quilos_Saldo).replace(',', '.')) || 0;
-                        if (newLoad.totalKg + orderKg <= MAX_KG_3_4) {
-                            newLoad.pedidos.push(order);
-                            newLoad.totalKg += orderKg;
-                        }
-                    }
-
-                    if (newLoad.totalKg >= MIN_KG_3_4) {
-                        tresQuartosLoads.push(newLoad);
-                        const usedPedidos = new Set(newLoad.pedidos.map(p => p.Num_Pedido));
-                        leftoverPedidos = leftoverPedidos.filter(p => !usedPedidos.has(p.Num_Pedido));
-                    }
-                }
-            }
-
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2">
-                            <h3 class="mb-0">${finalVanLoads.length} Carga(s) de Van para ${title}:</h3>
-                            ${finalVanLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargasVan('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Concluídas</button>` : ''}
-                        </div>`;
-
-            if (finalVanLoads.length === 0) {
-                html += '<p>Nenhuma carga de Van foi formada.</p>';
-            }
-            finalVanLoads.forEach(van => {
-                const totalKgFormatado = van.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const totalCubagemFormatado = van.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const isPriorityLoad = van.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
-                html += `
-                    <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
-                        <div class="card-header bg-info text-white">
-                            Van ${van.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³ ${priorityBadge}
-                        </div>
-                        <div class="card-body">
-                            ${createTable(van.pedidos)}
-                        </div>
-                    </div>
-                `;
-            });
-
-            // *** START: Fallback logic for Van from Fiorino leftovers ***
-            let vanLoadsFromLeftovers = [];
-            if (leftoverPedidos.length > 0) {
-                const MIN_KG_VAN = 1100;
-                const MAX_KG_VAN = 1560;
-                const MAX_CUBAGEM_VAN = 5.0;
-
-                let packableItemsVan = [];
-                const otherPedidosVan = leftoverPedidos.filter(p => !isSpecialClient(p));
-                const specialPedidosVan = leftoverPedidos.filter(p => isSpecialClient(p));
-
-                specialPedidosVan.forEach(pedido => {
-                    packableItemsVan.push({
-                        isSpecial: true,
-                        pedidos: [pedido],
-                        totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
-                        totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
-                    });
-                });
-
-                const otherClientGroupsMapVan = otherPedidosVan.reduce((acc, pedido) => {
-                    const clienteId = pedido.Cliente;
-                    if (!acc[clienteId]) {
-                        acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
-                    }
-                    acc[clienteId].pedidos.push(pedido);
-                    return acc;
-                }, {});
-                
-                Object.values(otherClientGroupsMapVan).forEach(group => {
-                    group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                    group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
-                    packableItemsVan.push(group);
-                });
-
-                packableItemsVan.sort((a, b) => b.totalKg - a.totalKg);
-
-                let potentialVanLoads = [];
-                let leftoverItemsVan = [];
-
-                packableItemsVan.forEach(item => {
-                    if (item.totalKg > MAX_KG_VAN || item.totalCubagem > MAX_CUBAGEM_VAN) {
-                        leftoverItemsVan.push(item);
-                        return;
-                    }
-
-                    let placed = false;
-                    for (const van of potentialVanLoads) {
-                        const specialCountInVan = van.pedidos.filter(p => isSpecialClient(p)).length;
-                        const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
-
-                        if ( (van.totalKg + item.totalKg <= MAX_KG_VAN) &&
-                             (van.totalCubagem + item.totalCubagem <= MAX_CUBAGEM_VAN) &&
-                             (specialCountInVan + specialOrdersInItem <= 2) )
-                        {
-                            van.pedidos.push(...item.pedidos);
-                            van.totalKg += item.totalKg;
-                            van.totalCubagem += item.totalCubagem;
-                            placed = true;
-                            break;
-                        }
-                    }
-
-                    if (!placed) {
-                        potentialVanLoads.push({
-                            pedidos: [...item.pedidos],
-                            totalKg: item.totalKg,
-                            totalCubagem: item.totalCubagem,
-                        });
-                    }
-                });
-
-                let unplacedFromMinRuleVan = [];
-                potentialVanLoads.forEach(van => {
-                    if (van.totalKg >= MIN_KG_VAN) {
-                        vanLoadsFromLeftovers.push(van);
-                    } else {
-                        unplacedFromMinRuleVan.push(...van.pedidos);
-                    }
-                });
-
-                if (vanLoadsFromLeftovers.length > 0) {
-                    const usedPedidos = new Set(vanLoadsFromLeftovers.flatMap(l => l.pedidos).map(p => p.Num_Pedido));
-                    leftoverPedidos = leftoverItemsVan.flatMap(item => item.pedidos).concat(unplacedFromMinRuleVan).filter(p => !usedPedidos.has(p.Num_Pedido));
-                }
-            }
-
-            if (vanLoadsFromLeftovers.length > 0) {
-                html += `<div class="d-flex justify-content-between align-items-center mb-2">
-                                <h3 class="mb-0 text-info">Carga de Van (Fallback da Fiorino):</h3>
-                                <button class="btn btn-sm btn-outline-info" onclick="imprimirCargasVanFallback('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Cargas Van (Fallback)</button>
-                            </div>`;
-                vanLoadsFromLeftovers.forEach((van, index) => {
-                    van.numero = index + 1;
-                    const totalKgFormatado = van.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    const totalCubagemFormatado = van.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    html += `
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                Van ${van.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³
-                            </div>
-                            <div class="card-body">
-                                ${createTable(van.pedidos)}
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            // *** END: Fallback logic ***
-
-            if (leftoverPedidos.length > 0) {
-                const totalKgUnassigned = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                html += `<h4 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h4>`;
-                html += `
-                    <div class="card mb-3">
-                        <div class="card-header bg-danger text-white">
-                            Detalhes dos Pedidos Restantes
-                        </div>
-                        <div class="card-body">
-                            ${createTable(leftoverPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}
-                        </div>
-                    </div>
-                `;
-            }
-            
-            resultadoDiv.innerHTML = html;
-        }
-
-        function separarCargasFiorino(routeOrRoutes, divId, title) {
-            const resultadoDiv = document.getElementById(divId);
-            resultadoDiv.innerHTML = '';
-            if (planilhaData.length === 0) {
-                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
-                return;
-            }
-
-            const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
-            
-            const MAX_KG_FIORINO = 570;
-            const MAX_CUBAGEM_FIORINO = 1.5;
-            const MIN_KG_FIORINO = 330;
-
-            const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
-            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
-            const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
-
-            let packableItems = [];
-            const otherPedidos = pedidosRota.filter(p => !isSpecialClient(p));
-            const specialPedidos = pedidosRota.filter(p => isSpecialClient(p));
-
-            specialPedidos.forEach(pedido => {
-                packableItems.push({
-                    isSpecial: true,
-                    pedidos: [pedido],
-                    totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
-                    totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
-                });
-            });
-
-            const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
-                const clienteId = pedido.Cliente;
-                if (!acc[clienteId]) {
-                    acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
-                }
-                acc[clienteId].pedidos.push(pedido);
-                return acc;
-            }, {});
-            
-            Object.values(otherClientGroupsMap).forEach(group => {
-                group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
-                packableItems.push(group);
-            });
-
-            packableItems.sort((a, b) => b.totalKg - a.totalKg);
-
-            let fiorinoLoads = [];
-            let leftoverItems = [];
-
-            packableItems.forEach(item => {
-                if (item.totalKg > MAX_KG_FIORINO || item.totalCubagem > MAX_CUBAGEM_FIORINO) {
-                    leftoverItems.push(item);
-                    return;
-                }
-
-                let placed = false;
-                for (const fiorino of fiorinoLoads) {
-                    const specialCountInFiorino = fiorino.pedidos.filter(p => isSpecialClient(p)).length;
-                    const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
-
-                    if ( (fiorino.totalKg + item.totalKg <= MAX_KG_FIORINO) &&
-                         (fiorino.totalCubagem + item.totalCubagem <= MAX_CUBAGEM_FIORINO) &&
-                         (specialCountInFiorino + specialOrdersInItem <= 2) )
-                    {
-                        fiorino.pedidos.push(...item.pedidos);
-                        fiorino.totalKg += item.totalKg;
-                        fiorino.totalCubagem += item.totalCubagem;
-                        placed = true;
-                        break;
-                    }
-                }
-
-                if (!placed) {
-                    fiorinoLoads.push({
-                        pedidos: [...item.pedidos],
-                        totalKg: item.totalKg,
-                        totalCubagem: item.totalCubagem,
-                    });
-                }
-            });
-
-            let finalFiorinoLoads = [];
-            let unplacedFromMinRule = [];
-            fiorinoLoads.forEach(fiorino => {
-                const hasPriority = fiorino.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                if (hasPriority || fiorino.totalKg >= MIN_KG_FIORINO) {
-                    finalFiorinoLoads.push(fiorino);
-                } else {
-                    unplacedFromMinRule.push(...fiorino.pedidos);
-                }
-            });
-
-            finalFiorinoLoads.forEach((fiorino, index) => { 
-                fiorino.numero = index + 1;
-                fiorino.estimatedDistance = calculateEstimatedDistance(fiorino.pedidos); // Calculate estimated distance
-            });
-
-            // Sort finalFiorinoLoads by estimatedDistance for "best load" indication
-            finalFiorinoLoads.sort((a, b) => a.estimatedDistance - b.estimatedDistance);
-
-            let leftoverPedidos = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
-            
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2">
-                            <h3 class="mb-0">${finalFiorinoLoads.length} Carga(s) de Fiorino para ${title}:</h3>
-                            ${finalFiorinoLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargas('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Concluídas</button>` : ''}
-                        </div>`;
-
-            if (finalFiorinoLoads.length === 0) {
-                html += '<p>Nenhuma carga de Fiorino foi formada.</p>';
-            }
-            finalFiorinoLoads.forEach((fiorino, index) => {
-                const totalKgFormatado = fiorino.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const totalCubagemFormatado = fiorino.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const estimatedDistanceFormatted = fiorino.estimatedDistance.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-                const isPriorityLoad = fiorino.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
-                html += `
-                    <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
-                        <div class="card-header bg-success text-white">
-                            Fiorino ${fiorino.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³ (Distância Estimada: ${estimatedDistanceFormatted} km) ${priorityBadge}
-                        </div>
-                        <div class="card-body">
-                            ${createTable(fiorino.pedidos)}
-                        </div>
-                    </div>
-                `;
-            });
-
-            // *** START: Fallback logic for Van from Fiorino leftovers ***
-            let vanLoadsFromLeftovers = [];
-            if (leftoverPedidos.length > 0) {
-                const MIN_KG_VAN = 1100;
-                const MAX_KG_VAN = 1560;
-                const MAX_CUBAGEM_VAN = 5.0;
-
-                let packableItemsVan = [];
-                const otherPedidosVan = leftoverPedidos.filter(p => !isSpecialClient(p));
-                const specialPedidosVan = leftoverPedidos.filter(p => isSpecialClient(p));
-
-                specialPedidosVan.forEach(pedido => {
-                    packableItemsVan.push({
-                        isSpecial: true,
-                        pedidos: [pedido],
-                        totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
-                        totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
-                    });
-                });
-
-                const otherClientGroupsMapVan = otherPedidosVan.reduce((acc, pedido) => {
-                    const clienteId = pedido.Cliente;
-                    if (!acc[clienteId]) {
-                        acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
-                    }
-                    acc[clienteId].pedidos.push(pedido);
-                    return acc;
-                }, {});
-                
-                Object.values(otherClientGroupsMapVan).forEach(group => {
-                    group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                    group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
-                    packableItemsVan.push(group);
-                });
-
-                packableItemsVan.sort((a, b) => b.totalKg - a.totalKg);
-
-                let potentialVanLoads = [];
-                let leftoverItemsVan = [];
-
-                packableItemsVan.forEach(item => {
-                    if (item.totalKg > MAX_KG_VAN || item.totalCubagem > MAX_CUBAGEM_VAN) {
-                        leftoverItemsVan.push(item);
-                        return;
-                    }
-
-                    let placed = false;
-                    for (const van of potentialVanLoads) {
-                        const specialCountInVan = van.pedidos.filter(p => isSpecialClient(p)).length;
-                        const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
-
-                        if ( (van.totalKg + item.totalKg <= MAX_KG_VAN) &&
-                             (van.totalCubagem + item.totalCubagem <= MAX_CUBAGEM_VAN) &&
-                             (specialCountInVan + specialOrdersInItem <= 2) )
-                        {
-                            van.pedidos.push(...item.pedidos);
-                            van.totalKg += item.totalKg;
-                            van.totalCubagem += item.totalCubagem;
-                            placed = true;
-                            break;
-                        }
-                    }
-
-                    if (!placed) {
-                        potentialVanLoads.push({
-                            pedidos: [...item.pedidos],
-                            totalKg: item.totalKg,
-                            totalCubagem: item.totalCubagem,
-                        });
-                    }
-                });
-
-                let unplacedFromMinRuleVan = [];
-                potentialVanLoads.forEach(van => {
-                    if (van.totalKg >= MIN_KG_VAN) {
-                        vanLoadsFromLeftovers.push(van);
-                    } else {
-                        unplacedFromMinRuleVan.push(...van.pedidos);
-                    }
-                });
-
-                if (vanLoadsFromLeftovers.length > 0) {
-                    const usedPedidos = new Set(vanLoadsFromLeftovers.flatMap(l => l.pedidos).map(p => p.Num_Pedido));
-                    leftoverPedidos = leftoverItemsVan.flatMap(item => item.pedidos).concat(unplacedFromMinRuleVan).filter(p => !usedPedidos.has(p.Num_Pedido));
-                }
-            }
-
-            if (vanLoadsFromLeftovers.length > 0) {
-                html += `<div class="d-flex justify-content-between align-items-center mb-2">
-                                <h3 class="mb-0 text-info">Carga de Van (Fallback da Fiorino):</h3>
-                                <button class="btn btn-sm btn-outline-info" onclick="imprimirCargasVanFallback('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Cargas Van (Fallback)</button>
-                            </div>`;
-                vanLoadsFromLeftovers.forEach((van, index) => {
-                    van.numero = index + 1;
-                    const totalKgFormatado = van.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    const totalCubagemFormatado = van.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    html += `
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                Van ${van.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³
-                            </div>
-                            <div class="card-body">
-                                ${createTable(van.pedidos)}
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            // *** END: Fallback logic ***
-
-            if (leftoverPedidos.length > 0) {
-                const totalKgUnassigned = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                html += `<h4 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h4>`;
-                html += `
-                    <div class="card mb-3">
-                        <div class="card-header bg-danger text-white">
-                            Detalhes dos Pedidos Restantes
-                        </div>
-                        <div class="card-body">
-                            ${createTable(leftoverPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}
-                        </div>
-                    </div>
-                `;
-            }
-            
-            resultadoDiv.innerHTML = html;
-        }
+        function separarCargasFiorino(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'fiorino'); }
+        function separarCargasVan(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'van'); }
+        function separarCargas34(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'tresQuartos'); }
 
         function displayToco(div, grupos) {
             if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhuma carga toco encontrada.</div>'; return; }
+            const MAX_KG_TOCO = parseFloat(document.getElementById('tocoMaxCapacity').value) || defaultConfigs.tocoMaxCapacity;
+            
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionToco">';
             Object.keys(grupos).sort().forEach((cf, index) => {
-                const grupo = grupos[cf];
-                const pedidos = grupo.pedidos;
+                const grupo = grupos[cf]; const pedidos = grupo.pedidos;
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                accordionHtml += `
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingToco${index}">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}">
-                                <strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2">${pedidos.length} pedidos</span> <span class="badge bg-info ms-2">${totalKgFormatado} kg</span>
-                            </button>
-                        </h2>
-                        <div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body">
-                            <button class="btn btn-sm btn-outline-info mb-3" onclick="imprimirTocoIndividual('${cf}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir esta Carga Toco</button>
-                            ${createTable(pedidos)}</div></div>
-                    </div>`;
+                const overWeight = grupo.totalKg > MAX_KG_TOCO;
+                const weightBadge = overWeight
+                    ? `<span class="badge bg-danger ms-2">${totalKgFormatado} kg (ACIMA DO PESO!)</span>`
+                    : `<span class="badge bg-info ms-2">${totalKgFormatado} kg</span>`;
+                
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2">${pedidos.length} pedidos</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')">🖨️ Imprimir esta Carga Toco</button>${createTable(pedidos)}</div></div></div>`;
             });
-            accordionHtml += '</div>';
-            div.innerHTML = accordionHtml;
+            accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        function imprimirCargas(divId) {
+        function imprimirCargasGeneric(divId, title, headerBgClass, headerTextClass) {
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
 
-            const completedLoadsHeaders = divToPrint.querySelectorAll('.card-header.bg-success');
-            if (completedLoadsHeaders.length === 0) {
-                alert("Nenhuma carga de Fiorino concluída para imprimir.");
-                return;
+            const completedLoadsCards = divToPrint.querySelectorAll(`.card-header.${headerBgClass}`);
+            if (completedLoadsCards.length === 0) {
+                alert("Nenhuma carga concluída para imprimir."); return;
             }
 
             const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir Cargas de Fiorino Concluídas</title>');
+            printWindow.document.write('<html><head><title>Imprimir: ' + title + '</title>');
             printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write('<style>');
-            printWindow.document.write(`
+            printWindow.document.write(`<style>
                 body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .card { break-inside: avoid; margin-bottom: 1rem; }
-                .card-header { background-color: #198754 !important; color: #fff !important; }
+                .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; }
+                .no-print { display: none !important; }
+                .${headerBgClass} { background-color: ${getComputedStyle(document.querySelector(`.${headerBgClass}`)).backgroundColor} !important; }
+                .${headerTextClass} { color: ${getComputedStyle(document.querySelector(`.${headerTextClass}`)).color} !important; }
                 .table-responsive { overflow: visible !important; }
                 table, th, td { border: 1px solid #dee2e6 !important; }
-                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            `);
-            printWindow.document.write('</style></head><body>');
+                h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
+            </style></head><body>`);
             
-            let contentToPrint = '<h3>Cargas de Fiorino Concluídas</h3>';
-            completedLoadsHeaders.forEach(header => {
-                contentToPrint += header.closest('.card.mb-3').outerHTML;
-            });
+            let contentToPrint = `<h3>${title}</h3>`;
+            completedLoadsCards.forEach(header => { contentToPrint += header.closest('.card.mb-3').outerHTML; });
 
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
-        }
-
-        function imprimirCargasVan(divId) {
-            const divToPrint = document.getElementById(divId);
-            if (!divToPrint) return;
-
-            const completedLoadsHeaders = divToPrint.querySelectorAll('.card-header.bg-info');
-            if (completedLoadsHeaders.length === 0) {
-                alert("Nenhuma carga de Van concluída para imprimir.");
-                return;
-            }
-
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir Cargas de Van Concluídas</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write('<style>');
-            printWindow.document.write(`
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .card { break-inside: avoid; margin-bottom: 1rem; }
-                .card-header { background-color: #0dcaf0 !important; color: #fff !important; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            `);
-            printWindow.document.write('</style></head><body>');
-            
-            let contentToPrint = '<h3>Cargas de Van Concluídas</h3>';
-            completedLoadsHeaders.forEach(header => {
-                // Ensure it\'s not a fallback from fiorino section
-                if(header.closest('#resultado-fiorino-geral')) return;
-                contentToPrint += header.closest('.card.mb-3').outerHTML;
-            });
-
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
-        }
-
-        function imprimirCargas34(divId) {
-            const divToPrint = document.getElementById(divId);
-            if (!divToPrint) return;
-
-            const completedLoadsHeaders = divToPrint.querySelectorAll('.card-header.bg-warning');
-            if (completedLoadsHeaders.length === 0) {
-                alert("Nenhuma carga de 3/4 concluída para imprimir.");
-                return;
-            }
-
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir Cargas de 3/4 Concluídas</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write('<style>');
-            printWindow.document.write(`
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .card { break-inside: avoid; margin-bottom: 1rem; }
-                .card-header { background-color: #ffc107 !important; color: #000 !important; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            `);
-            printWindow.document.write('</style></head><body>');
-            
-            let contentToPrint = '<h3>Cargas de 3/4 Concluídas</h3>';
-            completedLoadsHeaders.forEach(header => {
-                contentToPrint += header.closest('.card.mb-3').outerHTML;
-            });
-
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
-        }
-
-        function imprimirCargasTresQuartosAutomatico(divId) {
-            const divToPrint = document.getElementById(divId);
-            if (!divToPrint) return;
-
-            const completedLoadsHeaders = divToPrint.querySelectorAll('.card-header.bg-warning');
-            if (completedLoadsHeaders.length === 0) {
-                alert("Nenhuma carga 3/4 automática concluída para imprimir.");
-                return;
-            }
-
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir Cargas 3/4 Automáticas Concluídas</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write('<style>');
-            printWindow.document.write(`
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .card { break-inside: avoid; margin-bottom: 1rem; }
-                .card-header { background-color: #ffc107 !important; color: #000 !important; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            `);
-            printWindow.document.write('</style></head><body>');
-            
-            let contentToPrint = '<h3>Cargas de 3/4 Automáticas Concluídas</h3>';
-            completedLoadsHeaders.forEach(header => {
-                contentToPrint += header.closest('.card.mb-3').outerHTML;
-            });
-
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
-        }
-
-        function imprimirCargasVanFallback(divId) {
-            const divToPrint = document.getElementById(divId);
-            if (!divToPrint) return;
-
-            // Select only the cards within the fallback van section
-            const fallbackVanSection = divToPrint.querySelector('h3.text-info');
-            if (!fallbackVanSection) {
-                alert("Nenhuma carga de Van (Fallback da Fiorino) para imprimir.");
-                return;
-            }
-            
-            let contentToPrint = '';
-            let currentElement = fallbackVanSection.closest('div.d-flex').nextElementSibling; // Start from the first card after the header
-
-            while (currentElement && currentElement.classList.contains('card')) {
-                contentToPrint += currentElement.outerHTML;
-                currentElement = currentElement.nextElementSibling;
-            }
-
-            if (contentToPrint === '') {
-                alert("Nenhuma carga de Van (Fallback da Fiorino) para imprimir.");
-                return;
-            }
-
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir Cargas de Van (Fallback da Fiorino)</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write('<style>');
-            printWindow.document.write(`
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .card { break-inside: avoid; margin-bottom: 1rem; }
-                .card-header { background-color: #0dcaf0 !important; color: #fff !important; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            `);
-            printWindow.document.write('</style></head><body>');
-            
-            printWindow.document.body.innerHTML = '<h3>Cargas de Van (Fallback da Fiorino)</h3>' + contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
-        }
-
-        function imprimirCargas34Fallback(divId) {
-            const divToPrint = document.getElementById(divId);
-            if (!divToPrint) return;
-
-            // Select only the cards within the fallback 3/4 section
-            const fallback34Section = divToPrint.querySelector('h3:contains("Carga de 3/4 (Fallback da Van)")');
-            if (!fallback34Section) {
-                alert("Nenhuma carga de 3/4 (Fallback da Van) para imprimir.");
-                return;
-            }
-            
-            let contentToPrint = '';
-            let currentElement = fallback34Section.closest('div.d-flex').nextElementSibling; // Start from the first card after the header
-
-            while (currentElement && currentElement.classList.contains('card')) {
-                contentToPrint += currentElement.outerHTML;
-                currentElement = currentElement.nextElementSibling;
-            }
-
-            if (contentToPrint === '') {
-                alert("Nenhuma carga de 3/4 (Fallback da Van) para imprimir.");
-                return;
-            }
-
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir Cargas de 3/4 (Fallback da Van)</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write('<style>');
-            printWindow.document.write(`
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .card { break-inside: avoid; margin-bottom: 1rem; }
-                .card-header { background-color: #ffc107 !important; color: #000 !important; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            `);
-            printWindow.document.write('</style></head><body>');
-            
-            printWindow.document.body.innerHTML = '<h3>Cargas de 3/4 (Fallback da Van)</h3>' + contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
-        }
-
-        function imprimirCargasToco() {
-            const divToPrint = document.getElementById('resultado-toco');
-            if (!divToPrint) return;
-
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir Cargas "Toco"</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write('<style>');
-            printWindow.document.write(`
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .accordion-item { break-inside: avoid; margin-bottom: 1rem; }
-                .accordion-button { background-color: #f8f9fa !important; color: #000 !important; border: 1px solid #dee2e6 !important; }
-                .accordion-body { background-color: #fff !important; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            `);
-            printWindow.document.write('</style></head><body>');
-            
-            let contentToPrint = '<h3>Cargas "Toco"</h3>';
-            contentToPrint += divToPrint.innerHTML;
-
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
+            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
 
         function imprimirTocoIndividual(cf) {
-            if (!gruposToco[cf]) {
-                alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`);
-                return;
-            }
-
-            const grupo = gruposToco[cf];
-            const pedidos = grupo.pedidos;
+            if (!gruposToco[cf]) { alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`); return; }
+            const grupo = gruposToco[cf]; const pedidos = grupo.pedidos;
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             const printWindow = window.open('', '', 'height=800,width=1200');
             printWindow.document.write('<html><head><title>Imprimir Carga Toco CF: ' + cf + '</title>');
             printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write('<style>');
-            printWindow.document.write(`
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .card { break-inside: avoid; margin-bottom: 1rem; }
-                .card-header { background-color: #f8f9fa !important; color: #000 !important; border: 1px solid #dee2e6 !important; }
+            printWindow.document.write(`<style>
+                body { margin: 20px; }
                 .table-responsive { overflow: visible !important; }
                 table, th, td { border: 1px solid #dee2e6 !important; }
-                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            `);
-            printWindow.document.write('</style></head><body>');
+                h3 { margin-bottom: 1rem; }
+            </style></head><body>`);
             
-            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>`;
-            contentToPrint += createTable(pedidos); // Reusing createTable function
+            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos);
 
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
+            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
