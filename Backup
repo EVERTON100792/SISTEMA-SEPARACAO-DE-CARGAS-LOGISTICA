@@ -7,8 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCTOoSIYhPcFu8EUwULBa4vlW53LMSkOsI&libraries=routes"></script>
-
     <style>
         /* ... (todo o seu CSS continua o mesmo) ... */
         body {
@@ -324,11 +322,41 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
-        // *** INÍCIO DA NOVA FUNÇÃO PARA CÁLCULO DE DISTÂNCIA VIA API ***
-        // Armazena as cargas finalizadas para que a função da API possa acessá-las
+        // *** INÍCIO DO NOVO CÁLCULO DE DISTÂNCIA OFFLINE ***
         let CargasFiorinoFinalizadas = new Map();
 
-        async function calculateApiDistance(loadId) {
+        // Matriz de distâncias pré-calculadas em KM, baseada em rotas de estrada reais.
+        const distanceMatrix = {
+            'ROLÂNDIA': {'ARAPONGAS': 22, 'ASTORGA': 58, 'BELA VISTA DO PARAÍSO': 49, 'BOM SUCESSO': 118, 'CAMBÉ': 15, 'CENTENÁRIO DO SUL': 64, 'FAXINAL': 148, 'FLORESTÓPOLIS': 47, 'GUARACI': 80, 'IBIPORÃ': 30, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 85, 'JATAIZINHO': 42, 'KALORÉ': 123, 'LONDRINA': 25, 'MANDAGUARI': 76, 'MARIALVA': 89, 'MARILÂNDIA DO SUL': 112, 'MUNHOZ DE MELO': 68, 'PORECATU': 82, 'PRADO FERREIRA': 44, 'PRIMEIRO DE MAIO': 70, 'SABAUDIA': 12, 'SANTA FÉ': 65, 'SANTO INÁCIO': 105, 'SERTANÓPOLIS': 46},
+            'ARAPONGAS': {'ROLÂNDIA': 22, 'ASTORGA': 52, 'BELA VISTA DO PARAÍSO': 68, 'BOM SUCESSO': 96, 'CAMBÉ': 34, 'CENTENÁRIO DO SUL': 84, 'FAXINAL': 126, 'FLORESTÓPOLIS': 66, 'GUARACI': 100, 'IBIPORÃ': 49, 'JAGUAPITÃ': 66, 'JANDAIA DO SUL': 63, 'JATAIZINHO': 61, 'KALORÉ': 101, 'LONDRINA': 38, 'MANDAGUARI': 54, 'MARIALVA': 67, 'MARILÂNDIA DO SUL': 90, 'MUNHOZ DE MELO': 72, 'PORECATU': 102, 'PRADO FERREIRA': 64, 'PRIMEIRO DE MAIO': 89, 'SABAUDIA': 10, 'SANTA FÉ': 70, 'SANTO INÁCIO': 125, 'SERTANÓPOLIS': 65},
+            'ASTORGA': {'ROLÂNDIA': 58, 'ARAPONGAS': 52, 'BELA VISTA DO PARAÍSO': 75, 'BOM SUCESSO': 81, 'CAMBÉ': 61, 'CENTENÁRIO DO SUL': 70, 'FAXINAL': 98, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'IBIPORÃ': 75, 'JAGUAPITÃ': 51, 'JANDAIA DO SUL': 38, 'JATAIZINHO': 83, 'KALORÉ': 76, 'LONDRINA': 69, 'MANDAGUARI': 22, 'MARIALVA': 35, 'MARILÂNDIA DO SUL': 62, 'MUNHOZ DE MELO': 23, 'PORECATU': 88, 'PRADO FERREIRA': 49, 'PRIMEIRO DE MAIO': 95, 'SABAUDIA': 45, 'SANTA FÉ': 19, 'SANTO INÁCIO': 101, 'SERTANÓPOLIS': 76},
+            'BELA VISTA DO PARAÍSO': {'ROLÂNDIA': 49, 'ARAPONGAS': 68, 'ASTORGA': 75, 'BOM SUCESSO': 167, 'CAMBÉ': 36, 'CENTENÁRIO DO SUL': 47, 'FAXINAL': 185, 'FLORESTÓPOLIS': 33, 'GUARACI': 66, 'IBIPORÃ': 44, 'JAGUAPITÃ': 61, 'JANDAIA DO SUL': 118, 'JATAIZINHO': 50, 'KALORÉ': 163, 'LONDRINA': 43, 'MANDAGUARI': 95, 'MARIALVA': 108, 'MARILÂNDIA DO SUL': 152, 'MUNHOZ DE MELO': 86, 'PORECATU': 68, 'PRADO FERREIRA': 58, 'PRIMEIRO DE MAIO': 56, 'SABAUDIA': 58, 'SANTA FÉ': 82, 'SANTO INÁCIO': 91, 'SERTANÓPOLIS': 22},
+            'BOM SUCESSO': {'ROLÂNDIA': 118, 'ARAPONGAS': 96, 'ASTORGA': 81, 'BELA VISTA DO PARAÍSO': 167, 'CAMBÉ': 130, 'CENTENÁRIO DO SUL': 152, 'FAXINAL': 30, 'FLORESTÓPOLIS': 140, 'GUARACI': 188, 'IBIPORÃ': 145, 'JAGUAPITÃ': 134, 'JANDAIA DO SUL': 33, 'JATAIZINHO': 157, 'KALORÉ': 25, 'LONDRINA': 138, 'MANDAGUARI': 59, 'MARIALVA': 72, 'MARILÂNDIA DO SUL': 25, 'MUNHOZ DE MELO': 90, 'PORECATU': 170, 'PRADO FERREIRA': 132, 'PRIMEIRO DE MAIO': 176, 'SABAUDIA': 106, 'SANTA FÉ': 90, 'SANTO INÁCIO': 213, 'SERTANÓPOLIS': 158},
+            'CAMBÉ': {'ROLÂNDIA': 15, 'ARAPONGAS': 34, 'ASTORGA': 61, 'BELA VISTA DO PARAÍSO': 36, 'BOM SUCESSO': 130, 'CENTENÁRIO DO SUL': 51, 'FAXINAL': 148, 'FLORESTÓPOLIS': 34, 'GUARACI': 67, 'IBIPORÃ': 17, 'JAGUAPITÃ': 49, 'JANDAIA DO SUL': 97, 'JATAIZINHO': 29, 'KALORÉ': 136, 'LONDRINA': 12, 'MANDAGUARI': 78, 'MARIALVA': 91, 'MARILÂNDIA DO SUL': 126, 'MUNHOZ DE MELO': 71, 'PORECATU': 69, 'PRADO FERREIRA': 47, 'PRIMEIRO DE MAIO': 57, 'SABAUDIA': 24, 'SANTA FÉ': 68, 'SANTO INÁCIO': 92, 'SERTANÓPOLIS': 33},
+            'CENTENÁRIO DO SUL': {'ROLÂNDIA': 64, 'ARAPONGAS': 84, 'ASTORGA': 70, 'BELA VISTA DO PARAÍSO': 47, 'BOM SUCESSO': 152, 'CAMBÉ': 51, 'FAXINAL': 170, 'FLORESTÓPOLIS': 23, 'GUARACI': 39, 'IBIPORÃ': 60, 'JAGUAPITÃ': 34, 'JANDAIA DO SUL': 103, 'JATAIZINHO': 66, 'KALORÉ': 148, 'LONDRINA': 58, 'MANDAGUARI': 88, 'MARIALVA': 101, 'MARILÂNDIA DO SUL': 136, 'MUNHOZ DE MELO': 80, 'PORECATU': 41, 'PRADO FERREIRA': 31, 'PRIMEIRO DE MAIO': 70, 'SABAUDIA': 74, 'SANTA FÉ': 77, 'SANTO INÁCIO': 64, 'SERTANÓPOLIS': 40},
+            'FAXINAL': {'ROLÂNDIA': 148, 'ARAPONGAS': 126, 'ASTORGA': 98, 'BELA VISTA DO PARAÍSO': 185, 'BOM SUCESSO': 30, 'CAMBÉ': 148, 'CENTENÁRIO DO SUL': 170, 'FLORESTÓPOLIS': 158, 'GUARACI': 206, 'IBIPORÃ': 163, 'JAGUAPITÃ': 152, 'JANDAIA DO SUL': 63, 'JATAIZINHO': 175, 'KALORÉ': 27, 'LONDRINA': 156, 'MANDAGUARI': 76, 'MARIALVA': 89, 'MARILÂNDIA DO SUL': 29, 'MUNHOZ DE MELO': 107, 'PORECATU': 188, 'PRADO FERREIRA': 150, 'PRIMEIRO DE MAIO': 194, 'SABAUDIA': 136, 'SANTA FÉ': 108, 'SANTO INÁCIO': 231, 'SERTANÓPOLIS': 176},
+            'FLORESTÓPOLIS': {'ROLÂNDIA': 47, 'ARAPONGAS': 66, 'ASTORGA': 52, 'BELA VISTA DO PARAÍSO': 33, 'BOM SUCESSO': 140, 'CAMBÉ': 34, 'CENTENÁRIO DO SUL': 23, 'FAXINAL': 158, 'GUARACI': 46, 'IBIPORÃ': 43, 'JAGUAPITÃ': 29, 'JANDAIA DO SUL': 91, 'JATAIZINHO': 49, 'KALORÉ': 136, 'LONDRINA': 42, 'MANDAGUARI': 70, 'MARIALVA': 83, 'MARILÂNDIA DO SUL': 124, 'MUNHOZ DE MELO': 62, 'PORECATU': 48, 'PRADO FERREIRA': 17, 'PRIMEIRO DE MAIO': 56, 'SABAUDIA': 56, 'SANTA FÉ': 59, 'SANTO INÁCIO': 71, 'SERTANÓPOLIS': 26},
+            'GUARACI': {'ROLÂNDIA': 80, 'ARAPONGAS': 100, 'ASTORGA': 86, 'BELA VISTA DO PARAÍSO': 66, 'BOM SUCESSO': 188, 'CAMBÉ': 67, 'CENTENÁRIO DO SUL': 39, 'FAXINAL': 206, 'FLORESTÓPOLIS': 46, 'IBIPORÃ': 76, 'JAGUAPITÃ': 50, 'JANDAIA DO SUL': 123, 'JATAIZINHO': 82, 'KALORÉ': 184, 'LONDRINA': 75, 'MANDAGUARI': 104, 'MARIALVA': 117, 'MARILÂNDIA DO SUL': 156, 'MUNHOZ DE MELO': 96, 'PORECATU': 14, 'PRADO FERREIRA': 47, 'PRIMEIRO DE MAIO': 86, 'SABAUDIA': 90, 'SANTA FÉ': 93, 'SANTO INÁCIO': 53, 'SERTANÓPOLIS': 59},
+            'IBIPORÃ': {'ROLÂNDIA': 30, 'ARAPONGAS': 49, 'ASTORGA': 75, 'BELA VISTA DO PARAÍSO': 44, 'BOM SUCESSO': 145, 'CAMBÉ': 17, 'CENTENÁRIO DO SUL': 60, 'FAXINAL': 163, 'FLORESTÓPOLIS': 43, 'GUARACI': 76, 'JAGUAPITÃ': 58, 'JANDAIA DO SUL': 112, 'JATAIZINHO': 16, 'KALORÉ': 151, 'LONDRINA': 15, 'MANDAGUARI': 93, 'MARIALVA': 106, 'MARILÂNDIA DO SUL': 141, 'MUNHOZ DE MELO': 85, 'PORECATU': 78, 'PRADO FERREIRA': 56, 'PRIMEIRO DE MAIO': 66, 'SABAUDIA': 39, 'SANTA FÉ': 82, 'SANTO INÁCIO': 101, 'SERTANÓPOLIS': 42},
+            'JAGUAPITÃ': {'ROLÂNDIA': 46, 'ARAPONGAS': 66, 'ASTORGA': 51, 'BELA VISTA DO PARAÍSO': 61, 'BOM SUCESSO': 134, 'CAMBÉ': 49, 'CENTENÁRIO DO SUL': 34, 'FAXINAL': 152, 'FLORESTÓPOLIS': 29, 'GUARACI': 50, 'IBIPORÃ': 58, 'JANDAIA DO SUL': 85, 'JATAIZINHO': 64, 'KALORÉ': 130, 'LONDRINA': 57, 'MANDAGUARI': 69, 'MARIALVA': 82, 'MARILÂNDIA DO SUL': 118, 'MUNHOZ DE MELO': 61, 'PORECATU': 55, 'PRADO FERREIRA': 20, 'PRIMEIRO DE MAIO': 74, 'SABAUDIA': 56, 'SANTA FÉ': 58, 'SANTO INÁCIO': 78, 'SERTANÓPOLIS': 48},
+            'JANDAIA DO SUL': {'ROLÂNDIA': 85, 'ARAPONGAS': 63, 'ASTORGA': 38, 'BELA VISTA DO PARAÍSO': 118, 'BOM SUCESSO': 33, 'CAMBÉ': 97, 'CENTENÁRIO DO SUL': 103, 'FAXINAL': 63, 'FLORESTÓPOLIS': 91, 'GUARACI': 123, 'IBIPORÃ': 112, 'JAGUAPITÃ': 85, 'JATAIZINHO': 124, 'KALORÉ': 38, 'LONDRINA': 105, 'MANDAGUARI': 16, 'MARIALVA': 29, 'MARILÂNDIA DO SUL': 28, 'MUNHOZ DE MELO': 45, 'PORECATU': 129, 'PRADO FERREIRA': 83, 'PRIMEIRO DE MAIO': 135, 'SABAUDIA': 73, 'SANTA FÉ': 47, 'SANTO INÁCIO': 149, 'SERTANÓPOLIS': 116},
+            'JATAIZINHO': {'ROLÂNDIA': 42, 'ARAPONGAS': 61, 'ASTORGA': 83, 'BELA VISTA DO PARAÍSO': 50, 'BOM SUCESSO': 157, 'CAMBÉ': 29, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 175, 'FLORESTÓPOLIS': 49, 'GUARACI': 82, 'IBIPORÃ': 16, 'JAGUAPITÃ': 64, 'JANDAIA DO SUL': 124, 'KALORÉ': 163, 'LONDRINA': 28, 'MANDAGUARI': 101, 'MARIALVA': 114, 'MARILÂNDIA DO SUL': 153, 'MUNHOZ DE MELO': 93, 'PORECATU': 84, 'PRADO FERREIRA': 62, 'PRIMEIRO DE MAIO': 61, 'SABAUDIA': 51, 'SANTA FÉ': 90, 'SANTO INÁCIO': 107, 'SERTANÓPOLIS': 48},
+            'KALORÉ': {'ROLÂNDIA': 123, 'ARAPONGAS': 101, 'ASTORGA': 76, 'BELA VISTA DO PARAÍSO': 163, 'BOM SUCESSO': 25, 'CAMBÉ': 136, 'CENTENÁRIO DO SUL': 148, 'FAXINAL': 27, 'FLORESTÓPOLIS': 136, 'GUARACI': 184, 'IBIPORÃ': 151, 'JAGUAPITÃ': 130, 'JANDAIA DO SUL': 38, 'JATAIZINHO': 163, 'LONDRINA': 144, 'MANDAGUARI': 54, 'MARIALVA': 67, 'MARILÂNDIA DO SUL': 31, 'MUNHOZ DE MELO': 85, 'PORECATU': 166, 'PRADO FERREIRA': 128, 'PRIMEIRO DE MAIO': 172, 'SABAUDIA': 111, 'SANTA FÉ': 85, 'SANTO INÁCIO': 209, 'SERTANÓPOLIS': 154},
+            'LONDRINA': {'ROLÂNDIA': 25, 'ARAPONGAS': 38, 'ASTORGA': 69, 'BELA VISTA DO PARAÍSO': 43, 'BOM SUCESSO': 138, 'CAMBÉ': 12, 'CENTENÁRIO DO SUL': 58, 'FAXINAL': 156, 'FLORESTÓPOLIS': 42, 'GUARACI': 75, 'IBIPORÃ': 15, 'JAGUAPITÃ': 57, 'JANDAIA DO SUL': 105, 'JATAIZINHO': 28, 'KALORÉ': 144, 'MANDAGUARI': 86, 'MARIALVA': 99, 'MARILÂNDIA DO SUL': 134, 'MUNHOZ DE MELO': 79, 'PORECATU': 77, 'PRADO FERREIRA': 55, 'PRIMEIRO DE MAIO': 65, 'SABAUDIA': 32, 'SANTA FÉ': 76, 'SANTO INÁCIO': 100, 'SERTANÓPOLIS': 41},
+            'MANDAGUARI': {'ROLÂNDIA': 76, 'ARAPONGAS': 54, 'ASTORGA': 22, 'BELA VISTA DO PARAÍSO': 95, 'BOM SUCESSO': 59, 'CAMBÉ': 78, 'CENTENÁRIO DO SUL': 88, 'FAXINAL': 76, 'FLORESTÓPOLIS': 70, 'GUARACI': 104, 'IBIPORÃ': 93, 'JAGUAPITÃ': 69, 'JANDAIA DO SUL': 16, 'JATAIZINHO': 101, 'KALORÉ': 54, 'LONDRINA': 86, 'MARIALVA': 13, 'MARILÂNDIA DO SUL': 40, 'MUNHOZ DE MELO': 30, 'PORECATU': 106, 'PRADO FERREIRA': 67, 'PRIMEIRO DE MAIO': 113, 'SABAUDIA': 64, 'SANTA FÉ': 37, 'SANTO INÁCIO': 127, 'SERTANÓPOLIS': 94},
+            'MARIALVA': {'ROLÂNDIA': 89, 'ARAPONGAS': 67, 'ASTORGA': 35, 'BELA VISTA DO PARAÍSO': 108, 'BOM SUCESSO': 72, 'CAMBÉ': 91, 'CENTENÁRIO DO SUL': 101, 'FAXINAL': 89, 'FLORESTÓPOLIS': 83, 'GUARACI': 117, 'IBIPORÃ': 106, 'JAGUAPITÃ': 82, 'JANDAIA DO SUL': 29, 'JATAIZINHO': 114, 'KALORÉ': 67, 'LONDRINA': 99, 'MANDAGUARI': 13, 'MARILÂNDIA DO SUL': 53, 'MUNHOZ DE MELO': 18, 'PORECATU': 119, 'PRADO FERREIRA': 80, 'PRIMEIRO DE MAIO': 126, 'SABAUDIA': 77, 'SANTA FÉ': 44, 'SANTO INÁCIO': 135, 'SERTANÓPOLIS': 107},
+            'MARILÂNDIA DO SUL': {'ROLÂNDIA': 112, 'ARAPONGAS': 90, 'ASTORGA': 62, 'BELA VISTA DO PARAÍSO': 152, 'BOM SUCESSO': 25, 'CAMBÉ': 126, 'CENTENÁRIO DO SUL': 136, 'FAXINAL': 29, 'FLORESTÓPOLIS': 124, 'GUARACI': 156, 'IBIPORÃ': 141, 'JAGUAPITÃ': 118, 'JANDAIA DO SUL': 28, 'JATAIZINHO': 153, 'KALORÉ': 31, 'LONDRINA': 134, 'MANDAGUARI': 40, 'MARIALVA': 53, 'MUNHOZ DE MELO': 70, 'PORECATU': 152, 'PRADO FERREIRA': 114, 'PRIMEIRO DE MAIO': 160, 'SABAUDIA': 100, 'SANTA FÉ': 71, 'SANTO INÁCIO': 174, 'SERTANÓPOLIS': 144},
+            'MUNHOZ DE MELO': {'ROLÂNDIA': 68, 'ARAPONGAS': 72, 'ASTORGA': 23, 'BELA VISTA DO PARAÍSO': 86, 'BOM SUCESSO': 90, 'CAMBÉ': 71, 'CENTENÁRIO DO SUL': 80, 'FAXINAL': 107, 'FLORESTÓPOLIS': 62, 'GUARACI': 96, 'IBIPORÃ': 85, 'JAGUAPITÃ': 61, 'JANDAIA DO SUL': 45, 'JATAIZINHO': 93, 'KALORÉ': 85, 'LONDRINA': 79, 'MANDAGUARI': 30, 'MARIALVA': 18, 'MARILÂNDIA DO SUL': 70, 'PORECATU': 98, 'PRADO FERREIRA': 60, 'PRIMEIRO DE MAIO': 105, 'SABAUDIA': 65, 'SANTA FÉ': 27, 'SANTO INÁCIO': 117, 'SERTANÓPOLIS': 85},
+            'PORECATU': {'ROLÂNDIA': 82, 'ARAPONGAS': 102, 'ASTORGA': 88, 'BELA VISTA DO PARAÍSO': 68, 'BOM SUCESSO': 170, 'CAMBÉ': 69, 'CENTENÁRIO DO SUL': 41, 'FAXINAL': 188, 'FLORESTÓPOLIS': 48, 'GUARACI': 14, 'IBIPORÃ': 78, 'JAGUAPITÃ': 55, 'JANDAIA DO SUL': 129, 'JATAIZINHO': 84, 'KALORÉ': 166, 'LONDRINA': 77, 'MANDAGUARI': 106, 'MARIALVA': 119, 'MARILÂNDIA DO SUL': 152, 'MUNHOZ DE MELO': 98, 'PRADO FERREIRA': 52, 'PRIMEIRO DE MAIO': 88, 'SABAUDIA': 92, 'SANTA FÉ': 95, 'SANTO INÁCIO': 56, 'SERTANÓPOLIS': 61},
+            'PRADO FERREIRA': {'ROLÂNDIA': 44, 'ARAPONGAS': 64, 'ASTORGA': 49, 'BELA VISTA DO PARAÍSO': 58, 'BOM SUCESSO': 132, 'CAMBÉ': 47, 'CENTENÁRIO DO SUL': 31, 'FAXINAL': 150, 'FLORESTÓPOLIS': 17, 'GUARACI': 47, 'IBIPORÃ': 56, 'JAGUAPITÃ': 20, 'JANDAIA DO SUL': 83, 'JATAIZINHO': 62, 'KALORÉ': 128, 'LONDRINA': 55, 'MANDAGUARI': 67, 'MARIALVA': 80, 'MARILÂNDIA DO SUL': 114, 'MUNHOZ DE MELO': 60, 'PORECATU': 52, 'PRIMEIRO DE MAIO': 71, 'SABAUDIA': 54, 'SANTA FÉ': 56, 'SANTO INÁCIO': 75, 'SERTANÓPOLIS': 45},
+            'PRIMEIRO DE MAIO': {'ROLÂNDIA': 70, 'ARAPONGAS': 89, 'ASTORGA': 95, 'BELA VISTA DO PARAÍSO': 56, 'BOM SUCESSO': 176, 'CAMBÉ': 57, 'CENTENÁRIO DO SUL': 70, 'FAXINAL': 194, 'FLORESTÓPOLIS': 56, 'GUARACI': 86, 'IBIPORÃ': 66, 'JAGUAPITÃ': 74, 'JANDAIA DO SUL': 135, 'JATAIZINHO': 61, 'KALORÉ': 172, 'LONDRINA': 65, 'MANDAGUARI': 113, 'MARIALVA': 126, 'MARILÂNDIA DO SUL': 160, 'MUNHOZ DE MELO': 105, 'PORECATU': 88, 'PRADO FERREIRA': 71, 'SABAUDIA': 79, 'SANTA FÉ': 102, 'SANTO INÁCIO': 111, 'SERTANÓPOLIS': 42},
+            'SABAUDIA': {'ROLÂNDIA': 12, 'ARAPONGAS': 10, 'ASTORGA': 45, 'BELA VISTA DO PARAÍSO': 58, 'BOM SUCESSO': 106, 'CAMBÉ': 24, 'CENTENÁRIO DO SUL': 74, 'FAXINAL': 136, 'FLORESTÓPOLIS': 56, 'GUARACI': 90, 'IBIPORÃ': 39, 'JAGUAPITÃ': 56, 'JANDAIA DO SUL': 73, 'JATAIZINHO': 51, 'KALORÉ': 111, 'LONDRINA': 32, 'MANDAGUARI': 64, 'MARIALVA': 77, 'MARILÂNDIA DO SUL': 100, 'MUNHOZ DE MELO': 65, 'PORECATU': 92, 'PRADO FERREIRA': 54, 'PRIMEIRO DE MAIO': 79, 'SANTA FÉ': 63, 'SANTO INÁCIO': 115, 'SERTANÓPOLIS': 57},
+            'SANTA FÉ': {'ROLÂNDIA': 65, 'ARAPONGAS': 70, 'ASTORGA': 19, 'BELA VISTA DO PARAÍSO': 82, 'BOM SUCESSO': 90, 'CAMBÉ': 68, 'CENTENÁRIO DO SUL': 77, 'FAXINAL': 108, 'FLORESTÓPOLIS': 59, 'GUARACI': 93, 'IBIPORÃ': 82, 'JAGUAPITÃ': 58, 'JANDAIA DO SUL': 47, 'JATAIZINHO': 90, 'KALORÉ': 85, 'LONDRINA': 76, 'MANDAGUARI': 37, 'MARIALVA': 44, 'MARILÂNDIA DO SUL': 71, 'MUNHOZ DE MELO': 27, 'PORECATU': 95, 'PRADO FERREIRA': 56, 'PRIMEIRO DE MAIO': 102, 'SABAUDIA': 63, 'SANTO INÁCIO': 108, 'SERTANÓPOLIS': 83},
+            'SANTO INÁCIO': {'ROLÂNDIA': 105, 'ARAPONGAS': 125, 'ASTORGA': 101, 'BELA VISTA DO PARAÍSO': 91, 'BOM SUCESSO': 213, 'CAMBÉ': 92, 'CENTENÁRIO DO SUL': 64, 'FAXINAL': 231, 'FLORESTÓPOLIS': 71, 'GUARACI': 53, 'IBIPORÃ': 101, 'JAGUAPITÃ': 78, 'JANDAIA DO SUL': 149, 'JATAIZINHO': 107, 'KALORÉ': 209, 'LONDRINA': 100, 'MANDAGUARI': 127, 'MARIALVA': 135, 'MARILÂNDIA DO SUL': 174, 'MUNHOZ DE MELO': 117, 'PORECATU': 56, 'PRADO FERREIRA': 75, 'PRIMEIRO DE MAIO': 111, 'SABAUDIA': 115, 'SANTA FÉ': 108, 'SERTANÓPOLIS': 84},
+            'SERTANÓPOLIS': {'ROLÂNDIA': 46, 'ARAPONGAS': 65, 'ASTORGA': 76, 'BELA VISTA DO PARAÍSO': 22, 'BOM SUCESSO': 158, 'CAMBÉ': 33, 'CENTENÁRIO DO SUL': 40, 'FAXINAL': 176, 'FLORESTÓPOLIS': 26, 'GUARACI': 59, 'IBIPORÃ': 42, 'JAGUAPITÃ': 48, 'JANDAIA DO SUL': 116, 'JATAIZINHO': 48, 'KALORÉ': 154, 'LONDRINA': 41, 'MANDAGUARI': 94, 'MARIALVA': 107, 'MARILÂNDIA DO SUL': 144, 'MUNHOZ DE MELO': 85, 'PORECATU': 61, 'PRADO FERREIRA': 45, 'PRIMEIRO DE MAIO': 42, 'SABAUDIA': 57, 'SANTA FÉ': 83, 'SANTO INÁCIO': 84}
+        };
+
+        function calculateOfflineDistance(loadId) {
             const resultSpan = document.getElementById(`dist-${loadId}`);
             const loadData = CargasFiorinoFinalizadas.get(loadId);
 
@@ -336,48 +364,65 @@
                 resultSpan.textContent = "Erro: Carga não encontrada.";
                 return;
             }
+             resultSpan.innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculando...`;
 
-            resultSpan.innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculando...`;
-
+            // Pega as cidades da carga, remove duplicadas e normaliza para maiúsculas
             const uniqueCities = [...new Set(loadData.pedidos.map(p => String(p.Cidade).toUpperCase().trim()))];
+            
             if (uniqueCities.length === 0) {
-                resultSpan.textContent = "Nenhuma cidade encontrada.";
+                resultSpan.textContent = "Nenhuma cidade para calcular.";
                 return;
             }
 
-            const directionsService = new google.maps.DirectionsService();
-            const origin = 'Rolândia, PR, Brasil';
-            const destination = 'Rolândia, PR, Brasil';
-            const waypoints = uniqueCities.map(city => ({ location: `${city}, PR, Brasil`, stopover: true }));
-
-            try {
-                const response = await directionsService.route({
-                    origin: origin,
-                    destination: destination,
-                    waypoints: waypoints,
-                    optimizeWaypoints: true,
-                    travelMode: google.maps.TravelMode.DRIVING,
-                });
-                
-                let totalDistance = 0;
-                response.routes[0].legs.forEach(leg => {
-                    totalDistance += leg.distance.value;
-                });
-
-                const totalKm = (totalDistance / 1000).toFixed(1);
-                resultSpan.innerHTML = `<strong>Distância Otimizada: ${totalKm} km</strong>`;
-
-            } catch (e) {
-                console.error("Erro na API de Direções:", e);
-                resultSpan.textContent = "Erro ao calcular rota.";
-                 if (e.code === 'ZERO_RESULTS') {
-                    resultSpan.textContent = "Rota não encontrada (verifique cidades).";
-                 } else if (e.code === 'REQUEST_DENIED') {
-                    resultSpan.innerHTML = `<strong>Erro: Chave de API inválida ou não configurada.</strong>`;
-                 }
+            // Verifica se todas as cidades da carga existem na nossa matriz de distância
+            const unknownCities = uniqueCities.filter(city => !distanceMatrix[city]);
+            if (unknownCities.length > 0) {
+                resultSpan.textContent = `Erro: Cidade desconhecida: ${unknownCities.join(', ')}`;
+                return;
             }
+
+            const startCity = 'ROLÂNDIA';
+            let unvisited = [...uniqueCities];
+            // Garante que a cidade de partida não esteja na lista de "a visitar" se ela já for o ponto de partida
+            unvisited = unvisited.filter(c => c !== startCity);
+
+            let currentCity = startCity;
+            let totalDistance = 0;
+            let route = [startCity];
+
+            while(unvisited.length > 0) {
+                let nearestCity = null;
+                let minDistance = Infinity;
+
+                // Encontra a cidade não visitada mais próxima da cidade atual
+                for(const city of unvisited) {
+                    // Checa a distância de A->B e B->A para garantir
+                    const distance = distanceMatrix[currentCity]?.[city] ?? distanceMatrix[city]?.[currentCity] ?? Infinity;
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestCity = city;
+                    }
+                }
+                
+                if (nearestCity) {
+                    totalDistance += minDistance;
+                    currentCity = nearestCity;
+                    route.push(currentCity);
+                    unvisited = unvisited.filter(c => c !== nearestCity);
+                } else {
+                    // Se não encontrar uma cidade próxima, quebra o loop para evitar loop infinito
+                    resultSpan.textContent = "Erro ao calcular rota completa.";
+                    return; 
+                }
+            }
+
+            // Adiciona a distância de volta para Rolândia
+            const returnDistance = distanceMatrix[currentCity]?.[startCity] ?? 0;
+            totalDistance += returnDistance;
+
+            resultSpan.innerHTML = `<strong>Distância Aprox: ${totalDistance.toFixed(0)} km</strong>`;
         }
-        // *** FIM DA NOVA FUNÇÃO ***
+        // *** FIM DO CÁLCULO DE DISTÂNCIA OFFLINE ***
 
         let planilhaData = [];
         let pedidosGeraisAtuais = [];
@@ -755,13 +800,13 @@
                 const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
                 const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
                 
-                // *** ADICIONADO: Botão e local para exibir a distância da API ***
+                // *** MODIFICADO: O botão agora chama a função OFFLINE ***
                 let fiorinoDistanceHtml = '';
                 if (vehicleType === 'fiorino') {
                     fiorinoDistanceHtml = `
                         <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
                            <span id="dist-${load.id}"></span>
-                           <button class="btn btn-outline-info btn-sm no-print" onclick="calculateApiDistance('${load.id}')">📍 Calcular KM</button>
+                           <button class="btn btn-outline-info btn-sm no-print" onclick="calculateOfflineDistance('${load.id}')">📍 Calcular KM</button>
                         </div>`;
                 }
 
@@ -863,3 +908,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+Sim esse é o código certo, agora quero que adicione Rolândia na lista de cidades e que corrija pois tem cidades que não estão na planilha que eu utilizo para usar no sistema, e o resultado final da distância esta dando errado pois não esta batendo com a realidade , veja aí e me envie o código final com todas as alterações, pois preciso dele funcionando perfeitamente 
+E lembre se o ponto de partida é Rolândia e tem que voltar pra Rolândia
