@@ -438,6 +438,7 @@
         const statusDiv = document.getElementById('status');
         const dropZone = document.getElementById('drop-zone');
         const dropZoneText = document.getElementById('drop-zone-text');
+        const isNumeric = (str) => str && /^\d+$/.test(String(str).trim());
 
         fileInput.addEventListener('change', (event) => { handleFile(event.target.files[0]); });
         dropZone.addEventListener('dragover', (event) => { event.stopPropagation(); event.preventDefault(); dropZone.classList.add('border-primary'); });
@@ -510,7 +511,8 @@
                 const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                 if (originalPedido) {
                     pedidoEncontrado = originalPedido;
-                    if (tocoPedidoIds.has(String(originalPedido.Num_Pedido))) { local = 'Filtrado (pertence a um grupo Toco)'; } 
+                    if (tocoPedidoIds.has(String(originalPedido.Num_Pedido))) { local = 'Filtrado (pertence a um grupo Toco)'; }
+                    else if (isNumeric(originalPedido.CF)) { local = 'Filtrado (possui CF numérico)'; }
                     else if (['21', '23', '17'].includes(String(originalPedido.Coluna4))) { local = 'Filtrado (Coluna4 é 21, 23, ou 17)'; } 
                     else if (String(originalPedido['BLOQ.']) === 'C' || String(originalPedido['BLOQ.']) === 'V') { local = 'Filtrado (Bloqueio C ou V)'; } 
                     else { local = 'Filtrado (outro motivo, verifique filtros)'; }
@@ -556,8 +558,8 @@
                 const pedidos = planilhaData.filter(p => String(p.Coluna4) != '500');
 
                 const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
-                const cfCounts = {}; const isNumeric = (str) => /^\d+$/.test(str);
-                pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(String(p.CF))) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
+                const cfCounts = {};
+                pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
                 const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
                 const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
                 gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
@@ -570,21 +572,26 @@
                 const clientesComBloqueio = new Set(); const clientesSemBloqueio = new Set();
                 pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
                 const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
-                const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 11101; const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 11731;
+                const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
                 
                 const pedidosGeraisFiltrados = pedidos.filter(p => {
                     if (tocoPedidoIds.has(String(p.Num_Pedido))) return false;
                     if (['21', '23', '17'].includes(String(p.Coluna4))) return false;
+
+                    // *** REGRA GLOBAL CORRIGIDA: Exclui QUALQUER pedido que não seja Toco e tenha um número no campo CF ***
+                    if (isNumeric(p.CF)) {
+                        return false;
+                    }
+
                     const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
-                    if ((rotaAtualNum === 11311 || rotaAtualNum === 11521 || rotaAtualNum === 11361) && isNumeric(String(p.CF))) { return false; }
-                    if (!(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return false;
+                    if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return false;
+
                     if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return false;
                     if (clientesParaRemover.has(String(p.Cliente))) return false;
                     return true;
                 });
 
                 let tresQuartosLoads = [];
-                // *** USA VALORES DOS INPUTS ***
                 const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value) || defaultConfigs.tresQuartosMinCapacity;
                 const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value) || defaultConfigs.tresQuartosMaxCapacity;
                 const LARGE_ORDER_KG = 1700;
@@ -663,7 +670,6 @@
 
             const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
 
-            // *** USA VALORES DOS INPUTS ***
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value) || defaultConfigs[`${vehicleType}MinCapacity`];
             const MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value) || defaultConfigs[`${vehicleType}MaxCapacity`];
             const MAX_CUBAGEM = parseFloat(document.getElementById(`${vehicleType}Cubage`).value) || defaultConfigs[`${vehicleType}Cubage`];
@@ -743,7 +749,6 @@
 
         function displayToco(div, grupos) {
             if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhuma carga toco encontrada.</div>'; return; }
-            // *** USA VALORES DOS INPUTS ***
             const MAX_KG_TOCO = parseFloat(document.getElementById('tocoMaxCapacity').value) || defaultConfigs.tocoMaxCapacity;
             
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionToco">';
