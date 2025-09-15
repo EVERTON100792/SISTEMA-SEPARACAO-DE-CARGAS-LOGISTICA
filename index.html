@@ -288,6 +288,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-danger me-auto" id="restore-defaults-btn">Restaurar Padrões</button>
                     <button type="button" class="btn btn-primary" id="save-settings-btn">Salvar e Atualizar</button>
                 </div>
             </div>
@@ -304,23 +305,7 @@
         let tocoPedidoIds = new Set();
         let vehicleConfigs = [];
 
-        const distanciasCidades = {
-             'LONDRINA': 25, 'CAMBE': 15, 'ARAPONGAS': 10, 'APUCARANA': 30, 'MARINGA': 60, 'IBIPORA': 40, 'SERTANOPOLIS': 60, 'JATAIZINHO': 50, 'CORNELIO PROCOPIO': 85, 'BANDEIRANTES': 115, 'SANTA MARIANA': 100, 'JANDAIA DO SUL': 45, 'MANDAGUARI': 80, 'PORECATU': 85, 'PARANAPOEMA': 130, 'ITAMBARACA': 85, 'CURITIBA': 400, 'PONTA GROSSA': 300, 'IMBAU': 200, 'ORTIGUEIRA': 180, 'MAUA DA SERRA': 100, 'CALIFORNIA': 50, 'CAMPO LARGO': 380, 'SAO JOSE DOS PINHAIS': 420, 'FOZ DO IGUACU': 550, 'COLOMBO': 410, 'GUARAPUAVA': 350, 'PARANAGUA': 450, 'TOLEDO': 400, 'PINHAIS': 400, 'ARAUCARIA': 400, 'UMUARAMA': 250, 'PARANAVAI': 150, 'FRANCISCO BELTRAO': 450, 'CAMPO MOURAO': 180, 'SARANDI': 70, 'PATO BRANCO': 400, 'TELEMACO BORBA': 250, 'CASTRO': 300, 'IRATI': 350, 'UNIAO DA VITORIA': 450, 'PRUDENTOPOLIS': 300, 'MARECHAL CANDIDO RONDON': 400, 'SANTO ANTONIO DA PLATINA': 150, 'LAPA': 400, 'PALMAS': 450, 'SAO MATEUS DO SUL': 400, 'JACAREZINHO': 150, 'MEDIANEIRA': 500, 'PAICANDU': 70, 'GUARATUBA': 500, 'JAGUARIAIVA': 200, 'RIO BRANCO DO SUL': 400, 'PALMEIRA': 350, 'QUEDAS DO IGUACU': 450, 'LARANJEIRAS DO SUL': 350, 'GUAIRA': 300, 'GOIOERE': 150, 'IBAITI': 150, 'PALOTINA': 350, 'IMBITUVA': 300, 'ARAPOTI': 200, 'NOVA ESPERANCA': 100, 'RESERVA': 200, 'ASTORGA': 50, 'CAMBARA': 100, 'CAMPO MAGRO': 400, 'PIRAI DO SUL': 250, 'MATINHOS': 500, 'ITAPERUCU': 400, 'CORONEL VIVIDA': 400, 'ANDIRA': 100, 'MANDIRITUBA': 400, 'CRUZEIRO DO OESTE': 200, 'SANTA TEREZINHA DE ITAIPU': 550, 'SENGES': 200,
-        };
-
-        // Elementos do DOM
-        const fileInput = document.getElementById('fileInput');
-        const processarBtn = document.getElementById('processarBtn');
-        const statusDiv = document.getElementById('status');
-        const dropZone = document.getElementById('drop-zone');
-        const dropZoneText = document.getElementById('drop-zone-text');
-        
-        // Modal de Carregamento
-        const loadingModalEl = document.getElementById('loadingModal');
-        const loadingModal = new bootstrap.Modal(loadingModalEl);
-        const loadingModalText = document.getElementById('loadingModalText');
-
-        // --- LÓGICA DE CONFIGURAÇÕES DE VEÍCULOS ---
+        // --- VALORES PADRÃO E DADOS ESTÁTICOS ---
         const defaultVehicleConfigs = [
             { name: 'Rota 11101', type: 'Fiorino', routes: ['11101'], minKg: 330, maxKg: 570, maxCubagem: 1.5 },
             { name: 'Rota 11301', type: 'Fiorino', routes: ['11301'], minKg: 330, maxKg: 570, maxCubagem: 1.5 },
@@ -344,19 +329,40 @@
             { name: 'Rotas 11501, 11502 & 11511', type: '3/4', routes: ['11501', '11502', '11511'], minKg: 2300, maxKg: 4100, maxCubagem: 15.0 },
             { name: 'Rota 11541', type: '3/4', routes: ['11541'], minKg: 2300, maxKg: 4100, maxCubagem: 15.0 },
         ];
+        const distanciasCidades = {
+             'LONDRINA': 25, 'CAMBE': 15, 'ARAPONGAS': 10, 'APUCARANA': 30, 'MARINGA': 60, 'IBIPORA': 40, 'SERTANOPOLIS': 60, 'JATAIZINHO': 50, 'CORNELIO PROCOPIO': 85, 'BANDEIRANTES': 115, 'SANTA MARIANA': 100, 'JANDAIA DO SUL': 45, 'MANDAGUARI': 80, 'PORECATU': 85, 'PARANAPOEMA': 130, 'ITAMBARACA': 85, 'CURITIBA': 400, 'PONTA GROSSA': 300, 'IMBAU': 200, 'ORTIGUEIRA': 180, 'MAUA DA SERRA': 100, 'CALIFORNIA': 50, 'CAMPO LARGO': 380, 'SAO JOSE DOS PINHAIS': 420, 'FOZ DO IGUACU': 550, 'COLOMBO': 410, 'GUARAPUAVA': 350, 'PARANAGUA': 450, 'TOLEDO': 400, 'PINHAIS': 400, 'ARAUCARIA': 400, 'UMUARAMA': 250, 'PARANAVAI': 150, 'FRANCISCO BELTRAO': 450, 'CAMPO MOURAO': 180, 'SARANDI': 70, 'PATO BRANCO': 400, 'TELEMACO BORBA': 250, 'CASTRO': 300, 'IRATI': 350, 'UNIAO DA VITORIA': 450, 'PRUDENTOPOLIS': 300, 'MARECHAL CANDIDO RONDON': 400, 'SANTO ANTONIO DA PLATINA': 150, 'LAPA': 400, 'PALMAS': 450, 'SAO MATEUS DO SUL': 400, 'JACAREZINHO': 150, 'MEDIANEIRA': 500, 'PAICANDU': 70, 'GUARATUBA': 500, 'JAGUARIAIVA': 200, 'RIO BRANCO DO SUL': 400, 'PALMEIRA': 350, 'QUEDAS DO IGUACU': 450, 'LARANJEIRAS DO SUL': 350, 'GUAIRA': 300, 'GOIOERE': 150, 'IBAITI': 150, 'PALOTINA': 350, 'IMBITUVA': 300, 'ARAPOTI': 200, 'NOVA ESPERANCA': 100, 'RESERVA': 200, 'ASTORGA': 50, 'CAMBARA': 100, 'CAMPO MAGRO': 400, 'PIRAI DO SUL': 250, 'MATINHOS': 500, 'ITAPERUCU': 400, 'CORONEL VIVIDA': 400, 'ANDIRA': 100, 'MANDIRITUBA': 400, 'CRUZEIRO DO OESTE': 200, 'SANTA TEREZINHA DE ITAIPU': 550, 'SENGES': 200,
+        };
+
+        // Elementos do DOM
+        const fileInput = document.getElementById('fileInput');
+        const processarBtn = document.getElementById('processarBtn');
+        const statusDiv = document.getElementById('status');
+        const dropZone = document.getElementById('drop-zone');
+        const dropZoneText = document.getElementById('drop-zone-text');
         
+        // Modal de Carregamento
+        const loadingModalEl = document.getElementById('loadingModal');
+        const loadingModal = new bootstrap.Modal(loadingModalEl);
+        const loadingModalText = document.getElementById('loadingModalText');
+
+        // --- LÓGICA DE CONFIGURAÇÕES DE VEÍCULOS (CORRIGIDA E MELHORADA) ---
+        
+        function deepCopy(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+
         function loadVehicleConfigs() {
             try {
                 const storedConfigs = localStorage.getItem('dashboardCargasConfigs');
-                if (storedConfigs) {
+                if (storedConfigs && storedConfigs !== '[]') {
                     vehicleConfigs = JSON.parse(storedConfigs);
                 } else {
-                    vehicleConfigs = JSON.parse(JSON.stringify(defaultVehicleConfigs)); // Deep copy
+                    vehicleConfigs = deepCopy(defaultVehicleConfigs);
                     saveVehicleConfigs();
                 }
             } catch (e) {
                 console.error("Erro ao carregar configurações, usando padrão.", e);
-                vehicleConfigs = JSON.parse(JSON.stringify(defaultVehicleConfigs));
+                vehicleConfigs = deepCopy(defaultVehicleConfigs);
             }
         }
 
@@ -368,23 +374,43 @@
             }
         }
         
+        // **NOVA FUNÇÃO** para atualizar o estado em memória
+        function updateVehicleConfig(index, key, value) {
+            const config = vehicleConfigs[index];
+            if (!config) return;
+
+            const isNumber = ['minKg', 'maxKg', 'maxCubagem'].includes(key);
+            config[key] = isNumber ? parseFloat(value) : value;
+
+            // Se o nome for alterado, atualiza as rotas extraídas dele
+            if (key === 'name') {
+                config.routes = value.match(/\d{5}/g) || [];
+            }
+        }
+
         function populateSettingsModal() {
             const tbody = document.getElementById('vehicle-configs-tbody');
             tbody.innerHTML = '';
+            if (!vehicleConfigs || vehicleConfigs.length === 0) {
+                // Mostra uma mensagem se estiver vazio
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nenhuma configuração encontrada. Adicione uma ou restaure os padrões.</td></tr>';
+                return;
+            }
+
             vehicleConfigs.forEach((config, index) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="text" class="form-control" value="${config.name}" data-key="name"></td>
+                    <td><input type="text" class="form-control" value="${config.name}" oninput="updateVehicleConfig(${index}, 'name', this.value)"></td>
                     <td>
-                        <select class="form-select" data-key="type">
+                        <select class="form-select" onchange="updateVehicleConfig(${index}, 'type', this.value)">
                             <option value="Fiorino" ${config.type === 'Fiorino' ? 'selected' : ''}>Fiorino</option>
                             <option value="Van" ${config.type === 'Van' ? 'selected' : ''}>Van</option>
                             <option value="3/4" ${config.type === '3/4' ? 'selected' : ''}>3/4</option>
                         </select>
                     </td>
-                    <td><input type="number" class="form-control" value="${config.minKg}" data-key="minKg"></td>
-                    <td><input type="number" class="form-control" value="${config.maxKg}" data-key="maxKg"></td>
-                    <td><input type="number" class="form-control" step="0.1" value="${config.maxCubagem}" data-key="maxCubagem"></td>
+                    <td><input type="number" class="form-control" value="${config.minKg}" oninput="updateVehicleConfig(${index}, 'minKg', this.value)"></td>
+                    <td><input type="number" class="form-control" value="${config.maxKg}" oninput="updateVehicleConfig(${index}, 'maxKg', this.value)"></td>
+                    <td><input type="number" class="form-control" step="0.1" value="${config.maxCubagem}" oninput="updateVehicleConfig(${index}, 'maxCubagem', this.value)"></td>
                     <td><button class="btn btn-danger btn-sm" onclick="removeVehicleConfig(${index})">&times;</button></td>
                 `;
                 tbody.appendChild(tr);
@@ -393,59 +419,45 @@
         
         function removeVehicleConfig(index) {
             vehicleConfigs.splice(index, 1);
-            populateSettingsModal();
+            populateSettingsModal(); // Apenas atualiza a tela
         }
-        
+
         document.getElementById('add-vehicle-config-btn').addEventListener('click', () => {
-             vehicleConfigs.push({ name: 'Nova Rota', type: 'Fiorino', routes: [], minKg: 330, maxKg: 570, maxCubagem: 1.5 });
+             vehicleConfigs.push({ name: 'Nova Rota (Ex: 99999)', type: 'Fiorino', routes: [], minKg: 330, maxKg: 570, maxCubagem: 1.5 });
              populateSettingsModal();
         });
 
-        document.getElementById('save-settings-btn').addEventListener('click', () => {
-            const newConfigs = [];
-            const rows = document.getElementById('vehicle-configs-tbody').querySelectorAll('tr');
-            rows.forEach(row => {
-                const config = {};
-                // Special handling for name to extract routes
-                const nameInput = row.querySelector('input[data-key="name"]');
-                config.name = nameInput.value;
-                config.routes = nameInput.value.match(/\d{5}/g) || []; // Extract 5-digit numbers as routes
+        document.getElementById('restore-defaults-btn').addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja restaurar as configurações padrão? Todas as suas alterações serão perdidas.')) {
+                vehicleConfigs = deepCopy(defaultVehicleConfigs);
+                populateSettingsModal();
+            }
+        });
 
-                row.querySelectorAll('select, input:not([data-key="name"])').forEach(input => {
-                    config[input.dataset.key] = input.type === 'number' ? parseFloat(input.value) : input.value;
-                });
-                newConfigs.push(config);
-            });
-            vehicleConfigs = newConfigs;
-            saveVehicleConfigs();
-            renderVehicleButtons();
+        // **LÓGICA DE SALVAR SIMPLIFICADA**
+        document.getElementById('save-settings-btn').addEventListener('click', () => {
+            saveVehicleConfigs(); // Apenas salva o estado atual da memória
+            renderVehicleButtons(); // Renderiza os botões com base nos dados salvos
             bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
             statusDiv.innerHTML = '<p class="text-success">Configurações salvas e botões atualizados!</p>';
         });
 
-        document.getElementById('settingsModal').addEventListener('show.bs.modal', populateSettingsModal);
+        document.getElementById('settingsModal').addEventListener('show.bs.modal', () => {
+            // Garante que estamos com os dados mais recentes antes de popular
+            loadVehicleConfigs();
+            populateSettingsModal();
+        });
 
         // --- LÓGICA DE DRAG AND DROP ---
         dropZone.addEventListener('click', () => fileInput.click());
-        dropZone.addEventListener('dragenter', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-        dropZone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-        });
+        dropZone.addEventListener('dragenter', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('dragover');
             const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFile(files[0]);
-            }
+            if (files.length > 0) handleFile(files[0]);
         });
         fileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -454,12 +466,11 @@
 
         function handleFile(file) {
             if (!file) return;
-            
             loadingModalText.textContent = `Carregando ${file.name}...`;
             loadingModal.show();
             processarBtn.disabled = true;
 
-            setTimeout(() => { // Allow UI to update
+            setTimeout(() => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
@@ -506,8 +517,6 @@
                 Van: document.getElementById('van-buttons-container'),
                 '3/4': document.getElementById('tres-quartos-buttons-container'),
             };
-
-            // Limpa containers
             Object.values(containers).forEach(c => c.innerHTML = '');
 
             const groupedConfigs = vehicleConfigs.reduce((acc, config) => {
@@ -516,23 +525,21 @@
                 return acc;
             }, {});
 
-            // Fiorino - Botões individuais
             if (groupedConfigs.Fiorino) {
                 groupedConfigs.Fiorino.forEach(config => {
                     const btn = document.createElement('button');
                     btn.className = 'btn btn-success mt-2 me-2';
                     btn.textContent = config.name;
-                    // Passando o objeto de configuração inteiro para a função
                     btn.onclick = () => separarCargas(config, 'resultado-fiorino-geral');
                     containers.Fiorino.appendChild(btn);
                 });
             }
 
-            // Van e 3/4 - Dropdowns
             ['Van', '3/4'].forEach(type => {
-                if (groupedConfigs[type]) {
+                if (groupedConfigs[type] && groupedConfigs[type].length > 0) {
                     const color = type === 'Van' ? 'primary' : 'warning';
                     const resultDivId = type === 'Van' ? 'resultado-van-geral' : 'resultado-34-geral';
+                    // Usamos JSON.stringify para passar o objeto config completo de forma segura
                     const dropdownHTML = `
                         <div class="dropdown">
                             <button class="btn btn-${color} dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -540,7 +547,7 @@
                             </button>
                             <ul class="dropdown-menu">
                                 ${groupedConfigs[type].map(config => `
-                                    <li><a class="dropdown-item" href="#" onclick='separarCargas(${JSON.stringify(config)}, "${resultDivId}")'>${config.name}</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick='separarCargas(${JSON.stringify(config).replace(/'/g, "&apos;")}, "${resultDivId}")'>${config.name}</a></li>
                                 `).join('')}
                             </ul>
                         </div>`;
@@ -552,20 +559,9 @@
 
         function calculateEstimatedDistance(pedidos) {
             const uniqueCities = new Set();
-            pedidos.forEach(p => {
-                if (p.Cidade) {
-                    uniqueCities.add(String(p.Cidade).toUpperCase().trim());
-                }
-            });
-
+            pedidos.forEach(p => { if (p.Cidade) uniqueCities.add(String(p.Cidade).toUpperCase().trim()) });
             let totalDistance = 0;
-            uniqueCities.forEach(city => {
-                if (distanciasCidades[city]) {
-                    totalDistance += distanciasCidades[city];
-                } else {
-                    console.warn(`Distância para a cidade '${city}' não encontrada.`);
-                }
-            });
+            uniqueCities.forEach(city => { totalDistance += distanciasCidades[city] || 0; });
             return totalDistance * 1.50;
         }
 
@@ -580,40 +576,25 @@
                  return;
              }
 
-             let pedidoEncontrado = null;
-             let local = 'Não encontrado';
-             let accordionId = '';
-
+             let pedidoEncontrado = null, local = 'Não encontrado', accordionId = '';
              pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
-             if (pedidoEncontrado) {
-                 local = 'Resultados Gerais';
-                 accordionId = 'accordionGeral';
-             }
+             if (pedidoEncontrado) { local = 'Resultados Gerais'; accordionId = 'accordionGeral'; }
 
              if (!pedidoEncontrado) {
                  for (const cf in gruposToco) {
                      pedidoEncontrado = gruposToco[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
-                     if (pedidoEncontrado) {
-                         local = `Cargas "Toco" (CF: ${cf})`;
-                         accordionId = 'accordionToco';
-                         break;
-                     }
+                     if (pedidoEncontrado) { local = `Cargas "Toco" (CF: ${cf})`; accordionId = 'accordionToco'; break; }
                  }
              }
             
              if (!pedidoEncontrado) {
                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                  if (originalPedido) {
-                     pedidoEncontrado = originalPedido; // Use for display
-                     if (tocoPedidoIds.has(String(originalPedido.Num_Pedido))) {
-                         local = 'Filtrado (pertence a um grupo Toco)';
-                     } else if (['21', '23', '17'].includes(String(originalPedido.Coluna4))) {
-                         local = 'Filtrado (Coluna4 é 21, 23, ou 17)';
-                     } else if (String(originalPedido['BLOQ.']) === 'C' || String(originalPedido['BLOQ.']) === 'V') {
-                         local = 'Filtrado (Bloqueio C ou V)';
-                     } else {
-                         local = 'Filtrado (outro motivo, verifique filtros de rota ou cliente)';
-                     }
+                     pedidoEncontrado = originalPedido;
+                     if (tocoPedidoIds.has(String(originalPedido.Num_Pedido))) local = 'Filtrado (pertence a um grupo Toco)';
+                     else if (['21', '23', '17'].includes(String(originalPedido.Coluna4))) local = 'Filtrado (Coluna4 é 21, 23, ou 17)';
+                     else if (String(originalPedido['BLOQ.']) === 'C' || String(originalPedido['BLOQ.']) === 'V') local = 'Filtrado (Bloqueio C ou V)';
+                     else local = 'Filtrado (outro motivo, verifique filtros de rota ou cliente)';
                  }
              }
 
@@ -621,55 +602,29 @@
                  let buttons = '';
                  if (local === 'Resultados Gerais') {
                      const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
-                     buttons = `
-                         <button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>
-                             ${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}
-                         </button>
-                         <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">
-                             Destacar na Lista
-                         </button>
-                     `;
+                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button> <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                  } else if (accordionId) {
-                      buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">
-                             Destacar na Lista
-                         </button>`;
+                      buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                  }
 
-                 searchResultDiv.innerHTML = `
-                     <div class="alert alert-info">
-                         <h5>Pedido ${searchInput} encontrado!</h5>
-                         <p class="mb-1"><strong>Local:</strong> ${local}</p>
-                         <p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br>
-                             <strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>
-                         ${buttons ? `<div class="mt-2">${buttons}</div>` : ''}
-                     </div>
-                 `;
+                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
              } else {
                  searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>';
              }
         }
 
         function priorizarPedido(numPedido) {
-             if (!pedidosPrioritarios.includes(numPedido)) {
-                 pedidosPrioritarios.push(numPedido);
-                 buscarPedido(); 
-             }
+             if (!pedidosPrioritarios.includes(numPedido)) { pedidosPrioritarios.push(numPedido); buscarPedido(); }
         }
 
         function highlightPedido(numPedido) {
              const row = document.getElementById(`pedido-${numPedido}`);
              if (row) {
                  row.classList.toggle('table-info');
-
                  if (row.classList.contains('table-info')) {
                      const collapseEl = row.closest('.accordion-collapse');
-                     if (collapseEl && !collapseEl.classList.contains('show')) {
-                         bootstrap.Collapse.getOrCreateInstance(collapseEl).show();
-                     }
-                    
-                     setTimeout(() => {
-                         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                     }, 350);
+                     if (collapseEl && !collapseEl.classList.contains('show')) bootstrap.Collapse.getOrCreateInstance(collapseEl).show();
+                     setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350);
                  }
              }
         }
@@ -678,96 +633,59 @@
             loadingModalText.textContent = 'Processando cargas...';
             loadingModal.show();
 
-            // Usamos setTimeout para garantir que o modal apareça antes do processamento pesado
             setTimeout(() => {
-                const resultadoGeralDiv = document.getElementById('resultado-geral');
-                const resultadoTocoDiv = document.getElementById('resultado-toco');
-                const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
+                const resultadoGeralDiv = document.getElementById('resultado-geral'), resultadoTocoDiv = document.getElementById('resultado-toco'), resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
                 try {
-                    if (planilhaData.length === 0) {
-                        statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
-                        return;
-                    }
-                    const rotaInicialInput = document.getElementById('rotaInicialInput').value;
-                    const rotaFinalInput = document.getElementById('rotaFinalInput').value;
-                    resultadoGeralDiv.innerHTML = '';
-                    resultadoTocoDiv.innerHTML = '';
-                    resultadoTresQuartosDiv.innerHTML = '';
+                    if (planilhaData.length === 0) { statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return; }
+                    const rotaInicialInput = document.getElementById('rotaInicialInput').value, rotaFinalInput = document.getElementById('rotaFinalInput').value;
+                    [resultadoGeralDiv, resultadoTocoDiv, resultadoTresQuartosDiv].forEach(d => d.innerHTML = '');
 
                     const pedidos = planilhaData.filter(p => String(p.Coluna4) != '500');
-
                     const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
-                    const cfCounts = {};
-                    const isNumeric = (str) => /^\d+$/.test(str);
+                    const cfCounts = {}, isNumeric = (str) => /^\d+$/.test(str);
                     pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(String(p.CF))) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
                     const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
                     const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
                     gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
-                        const cf = p.CF;
-                        if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; }
-                        acc[cf].pedidos.push(p);
-                        acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                        return acc;
+                        const cf = p.CF; if (!acc[cf]) acc[cf] = { pedidos: [], totalKg: 0 };
+                        acc[cf].pedidos.push(p); acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
                     }, {});
                     displayToco(resultadoTocoDiv, gruposToco);
 
                     tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
-                    const clientesComBloqueio = new Set();
-                    const clientesSemBloqueio = new Set();
-                    pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
+                    const clientesComBloqueio = new Set(), clientesSemBloqueio = new Set();
+                    pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') clientesComBloqueio.add(String(p.Cliente)); else clientesSemBloqueio.add(String(p.Cliente)); });
                     const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
-                    const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 11101;
-                    const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 11731;
+                    const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 11101, rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 11731;
                     const pedidosGeraisFiltrados = pedidos.filter(p => {
-                        if (tocoPedidoIds.has(String(p.Num_Pedido))) return false;
-                        if (['21', '23', '17'].includes(String(p.Coluna4))) return false;
+                        if (tocoPedidoIds.has(String(p.Num_Pedido))) return false; if (['21', '23', '17'].includes(String(p.Coluna4))) return false;
                         const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
-                        if ((rotaAtualNum === 11311 || rotaAtualNum === 11521 || rotaAtualNum === 11361) && isNumeric(String(p.CF))) {
-                            return false;
-                        }
+                        if ((rotaAtualNum === 11311 || rotaAtualNum === 11521 || rotaAtualNum === 11361) && isNumeric(String(p.CF))) return false;
                         if (!(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return false;
-                        if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return false;
-                        if (clientesParaRemover.has(String(p.Cliente))) return false;
+                        if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return false; if (clientesParaRemover.has(String(p.Cliente))) return false;
                         return true;
                     });
 
-                    // Lógica para 3/4 automático
                     let tresQuartosLoads = [];
                     const config34Auto = vehicleConfigs.find(c => c.type === '3/4') || { minKg: 2300, maxKg: 4100 };
                     const LARGE_ORDER_KG = 1700;
-                    
                     const largeOrdersByRoute = pedidosGeraisFiltrados.reduce((acc, p) => {
                         const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                        if (peso >= LARGE_ORDER_KG) {
-                            const rota = p.Cod_Rota;
-                            if (!acc[rota]) acc[rota] = [];
-                            acc[rota].push(p);
-                        }
-                        return acc;
+                        if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } return acc;
                     }, {});
 
                     const pedidosEmCargas3_4 = new Set();
                     Object.keys(largeOrdersByRoute).forEach(rota => {
-                        const largeOrders = largeOrdersByRoute[rota];
-                        if (largeOrders.length === 1) {
-                            const largeOrder = largeOrders[0];
-                            if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
-
+                        if (largeOrdersByRoute[rota].length === 1) {
+                            const largeOrder = largeOrdersByRoute[rota][0]; if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
                             let newLoad = { pedidos: [largeOrder], totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0, rota: rota };
                             const otherOrdersInRoute = pedidosGeraisFiltrados.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
-
                             for (const order of otherOrdersInRoute) {
                                 if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue;
                                 const orderKg = parseFloat(String(order.Quilos_Saldo).replace(',', '.')) || 0;
-                                if (newLoad.totalKg + orderKg <= config34Auto.maxKg) {
-                                    newLoad.pedidos.push(order);
-                                    newLoad.totalKg += orderKg;
-                                }
+                                if (newLoad.totalKg + orderKg <= config34Auto.maxKg) { newLoad.pedidos.push(order); newLoad.totalKg += orderKg; }
                             }
-                            if (newLoad.totalKg >= config34Auto.minKg) {
-                                tresQuartosLoads.push(newLoad);
-                                newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido));
-                            }
+                            if (newLoad.totalKg >= config34Auto.minKg) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); }
                         }
                     });
                     
@@ -776,176 +694,87 @@
 
                     pedidosGeraisAtuais = pedidosGeraisFiltrados.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
                     const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
-                        const rota = p.Cod_Rota;
-                        if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; }
-                        acc[rota].pedidos.push(p);
-                        acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                        return acc;
+                        const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; }
+                        acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
                     }, {});
                     displayGerais(resultadoGeralDiv, gruposGerais);
-
-                } catch (error) {
-                    statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`;
-                    console.error(error);
-                } finally {
-                    loadingModal.hide();
-                }
+                } catch (error) { statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; console.error(error);
+                } finally { loadingModal.hide(); }
             }, 100);
         }
 
-        // --- FUNÇÃO DE SEPARAÇÃO DE CARGAS REATORADA ---
         function separarCargas(config, divId) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '';
-            if (planilhaData.length === 0) {
-                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
-                return;
-            }
+            if (planilhaData.length === 0) { resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return; }
 
             const pedidosRota = pedidosGeraisAtuais.filter(p => config.routes.includes(String(p.Cod_Rota)));
-            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
-            const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
+            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'], isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
 
             let packableItems = [];
-            const otherPedidos = pedidosRota.filter(p => !isSpecialClient(p));
-            const specialPedidos = pedidosRota.filter(p => isSpecialClient(p));
-
-            specialPedidos.forEach(pedido => {
-                packableItems.push({ isSpecial: true, pedidos: [pedido], totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0, totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0 });
-            });
+            const otherPedidos = pedidosRota.filter(p => !isSpecialClient(p)), specialPedidos = pedidosRota.filter(p => isSpecialClient(p));
+            specialPedidos.forEach(p => packableItems.push({ isSpecial: true, pedidos: [p], totalKg: parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0, totalCubagem: parseFloat(String(p.Cubagem).replace(',', '.')) || 0 }));
 
             const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
-                const clienteId = pedido.Cliente;
-                if (!acc[clienteId]) {
-                    acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
-                }
-                acc[clienteId].pedidos.push(pedido);
-                return acc;
+                const clienteId = pedido.Cliente; if (!acc[clienteId]) acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                acc[clienteId].pedidos.push(pedido); return acc;
             }, {});
-            
             Object.values(otherClientGroupsMap).forEach(group => {
                 group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
                 packableItems.push(group);
             });
-            
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
-            priorityItems.sort((a, b) => b.totalKg - a.totalKg);
-            regularItems.sort((a, b) => b.totalKg - a.totalKg);
+            priorityItems.sort((a, b) => b.totalKg - a.totalKg); regularItems.sort((a, b) => b.totalKg - a.totalKg);
             packableItems = [...priorityItems, ...regularItems];
 
-            let loads = [];
-            let leftoverItems = [];
-
+            let loads = [], leftoverItems = [];
             packableItems.forEach(item => {
-                if (item.totalKg > config.maxKg || item.totalCubagem > config.maxCubagem) {
-                    leftoverItems.push(item);
-                    return;
-                }
+                if (item.totalKg > config.maxKg || item.totalCubagem > config.maxCubagem) { leftoverItems.push(item); return; }
                 let placed = false;
                 for (const load of loads) {
-                    const specialCountInLoad = load.pedidos.filter(p => isSpecialClient(p)).length;
-                    const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
+                    const specialCountInLoad = load.pedidos.filter(p => isSpecialClient(p)).length, specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
                     if ((load.totalKg + item.totalKg <= config.maxKg) && (load.totalCubagem + item.totalCubagem <= config.maxCubagem) && (specialCountInLoad + specialOrdersInItem <= 2)) {
-                        load.pedidos.push(...item.pedidos);
-                        load.totalKg += item.totalKg;
-                        load.totalCubagem += item.totalCubagem;
-                        placed = true;
-                        break;
+                        load.pedidos.push(...item.pedidos); load.totalKg += item.totalKg; load.totalCubagem += item.totalCubagem; placed = true; break;
                     }
                 }
-                if (!placed) {
-                    loads.push({ pedidos: [...item.pedidos], totalKg: item.totalKg, totalCubagem: item.totalCubagem });
-                }
+                if (!placed) loads.push({ pedidos: [...item.pedidos], totalKg: item.totalKg, totalCubagem: item.totalCubagem });
             });
 
-            let finalLoads = [];
-            let unplacedFromMinRule = [];
+            let finalLoads = [], unplacedFromMinRule = [];
             loads.forEach(load => {
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                if (hasPriority || load.totalKg >= config.minKg) {
-                    finalLoads.push(load);
-                } else {
-                    unplacedFromMinRule.push(...load.pedidos);
-                }
+                if (hasPriority || load.totalKg >= config.minKg) finalLoads.push(load); else unplacedFromMinRule.push(...load.pedidos);
             });
 
             finalLoads.forEach((load, index) => { 
                 load.numero = index + 1;
-                if (config.type === 'Fiorino') {
-                    load.estimatedDistance = calculateEstimatedDistance(load.pedidos);
-                }
+                if (config.type === 'Fiorino') load.estimatedDistance = calculateEstimatedDistance(load.pedidos);
             });
-            
-            if (config.type === 'Fiorino') {
-                finalLoads.sort((a, b) => a.estimatedDistance - b.estimatedDistance);
-            }
+            if (config.type === 'Fiorino') finalLoads.sort((a, b) => a.estimatedDistance - b.estimatedDistance);
 
             let leftoverPedidos = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
-
-            // Geração de HTML
             const vehicleColors = { Fiorino: 'success', Van: 'primary', '3/4': 'warning' };
             const printFunctionNames = { Fiorino: 'imprimirCargas', Van: 'imprimirCargasVan', '3/4': 'imprimirCargas34' };
-            const colorClass = vehicleColors[config.type] || 'secondary';
-            const printFunction = printFunctionNames[config.type] || 'imprimirCargas';
+            const colorClass = vehicleColors[config.type] || 'secondary', printFunction = printFunctionNames[config.type] || 'imprimirCargas';
             
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2">
-                            <h3 class="mb-0">${finalLoads.length} Carga(s) de ${config.type} para ${config.name}:</h3>
-                            ${finalLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="${printFunction}('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Concluídas</button>` : ''}
-                        </div>`;
-
-            if (finalLoads.length === 0) {
-                html += `<p>Nenhuma carga de ${config.type} foi formada para esta rota.</p>`;
-            } else {
-                finalLoads.forEach(load => {
-                    const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                    const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
-                    
-                    const weightPercent = (load.totalKg / config.maxKg * 100).toFixed(2);
-                    const progressBar = `
-                        <div class="progress-container text-white">
-                            <small>${totalKgFormatado} kg / ${config.maxKg} kg</small>
-                            <div class="progress" style="height: 10px;">
-                                <div class="progress-bar ${weightPercent > 100 ? 'bg-danger' : 'bg-light'}" role="progressbar" style="width: ${Math.min(weightPercent, 100)}%;" aria-valuenow="${weightPercent}" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div>`;
-                    
-                    let headerInfo = `${config.type} #${load.numero} - ${totalCubagemFormatado} m³ ${priorityBadge}`;
-                    if (config.type === 'Fiorino') {
-                        headerInfo += ` (Distância Estimada: ${load.estimatedDistance.toFixed(0)} km)`;
-                    }
-
-                    html += `
-                        <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
-                            <div class="card-header bg-${colorClass} text-white">
-                                <div>${headerInfo}</div>
-                                ${progressBar}
-                            </div>
-                            <div class="card-body">
-                                ${createTable(load.pedidos)}
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h3 class="mb-0">${finalLoads.length} Carga(s) de ${config.type} para ${config.name}:</h3>${finalLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="${printFunction}('${divId}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Concluídas</button>` : ''}</div>`;
+            if (finalLoads.length === 0) html += `<p>Nenhuma carga de ${config.type} foi formada para esta rota.</p>`;
+            else finalLoads.forEach(load => {
+                const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))), priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
+                const weightPercent = (load.totalKg / config.maxKg * 100), progressBar = `<div class="progress-container text-white"><small>${totalKgFormatado} kg / ${config.maxKg} kg</small><div class="progress" style="height: 10px;"><div class="progress-bar ${weightPercent > 100 ? 'bg-danger' : 'bg-light'}" role="progressbar" style="width: ${Math.min(weightPercent, 100)}%;" aria-valuenow="${weightPercent.toFixed(2)}" aria-valuemin="0" aria-valuemax="100"></div></div></div>`;
+                let headerInfo = `${config.type} #${load.numero} - ${totalCubagemFormatado} m³ ${priorityBadge}`;
+                if (config.type === 'Fiorino') headerInfo += ` (Distância Estimada: ${load.estimatedDistance.toFixed(0)} km)`;
+                html += `<div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}"><div class="card-header bg-${colorClass} text-white"><div>${headerInfo}</div>${progressBar}</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
+            });
             if (leftoverPedidos.length > 0) {
                 const totalKgUnassigned = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                html += `<h4 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h4>
-                         <div class="card mb-3">
-                             <div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div>
-                             <div class="card-body">${createTable(leftoverPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}</div>
-                         </div>`;
+                html += `<h4 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h4><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(leftoverPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}</div></div>`;
             }
-
             resultadoDiv.innerHTML = html;
         }
-
-
-        // --- FUNÇÕES DE DISPLAY E TABELAS ---
 
         function createTable(pedidos, columnsToDisplay) {
              if (!pedidos || pedidos.length === 0) return '';
@@ -966,272 +795,71 @@
              if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhum pedido geral encontrado.</div>'; return; }
              let accordionHtml = '<div class="accordion accordion-flush" id="accordionGeral">';
              Object.keys(grupos).sort().forEach((rota, index) => {
-                 const grupo = grupos[rota];
-                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                 accordionHtml += `
-                     <div class="accordion-item">
-                         <h2 class="accordion-header" id="headingGeral${index}">
-                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}">
-                                 <strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2">${grupo.pedidos.length} pedidos</span> <span class="badge bg-info ms-2">${totalKgFormatado} kg</span>
-                             </button>
-                         </h2>
-                         <div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div>
-                     </div>`;
+                 const grupo = grupos[rota], totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                 accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2">${grupo.pedidos.length} pedidos</span> <span class="badge bg-info ms-2">${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
              });
-             accordionHtml += '</div>';
-             div.innerHTML = accordionHtml;
+             div.innerHTML = accordionHtml + '</div>';
         }
         
         function displayTresQuartos(div, loads, config) {
-            if (loads.length === 0) {
-                div.innerHTML = '<div class="text-center p-3">Nenhuma carga 3/4 formada automaticamente.</div>';
-                return;
-            }
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2">
-                            <h3 class="mb-0">Cargas 3/4 (Automático):</h3>
-                            ${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargasTresQuartosAutomatico('${div.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Concluídas</button>` : ''}
-                        </div>`;
+            if (loads.length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhuma carga 3/4 formada automaticamente.</div>'; return; }
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h3 class="mb-0">Cargas 3/4 (Automático):</h3>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargasTresQuartosAutomatico('${div.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir Concluídas</button>` : ''}</div>`;
             loads.forEach(load => {
                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const weightPercent = (load.totalKg / config.maxKg * 100).toFixed(2);
-                const progressBar = `
-                    <div class="progress-container text-dark">
-                        <small>${totalKgFormatado} kg / ${config.maxKg} kg</small>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar ${weightPercent > 100 ? 'bg-danger' : 'bg-dark'}" role="progressbar" style="width: ${Math.min(weightPercent, 100)}%;" aria-valuenow="${weightPercent}" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>`;
-
-                html += `
-                    <div class="card mb-3">
-                        <div class="card-header bg-warning text-dark">
-                            <div>Carga 3/4 #${load.numero} (Rota: ${load.rota})</div>
-                            ${progressBar}
-                        </div>
-                        <div class="card-body">
-                            ${createTable(load.pedidos)}
-                        </div>
-                    </div>
-                `;
+                const weightPercent = (load.totalKg / config.maxKg * 100);
+                const progressBar = `<div class="progress-container text-dark"><small>${totalKgFormatado} kg / ${config.maxKg} kg</small><div class="progress" style="height: 10px;"><div class="progress-bar ${weightPercent > 100 ? 'bg-danger' : 'bg-dark'}" role="progressbar" style="width: ${Math.min(weightPercent, 100)}%;" aria-valuenow="${weightPercent.toFixed(2)}" aria-valuemin="0" aria-valuemax="100"></div></div></div>`;
+                html += `<div class="card mb-3"><div class="card-header bg-warning text-dark"><div>Carga 3/4 #${load.numero} (Rota: ${load.rota})</div>${progressBar}</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
             });
             div.innerHTML = html;
         }
-
 
         function displayToco(div, grupos) {
              if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhuma carga toco encontrada.</div>'; return; }
              let accordionHtml = '<div class="accordion accordion-flush" id="accordionToco">';
              Object.keys(grupos).sort().forEach((cf, index) => {
-                 const grupo = grupos[cf];
-                 const pedidos = grupo.pedidos;
-                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                 accordionHtml += `
-                     <div class="accordion-item">
-                         <h2 class="accordion-header" id="headingToco${index}">
-                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}">
-                                 <strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2">${pedidos.length} pedidos</span> <span class="badge bg-info ms-2">${totalKgFormatado} kg</span>
-                             </button>
-                         </h2>
-                         <div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body">
-                             <button class="btn btn-sm btn-outline-info mb-3" onclick="imprimirTocoIndividual('${cf}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir esta Carga Toco</button>
-                             ${createTable(pedidos)}</div></div>
-                     </div>`;
+                 const grupo = grupos[cf], pedidos = grupo.pedidos, totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                 accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2">${pedidos.length} pedidos</span> <span class="badge bg-info ms-2">${totalKgFormatado} kg</span></button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body"><button class="btn btn-sm btn-outline-info mb-3" onclick="imprimirTocoIndividual('${cf}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1-2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zM12 7a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12z"/></svg>Imprimir esta Carga Toco</button>${createTable(pedidos)}</div></div></div>`;
              });
-             accordionHtml += '</div>';
-             div.innerHTML = accordionHtml;
+             div.innerHTML = accordionHtml + '</div>';
         }
 
-        // --- FUNÇÕES DE IMPRESSÃO ---
+        // --- FUNÇÕES DE IMPRESSÃO (SEM ALTERAÇÃO) ---
+        function genericPrint(title, content, style) {
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write(`<html><head><title>${title}</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><style>${style}</style></head><body><h3>${title}</h3>${content}</body></html>`);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+        }
         function imprimirCargas(divId) {
-             const divToPrint = document.getElementById(divId);
-             if (!divToPrint) return;
-
-             const completedLoadsHeaders = divToPrint.querySelectorAll('.card-header.bg-success');
-             if (completedLoadsHeaders.length === 0) {
-                 alert("Nenhuma carga de Fiorino concluída para imprimir.");
-                 return;
-             }
-
-             const printWindow = window.open('', '', 'height=800,width=1200');
-             printWindow.document.write('<html><head><title>Imprimir Cargas de Fiorino Concluídas</title>');
-             printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-             printWindow.document.write('<style>');
-             printWindow.document.write(`
-                 body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                 .card { break-inside: avoid; margin-bottom: 1rem; }
-                 .card-header { background-color: #198754 !important; color: #fff !important; }
-                 .progress-bar { background-color: #fff !important; }
-                 .table-responsive { overflow: visible !important; }
-                 table, th, td { border: 1px solid #dee2e6 !important; }
-                 h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-             `);
-             printWindow.document.write('</style></head><body>');
-            
-             let contentToPrint = '<h3>Cargas de Fiorino Concluídas</h3>';
-             completedLoadsHeaders.forEach(header => {
-                 contentToPrint += header.closest('.card.mb-3').outerHTML;
-             });
-
-             printWindow.document.body.innerHTML = contentToPrint;
-             printWindow.document.close();
-             printWindow.focus(); 
-             setTimeout(() => { 
-                 printWindow.print(); 
-                 printWindow.close(); 
-             }, 500);
+             const divToPrint = document.getElementById(divId); if (!divToPrint) return;
+             const loads = divToPrint.querySelectorAll('.card-header.bg-success'); if (loads.length === 0) return alert("Nenhuma carga de Fiorino concluída para imprimir.");
+             let content = ''; loads.forEach(h => content += h.closest('.card.mb-3').outerHTML);
+             genericPrint('Cargas de Fiorino Concluídas', content, `body{margin:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.card{break-inside:avoid;margin-bottom:1rem}.card-header{background-color:#198754!important;color:#fff!important}.progress-bar{background-color:#fff!important}table,th,td{border:1px solid #dee2e6!important}`);
         }
-
         function imprimirCargasVan(divId) {
-            const divToPrint = document.getElementById(divId);
-            if (!divToPrint) return;
-
-            const completedLoadsHeaders = divToPrint.querySelectorAll('.card-header.bg-primary');
-            if (completedLoadsHeaders.length === 0) {
-                alert("Nenhuma carga de Van concluída para imprimir.");
-                return;
-            }
-
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir Cargas de Van Concluídas</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write('<style>');
-            printWindow.document.write(`
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .card { break-inside: avoid; margin-bottom: 1rem; }
-                .card-header { background-color: #0d6efd !important; color: #fff !important; }
-                .progress-bar { background-color: #fff !important; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            `);
-            printWindow.document.write('</style></head><body>');
-            
-            let contentToPrint = '<h3>Cargas de Van Concluídas</h3>';
-            completedLoadsHeaders.forEach(header => {
-                contentToPrint += header.closest('.card.mb-3').outerHTML;
-            });
-
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
+             const divToPrint = document.getElementById(divId); if (!divToPrint) return;
+             const loads = divToPrint.querySelectorAll('.card-header.bg-primary'); if (loads.length === 0) return alert("Nenhuma carga de Van concluída para imprimir.");
+             let content = ''; loads.forEach(h => content += h.closest('.card.mb-3').outerHTML);
+             genericPrint('Cargas de Van Concluídas', content, `body{margin:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.card{break-inside:avoid;margin-bottom:1rem}.card-header{background-color:#0d6efd!important;color:#fff!important}.progress-bar{background-color:#fff!important}table,th,td{border:1px solid #dee2e6!important}`);
         }
-
         function imprimirCargas34(divId) {
-            const divToPrint = document.getElementById(divId);
-            if (!divToPrint) return;
-
-            const completedLoadsHeaders = divToPrint.querySelectorAll('.card-header.bg-warning');
-            if (completedLoadsHeaders.length === 0) {
-                alert("Nenhuma carga de 3/4 concluída para imprimir.");
-                return;
-            }
-
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir Cargas de 3/4 Concluídas</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write('<style>');
-            printWindow.document.write(`
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .card { break-inside: avoid; margin-bottom: 1rem; }
-                .card-header { background-color: #ffc107 !important; color: #000 !important; }
-                .progress-bar { background-color: #000 !important; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            `);
-            printWindow.document.write('</style></head><body>');
-            
-            let contentToPrint = '<h3>Cargas de 3/4 Concluídas</h3>';
-            completedLoadsHeaders.forEach(header => {
-                contentToPrint += header.closest('.card.mb-3').outerHTML;
-            });
-
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
+             const divToPrint = document.getElementById(divId); if (!divToPrint) return;
+             const loads = divToPrint.querySelectorAll('.card-header.bg-warning'); if (loads.length === 0) return alert("Nenhuma carga de 3/4 concluída para imprimir.");
+             let content = ''; loads.forEach(h => content += h.closest('.card.mb-3').outerHTML);
+             genericPrint('Cargas de 3/4 Concluídas', content, `body{margin:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.card{break-inside:avoid;margin-bottom:1rem}.card-header{background-color:#ffc107!important;color:#000!important}.progress-bar{background-color:#000!important}table,th,td{border:1px solid #dee2e6!important}`);
         }
-
         function imprimirCargasTresQuartosAutomatico(divId) {
-            const divToPrint = document.getElementById(divId);
-            if (!divToPrint) return;
-
-            const completedLoadsHeaders = divToPrint.querySelectorAll('.card-header.bg-warning');
-            if (completedLoadsHeaders.length === 0) {
-                alert("Nenhuma carga 3/4 automática concluída para imprimir.");
-                return;
-            }
-
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir Cargas 3/4 Automáticas Concluídas</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write('<style>');
-            printWindow.document.write(`
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .card { break-inside: avoid; margin-bottom: 1rem; }
-                .card-header { background-color: #ffc107 !important; color: #000 !important; }
-                .progress-bar { background-color: #000 !important; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            `);
-            printWindow.document.write('</style></head><body>');
-            
-            let contentToPrint = '<h3>Cargas de 3/4 Automáticas Concluídas</h3>';
-            completedLoadsHeaders.forEach(header => {
-                contentToPrint += header.closest('.card.mb-3').outerHTML;
-            });
-
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
+             const divToPrint = document.getElementById(divId); if (!divToPrint) return;
+             const loads = divToPrint.querySelectorAll('.card-header.bg-warning'); if (loads.length === 0) return alert("Nenhuma carga 3/4 automática para imprimir.");
+             let content = ''; loads.forEach(h => content += h.closest('.card.mb-3').outerHTML);
+             genericPrint('Cargas 3/4 Automáticas Concluídas', content, `body{margin:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.card{break-inside:avoid;margin-bottom:1rem}.card-header{background-color:#ffc107!important;color:#000!important}.progress-bar{background-color:#000!important}table,th,td{border:1px solid #dee2e6!important}`);
         }
-
         function imprimirTocoIndividual(cf) {
-            if (!gruposToco[cf]) {
-                alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`);
-                return;
-            }
-
-            const grupo = gruposToco[cf];
-            const pedidos = grupo.pedidos;
-            const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir Carga Toco CF: ' + cf + '</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write('<style>');
-            printWindow.document.write(`
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .card { break-inside: avoid; margin-bottom: 1rem; }
-                .card-header { background-color: #f8f9fa !important; color: #000 !important; border: 1px solid #dee2e6 !important; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            `);
-            printWindow.document.write('</style></head><body>');
-            
-            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>`;
-            contentToPrint += createTable(pedidos);
-
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
+            if (!gruposToco[cf]) return alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`);
+            const grupo = gruposToco[cf], totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const content = createTable(grupo.pedidos);
+            genericPrint(`Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg`, content, `body{margin:20px}table,th,td{border:1px solid #dee2e6!important}`);
         }
 
         // --- INICIALIZAÇÃO ---
@@ -1239,7 +867,6 @@
             loadVehicleConfigs();
             renderVehicleButtons();
         });
-
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
