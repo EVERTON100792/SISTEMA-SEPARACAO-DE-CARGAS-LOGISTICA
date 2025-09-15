@@ -6,7 +6,11 @@
     <title>Dashboard de Separação de Cargas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCTOoSIYhPcFu8EUwULBa4vlW53LMSkOsI&libraries=routes"></script>
+
     <style>
+        /* ... (todo o seu CSS continua o mesmo) ... */
         body {
             background-color: #212529;
         }
@@ -315,20 +319,72 @@
                 </div>
             </div>
         </div>
-
     </div>
+
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
+        // *** INÍCIO DA NOVA FUNÇÃO PARA CÁLCULO DE DISTÂNCIA VIA API ***
+        // Armazena as cargas finalizadas para que a função da API possa acessá-las
+        let CargasFiorinoFinalizadas = new Map();
+
+        async function calculateApiDistance(loadId) {
+            const resultSpan = document.getElementById(`dist-${loadId}`);
+            const loadData = CargasFiorinoFinalizadas.get(loadId);
+
+            if (!loadData) {
+                resultSpan.textContent = "Erro: Carga não encontrada.";
+                return;
+            }
+
+            resultSpan.innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculando...`;
+
+            const uniqueCities = [...new Set(loadData.pedidos.map(p => String(p.Cidade).toUpperCase().trim()))];
+            if (uniqueCities.length === 0) {
+                resultSpan.textContent = "Nenhuma cidade encontrada.";
+                return;
+            }
+
+            const directionsService = new google.maps.DirectionsService();
+            const origin = 'Rolândia, PR, Brasil';
+            const destination = 'Rolândia, PR, Brasil';
+            const waypoints = uniqueCities.map(city => ({ location: `${city}, PR, Brasil`, stopover: true }));
+
+            try {
+                const response = await directionsService.route({
+                    origin: origin,
+                    destination: destination,
+                    waypoints: waypoints,
+                    optimizeWaypoints: true,
+                    travelMode: google.maps.TravelMode.DRIVING,
+                });
+                
+                let totalDistance = 0;
+                response.routes[0].legs.forEach(leg => {
+                    totalDistance += leg.distance.value;
+                });
+
+                const totalKm = (totalDistance / 1000).toFixed(1);
+                resultSpan.innerHTML = `<strong>Distância Otimizada: ${totalKm} km</strong>`;
+
+            } catch (e) {
+                console.error("Erro na API de Direções:", e);
+                resultSpan.textContent = "Erro ao calcular rota.";
+                 if (e.code === 'ZERO_RESULTS') {
+                    resultSpan.textContent = "Rota não encontrada (verifique cidades).";
+                 } else if (e.code === 'REQUEST_DENIED') {
+                    resultSpan.innerHTML = `<strong>Erro: Chave de API inválida ou não configurada.</strong>`;
+                 }
+            }
+        }
+        // *** FIM DA NOVA FUNÇÃO ***
+
         let planilhaData = [];
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
         let pedidosPrioritarios = [];
         let tocoPedidoIds = new Set();
 
-        // --- INÍCIO DA LÓGICA DE CONFIGURAÇÃO ---
-
-        // Valores padrão para as configurações dos veículos
         const defaultConfigs = {
             fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.5,
             vanMaxCapacity: 1560, vanMinCapacity: 1100, vanCubage: 5.0,
@@ -336,36 +392,28 @@
             tocoMaxCapacity: 8500, tocoMinCapacity: 5000, tocoCubage: 30.0
         };
 
-        // Função para salvar as configurações no localStorage do navegador
         function saveConfigurations() {
             const configStatus = document.getElementById('configStatus');
             try {
                 const configs = {};
-                Object.keys(defaultConfigs).forEach(key => {
-                    configs[key] = document.getElementById(key).value;
-                });
+                Object.keys(defaultConfigs).forEach(key => { configs[key] = document.getElementById(key).value; });
                 localStorage.setItem('vehicleConfigs', JSON.stringify(configs));
                 configStatus.innerHTML = '<p class="text-success">Configurações salvas com sucesso!</p>';
-                setTimeout(() => { configStatus.innerHTML = ''; }, 3000); // Limpa a mensagem após 3 segundos
+                setTimeout(() => { configStatus.innerHTML = ''; }, 3000);
             } catch (error) {
                 configStatus.innerHTML = '<p class="text-danger">Erro ao salvar as configurações.</p>';
-                console.error("Save Config Error:", error);
             }
         }
 
-        // Função para carregar as configurações do localStorage ou usar os padrões
         function loadConfigurations() {
             const savedConfigs = localStorage.getItem('vehicleConfigs');
             const configs = savedConfigs ? JSON.parse(savedConfigs) : defaultConfigs;
             Object.keys(configs).forEach(key => {
                 const element = document.getElementById(key);
-                if (element) {
-                    element.value = configs[key];
-                }
+                if (element) { element.value = configs[key]; }
             });
         }
         
-        // Funções para resetar as configurações para os valores padrão
         function resetFiorino() {
             document.getElementById('fiorinoMaxCapacity').value = defaultConfigs.fiorinoMaxCapacity;
             document.getElementById('fiorinoMinCapacity').value = defaultConfigs.fiorinoMinCapacity;
@@ -391,13 +439,10 @@
             saveConfigurations();
         }
         function resetAll() {
-            Object.keys(defaultConfigs).forEach(key => {
-                document.getElementById(key).value = defaultConfigs[key];
-            });
+            Object.keys(defaultConfigs).forEach(key => { document.getElementById(key).value = defaultConfigs[key]; });
             saveConfigurations();
         }
 
-        // Adiciona os eventos aos botões e carrega as configurações quando a página é carregada
         document.addEventListener('DOMContentLoaded', () => {
             loadConfigurations();
             document.getElementById('saveConfig').addEventListener('click', saveConfigurations);
@@ -408,31 +453,12 @@
             document.getElementById('resetAllConfigs').addEventListener('click', resetAll);
         });
 
-        // --- FIM DA LÓGICA DE CONFIGURAÇÃO ---
-
-
         const rotaVeiculoMap = {
             '11101': 'Fiorino', '11301': 'Fiorino', '11311': 'Fiorino', '11561': 'Fiorino', '11721': 'Fiorino', '11731': 'Fiorino',
             '11102': 'Van', '11331': 'Van', '11341': 'Van', '11342': 'Van', '11351': 'Van', '11521': 'Van', '11531': 'Van', '11551': 'Van', '11571': 'Van', '11701': 'Van', '11711': 'Van',
             '11361': '3/4', '11501': '3/4', '11502': '3/4', '11511': '3/4', '11541': '3/4',
         };
-
-        const distanciasCidades = {
-            // Distâncias estimadas em km de Rolândia.
-            'LONDRINA': 25, 'CAMBE': 15, 'ARAPONGAS': 10, 'APUCARANA': 30, 'MARINGA': 60, 'IBIPORA': 40, 'SERTANOPOLIS': 60, 'JATAIZINHO': 50,
-            'CORNELIO PROCOPIO': 85, 'BANDEIRANTES': 115, 'SANTA MARIANA': 100, 'JANDAIA DO SUL': 45, 'MANDAGUARI': 80, 'PORECATU': 85,
-            'PARANAPOEMA': 130, 'ITAMBARACA': 85, 'CURITIBA': 400, 'PONTA GROSSA': 300, 'IMBAU': 200, 'ORTIGUEIRA': 180, 'MAUA DA SERRA': 100,
-            'CALIFORNIA': 50, 'CAMPO LARGO': 380, 'SAO JOSE DOS PINHAIS': 420, 'FOZ DO IGUACU': 550, 'COLOMBO': 410, 'GUARAPUAVA': 350,
-            'PARANAGUA': 450, 'TOLEDO': 400, 'PINHAIS': 400, 'ARAUCARIA': 400, 'UMUARAMA': 250, 'PARANAVAI': 150, 'FRANCISCO BELTRAO': 450,
-            'CAMPO MOURAO': 180, 'SARANDI': 70, 'PATO BRANCO': 400, 'TELEMACO BORBA': 250, 'CASTRO': 300, 'IRATI': 350, 'UNIAO DA VITORIA': 450,
-            'PRUDENTOPOLIS': 300, 'MARECHAL CANDIDO RONDON': 400, 'SANTO ANTONIO DA PLATINA': 150, 'LAPA': 400, 'PALMAS': 450, 'SAO MATEUS DO SUL': 400,
-            'JACAREZINHO': 150, 'MEDIANEIRA': 500, 'PAICANDU': 70, 'GUARATUBA': 500, 'JAGUARIAIVA': 200, 'RIO BRANCO DO SUL': 400, 'PALMEIRA': 350,
-            'QUEDAS DO IGUACU': 450, 'LARANJEIRAS DO SUL': 350, 'GUAIRA': 300, 'GOIOERE': 150, 'IBAITI': 150, 'PALOTINA': 350, 'IMBITUVA': 300,
-            'ARAPOTI': 200, 'NOVA ESPERANCA': 100, 'RESERVA': 200, 'ASTORGA': 50, 'CAMBARA': 100, 'CAMPO MAGRO': 400, 'PIRAI DO SUL': 250,
-            'MATINHOS': 500, 'ITAPERUCU': 400, 'CORONEL VIVIDA': 400, 'ANDIRA': 100, 'MANDIRITUBA': 400, 'CRUZEIRO DO OESTE': 200,
-            'SANTA TEREZINHA DE ITAIPU': 550, 'SENGES': 200,
-        };
-
+        
         const fileInput = document.getElementById('fileInput');
         const processarBtn = document.getElementById('processarBtn');
         const statusDiv = document.getElementById('status');
@@ -474,17 +500,6 @@
                 }
             };
             reader.readAsArrayBuffer(file);
-        }
-
-        function calculateEstimatedDistance(pedidos) {
-            const uniqueCities = new Set();
-            pedidos.forEach(p => { if (p.Cidade) { uniqueCities.add(String(p.Cidade).toUpperCase().trim()); } });
-            let totalDistance = 0;
-            uniqueCities.forEach(city => {
-                if (distanciasCidades[city]) { totalDistance += distanciasCidades[city]; } 
-                else { console.warn(`Distância para a cidade '${city}' não encontrada.`); }
-            });
-            return totalDistance * 1.50; // Fator de ajuste para ida e volta e deslocamentos
         }
 
         function buscarPedido() {
@@ -577,15 +592,9 @@
                 const pedidosGeraisFiltrados = pedidos.filter(p => {
                     if (tocoPedidoIds.has(String(p.Num_Pedido))) return false;
                     if (['21', '23', '17'].includes(String(p.Coluna4))) return false;
-
-                    // *** REGRA GLOBAL CORRIGIDA: Exclui QUALQUER pedido que não seja Toco e tenha um número no campo CF ***
-                    if (isNumeric(p.CF)) {
-                        return false;
-                    }
-
+                    if (isNumeric(p.CF)) { return false; }
                     const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
                     if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return false;
-
                     if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return false;
                     if (clientesParaRemover.has(String(p.Cliente))) return false;
                     return true;
@@ -718,6 +727,16 @@
                 if (hasPriority || load.totalKg >= MIN_KG) { finalLoads.push(load); } else { unplacedFromMinRule.push(...load.pedidos); }
             });
             finalLoads.forEach((load, index) => { load.numero = index + 1; });
+            
+            if (vehicleType === 'fiorino') {
+                CargasFiorinoFinalizadas.clear();
+                finalLoads.forEach(load => {
+                    const loadId = `fiorino-${title.replace(/\s+/g, '-')}-${load.numero}`;
+                    load.id = loadId;
+                    CargasFiorinoFinalizadas.set(loadId, load);
+                });
+            }
+
             let leftoverPedidos = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             
             const vehicleInfo = {
@@ -729,12 +748,33 @@
 
             let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${finalLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${finalLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}', '${vInfo.colorClass}', '${vInfo.textColor}')">🖨️ Imprimir Concluídas</button>` : ''}</div>`;
             if (finalLoads.length === 0) { html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; }
+            
             finalLoads.forEach(load => {
                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
                 const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
-                html += `<div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}"><div class="card-header ${vInfo.colorClass} ${vInfo.textColor}">${vInfo.name} #${load.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³ ${priorityBadge}</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
+                
+                // *** ADICIONADO: Botão e local para exibir a distância da API ***
+                let fiorinoDistanceHtml = '';
+                if (vehicleType === 'fiorino') {
+                    fiorinoDistanceHtml = `
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
+                           <span id="dist-${load.id}"></span>
+                           <button class="btn btn-outline-info btn-sm no-print" onclick="calculateApiDistance('${load.id}')">📍 Calcular KM</button>
+                        </div>`;
+                }
+
+                html += `
+                    <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
+                        <div class="card-header ${vInfo.colorClass} ${vInfo.textColor}">
+                            ${vInfo.name} #${load.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³ ${priorityBadge}
+                        </div>
+                        <div class="card-body">
+                            ${createTable(load.pedidos)}
+                            ${fiorinoDistanceHtml}
+                        </div>
+                    </div>`;
             });
             if (leftoverPedidos.length > 0) {
                 const totalKgUnassigned = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
@@ -765,7 +805,6 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        // Função de impressão genérica
         function imprimirCargasGeneric(divId, title, headerBgClass, headerTextClass) {
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
@@ -781,6 +820,7 @@
             printWindow.document.write(`<style>
                 body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                 .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; }
+                .no-print { display: none !important; }
                 .${headerBgClass} { background-color: ${getComputedStyle(document.querySelector(`.${headerBgClass}`)).backgroundColor} !important; }
                 .${headerTextClass} { color: ${getComputedStyle(document.querySelector(`.${headerTextClass}`)).color} !important; }
                 .table-responsive { overflow: visible !important; }
