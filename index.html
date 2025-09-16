@@ -17,12 +17,11 @@
     <style>
         body {
             background-color: #212529;
-            font-family: 'Inter', sans-serif; /* <-- NOVA FONTE APLICADA */
+            font-family: 'Inter', sans-serif;
         }
         .card {
             background-color: #2b3035;
             border: 1px solid #495057;
-            /* -- NOVOS EFEITOS DE SOMBRA E TRANSIÇÃO -- */
             border-radius: 0.5rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.25), 0 2px 3px rgba(0,0,0,0.22);
             transition: all 0.2s ease-in-out;
@@ -55,6 +54,24 @@
             filter: brightness(1.1);
             transform: translateY(-2px);
         }
+
+        /* ESTILOS PARA DRAG AND DROP */
+        .pedido-row {
+            cursor: grab;
+            transition: background-color 0.2s ease;
+        }
+        .pedido-row.dragging {
+            opacity: 0.5;
+            background-color: #0d6efd;
+        }
+        .drop-zone.drag-over {
+            border: 2px dashed #0d6efd;
+            background-color: #343a40;
+        }
+        .card-header.below-min-weight {
+            border: 2px solid #dc3545 !important;
+        }
+        
         @media print {
             body { background-color: #fff; color: #000; }
             .container, .card, .accordion-item, .accordion-body { background-color: #fff !important; color: #000 !important; border: none !important; box-shadow: none !important; }
@@ -126,7 +143,7 @@
                 </div>
                 <div class="col-md-3">
                     <label for="fiorinoCubage" class="form-label">Fiorino - Cubagem Máx (m³)</label>
-                    <input type="number" class="form-control config-input" id="fiorinoCubage" value="1.5" step="0.1">
+                    <input type="number" class="form-control config-input" id="fiorinoCubage" value="1.6" step="0.1">
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <button class="btn btn-secondary w-100" id="resetFiorino">Reset Fiorino</button>
@@ -212,7 +229,7 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5 text-success"><i class="bi bi-box-seam me-2"></i>Separação de Cargas (Fiorino)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Fiorino para separar as cargas. O sistema tentará promover sobras para uma Van se houver pedidos grandes.</p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Após processar, você pode arrastar e soltar pedidos entre as cargas. O sistema validará a movimentação.</p>
                         <div class="no-print">
                             <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11101', 'resultado-fiorino-geral', 'Rota 11101')">Rota 11101</button>
                             <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11301', 'resultado-fiorino-geral', 'Rota 11301')">Rota 11301</button>
@@ -296,7 +313,15 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
+        // --- VARIÁVEIS GLOBAIS ---
         let CargasFiorinoFinalizadas = new Map();
+        let planilhaData = [];
+        let pedidosGeraisAtuais = [];
+        let gruposToco = {};
+        let pedidosPrioritarios = [];
+        let tocoPedidoIds = new Set();
+        // --> NOVO: Variável para manter o estado da separação interativa
+        let activeSeparationState = null;
 
         const matrizDeDistancias = {
             'ARAPONGAS': { 'ASTORGA': 34, 'BELA VISTA DO PARAÍSO': 75, 'BOM SUCESSO': 75, 'CAMBÉ': 22, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 96, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'IBIPORÃ': 46, 'ITAMBARACÁ': 122, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 46, 'JATAIZINHO': 52, 'KALORÉ': 61, 'LONDRINA': 38, 'MANDAGUARI': 48, 'MARIALVA': 60, 'MARILÂNDIA DO SUL': 62, 'MUNHOZ DE MELO': 49, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 87, 'ROLÂNDIA': 10, 'SABAUDIA': 16, 'SANTA FÉ': 54, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 80, 'URAÍ': 85 },
@@ -393,14 +418,8 @@
             resultSpan.innerHTML = `<strong>Distância Estimada: ${totalDistance.toFixed(0)} km</strong>`;
         }
         
-        let planilhaData = [];
-        let pedidosGeraisAtuais = [];
-        let gruposToco = {};
-        let pedidosPrioritarios = [];
-        let tocoPedidoIds = new Set();
-
         const defaultConfigs = {
-            fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.5,
+            fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.6,
             vanMaxCapacity: 1560, vanMinCapacity: 1100, vanCubage: 5.0,
             tresQuartosMaxCapacity: 4100, tresQuartosMinCapacity: 2300, tresQuartosCubage: 15.0,
             tocoMaxCapacity: 8500, tocoMinCapacity: 5000, tocoCubage: 30.0
@@ -651,13 +670,21 @@
             } catch (error) { statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; console.error(error); }
         }
 
-        function createTable(pedidos, columnsToDisplay) {
+        // --- FUNÇÕES DE EXIBIÇÃO E MONTAGEM DE CARGAS ---
+
+        function createTable(pedidos, columnsToDisplay, isDraggable = false) { // Adicionado isDraggable
             if (!pedidos || pedidos.length === 0) return '';
             const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
             let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped"><thead><tr>';
             colunasExibir.forEach(c => table += `<th>${c}</th>`);
             table += '</tr></thead><tbody>';
-            pedidos.forEach(p => { table += `<tr id="pedido-${p.Num_Pedido}">`; colunasExibir.forEach(c => table += `<td>${p[c] === undefined || p[c] === null ? '' : p[c]}</td>`); table += '</tr>'; });
+            pedidos.forEach(p => { 
+                // Adiciona a classe 'pedido-row' e o atributo draggable se necessário
+                const draggableAttrs = isDraggable ? `class="pedido-row" draggable="true"` : '';
+                table += `<tr id="pedido-${p.Num_Pedido}" ${draggableAttrs}>`; 
+                colunasExibir.forEach(c => table += `<td>${p[c] === undefined || p[c] === null ? '' : p[c]}</td>`); 
+                table += '</tr>'; 
+            });
             table += '</tbody></table></div>';
             return table;
         }
@@ -676,7 +703,7 @@
 
         function displayTresQuartos(div, loads) {
             if (loads.length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhuma carga 3/4 formada.</div>'; return; }
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${div.id}', 'Cargas 3/4 (Automático)', 'bg-warning', 'text-dark')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
             loads.forEach(load => {
                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 html += `<div class="card mb-3"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
@@ -684,10 +711,6 @@
             div.innerHTML = html;
         }
         
-        // ==========================================================================================
-        // NOVA LÓGICA DE MONTAGEM DE CARGAS - INÍCIO
-        // ==========================================================================================
-
         function packLoads(pedidos, vehicleType) {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
@@ -785,37 +808,37 @@
             const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
             const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
 
-            // PASSO 1: Tenta montar as cargas com o veículo primário
             const primaryResult = packLoads(pedidosRota, vehicleType);
             let primaryLoads = primaryResult.loads;
             let currentLeftovers = primaryResult.leftovers;
             let promotedLoads = [];
 
-            // PASSO 2: LÓGICA DE PROMOÇÃO DE VEÍCULO
-            // Se for Fiorino, verifica se pode promover para Van
             if (vehicleType === 'fiorino' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 600)) {
                 const promotedResult = packLoads(currentLeftovers, 'van');
                 promotedLoads = promotedResult.loads;
-                currentLeftovers = promotedResult.leftovers; // Sobras Finais
+                currentLeftovers = promotedResult.leftovers; 
             }
-            // Se for Van, verifica se pode promover para 3/4
             else if (vehicleType === 'van' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 1650)) {
                 const promotedResult = packLoads(currentLeftovers, 'tresQuartos');
                 promotedLoads = promotedResult.loads;
-                currentLeftovers = promotedResult.leftovers; // Sobras Finais
+                currentLeftovers = promotedResult.leftovers;
             }
             
-            // PASSO 3: EXIBIÇÃO DOS RESULTADOS
-            primaryLoads.forEach((load, index) => { load.numero = index + 1; });
-            promotedLoads.forEach((load, index) => { load.numero = index + 1; });
+            primaryLoads.forEach((load, index) => { load.numero = index + 1; load.id = `${vehicleType}-p-${index + 1}`; });
+            promotedLoads.forEach((load, index) => { load.numero = index + 1; load.id = `${vehicleType}-m-${index + 1}`; });
             
             if (vehicleType === 'fiorino') {
                 CargasFiorinoFinalizadas.clear();
-                primaryLoads.forEach(load => {
-                    const loadId = `fiorino-${title.replace(/\s+/g, '-')}-${load.numero}`;
-                    load.id = loadId;
-                    CargasFiorinoFinalizadas.set(loadId, load);
-                });
+                primaryLoads.forEach(load => CargasFiorinoFinalizadas.set(load.id, load));
+            }
+
+            // --> NOVO: Armazena o resultado no estado global para interatividade
+            if (vehicleType === 'fiorino') {
+                activeSeparationState = {
+                    primaryLoads: primaryLoads,
+                    promotedLoads: promotedLoads,
+                    leftovers: currentLeftovers,
+                };
             }
 
             const vehicleInfo = {
@@ -825,82 +848,80 @@
             };
 
             let html = '';
-            
-            // Exibe cargas primárias
             const vInfo = vehicleInfo[vehicleType];
-            html += `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${primaryLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${(primaryLoads.length > 0 || promotedLoads.length > 0) ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}</div>`;
+            html += `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${primaryLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${(primaryLoads.length > 0 || promotedLoads.length > 0) ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}</div>`;
             if (primaryLoads.length === 0) { html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; }
 
             primaryLoads.forEach(load => {
-                html += renderLoadCard(load, vehicleType, vInfo);
+                html += renderLoadCard(load, vehicleType, vInfo, false, vehicleType === 'fiorino');
             });
 
-            // Exibe cargas promovidas, se houver
             if (promotedLoads.length > 0) {
                 const promotedVehicleType = (vehicleType === 'fiorino') ? 'van' : 'tresQuartos';
                 const pVInfo = vehicleInfo[promotedVehicleType];
                 html += `<hr class="my-4"><div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0 text-info"><i class="bi bi-star-fill me-2"></i>${promotedLoads.length} Carga(s) Promovida(s) para ${pVInfo.name}:</h4></div>`;
                 
                 promotedLoads.forEach(load => {
-                    html += renderLoadCard(load, promotedVehicleType, pVInfo, true);
+                    html += renderLoadCard(load, promotedVehicleType, pVInfo, true, vehicleType === 'fiorino');
                 });
             }
 
-            // Exibe sobras finais
             if (currentLeftovers.length > 0) {
                 const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}</div></div>`;
+                // --> NOVO: Adiciona ID e classes para a zona de drop das sobras
+                html += `<h5 class="mt-4">Pedidos restantes: <span id="leftovers-total-kg">${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> kg</h5>
+                         <div id="leftovers-card" class="card mb-3 drop-zone" data-load-id="leftovers" data-vehicle-type="leftovers">
+                            <div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div>
+                            <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'], vehicleType === 'fiorino')}</div>
+                         </div>`;
             }
 
             resultadoDiv.innerHTML = html;
+
+            // --> NOVO: Ativa os listeners de drag and drop se for Fiorino
+            if (vehicleType === 'fiorino') {
+                initDragDropListeners(divId);
+            }
         }
 
-        function renderLoadCard(load, vehicleType, vInfo, isPromoted = false) {
-            // Ordena os pedidos dentro da carga por cliente e depois por número do pedido, para agrupá-los visualmente na tabela.
-            load.pedidos.sort((a, b) => {
-                const clienteA = String(a.Cliente);
-                const clienteB = String(b.Cliente);
-                const pedidoA = String(a.Num_Pedido);
-                const pedidoB = String(b.Num_Pedido);
+        function renderLoadCard(load, vehicleType, vInfo, isPromoted = false, isDraggable = false) {
+            load.pedidos.sort((a, b) => String(a.Cliente).localeCompare(String(b.Cliente)) || String(a.Num_Pedido).localeCompare(String(b.Num_Pedido)));
+            
+            const totalKg = load.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+            const totalCubagem = load.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+            load.totalKg = totalKg; // Atualiza o objeto de carga
+            load.totalCubagem = totalCubagem;
 
-                if (clienteA < clienteB) return -1;
-                if (clienteA > clienteB) return 1;
-                
-                // Se os clientes forem iguais, ordena pelo número do pedido
-                return pedidoA.localeCompare(pedidoB);
-            });
-
-            const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const totalCubagemFormatado = totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
             const promotedBadge = isPromoted ? '<span class="badge bg-info-subtle text-info-emphasis ms-3">PROMOVIDA</span>' : '';
 
             let fiorinoDistanceHtml = '';
             if (vehicleType === 'fiorino') {
-                fiorinoDistanceHtml = `
-                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
-                       <span id="dist-${load.id}"></span>
-                       <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
-                    </div>`;
+                fiorinoDistanceHtml = `<div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary"><span id="dist-${load.id}"></span><button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button></div>`;
             }
 
+            // --> NOVO: Adiciona ID e classes para a zona de drop da carga
             return `
-                <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
-                    <div class="card-header ${vInfo.colorClass} ${vInfo.textColor}">
-                        <i class="bi bi-box-seam-fill me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${promotedBadge}
+                <div id="card-${load.id}" class="card mb-3 drop-zone" data-load-id="${load.id}" data-vehicle-type="${vehicleType}">
+                    <div id="header-${load.id}" class="card-header ${vInfo.colorClass} ${vInfo.textColor}">
+                        <i class="bi bi-box-seam-fill me-2"></i>${vInfo.name} #${load.numero} - 
+                        <span class="totals">
+                            <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / 
+                            <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³
+                        </span> 
+                        ${priorityBadge} ${promotedBadge}
                     </div>
                     <div class="card-body">
-                        ${createTable(load.pedidos)}
+                        ${createTable(load.pedidos, null, isDraggable)}
                         ${fiorinoDistanceHtml}
                     </div>
                 </div>`;
         }
         
-        // ==========================================================================================
-        // NOVA LÓGICA DE MONTAGEM DE CARGAS - FIM
-        // ==========================================================================================
-
         function separarCargasFiorino(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'fiorino'); }
         function separarCargasVan(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'van'); }
         function separarCargas34(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'tresQuartos'); }
@@ -923,12 +944,9 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        function imprimirCargasGeneric(divId, title) {
+        function imprimirCargasGeneric(divId) {
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
-
-            // <-- MUDANÇA PRINCIPAL AQUI: Seleciona todos os cabeçalhos de card que NÃO são o de sobras (bg-danger).
-            // Isso garante que cargas primárias e promovidas (com cores diferentes) sejam impressas juntas.
             const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
             
             if (completedLoadsCards.length === 0) {
@@ -937,22 +955,22 @@
             }
 
             const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir: ' + title + '</title>');
+            printWindow.document.write('<html><head><title>Imprimir Cargas</title>');
             printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
             printWindow.document.write(`<style>
                 body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                 .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; }
                 .no-print { display: none !important; }
-                /* Mantém as cores dos cabeçalhos na impressão */
                 .bg-success { background-color: #198754 !important; color: white !important; }
                 .bg-primary { background-color: #0d6efd !important; color: white !important; }
                 .bg-warning { background-color: #ffc107 !important; color: black !important; }
+                .text-white { color: white !important; } .text-dark { color: black !important; }
                 .table-responsive { overflow: visible !important; }
                 table, th, td { border: 1px solid #dee2e6 !important; }
                 h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
             </style></head><body>`);
             
-            let contentToPrint = `<h3>${title}</h3>`;
+            let contentToPrint = `<h3>Relatório de Cargas</h3>`;
             completedLoadsCards.forEach(header => { 
                 contentToPrint += header.closest('.card.mb-3').outerHTML; 
             });
@@ -971,13 +989,7 @@
             const printWindow = window.open('', '', 'height=800,width=1200');
             printWindow.document.write('<html><head><title>Imprimir Carga Toco CF: ' + cf + '</title>');
             printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write(`<style>
-                body { margin: 20px; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h3 { margin-bottom: 1rem; }
-            </style></head><body>`);
-            
+            printWindow.document.write(`<style> body { margin: 20px; } .table-responsive { overflow: visible !important; } table, th, td { border: 1px solid #dee2e6 !important; } h3 { margin-bottom: 1rem; } </style></head><body>`);
             let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos);
 
             printWindow.document.body.innerHTML = contentToPrint;
@@ -985,6 +997,167 @@
             printWindow.focus(); 
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
+
+        // --- INÍCIO DA LÓGICA DE DRAG AND DROP ---
+        
+        function initDragDropListeners(containerId) {
+            const container = document.getElementById(containerId);
+            const draggables = container.querySelectorAll('.pedido-row');
+            const dropZones = container.querySelectorAll('.drop-zone');
+
+            draggables.forEach(draggable => {
+                draggable.addEventListener('dragstart', handleDragStart);
+                draggable.addEventListener('dragend', handleDragEnd);
+            });
+
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+            });
+        }
+
+        function handleDragStart(e) {
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.id);
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+
+            const draggedElementId = e.dataTransfer.getData('text/plain');
+            const draggedElement = document.getElementById(draggedElementId);
+            const pedidoId = draggedElementId.replace('pedido-', '');
+            
+            const destZone = this;
+            const destLoadId = destZone.dataset.loadId;
+            const destVehicleType = destZone.dataset.vehicleType;
+            
+            const sourceZone = draggedElement.closest('.drop-zone');
+            const sourceLoadId = sourceZone.dataset.loadId;
+
+            if (destLoadId === sourceLoadId) return; // Não faz nada se soltar no mesmo lugar
+
+            // 1. Encontrar o pedido e as cargas no estado
+            let pedido, sourceList, destList, vehicleType;
+            
+            const findResult = findPedidoAndLists(pedidoId, sourceLoadId, destLoadId);
+            if (!findResult) { console.error("Não foi possível encontrar o pedido ou as listas."); return; }
+            ({ pedido, sourceList, destList } = findResult);
+
+            // 2. Validar a movimentação
+            const destLoad = findLoadById(destLoadId);
+            if (destLoad) { // Só valida se não for a lista de sobras
+                vehicleType = destLoad.isPromoted ? 'van' : 'fiorino';
+                const maxKg = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
+                const maxCubagem = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
+                const pedidoKg = parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                const pedidoCubagem = parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+
+                if (destLoad.totalKg + pedidoKg > maxKg) {
+                    alert(`Erro: A carga excederia o peso máximo de ${maxKg} kg.`);
+                    return;
+                }
+                if (destLoad.totalCubagem + pedidoCubagem > maxCubagem) {
+                    alert(`Erro: A carga excederia a cubagem máxima de ${maxCubagem} m³.`);
+                    return;
+                }
+            }
+
+            // 3. Atualizar o estado (mover o pedido)
+            const index = sourceList.findIndex(p => p.Num_Pedido == pedido.Num_Pedido);
+            sourceList.splice(index, 1);
+            destList.push(pedido);
+
+            // 4. Atualizar a interface (DOM)
+            const destTableBody = destZone.querySelector('tbody');
+            destTableBody.appendChild(draggedElement);
+
+            // 5. Recalcular e atualizar totais
+            updateCardUI(sourceLoadId);
+            updateCardUI(destLoadId);
+        }
+
+        function findPedidoAndLists(pedidoId, sourceLoadId, destLoadId) {
+            let pedido, sourceList, destList;
+            const allLists = [
+                ...activeSeparationState.primaryLoads, 
+                ...activeSeparationState.promotedLoads, 
+                { id: 'leftovers', pedidos: activeSeparationState.leftovers }
+            ];
+
+            for (const listContainer of allLists) {
+                if (listContainer.id === sourceLoadId) sourceList = listContainer.pedidos;
+                if (listContainer.id === destLoadId) destList = listContainer.pedidos;
+                if (!pedido) {
+                    const found = listContainer.pedidos.find(p => p.Num_Pedido == pedidoId);
+                    if (found) pedido = found;
+                }
+            }
+            return { pedido, sourceList, destList };
+        }
+        
+        function findLoadById(loadId) {
+             if (loadId === 'leftovers') return null;
+             let load = activeSeparationState.primaryLoads.find(l => l.id === loadId);
+             if (load) return { ...load, isPromoted: false };
+             load = activeSeparationState.promotedLoads.find(l => l.id === loadId);
+             if (load) return { ...load, isPromoted: true };
+             return null;
+        }
+
+        function updateCardUI(loadId) {
+            if (loadId === 'leftovers') {
+                const totalKg = activeSeparationState.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                document.getElementById('leftovers-total-kg').textContent = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return;
+            }
+
+            const loadData = findLoadById(loadId);
+            if (!loadData) return;
+            
+            const vehicleType = loadData.isPromoted ? 'van' : 'fiorino';
+            const vInfo = {
+                fiorino: { name: 'Fiorino', minKg: parseFloat(document.getElementById('fiorinoMinCapacity').value)},
+                van: { name: 'Van', minKg: parseFloat(document.getElementById('vanMinCapacity').value)}
+            }[vehicleType];
+
+            const header = document.getElementById(`header-${loadId}`);
+            const totalsSpan = header.querySelector('.totals');
+
+            const totalKg = loadData.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+            const totalCubagem = loadData.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+            
+            // Atualiza o objeto no estado
+            const stateLoad = [...activeSeparationState.primaryLoads, ...activeSeparationState.promotedLoads].find(l => l.id === loadId);
+            stateLoad.totalKg = totalKg;
+            stateLoad.totalCubagem = totalCubagem;
+            
+            totalsSpan.innerHTML = `<i class="bi bi-database me-1"></i>Total: ${totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg / 
+                                  <i class="bi bi-rulers me-1"></i>${totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m³`;
+
+            if (totalKg < vInfo.minKg) {
+                header.classList.add('below-min-weight');
+            } else {
+                header.classList.remove('below-min-weight');
+            }
+        }
+        // --- FIM DA LÓGICA DE DRAG AND DROP ---
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
