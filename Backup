@@ -17,12 +17,11 @@
     <style>
         body {
             background-color: #212529;
-            font-family: 'Inter', sans-serif; /* <-- NOVA FONTE APLICADA */
+            font-family: 'Inter', sans-serif;
         }
         .card {
             background-color: #2b3035;
             border: 1px solid #495057;
-            /* -- NOVOS EFEITOS DE SOMBRA E TRANSIÇÃO -- */
             border-radius: 0.5rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.25), 0 2px 3px rgba(0,0,0,0.22);
             transition: all 0.2s ease-in-out;
@@ -56,7 +55,7 @@
             transform: translateY(-2px);
         }
         @media print {
-            body { background-color: #fff; color: #000; }
+            body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .container, .card, .accordion-item, .accordion-body { background-color: #fff !important; color: #000 !important; border: none !important; box-shadow: none !important; }
             .no-print, .d-flex.align-items-center.mb-3, .card.p-3.mb-4.shadow-sm, button, .status-message, .card-subtitle, .accordion-button.collapsed, .accordion-collapse.collapse { display: none !important; }
             .table-responsive { overflow: visible !important; }
@@ -65,6 +64,7 @@
             .accordion-collapse { display: block !important; }
             .accordion-button { display: block !important; background-color: #f8f9fa !important; color: #000 !important; border: 1px solid #dee2e6 !important; margin-bottom: 0.5rem; }
             .accordion-button strong, .accordion-button .badge { color: #000 !important; }
+            .bg-warning { background-color: #ffc107 !important; color: black !important; }
         }
         #drop-zone-text {
             border: 2px dashed #495057;
@@ -296,6 +296,56 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
+        // <<< INÍCIO DA NOVA FUNCIONALIDADE: LISTA DE CLIENTES COM AGENDAMENTO >>>
+        const agendamentoClientCodes = new Set([
+            '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', 
+            '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', 
+            '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', 
+            '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', 
+            '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', 
+            '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', 
+            '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', 
+            '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', 
+            '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', 
+            '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', 
+            '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '144192', '144457', '145014', '145237', '145322', '146644', '146988', 
+            '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', 
+            '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', 
+            '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', 
+            '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', 
+            '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', 
+            '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', 
+            '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', 
+            '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', 
+            '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', 
+            '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196084', '196118', '196405', '196446', '196784', 
+            '197168', '197249', '197983', '198187', '198438', '198747', '198774', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', 
+            '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', 
+            '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', 
+            '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', 
+            '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', 
+            '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', 
+            '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', 
+            '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', 
+            '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', 
+            '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', 
+            '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218578', '218580', '218640', '218820', '218845', '219539', 
+            '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', 
+            '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', 
+            '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
+        ]);
+
+        function checkAgendamento(pedido) {
+            if (!pedido || typeof pedido.Cliente === 'undefined' || pedido.Cliente === null) {
+                pedido.Agendamento = 'Não';
+                return;
+            }
+            // Normaliza o código do cliente (remove zeros à esquerda) para garantir a correspondência
+            const normalizedCode = String(pedido.Cliente).replace(/^0+/, '');
+            pedido.Agendamento = agendamentoClientCodes.has(normalizedCode) ? 'Sim' : 'Não';
+        }
+        // <<< FIM DA NOVA FUNCIONALIDADE >>>
+
         let CargasFiorinoFinalizadas = new Map();
 
         const matrizDeDistancias = {
@@ -505,6 +555,10 @@
                     if (headerRowIndex === -1) throw new Error("Não foi possível encontrar a linha de cabeçalho com 'Cod_Rota'.");
                     const dataRows = rawData.slice(headerRowIndex + 1);
                     planilhaData = dataRows.map(row => { const pedido = {}; headers.forEach((header, i) => { if (header) { pedido[header] = row[i] !== undefined ? row[i] : ''; } }); return pedido; });
+                    
+                    // <<< ALTERAÇÃO: Adiciona a verificação de agendamento a todos os pedidos carregados >>>
+                    planilhaData.forEach(checkAgendamento);
+
                     statusDiv.innerHTML = `<p class="text-success">Planilha \"${file.name}\" carregada. ${planilhaData.length} linhas prontas para processar.</p>`;
                     processarBtn.disabled = false;
                     dropZoneText.innerHTML = `<p>Arquivo \"${file.name}\" carregado.</p><button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">Selecionar Outro Arquivo</button>`;
@@ -553,9 +607,9 @@
                 if (local === 'Resultados Gerais') {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                   <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                         buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                             buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -651,13 +705,25 @@
             } catch (error) { statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; console.error(error); }
         }
 
+        // <<< ALTERAÇÃO: Adicionada a coluna 'Agendamento' à lista padrão e à lógica da tabela >>>
         function createTable(pedidos, columnsToDisplay) {
             if (!pedidos || pedidos.length === 0) return '';
-            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
+            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
             let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped"><thead><tr>';
-            colunasExibir.forEach(c => table += `<th>${c}</th>`);
+            colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
-            pedidos.forEach(p => { table += `<tr id="pedido-${p.Num_Pedido}">`; colunasExibir.forEach(c => table += `<td>${p[c] === undefined || p[c] === null ? '' : p[c]}</td>`); table += '</tr>'; });
+            pedidos.forEach(p => {
+                table += `<tr id="pedido-${p.Num_Pedido}">`;
+                colunasExibir.forEach(c => {
+                    let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
+                    if (c === 'Agendamento' && cellContent === 'Sim') {
+                        table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
+                    } else {
+                        table += `<td>${cellContent}</td>`;
+                    }
+                });
+                table += '</tr>';
+            });
             table += '</tbody></table></div>';
             return table;
         }
@@ -684,10 +750,6 @@
             div.innerHTML = html;
         }
         
-        // ==========================================================================================
-        // NOVA LÓGICA DE MONTAGEM DE CARGAS - INÍCIO
-        // ==========================================================================================
-
         function packLoads(pedidos, vehicleType) {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
@@ -849,14 +911,13 @@
             // Exibe sobras finais
             if (currentLeftovers.length > 0) {
                 const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}</div></div>`;
+                html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}</div></div>`;
             }
 
             resultadoDiv.innerHTML = html;
         }
 
         function renderLoadCard(load, vehicleType, vInfo, isPromoted = false) {
-            // Ordena os pedidos dentro da carga por cliente e depois por número do pedido, para agrupá-los visualmente na tabela.
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente);
                 const clienteB = String(b.Cliente);
@@ -866,7 +927,6 @@
                 if (clienteA < clienteB) return -1;
                 if (clienteA > clienteB) return 1;
                 
-                // Se os clientes forem iguais, ordena pelo número do pedido
                 return pedidoA.localeCompare(pedidoB);
             });
 
@@ -897,10 +957,6 @@
                 </div>`;
         }
         
-        // ==========================================================================================
-        // NOVA LÓGICA DE MONTAGEM DE CARGAS - FIM
-        // ==========================================================================================
-
         function separarCargasFiorino(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'fiorino'); }
         function separarCargasVan(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'van'); }
         function separarCargas34(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'tresQuartos'); }
@@ -927,8 +983,6 @@
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
 
-            // <-- MUDANÇA PRINCIPAL AQUI: Seleciona todos os cabeçalhos de card que NÃO são o de sobras (bg-danger).
-            // Isso garante que cargas primárias e promovidas (com cores diferentes) sejam impressas juntas.
             const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
             
             if (completedLoadsCards.length === 0) {
