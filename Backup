@@ -49,7 +49,7 @@
             min-height: 24px; /* Prevent layout shift */
         }
         .btn {
-             transition: all 0.2s ease-in-out;
+            transition: all 0.2s ease-in-out;
         }
         .btn:hover {
             filter: brightness(1.1);
@@ -212,7 +212,7 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5 text-success"><i class="bi bi-box-seam me-2"></i>Separação de Cargas (Fiorino)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Fiorino para separar as cargas.</p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Fiorino para separar as cargas. O sistema tentará promover sobras para uma Van se houver pedidos grandes.</p>
                         <div class="no-print">
                             <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11101', 'resultado-fiorino-geral', 'Rota 11101')">Rota 11101</button>
                             <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11301', 'resultado-fiorino-geral', 'Rota 11301')">Rota 11301</button>
@@ -231,7 +231,7 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5 text-primary"><i class="bi bi-truck-front me-2"></i>Separação de Cargas (Van)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Van para separar as cargas.</p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Van para separar as cargas. O sistema tentará promover sobras para um 3/4 se houver pedidos grandes.</p>
                         <div class="no-print">
                             <button class="btn btn-primary mt-2" onclick="separarCargasVan('11102', 'resultado-van-geral', 'Rota 11102')">Rota 11102</button>
                             <button class="btn btn-primary mt-2" onclick="separarCargasVan('11331', 'resultado-van-geral', 'Rota 11331')">Rota 11331</button>
@@ -393,8 +393,6 @@
             resultSpan.innerHTML = `<strong>Distância Estimada: ${totalDistance.toFixed(0)} km</strong>`;
         }
         
-        // ... (o resto do seu script JavaScript, exatamente como estava antes)
-        
         let planilhaData = [];
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
@@ -555,9 +553,9 @@
                 if (local === 'Resultados Gerais') {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                               <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                   <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                         buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -685,32 +683,39 @@
             });
             div.innerHTML = html;
         }
+        
+        // ==========================================================================================
+        // NOVA LÓGICA DE MONTAGEM DE CARGAS - INÍCIO
+        // ==========================================================================================
 
-        function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType) {
-            const resultadoDiv = document.getElementById(divId);
-            resultadoDiv.innerHTML = '';
-            if (planilhaData.length === 0) {
-                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return;
-            }
-
-            const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
-
-            const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value) || defaultConfigs[`${vehicleType}MinCapacity`];
-            const MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value) || defaultConfigs[`${vehicleType}MaxCapacity`];
-            const MAX_CUBAGEM = parseFloat(document.getElementById(`${vehicleType}Cubage`).value) || defaultConfigs[`${vehicleType}Cubage`];
+        function packLoads(pedidos, vehicleType) {
+            const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
+            const MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
+            const MAX_CUBAGEM = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
             
-            const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
 
             let packableItems = [];
-            const otherPedidos = pedidosRota.filter(p => !isSpecialClient(p));
-            const specialPedidos = pedidosRota.filter(p => isSpecialClient(p));
+            const otherPedidos = pedidos.filter(p => !isSpecialClient(p));
+            const specialPedidos = pedidos.filter(p => isSpecialClient(p));
 
-            specialPedidos.forEach(pedido => { packableItems.push({ isSpecial: true, pedidos: [pedido], totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0, totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0, }); });
+            specialPedidos.forEach(pedido => {
+                packableItems.push({
+                    isSpecial: true,
+                    pedidos: [pedido],
+                    totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
+                    totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
+                });
+            });
 
             const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
-                const clienteId = pedido.Cliente; if (!acc[clienteId]) { acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 }; } acc[clienteId].pedidos.push(pedido); return acc;
+                const clienteId = pedido.Cliente;
+                if (!acc[clienteId]) {
+                    acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                }
+                acc[clienteId].pedidos.push(pedido);
+                return acc;
             }, {});
             
             Object.values(otherClientGroupsMap).forEach(group => {
@@ -721,82 +726,180 @@
 
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
-            priorityItems.sort((a, b) => b.totalKg - a.totalKg); regularItems.sort((a, b) => b.totalKg - a.totalKg);
+            priorityItems.sort((a, b) => b.totalKg - a.totalKg);
+            regularItems.sort((a, b) => b.totalKg - a.totalKg);
             packableItems = [...priorityItems, ...regularItems];
 
-            let loads = []; let leftoverItems = [];
+            let loads = [];
+            let leftoverItems = [];
             packableItems.forEach(item => {
-                if (item.totalKg > MAX_KG || item.totalCubagem > MAX_CUBAGEM) { leftoverItems.push(item); return; }
+                if (item.totalKg > MAX_KG || item.totalCubagem > MAX_CUBAGEM) {
+                    leftoverItems.push(item);
+                    return;
+                }
                 let placed = false;
                 for (const load of loads) {
-                    const specialCountInLoad = load.pedidos.filter(p => isSpecialClient(p)).length; const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
+                    const specialCountInLoad = load.pedidos.filter(p => isSpecialClient(p)).length;
+                    const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
                     if ((load.totalKg + item.totalKg <= MAX_KG) && (load.totalCubagem + item.totalCubagem <= MAX_CUBAGEM) && (specialCountInLoad + specialOrdersInItem <= 2)) {
-                        load.pedidos.push(...item.pedidos); load.totalKg += item.totalKg; load.totalCubagem += item.totalCubagem; placed = true; break;
+                        load.pedidos.push(...item.pedidos);
+                        load.totalKg += item.totalKg;
+                        load.totalCubagem += item.totalCubagem;
+                        placed = true;
+                        break;
                     }
                 }
-                if (!placed) { loads.push({ pedidos: [...item.pedidos], totalKg: item.totalKg, totalCubagem: item.totalCubagem, }); }
+                if (!placed) {
+                    loads.push({
+                        pedidos: [...item.pedidos],
+                        totalKg: item.totalKg,
+                        totalCubagem: item.totalCubagem,
+                    });
+                }
             });
 
-            let finalLoads = []; let unplacedFromMinRule = [];
+            let finalLoads = [];
+            let unplacedFromMinRule = [];
             loads.forEach(load => {
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                if (hasPriority || load.totalKg >= MIN_KG) { finalLoads.push(load); } else { unplacedFromMinRule.push(...load.pedidos); }
+                if (hasPriority || load.totalKg >= MIN_KG) {
+                    finalLoads.push(load);
+                } else {
+                    unplacedFromMinRule.push(...load.pedidos);
+                }
             });
-            finalLoads.forEach((load, index) => { load.numero = index + 1; });
+            
+            const leftovers = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
+            return { loads: finalLoads, leftovers };
+        }
+
+
+        function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType) {
+            const resultadoDiv = document.getElementById(divId);
+            resultadoDiv.innerHTML = '';
+            if (planilhaData.length === 0) {
+                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
+                return;
+            }
+
+            const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
+            const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
+
+            // PASSO 1: Tenta montar as cargas com o veículo primário
+            const primaryResult = packLoads(pedidosRota, vehicleType);
+            let primaryLoads = primaryResult.loads;
+            let currentLeftovers = primaryResult.leftovers;
+            let promotedLoads = [];
+
+            // PASSO 2: LÓGICA DE PROMOÇÃO DE VEÍCULO
+            // Se for Fiorino, verifica se pode promover para Van
+            if (vehicleType === 'fiorino' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 600)) {
+                const promotedResult = packLoads(currentLeftovers, 'van');
+                promotedLoads = promotedResult.loads;
+                currentLeftovers = promotedResult.leftovers; // Sobras Finais
+            }
+            // Se for Van, verifica se pode promover para 3/4
+            else if (vehicleType === 'van' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 1650)) {
+                const promotedResult = packLoads(currentLeftovers, 'tresQuartos');
+                promotedLoads = promotedResult.loads;
+                currentLeftovers = promotedResult.leftovers; // Sobras Finais
+            }
+            
+            // PASSO 3: EXIBIÇÃO DOS RESULTADOS
+            primaryLoads.forEach((load, index) => { load.numero = index + 1; });
+            promotedLoads.forEach((load, index) => { load.numero = index + 1; });
             
             if (vehicleType === 'fiorino') {
                 CargasFiorinoFinalizadas.clear();
-                finalLoads.forEach(load => {
+                primaryLoads.forEach(load => {
                     const loadId = `fiorino-${title.replace(/\s+/g, '-')}-${load.numero}`;
                     load.id = loadId;
                     CargasFiorinoFinalizadas.set(loadId, load);
                 });
             }
 
-            let leftoverPedidos = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
-            
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white' },
                 van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white' },
                 tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark' }
             };
-            const vInfo = vehicleInfo[vehicleType];
 
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${finalLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${finalLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}', '${vInfo.colorClass}', '${vInfo.textColor}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
-            if (finalLoads.length === 0) { html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; }
+            let html = '';
             
-            finalLoads.forEach(load => {
-                const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
-                
-                let fiorinoDistanceHtml = '';
-                if (vehicleType === 'fiorino') {
-                    fiorinoDistanceHtml = `
-                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
-                           <span id="dist-${load.id}"></span>
-                           <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
-                        </div>`;
-                }
+            // Exibe cargas primárias
+            const vInfo = vehicleInfo[vehicleType];
+            html += `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${primaryLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${(primaryLoads.length > 0 || promotedLoads.length > 0) ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}</div>`;
+            if (primaryLoads.length === 0) { html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; }
 
-                html += `
-                    <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
-                        <div class="card-header ${vInfo.colorClass} ${vInfo.textColor}">
-                            <i class="bi bi-box-seam-fill me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge}
-                        </div>
-                        <div class="card-body">
-                            ${createTable(load.pedidos)}
-                            ${fiorinoDistanceHtml}
-                        </div>
-                    </div>`;
+            primaryLoads.forEach(load => {
+                html += renderLoadCard(load, vehicleType, vInfo);
             });
-            if (leftoverPedidos.length > 0) {
-                const totalKgUnassigned = leftoverPedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(leftoverPedidos, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}</div></div>`;
+
+            // Exibe cargas promovidas, se houver
+            if (promotedLoads.length > 0) {
+                const promotedVehicleType = (vehicleType === 'fiorino') ? 'van' : 'tresQuartos';
+                const pVInfo = vehicleInfo[promotedVehicleType];
+                html += `<hr class="my-4"><div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0 text-info"><i class="bi bi-star-fill me-2"></i>${promotedLoads.length} Carga(s) Promovida(s) para ${pVInfo.name}:</h4></div>`;
+                
+                promotedLoads.forEach(load => {
+                    html += renderLoadCard(load, promotedVehicleType, pVInfo, true);
+                });
             }
+
+            // Exibe sobras finais
+            if (currentLeftovers.length > 0) {
+                const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}</div></div>`;
+            }
+
             resultadoDiv.innerHTML = html;
         }
+
+        function renderLoadCard(load, vehicleType, vInfo, isPromoted = false) {
+            // Ordena os pedidos dentro da carga por cliente e depois por número do pedido, para agrupá-los visualmente na tabela.
+            load.pedidos.sort((a, b) => {
+                const clienteA = String(a.Cliente);
+                const clienteB = String(b.Cliente);
+                const pedidoA = String(a.Num_Pedido);
+                const pedidoB = String(b.Num_Pedido);
+
+                if (clienteA < clienteB) return -1;
+                if (clienteA > clienteB) return 1;
+                
+                // Se os clientes forem iguais, ordena pelo número do pedido
+                return pedidoA.localeCompare(pedidoB);
+            });
+
+            const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+            const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
+            const promotedBadge = isPromoted ? '<span class="badge bg-info-subtle text-info-emphasis ms-3">PROMOVIDA</span>' : '';
+
+            let fiorinoDistanceHtml = '';
+            if (vehicleType === 'fiorino') {
+                fiorinoDistanceHtml = `
+                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
+                       <span id="dist-${load.id}"></span>
+                       <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
+                    </div>`;
+            }
+
+            return `
+                <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
+                    <div class="card-header ${vInfo.colorClass} ${vInfo.textColor}">
+                        <i class="bi bi-box-seam-fill me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${promotedBadge}
+                    </div>
+                    <div class="card-body">
+                        ${createTable(load.pedidos)}
+                        ${fiorinoDistanceHtml}
+                    </div>
+                </div>`;
+        }
+        
+        // ==========================================================================================
+        // NOVA LÓGICA DE MONTAGEM DE CARGAS - FIM
+        // ==========================================================================================
 
         function separarCargasFiorino(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'fiorino'); }
         function separarCargasVan(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'van'); }
@@ -820,13 +923,17 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        function imprimirCargasGeneric(divId, title, headerBgClass, headerTextClass) {
+        function imprimirCargasGeneric(divId, title) {
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
 
-            const completedLoadsCards = divToPrint.querySelectorAll(`.card-header.${headerBgClass}`);
+            // <-- MUDANÇA PRINCIPAL AQUI: Seleciona todos os cabeçalhos de card que NÃO são o de sobras (bg-danger).
+            // Isso garante que cargas primárias e promovidas (com cores diferentes) sejam impressas juntas.
+            const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
+            
             if (completedLoadsCards.length === 0) {
-                alert("Nenhuma carga concluída para imprimir."); return;
+                alert("Nenhuma carga concluída para imprimir.");
+                return;
             }
 
             const printWindow = window.open('', '', 'height=800,width=1200');
@@ -836,15 +943,19 @@
                 body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                 .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; }
                 .no-print { display: none !important; }
-                .${headerBgClass} { background-color: ${getComputedStyle(document.querySelector(`.${headerBgClass}`)).backgroundColor} !important; }
-                .${headerTextClass} { color: ${getComputedStyle(document.querySelector(`.${headerTextClass}`)).color} !important; }
+                /* Mantém as cores dos cabeçalhos na impressão */
+                .bg-success { background-color: #198754 !important; color: white !important; }
+                .bg-primary { background-color: #0d6efd !important; color: white !important; }
+                .bg-warning { background-color: #ffc107 !important; color: black !important; }
                 .table-responsive { overflow: visible !important; }
                 table, th, td { border: 1px solid #dee2e6 !important; }
                 h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
             </style></head><body>`);
             
             let contentToPrint = `<h3>${title}</h3>`;
-            completedLoadsCards.forEach(header => { contentToPrint += header.closest('.card.mb-3').outerHTML; });
+            completedLoadsCards.forEach(header => { 
+                contentToPrint += header.closest('.card.mb-3').outerHTML; 
+            });
 
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
