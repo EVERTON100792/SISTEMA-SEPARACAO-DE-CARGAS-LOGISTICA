@@ -828,7 +828,7 @@
             
             // Exibe cargas primárias
             const vInfo = vehicleInfo[vehicleType];
-            html += `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${primaryLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}', '${vInfo.colorClass}', '${vInfo.textColor}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>` : ''}</div>`;
+            html += `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${primaryLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${(primaryLoads.length > 0 || promotedLoads.length > 0) ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}</div>`;
             if (primaryLoads.length === 0) { html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; }
 
             primaryLoads.forEach(load => {
@@ -856,7 +856,6 @@
         }
 
         function renderLoadCard(load, vehicleType, vInfo, isPromoted = false) {
-            // <-- MUDANÇA PRINCIPAL AQUI
             // Ordena os pedidos dentro da carga por cliente e depois por número do pedido, para agrupá-los visualmente na tabela.
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente);
@@ -870,7 +869,6 @@
                 // Se os clientes forem iguais, ordena pelo número do pedido
                 return pedidoA.localeCompare(pedidoB);
             });
-            // FIM DA MUDANÇA
 
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -925,13 +923,17 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        function imprimirCargasGeneric(divId, title, headerBgClass, headerTextClass) {
+        function imprimirCargasGeneric(divId, title) {
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
 
-            const completedLoadsCards = divToPrint.querySelectorAll(`.card-header.${headerBgClass}`);
+            // <-- MUDANÇA PRINCIPAL AQUI: Seleciona todos os cabeçalhos de card que NÃO são o de sobras (bg-danger).
+            // Isso garante que cargas primárias e promovidas (com cores diferentes) sejam impressas juntas.
+            const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
+            
             if (completedLoadsCards.length === 0) {
-                alert("Nenhuma carga concluída para imprimir."); return;
+                alert("Nenhuma carga concluída para imprimir.");
+                return;
             }
 
             const printWindow = window.open('', '', 'height=800,width=1200');
@@ -941,15 +943,19 @@
                 body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                 .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; }
                 .no-print { display: none !important; }
-                .${headerBgClass} { background-color: ${getComputedStyle(document.querySelector(`.${headerBgClass}`)).backgroundColor} !important; }
-                .${headerTextClass} { color: ${getComputedStyle(document.querySelector(`.${headerTextClass}`)).color} !important; }
+                /* Mantém as cores dos cabeçalhos na impressão */
+                .bg-success { background-color: #198754 !important; color: white !important; }
+                .bg-primary { background-color: #0d6efd !important; color: white !important; }
+                .bg-warning { background-color: #ffc107 !important; color: black !important; }
                 .table-responsive { overflow: visible !important; }
                 table, th, td { border: 1px solid #dee2e6 !important; }
                 h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
             </style></head><body>`);
             
             let contentToPrint = `<h3>${title}</h3>`;
-            completedLoadsCards.forEach(header => { contentToPrint += header.closest('.card.mb-3').outerHTML; });
+            completedLoadsCards.forEach(header => { 
+                contentToPrint += header.closest('.card.mb-3').outerHTML; 
+            });
 
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
