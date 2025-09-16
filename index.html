@@ -856,6 +856,22 @@
         }
 
         function renderLoadCard(load, vehicleType, vInfo, isPromoted = false) {
+            // <-- MUDANÇA PRINCIPAL AQUI
+            // Ordena os pedidos dentro da carga por cliente e depois por número do pedido, para agrupá-los visualmente na tabela.
+            load.pedidos.sort((a, b) => {
+                const clienteA = String(a.Cliente);
+                const clienteB = String(b.Cliente);
+                const pedidoA = String(a.Num_Pedido);
+                const pedidoB = String(b.Num_Pedido);
+
+                if (clienteA < clienteB) return -1;
+                if (clienteA > clienteB) return 1;
+                
+                // Se os clientes forem iguais, ordena pelo número do pedido
+                return pedidoA.localeCompare(pedidoB);
+            });
+            // FIM DA MUDANÇA
+
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
