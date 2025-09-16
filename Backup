@@ -4,57 +4,117 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Separação de Cargas</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAKjUSe213Ru8xfXPSVPZK-0j9Eee3vdMA&libraries=routes"></script>
-
     <style>
-        /* ... (todo o seu CSS continua o mesmo) ... */
         body {
             background-color: #212529;
+            font-family: 'Inter', sans-serif; /* <-- NOVA FONTE APLICADA */
         }
         .card {
             background-color: #2b3035;
             border: 1px solid #495057;
+            /* -- NOVOS EFEITOS DE SOMBRA E TRANSIÇÃO -- */
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.25), 0 2px 3px rgba(0,0,0,0.22);
+            transition: all 0.2s ease-in-out;
         }
-        /* ... etc ... */
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.29), 0 6px 6px rgba(0,0,0,0.23);
+        }
+        .accordion-button {
+            background-color: #343a40;
+            color: #f8f9fa;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .accordion-body {
+            background-color: #2b3035;
+        }
+        .table-striped>tbody>tr:nth-of-type(odd)>* {
+            --bs-table-accent-bg: var(--bs-table-striped-bg);
+        }
+        .status-message {
+            min-height: 24px; /* Prevent layout shift */
+        }
+        .btn {
+             transition: all 0.2s ease-in-out;
+        }
+        .btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+        @media print {
+            body { background-color: #fff; color: #000; }
+            .container, .card, .accordion-item, .accordion-body { background-color: #fff !important; color: #000 !important; border: none !important; box-shadow: none !important; }
+            .no-print, .d-flex.align-items-center.mb-3, .card.p-3.mb-4.shadow-sm, button, .status-message, .card-subtitle, .accordion-button.collapsed, .accordion-collapse.collapse { display: none !important; }
+            .table-responsive { overflow: visible !important; }
+            table, th, td { border: 1px solid #dee2e6 !important; color: #000 !important; }
+            h1, h2, h3, h4, h5 { color: #000 !important; margin-top: 1rem; margin-bottom: 0.5rem; }
+            .accordion-collapse { display: block !important; }
+            .accordion-button { display: block !important; background-color: #f8f9fa !important; color: #000 !important; border: 1px solid #dee2e6 !important; margin-bottom: 0.5rem; }
+            .accordion-button strong, .accordion-button .badge { color: #000 !important; }
+        }
+        #drop-zone-text {
+            border: 2px dashed #495057;
+            border-radius: .25rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        }
+        #drop-zone.border-primary #drop-zone-text {
+            border-color: #0d6efd;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-4 mb-4">
         <div class="d-flex align-items-center mb-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-truck me-3" viewBox="0 0 16 16"><path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-4 0a1 1 0 0 1-1-1V3.5ZM1.5 3a.5.5 0 0 0-.5.5V11h.5a1 1 0 0 1 1 1 1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V3.5a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 .5.5v.364c-.606.252-1.134.63-1.562 1.136l-1.48-1.85A.5.5 0 0 0 9.02 3H1.5Zm3 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm9 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></svg>
+            <i class="bi bi-truck display-4 me-3"></i>
             <h1 class="mb-0">Dashboard de Separação de Cargas</h1>
         </div>
 
-        <div class="card p-3 mb-4 shadow-sm no-print" id="drop-zone">
+        <div class="card p-3 mb-4 no-print" id="drop-zone">
             <div class="row g-3 align-items-center">
                 <div class="col-md-4">
-                    <label for="fileInput" class="form-label fw-bold">1. Arraste e solte a planilha ou clique para selecionar:</label>
+                    <label for="fileInput" class="form-label fw-bold">1. Arraste e solte a planilha:</label>
                     <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv" style="display: none;">
                     <div id="drop-zone-text" class="text-center p-5 border-2 border-dashed rounded-3">
-                        <p>Arraste e solte o arquivo aqui</p>
-                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">Selecionar Arquivo</button>
+                        <p><i class="bi bi-file-earmark-spreadsheet-fill fs-2"></i></p>
+                        <p>Arraste o arquivo aqui ou</p>
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>
                     </div>
                 </div>
                 <div class="col-md-5">
                     <label class="form-label fw-bold">2. Defina a Faixa de Rotas (Opcional):</label>
                     <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-signpost-split-fill"></i></span>
                         <input type="text" class="form-control" id="rotaInicialInput" placeholder="Rota Inicial">
                         <input type="text" class="form-control" id="rotaFinalInput" placeholder="Rota Final">
                     </div>
                 </div>
                 <div class="col-md-3 align-self-end">
-                    <button class="btn btn-primary w-100" id="processarBtn" onclick="processar()" disabled>3. Processar Cargas</button>
+                    <button class="btn btn-primary w-100 py-2" id="processarBtn" onclick="processar()" disabled><i class="bi bi-gear-fill me-2"></i>Processar Cargas</button>
                 </div>
             </div>
             <div id="status" class="mt-2 status-message"></div>
         </div>
 
-        <div class="card p-3 mb-4 shadow-sm no-print">
-            <h2 class="card-title h5">Configurações de Veículos</h2>
-            <p class="card-subtitle mb-3 text-body-secondary small">Defina as capacidades de peso e cubagem para cada tipo de veículo. Suas configurações serão salvas automaticamente.</p>
+        <div class="card p-3 mb-4 no-print">
+            <h2 class="card-title h5"><i class="bi bi-sliders me-2"></i>Configurações de Veículos</h2>
+            <p class="card-subtitle mb-3 text-body-secondary small">Defina as capacidades de peso e cubagem para cada tipo de veículo.</p>
             <div class="row g-3">
                 <div class="col-md-3">
                     <label for="fiorinoMaxCapacity" class="form-label">Fiorino - Peso Máx (kg)</label>
@@ -132,13 +192,13 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
-                             <h2 class="card-title h5">Resultados Gerais</h2>
-                             <button class="btn btn-sm btn-outline-light no-print" onclick="window.print()">🖨️ Imprimir Tudo</button>
+                             <h2 class="card-title h5"><i class="bi bi-list-check me-2"></i>Resultados Gerais</h2>
+                             <button class="btn btn-sm btn-outline-light no-print" onclick="window.print()"><i class="bi bi-printer-fill me-1"></i> Imprimir Tudo</button>
                         </div>
                         <p class="card-subtitle mb-2 text-body-secondary small">Pedidos que não são 'Toco', agrupados por rota.</p>
                         <div class="input-group mb-3 no-print">
                             <input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar por Nº do Pedido...">
-                            <button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()">Buscar</button>
+                            <button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()"><i class="bi bi-search"></i></button>
                         </div>
                         <div id="search-result" class="mb-3"></div>
                         <div id="resultado-geral"></div>
@@ -151,9 +211,8 @@
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h2 class="card-title h5">Separação de Cargas (Fiorino)</h2>
+                        <h2 class="card-title h5 text-success"><i class="bi bi-box-seam me-2"></i>Separação de Cargas (Fiorino)</h2>
                         <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Fiorino para separar as cargas.</p>
-                        
                         <div class="no-print">
                             <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11101', 'resultado-fiorino-geral', 'Rota 11101')">Rota 11101</button>
                             <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11301', 'resultado-fiorino-geral', 'Rota 11301')">Rota 11301</button>
@@ -161,18 +220,17 @@
                             <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11561', 'resultado-fiorino-geral', 'Rota 11561')">Rota 11561</button>
                             <button class="btn btn-success mt-2" onclick="separarCargasFiorino(['11721', '11731'], 'resultado-fiorino-geral', 'Rotas 11721 & 11731')">Rotas 11721 & 11731</button>
                         </div>
-                        
                         <div id="resultado-fiorino-geral" class="mt-3"></div>
                     </div>
                 </div>
             </div>
         </div>
-
+        
         <div class="row">
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h2 class="card-title h5">Separação de Cargas (Van)</h2>
+                        <h2 class="card-title h5 text-primary"><i class="bi bi-truck-front me-2"></i>Separação de Cargas (Van)</h2>
                         <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Van para separar as cargas.</p>
                         <div class="no-print">
                             <button class="btn btn-primary mt-2" onclick="separarCargasVan('11102', 'resultado-van-geral', 'Rota 11102')">Rota 11102</button>
@@ -181,7 +239,8 @@
                             <button class="btn btn-primary mt-2" onclick="separarCargasVan('11342', 'resultado-van-geral', 'Rota 11342')">Rota 11342</button>
                             <button class="btn btn-primary mt-2" onclick="separarCargasVan('11351', 'resultado-van-geral', 'Rota 11351')">Rota 11351</button>
                             <button class="btn btn-primary mt-2" onclick="separarCargasVan('11521', 'resultado-van-geral', 'Rota 11521')">Rota 11521</button>
-                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11531', 'resultado-van-geral', 'Rota 11531')">Rota 11551</button>
+                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11531', 'resultado-van-geral', 'Rota 11531')">Rota 11531</button>
+                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11551', 'resultado-van-geral', 'Rota 11551')">Rota 11551</button>
                             <button class="btn btn-primary mt-2" onclick="separarCargasVan('11571', 'resultado-van-geral', 'Rota 11571')">Rota 11571</button>
                             <button class="btn btn-primary mt-2" onclick="separarCargasVan('11701', 'resultado-van-geral', 'Rota 11701')">Rota 11701</button>
                             <button class="btn btn-primary mt-2" onclick="separarCargasVan('11711', 'resultado-van-geral', 'Rota 11711')">Rota 11711</button>
@@ -196,9 +255,9 @@
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h2 class="card-title h5">Separação de Cargas (3/4)</h2>
+                        <h2 class="card-title h5 text-warning"><i class="bi bi-truck-flatbed me-2"></i>Separação de Cargas (3/4)</h2>
                         <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de 3/4 para separar as cargas.</p>
-                        <div class="no-print">
+                         <div class="no-print">
                             <button class="btn btn-warning mt-2" onclick="separarCargas34('11361', 'resultado-34-geral', 'Rota 11361')">Rota 11361</button>
                             <button class="btn btn-warning mt-2" onclick="separarCargas34(['11501', '11502', '11511'], 'resultado-34-geral', 'Rotas 11501, 11502 & 11511')">Rotas 11501, 11502 & 11511</button>
                             <button class="btn btn-warning mt-2" onclick="separarCargas34('11541', 'resultado-34-geral', 'Rota 11541')">Rota 11541</button>
@@ -213,7 +272,7 @@
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h2 class="card-title h5">Resultados Cargas 3/4 (Automático)</h2>
+                        <h2 class="card-title h5"><i class="bi bi-lightning-charge-fill me-2"></i>Resultados Cargas 3/4 (Automático)</h2>
                         <p class="card-subtitle mb-2 text-body-secondary small">Cargas formadas a partir de um pedido muito grande.</p>
                         <div id="resultado-tres-quartos"></div>
                     </div>
@@ -225,7 +284,7 @@
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h2 class="card-title h5">Resultados das Cargas "Toco"</h2>
+                        <h2 class="card-title h5"><i class="bi bi-inboxes-fill me-2"></i>Resultados das Cargas "Toco"</h2>
                         <p class="card-subtitle mb-2 text-body-secondary small">Grupos de cargas onde a Coluna4/5 contém "TOCO" e o CF se repete.</p>
                         <div id="resultado-toco"></div>
                     </div>
@@ -237,64 +296,104 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
-        // *** LÓGICA DE CÁLCULO DE DISTÂNCIA VIA API DO GOOGLE ***
         let CargasFiorinoFinalizadas = new Map();
 
-        async function calculateApiDistance(loadId) {
+        const matrizDeDistancias = {
+            'ARAPONGAS': { 'ASTORGA': 34, 'BELA VISTA DO PARAÍSO': 75, 'BOM SUCESSO': 75, 'CAMBÉ': 22, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 96, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'IBIPORÃ': 46, 'ITAMBARACÁ': 122, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 46, 'JATAIZINHO': 52, 'KALORÉ': 61, 'LONDRINA': 38, 'MANDAGUARI': 48, 'MARIALVA': 60, 'MARILÂNDIA DO SUL': 62, 'MUNHOZ DE MELO': 49, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 87, 'ROLÂNDIA': 10, 'SABAUDIA': 16, 'SANTA FÉ': 54, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 80, 'URAÍ': 85 },
+            'ASTORGA': { 'ARAPONGAS': 34, 'BELA VISTA DO PARAÍSO': 82, 'BOM SUCESSO': 68, 'CAMBÉ': 42, 'CENTENÁRIO DO SUL': 73, 'FAXINAL': 89, 'FLORESTÓPOLIS': 59, 'GUARACI': 93, 'IBIPORÃ': 56, 'ITAMBARACÁ': 130, 'JAGUAPITÃ': 53, 'JANDAIA DO SUL': 39, 'JATAIZINHO': 62, 'KALORÉ': 54, 'LONDRINA': 48, 'MANDAGUARI': 21, 'MARIALVA': 33, 'MARILÂNDIA DO SUL': 55, 'MUNHOZ DE MELO': 22, 'PORECATU': 84, 'PRADO FERREIRA': 66, 'PRIMEIRO DE MAIO': 94, 'ROLÂNDIA': 27, 'SABAUDIA': 18, 'SANTA FÉ': 27, 'SANTO INÁCIO': 80, 'SERTANÓPOLIS': 89, 'URAÍ': 94 },
+            'BELA VISTA DO PARAÍSO': { 'ARAPONGAS': 75, 'ASTORGA': 82, 'BOM SUCESSO': 130, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 32, 'FAXINAL': 151, 'FLORESTÓPOLIS': 27, 'GUARACI': 51, 'IBIPORÃ': 65, 'ITAMBARACÁ': 127, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 103, 'JATAIZINHO': 71, 'KALORÉ': 118, 'LONDRINA': 45, 'MANDAGUARI': 90, 'MARIALVA': 102, 'MARILÂNDIA DO SUL': 119, 'MUNHOZ DE MELO': 85, 'PORECATU': 42, 'PRADO FERREIRA': 34, 'PRIMEIRO DE MAIO': 53, 'ROLÂNDIA': 61, 'SABAUDIA': 79, 'SANTA FÉ': 89, 'SANTO INÁCIO': 57, 'SERTANÓPOLIS': 54, 'URAÍ': 90 },
+            'BOM SUCESSO': { 'ARAPONGAS': 75, 'ASTORGA': 68, 'BELA VISTA DO PARAÍSO': 130, 'CAMBÉ': 88, 'CENTENÁRIO DO SUL': 121, 'FAXINAL': 26, 'FLORESTÓPOLIS': 108, 'GUARACI': 142, 'IBIPORÃ': 102, 'ITAMBARACÁ': 179, 'JAGUAPITÃ': 92, 'JANDAIA DO SUL': 20, 'JATAIZINHO': 108, 'KALORÉ': 15, 'LONDRINA': 94, 'MANDAGUARI': 47, 'MARIALVA': 59, 'MARILÂNDIA DO SUL': 25, 'MUNHOZ DE MELO': 64, 'PORECATU': 133, 'PRADO FERREIRA': 115, 'PRIMEIRO DE MAIO': 143, 'ROLÂNDIA': 68, 'SABAUDIA': 59, 'SANTA FÉ': 72, 'SANTO INÁCIO': 129, 'SERTANÓPOLIS': 137, 'URAÍ': 142 },
+            'CAMBÉ': { 'ARAPONGAS': 22, 'ASTORGA': 42, 'BELA VISTA DO PARAÍSO': 59, 'BOM SUCESSO': 88, 'CENTENÁRIO DO SUL': 60, 'FAXINAL': 109, 'FLORESTÓPOLIS': 46, 'GUARACI': 80, 'IBIPORÃ': 29, 'ITAMBARACÁ': 108, 'JAGUAPITÃ': 40, 'JANDAIA DO SUL': 59, 'JATAIZINHO': 35, 'KALORÉ': 74, 'LONDRINA': 16, 'MANDAGUARI': 51, 'MARIALVA': 63, 'MARILÂNDIA DO SUL': 75, 'MUNHOZ DE MELO': 56, 'PORECATU': 71, 'PRADO FERREIRA': 53, 'PRIMEIRO DE MAIO': 72, 'ROLÂNDIA': 15, 'SABAUDIA': 26, 'SANTA FÉ': 59, 'SANTO INÁCIO': 67, 'SERTANÓPOLIS': 64, 'URAÍ': 69 },
+            'CENTENÁRIO DO SUL': { 'ARAPONGAS': 66, 'ASTORGA': 73, 'BELA VISTA DO PARAÍSO': 32, 'BOM SUCESSO': 121, 'CAMBÉ': 60, 'FAXINAL': 142, 'FLORESTÓPOLIS': 18, 'GUARACI': 20, 'IBIPORÃ': 66, 'ITAMBARACÁ': 136, 'JAGUAPITÃ': 37, 'JANDAIA DO SUL': 94, 'JATAIZINHO': 72, 'KALORÉ': 109, 'LONDRINA': 58, 'MANDAGUARI': 81, 'MARIALVA': 93, 'MARILÂNDIA DO SUL': 110, 'MUNHOZ DE MELO': 76, 'PORECATU': 24, 'PRADO FERREIRA': 25, 'PRIMEIRO DE MAIO': 35, 'ROLÂNDIA': 52, 'SABAUDIA': 70, 'SANTA FÉ': 80, 'SANTO INÁCIO': 28, 'SERTANÓPOLIS': 62, 'URAÍ': 98 },
+            'FAXINAL': { 'ARAPONGAS': 96, 'ASTORGA': 89, 'BELA VISTA DO PARAÍSO': 151, 'BOM SUCESSO': 26, 'CAMBÉ': 109, 'CENTENÁRIO DO SUL': 142, 'FLORESTÓPOLIS': 129, 'GUARACI': 163, 'IBIPORÃ': 123, 'ITAMBARACÁ': 200, 'JAGUAPITÃ': 113, 'JANDAIA DO SUL': 41, 'JATAIZINHO': 129, 'KALORÉ': 24, 'LONDRINA': 115, 'MANDAGUARI': 68, 'MARIALVA': 80, 'MARILÂNDIA DO SUL': 32, 'MUNHOZ DE MELO': 85, 'PORECATU': 154, 'PRADO FERREIRA': 136, 'PRIMEIRO DE MAIO': 164, 'ROLÂNDIA': 89, 'SABAUDIA': 80, 'SANTA FÉ': 93, 'SANTO INÁCIO': 150, 'SERTANÓPOLIS': 158, 'URAÍ': 163 },
+            'FLORESTÓPOLIS': { 'ARAPONGAS': 52, 'ASTORGA': 59, 'BELA VISTA DO PARAÍSO': 27, 'BOM SUCESSO': 108, 'CAMBÉ': 46, 'CENTENÁRIO DO SUL': 18, 'FAXINAL': 129, 'GUARACI': 37, 'IBIPORÃ': 52, 'ITAMBARACÁ': 121, 'JAGUAPITÃ': 23, 'JANDAIA DO SUL': 81, 'JATAIZINHO': 58, 'KALORÉ': 96, 'LONDRINA': 44, 'MANDAGUARI': 67, 'MARIALVA': 79, 'MARILÂNDIA DO SUL': 97, 'MUNHOZ DE MELO': 62, 'PORECATU': 29, 'PRADO FERREIRA': 20, 'PRIMEIRO DE MAIO': 39, 'ROLÂNDIA': 38, 'SABAUDIA': 56, 'SANTA FÉ': 66, 'SANTO INÁCIO': 43, 'SERTANÓPOLIS': 48, 'URAÍ': 84 },
+            'GUARACI': { 'ARAPONGAS': 86, 'ASTORGA': 93, 'BELA VISTA DO PARAÍSO': 51, 'BOM SUCESSO': 142, 'CAMBÉ': 80, 'CENTENÁRIO DO SUL': 20, 'FAXINAL': 163, 'FLORESTÓPOLIS': 37, 'IBIPORÃ': 86, 'ITAMBARACÁ': 134, 'JAGUAPITÃ': 57, 'JANDAIA DO SUL': 114, 'JATAIZINHO': 92, 'KALORÉ': 130, 'LONDRINA': 78, 'MANDAGUARI': 101, 'MARIALVA': 113, 'MARILÂNDIA DO SUL': 130, 'MUNHOZ DE MELO': 96, 'PORECATU': 28, 'PRADO FERREIRA': 45, 'PRIMEIRO DE MAIO': 15, 'ROLÂNDIA': 72, 'SABAUDIA': 90, 'SANTA FÉ': 100, 'SANTO INÁCIO': 8, 'SERTANÓPOLIS': 82, 'URAÍ': 118 },
+            'IBIPORÃ': { 'ARAPONGAS': 46, 'ASTORGA': 56, 'BELA VISTA DO PARAÍSO': 65, 'BOM SUCESSO': 102, 'CAMBÉ': 29, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 123, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'ITAMBARACÁ': 91, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 73, 'JATAIZINHO': 18, 'KALORÉ': 88, 'LONDRINA': 22, 'MANDAGUARI': 65, 'MARIALVA': 77, 'MARILÂNDIA DO SUL': 89, 'MUNHOZ DE MELO': 70, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 78, 'ROLÂNDIA': 32, 'SABAUDIA': 40, 'SANTA FÉ': 73, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 50, 'URAÍ': 55 },
+            'ITAMBARACÁ': { 'ARAPONGAS': 122, 'ASTORGA': 130, 'BELA VISTA DO PARAÍSO': 127, 'BOM SUCESSO': 179, 'CAMBÉ': 108, 'CENTENÁRIO DO SUL': 136, 'FAXINAL': 200, 'FLORESTÓPOLIS': 121, 'GUARACI': 134, 'IBIPORÃ': 91, 'JAGUAPITÃ': 129, 'JANDAIA DO SUL': 151, 'JATAIZINHO': 88, 'KALORÉ': 166, 'LONDRINA': 99, 'MANDAGUARI': 140, 'MARIALVA': 152, 'MARILÂNDIA DO SUL': 166, 'MUNHOZ DE MELO': 135, 'PORECATU': 142, 'PRADO FERREIRA': 129, 'PRIMEIRO DE MAIO': 126, 'ROLÂNDIA': 108, 'SABAUDIA': 125, 'SANTA FÉ': 139, 'SANTO INÁCIO': 121, 'SERTANÓPOLIS': 87, 'URAÍ': 45 },
+            'JAGUAPITÃ': { 'ARAPONGAS': 46, 'ASTORGA': 53, 'BELA VISTA DO PARAÍSO': 46, 'BOM SUCESSO': 92, 'CAMBÉ': 40, 'CENTENÁRIO DO SUL': 37, 'FAXINAL': 113, 'FLORESTÓPOLIS': 23, 'GUARACI': 57, 'IBIPORÃ': 46, 'ITAMBARACÁ': 129, 'JANDAIA DO SUL': 70, 'JATAIZINHO': 52, 'KALORÉ': 85, 'LONDRINA': 43, 'MANDAGUARI': 61, 'MARIALVA': 73, 'MARILÂNDIA DO SUL': 86, 'MUNHOZ DE MELO': 56, 'PORECATU': 48, 'PRADO FERREIRA': 20, 'PRIMEIRO DE MAIO': 59, 'ROLÂNDIA': 32, 'SABAUDIA': 50, 'SANTA FÉ': 60, 'SANTO INÁCIO': 54, 'SERTANÓPOLIS': 56, 'URAÍ': 92 },
+            'JANDAIA DO SUL': { 'ARAPONGAS': 46, 'ASTORGA': 39, 'BELA VISTA DO PARAÍSO': 103, 'BOM SUCESSO': 20, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 94, 'FAXINAL': 41, 'FLORESTÓPOLIS': 81, 'GUARACI': 114, 'IBIPORÃ': 73, 'ITAMBARACÁ': 151, 'JAGUAPITÃ': 70, 'JATAIZINHO': 80, 'KALORÉ': 15, 'LONDRINA': 65, 'MANDAGUARI': 18, 'MARIALVA': 30, 'MARILÂNDIA DO SUL': 25, 'MUNHOZ DE MELO': 35, 'PORECATU': 106, 'PRADO FERREIRA': 88, 'PRIMEIRO DE MAIO': 115, 'ROLÂNDIA': 39, 'SABAUDIA': 30, 'SANTA FÉ': 43, 'SANTO INÁCIO': 101, 'SERTANÓPOLIS': 109, 'URAÍ': 114 },
+            'JATAIZINHO': { 'ARAPONGAS': 52, 'ASTORGA': 62, 'BELA VISTA DO PARAÍSO': 71, 'BOM SUCESSO': 108, 'CAMBÉ': 35, 'CENTENÁRIO DO SUL': 72, 'FAXINAL': 129, 'FLORESTÓPOLIS': 58, 'GUARACI': 92, 'IBIPORÃ': 18, 'ITAMBARACÁ': 88, 'JAGUAPITÃ': 52, 'JANDAIA DO SUL': 80, 'KALORÉ': 95, 'LONDRINA': 28, 'MANDAGUARI': 72, 'MARIALVA': 84, 'MARILÂNDIA DO SUL': 96, 'MUNHOZ DE MELO': 77, 'PORECATU': 84, 'PRADO FERREIRA': 65, 'PRIMEIRO DE MAIO': 84, 'ROLÂNDIA': 38, 'SABAUDIA': 46, 'SANTA FÉ': 79, 'SANTO INÁCIO': 79, 'SERTANÓPOLIS': 56, 'URAÍ': 45 },
+            'KALORÉ': { 'ARAPONGAS': 61, 'ASTORGA': 54, 'BELA VISTA DO PARAÍSO': 118, 'BOM SUCESSO': 15, 'CAMBÉ': 74, 'CENTENÁRIO DO SUL': 109, 'FAXINAL': 24, 'FLORESTÓPOLIS': 96, 'GUARACI': 130, 'IBIPORÃ': 88, 'ITAMBARACÁ': 166, 'JAGUAPITÃ': 85, 'JANDAIA DO SUL': 15, 'JATAIZINHO': 95, 'LONDRINA': 80, 'MANDAGUARI': 33, 'MARIALVA': 45, 'MARILÂNDIA DO SUL': 24, 'MUNHOZ DE MELO': 50, 'PORECATU': 121, 'PRADO FERREIRA': 103, 'PRIMEIRO DE MAIO': 131, 'ROLÂNDIA': 54, 'SABAUDIA': 45, 'SANTA FÉ': 58, 'SANTO INÁCIO': 117, 'SERTANÓPOLIS': 125, 'URAÍ': 130 },
+            'LONDRINA': { 'ARAPONGAS': 38, 'ASTORGA': 48, 'BELA VISTA DO PARAÍSO': 45, 'BOM SUCESSO': 94, 'CAMBÉ': 16, 'CENTENÁRIO DO SUL': 58, 'FAXINAL': 115, 'FLORESTÓPOLIS': 44, 'GUARACI': 78, 'IBIPORÃ': 22, 'ITAMBARACÁ': 99, 'JAGUAPITÃ': 43, 'JANDAIA DO SUL': 65, 'JATAIZINHO': 28, 'KALORÉ': 80, 'MANDAGUARI': 57, 'MARIALVA': 69, 'MARILÂNDIA DO SUL': 81, 'MUNHOZ DE MELO': 62, 'PORECATU': 70, 'PRADO FERREIRA': 52, 'PRIMEIRO DE MAIO': 70, 'ROLÂNDIA': 25, 'SABAUDIA': 32, 'SANTA FÉ': 65, 'SANTO INÁCIO': 65, 'SERTANÓPOLIS': 54, 'URAÍ': 60 },
+            'MANDAGUARI': { 'ARAPONGAS': 48, 'ASTORGA': 21, 'BELA VISTA DO PARAÍSO': 90, 'BOM SUCESSO': 47, 'CAMBÉ': 51, 'CENTENÁRIO DO SUL': 81, 'FAXINAL': 68, 'FLORESTÓPOLIS': 67, 'GUARACI': 101, 'IBIPORÃ': 65, 'ITAMBARACÁ': 140, 'JAGUAPITÃ': 61, 'JANDAIA DO SUL': 18, 'JATAIZINHO': 72, 'KALORÉ': 33, 'LONDRINA': 57, 'MARIALVA': 12, 'MARILÂNDIA DO SUL': 34, 'MUNHOZ DE MELO': 23, 'PORECATU': 92, 'PRADO FERREIRA': 74, 'PRIMEIRO DE MAIO': 102, 'ROLÂNDIA': 38, 'SABAUDIA': 28, 'SANTA FÉ': 31, 'SANTO INÁCIO': 88, 'SERTANÓPOLIS': 98, 'URAÍ': 103 },
+            'MARIALVA': { 'ARAPONGAS': 60, 'ASTORGA': 33, 'BELA VISTA DO PARAÍSO': 102, 'BOM SUCESSO': 59, 'CAMBÉ': 63, 'CENTENÁRIO DO SUL': 93, 'FAXINAL': 80, 'FLORESTÓPOLIS': 79, 'GUARACI': 113, 'IBIPORÃ': 77, 'ITAMBARACÁ': 152, 'JAGUAPITÃ': 73, 'JANDAIA DO SUL': 30, 'JATAIZINHO': 84, 'KALORÉ': 45, 'LONDRINA': 69, 'MANDAGUARI': 12, 'MARILÂNDIA DO SUL': 46, 'MUNHOZ DE MELO': 18, 'PORECATU': 104, 'PRADO FERREIRA': 86, 'PRIMEIRO DE MAIO': 114, 'ROLÂNDIA': 50, 'SABAUDIA': 40, 'SANTA FÉ': 25, 'SANTO INÁCIO': 100, 'SERTANÓPOLIS': 110, 'URAÍ': 115 },
+            'MARILÂNDIA DO SUL': { 'ARAPONGAS': 62, 'ASTORGA': 55, 'BELA VISTA DO PARAÍSO': 119, 'BOM SUCESSO': 25, 'CAMBÉ': 75, 'CENTENÁRIO DO SUL': 110, 'FAXINAL': 32, 'FLORESTÓPOLIS': 97, 'GUARACI': 130, 'IBIPORÃ': 89, 'ITAMBARACÁ': 166, 'JAGUAPITÃ': 86, 'JANDAIA DO SUL': 25, 'JATAIZINHO': 96, 'KALORÉ': 24, 'LONDRINA': 81, 'MANDAGUARI': 34, 'MARIALVA': 46, 'MUNHOZ DE MELO': 51, 'PORECATU': 122, 'PRADO FERREIRA': 104, 'PRIMEIRO DE MAIO': 131, 'ROLÂNDIA': 55, 'SABAUDIA': 46, 'SANTA FÉ': 59, 'SANTO INÁCIO': 117, 'SERTANÓPOLIS': 125, 'URAÍ': 130 },
+            'MUNHOZ DE MELO': { 'ARAPONGAS': 49, 'ASTORGA': 22, 'BELA VISTA DO PARAÍSO': 85, 'BOM SUCESSO': 64, 'CAMBÉ': 56, 'CENTENÁRIO DO SUL': 76, 'FAXINAL': 85, 'FLORESTÓPOLIS': 62, 'GUARACI': 96, 'IBIPORÃ': 70, 'ITAMBARACÁ': 135, 'JAGUAPITÃ': 56, 'JANDAIA DO SUL': 35, 'JATAIZINHO': 77, 'KALORÉ': 50, 'LONDRINA': 62, 'MANDAGUARI': 23, 'MARIALVA': 18, 'MARILÂNDIA DO SUL': 51, 'PORECATU': 87, 'PRADO FERREIRA': 69, 'PRIMEIRO DE MAIO': 97, 'ROLÂNDIA': 39, 'SABAUDIA': 30, 'SANTA FÉ': 9, 'SANTO INÁCIO': 83, 'SERTANÓPOLIS': 93, 'URAÍ': 98 },
+            'PORECATU': { 'ARAPONGAS': 77, 'ASTORGA': 84, 'BELA VISTA DO PARAÍSO': 42, 'BOM SUCESSO': 133, 'CAMBÉ': 71, 'CENTENÁRIO DO SUL': 24, 'FAXINAL': 154, 'FLORESTÓPOLIS': 29, 'GUARACI': 28, 'IBIPORÃ': 77, 'ITAMBARACÁ': 142, 'JAGUAPITÃ': 48, 'JANDAIA DO SUL': 106, 'JATAIZINHO': 84, 'KALORÉ': 121, 'LONDRINA': 70, 'MANDAGUARI': 92, 'MARIALVA': 104, 'MARILÂNDIA DO SUL': 122, 'MUNHOZ DE MELO': 87, 'PRADO FERREIRA': 44, 'PRIMEIRO DE MAIO': 36, 'ROLÂNDIA': 63, 'SABAUDIA': 81, 'SANTA FÉ': 91, 'SANTO INÁCIO': 34, 'SERTANÓPOLIS': 74, 'URAÍ': 110 },
+            'PRADO FERREIRA': { 'ARAPONGAS': 59, 'ASTORGA': 66, 'BELA VISTA DO PARAÍSO': 34, 'BOM SUCESSO': 115, 'CAMBÉ': 53, 'CENTENÁRIO DO SUL': 25, 'FAXINAL': 136, 'FLORESTÓPOLIS': 20, 'GUARACI': 45, 'IBIPORÃ': 59, 'ITAMBARACÁ': 129, 'JAGUAPITÃ': 20, 'JANDAIA DO SUL': 88, 'JATAIZINHO': 65, 'KALORÉ': 103, 'LONDRINA': 52, 'MANDAGUARI': 74, 'MARIALVA': 86, 'MARILÂNDIA DO SUL': 104, 'MUNHOZ DE MELO': 69, 'PORECATU': 44, 'PRIMEIRO DE MAIO': 47, 'ROLÂNDIA': 45, 'SABAUDIA': 63, 'SANTA FÉ': 73, 'SANTO INÁCIO': 41, 'SERTANÓPOLIS': 56, 'URAÍ': 92 },
+            'PRIMEIRO DE MAIO': { 'ARAPONGAS': 87, 'ASTORGA': 94, 'BELA VISTA DO PARAÍSO': 53, 'BOM SUCESSO': 143, 'CAMBÉ': 72, 'CENTENÁRIO DO SUL': 35, 'FAXINAL': 164, 'FLORESTÓPOLIS': 39, 'GUARACI': 15, 'IBIPORÃ': 78, 'ITAMBARACÁ': 126, 'JAGUAPITÃ': 59, 'JANDAIA DO SUL': 115, 'JATAIZINHO': 84, 'KALORÉ': 131, 'LONDRINA': 70, 'MANDAGUARI': 102, 'MARIALVA': 114, 'MARILÂNDIA DO SUL': 131, 'MUNHOZ DE MELO': 97, 'PORECATU': 36, 'PRADO FERREIRA': 47, 'ROLÂNDIA': 73, 'SABAUDIA': 91, 'SANTA FÉ': 101, 'SANTO INÁCIO': 21, 'SERTANÓPOLIS': 74, 'URAÍ': 110 },
+            'ROLÂNDIA': { 'ARAPONGAS': 10, 'ASTORGA': 27, 'BELA VISTA DO PARAÍSO': 61, 'BOM SUCESSO': 68, 'CAMBÉ': 15, 'CENTENÁRIO DO SUL': 52, 'FAXINAL': 89, 'FLORESTÓPOLIS': 38, 'GUARACI': 72, 'IBIPORÃ': 32, 'ITAMBARACÁ': 108, 'JAGUAPITÃ': 32, 'JANDAIA DO SUL': 39, 'JATAIZINHO': 38, 'KALORÉ': 54, 'LONDRINA': 25, 'MANDAGUARI': 38, 'MARIALVA': 50, 'MARILÂNDIA DO SUL': 55, 'MUNHOZ DE MELO': 39, 'PORECATU': 63, 'PRADO FERREIRA': 45, 'PRIMEIRO DE MAIO': 73, 'SABAUDIA': 17, 'SANTA FÉ': 44, 'SANTO INÁCIO': 60, 'SERTANÓPOLIS': 66, 'URAÍ': 71 },
+            'SABAUDIA': { 'ARAPONGAS': 16, 'ASTORGA': 18, 'BELA VISTA DO PARAÍSO': 79, 'BOM SUCESSO': 59, 'CAMBÉ': 26, 'CENTENÁRIO DO SUL': 70, 'FAXINAL': 80, 'FLORESTÓPOLIS': 56, 'GUARACI': 90, 'IBIPORÃ': 40, 'ITAMBARACÁ': 125, 'JAGUAPITÃ': 50, 'JANDAIA DO SUL': 30, 'JATAIZINHO': 46, 'KALORÉ': 45, 'LONDRINA': 32, 'MANDAGUARI': 28, 'MARIALVA': 40, 'MARILÂNDIA DO SUL': 46, 'MUNHOZ DE MELO': 30, 'PORECATU': 81, 'PRADO FERREIRA': 63, 'PRIMEIRO DE MAIO': 91, 'ROLÂNDIA': 17, 'SANTA FÉ': 35, 'SANTO INÁCIO': 77, 'SERTANÓPOLIS': 85, 'URAÍ': 90 },
+            'SANTA FÉ': { 'ARAPONGAS': 54, 'ASTORGA': 27, 'BELA VISTA DO PARAÍSO': 89, 'BOM SUCESSO': 72, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 80, 'FAXINAL': 93, 'FLORESTÓPOLIS': 66, 'GUARACI': 100, 'IBIPORÃ': 73, 'ITAMBARACÁ': 139, 'JAGUAPITÃ': 60, 'JANDAIA DO SUL': 43, 'JATAIZINHO': 79, 'KALORÉ': 58, 'LONDRINA': 65, 'MANDAGUARI': 31, 'MARIALVA': 25, 'MARILÂNDIA DO SUL': 59, 'MUNHOZ DE MELO': 9, 'PORECATU': 91, 'PRADO FERREIRA': 73, 'PRIMEIRO DE MAIO': 101, 'ROLÂNDIA': 44, 'SABAUDIA': 35, 'SANTO INÁCIO': 87, 'SERTANÓPOLIS': 97, 'URAÍ': 102 },
+            'SANTO INÁCIO': { 'ARAPONGAS': 73, 'ASTORGA': 80, 'BELA VISTA DO PARAÍSO': 57, 'BOM SUCESSO': 129, 'CAMBÉ': 67, 'CENTENÁRIO DO SUL': 28, 'FAXINAL': 150, 'FLORESTÓPOLIS': 43, 'GUARACI': 8, 'IBIPORÃ': 73, 'ITAMBARACÁ': 121, 'JAGUAPITÃ': 54, 'JANDAIA DO SUL': 101, 'JATAIZINHO': 79, 'KALORÉ': 117, 'LONDRINA': 65, 'MANDAGUARI': 88, 'MARIALVA': 100, 'MARILÂNDIA DO SUL': 117, 'MUNHOZ DE MELO': 83, 'PORECATU': 34, 'PRADO FERREIRA': 41, 'PRIMEIRO DE MAIO': 21, 'ROLÂNDIA': 60, 'SABAUDIA': 77, 'SANTA FÉ': 87, 'SERTANÓPOLIS': 70, 'URAÍ': 106 },
+            'SERTANÓPOLIS': { 'ARAPONGAS': 80, 'ASTORGA': 89, 'BELA VISTA DO PARAÍSO': 54, 'BOM SUCESSO': 137, 'CAMBÉ': 64, 'CENTENÁRIO DO SUL': 62, 'FAXINAL': 158, 'FLORESTÓPOLIS': 48, 'GUARACI': 82, 'IBIPORÃ': 50, 'ITAMBARACÁ': 87, 'JAGUAPITÃ': 56, 'JANDAIA DO SUL': 109, 'JATAIZINHO': 56, 'KALORÉ': 125, 'LONDRINA': 54, 'MANDAGUARI': 98, 'MARIALVA': 110, 'MARILÂNDIA DO SUL': 125, 'MUNHOZ DE MELO': 93, 'PORECATU': 74, 'PRADO FERREIRA': 56, 'PRIMEIRO DE MAIO': 74, 'ROLÂNDIA': 66, 'SABAUDIA': 85, 'SANTA FÉ': 97, 'SANTO INÁCIO': 70, 'URAÍ': 60 },
+            'URAÍ': { 'ARAPONGAS': 85, 'ASTORGA': 94, 'BELA VISTA DO PARAÍSO': 90, 'BOM SUCESSO': 142, 'CAMBÉ': 69, 'CENTENÁRIO DO SUL': 98, 'FAXINAL': 163, 'FLORESTÓPOLIS': 84, 'GUARACI': 118, 'IBIPORÃ': 55, 'ITAMBARACÁ': 45, 'JAGUAPITÃ': 92, 'JANDAIA DO SUL': 114, 'JATAIZINHO': 45, 'KALORÉ': 130, 'LONDRINA': 60, 'MANDAGUARI': 103, 'MARIALVA': 115, 'MARILÂNDIA DO SUL': 130, 'MUNHOZ DE MELO': 98, 'PORECATU': 110, 'PRADO FERREIRA': 92, 'PRIMEIRO DE MAIO': 110, 'ROLÂNDIA': 71, 'SABAUDIA': 90, 'SANTA FÉ': 102, 'SANTO INÁCIO': 106, 'SERTANÓPOLIS': 60 }
+        };
+
+        function calcularDistanciaLocal(loadId) {
             const resultSpan = document.getElementById(`dist-${loadId}`);
             const loadData = CargasFiorinoFinalizadas.get(loadId);
-
+            
             if (!loadData) {
                 resultSpan.textContent = "Erro: Carga não encontrada.";
                 return;
             }
 
             resultSpan.innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculando...`;
-
-            const uniqueCities = [...new Set(loadData.pedidos.map(p => String(p.Cidade).toUpperCase().trim()))];
-            if (uniqueCities.length === 0) {
-                resultSpan.textContent = "Nenhuma cidade encontrada.";
+            
+            let cidadesNaCarga = [...new Set(loadData.pedidos.map(p => String(p.Cidade).toUpperCase().trim()))];
+            
+            if (cidadesNaCarga.length === 0) {
+                resultSpan.textContent = "Nenhuma cidade para calcular.";
                 return;
             }
 
-            // Verifica se o serviço do Google Maps está disponível
-            if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
-                 resultSpan.innerHTML = `<strong class="text-danger">Erro: API do Google Maps não carregou. Verifique a Chave de API.</strong>`;
-                 return;
+            cidadesNaCarga = cidadesNaCarga.filter(cidade => matrizDeDistancias[cidade]);
+            
+            if (cidadesNaCarga.length === 0) {
+                resultSpan.innerHTML = `<strong class="text-warning">Cidades não mapeadas.</strong>`;
+                return;
             }
 
-            const directionsService = new google.maps.DirectionsService();
-            const origin = 'Rolândia, PR, Brasil';
-            const destination = 'Rolândia, PR, Brasil';
-            const waypoints = uniqueCities.map(city => ({ location: `${city}, PR, Brasil`, stopover: true }));
+            let totalDistance = 0;
+            let currentCity = 'ROLÂNDIA';
+            let unvisitedCities = [...cidadesNaCarga];
 
-            try {
-                const response = await directionsService.route({
-                    origin: origin,
-                    destination: destination,
-                    waypoints: waypoints,
-                    optimizeWaypoints: true,
-                    travelMode: google.maps.TravelMode.DRIVING,
-                });
-                
-                let totalDistance = 0;
-                response.routes[0].legs.forEach(leg => {
-                    totalDistance += leg.distance.value;
-                });
+            while (unvisitedCities.length > 0) {
+                let closestCity = '';
+                let shortestDistance = Infinity;
 
-                const totalKm = (totalDistance / 1000).toFixed(1);
-                resultSpan.innerHTML = `<strong>Distância Otimizada: ${totalKm} km</strong>`;
+                for (const city of unvisitedCities) {
+                    const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
+                    if (!currentCityNormalized) break;
 
-            } catch (e) {
-                console.error("Erro na API de Direções:", e);
-                resultSpan.textContent = "Erro ao calcular rota.";
-                 if (e.code === 'ZERO_RESULTS') {
-                    resultSpan.textContent = "Rota não encontrada (verifique cidades).";
-                 } else if (e.code === 'REQUEST_DENIED') {
-                    resultSpan.innerHTML = `<strong class="text-danger">Erro: Chave de API inválida ou faturamento não configurado.</strong>`;
-                 }
+                    const distance = matrizDeDistancias[currentCityNormalized]?.[city];
+                    if (distance !== undefined && distance < shortestDistance) {
+                        shortestDistance = distance;
+                        closestCity = city;
+                    }
+                }
+
+                if (closestCity) {
+                    totalDistance += shortestDistance;
+                    currentCity = closestCity;
+                    unvisitedCities = unvisitedCities.filter(city => city !== closestCity);
+                } else {
+                    console.warn("Não foi possível encontrar rota para as cidades restantes:", unvisitedCities);
+                    break;
+                }
             }
+
+            const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
+            const returnDistance = matrizDeDistancias[currentCityNormalized]?.['ROLÂNDIA'];
+            if (returnDistance) {
+                totalDistance += returnDistance;
+            }
+
+            resultSpan.innerHTML = `<strong>Distância Estimada: ${totalDistance.toFixed(0)} km</strong>`;
         }
+        
+        // ... (o resto do seu script JavaScript, exatamente como estava antes)
         
         let planilhaData = [];
         let pedidosGeraisAtuais = [];
@@ -572,14 +671,14 @@
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const veiculo = rotaVeiculoMap[rota] || 'Toco';
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota} (${veiculo})</strong> &nbsp; <span class="badge bg-secondary ms-2">${grupo.pedidos.length} pedidos</span> <span class="badge bg-info ms-2">${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota} (${veiculo})</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length} pedidos</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
         function displayTresQuartos(div, loads) {
             if (loads.length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhuma carga 3/4 formada.</div>'; return; }
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${div.id}', 'Cargas 3/4 (Automático)', 'bg-warning', 'text-dark')">🖨️ Imprimir Concluídas</button>` : ''}</div>`;
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${div.id}', 'Cargas 3/4 (Automático)', 'bg-warning', 'text-dark')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
             loads.forEach(load => {
                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 html += `<div class="card mb-3"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
@@ -663,7 +762,7 @@
             };
             const vInfo = vehicleInfo[vehicleType];
 
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${finalLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${finalLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}', '${vInfo.colorClass}', '${vInfo.textColor}')">🖨️ Imprimir Concluídas</button>` : ''}</div>`;
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${finalLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${finalLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}', '${vInfo.colorClass}', '${vInfo.textColor}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
             if (finalLoads.length === 0) { html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; }
             
             finalLoads.forEach(load => {
@@ -677,14 +776,14 @@
                     fiorinoDistanceHtml = `
                         <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
                            <span id="dist-${load.id}"></span>
-                           <button class="btn btn-outline-info btn-sm no-print" onclick="calculateApiDistance('${load.id}')">📍 Calcular KM via API</button>
+                           <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
                         </div>`;
                 }
 
                 html += `
                     <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
                         <div class="card-header ${vInfo.colorClass} ${vInfo.textColor}">
-                            ${vInfo.name} #${load.numero} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³ ${priorityBadge}
+                            <i class="bi bi-box-seam-fill me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge}
                         </div>
                         <div class="card-body">
                             ${createTable(load.pedidos)}
@@ -713,10 +812,10 @@
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const overWeight = grupo.totalKg > MAX_KG_TOCO;
                 const weightBadge = overWeight
-                    ? `<span class="badge bg-danger ms-2">${totalKgFormatado} kg (ACIMA DO PESO!)</span>`
-                    : `<span class="badge bg-info ms-2">${totalKgFormatado} kg</span>`;
+                    ? `<span class="badge bg-danger ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>${totalKgFormatado} kg (ACIMA DO PESO!)</span>`
+                    : `<span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>`;
                 
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2">${pedidos.length} pedidos</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')">🖨️ Imprimir esta Carga Toco</button>${createTable(pedidos)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} pedidos</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir esta Carga Toco</button>${createTable(pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
