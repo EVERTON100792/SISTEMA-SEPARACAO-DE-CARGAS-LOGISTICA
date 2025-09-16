@@ -17,11 +17,12 @@
     <style>
         body {
             background-color: #212529;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', sans-serif; /* <-- NOVA FONTE APLICADA */
         }
         .card {
             background-color: #2b3035;
             border: 1px solid #495057;
+            /* -- NOVOS EFEITOS DE SOMBRA E TRANSIÇÃO -- */
             border-radius: 0.5rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.25), 0 2px 3px rgba(0,0,0,0.22);
             transition: all 0.2s ease-in-out;
@@ -45,7 +46,7 @@
             --bs-table-accent-bg: var(--bs-table-striped-bg);
         }
         .status-message {
-            min-height: 24px;
+            min-height: 24px; /* Prevent layout shift */
         }
         .btn {
             transition: all 0.2s ease-in-out;
@@ -125,7 +126,7 @@
                 </div>
                 <div class="col-md-3">
                     <label for="fiorinoCubage" class="form-label">Fiorino - Cubagem Máx (m³)</label>
-                    <input type="number" class="form-control config-input" id="fiorinoCubage" value="1.6" step="0.1">
+                    <input type="number" class="form-control config-input" id="fiorinoCubage" value="1.5" step="0.1">
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <button class="btn btn-secondary w-100" id="resetFiorino">Reset Fiorino</button>
@@ -295,324 +296,6 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
-        const clientStatusMap = {
-            '001398': { agendado: true, palletizado: true, urgente: false }, '001494': { agendado: true, palletizado: false, urgente: false },
-            '004277': { agendado: false, palletizado: true, urgente: false }, '004639': { agendado: true, palletizado: true, urgente: false },
-            '004872': { agendado: true, palletizado: true, urgente: false }, '005546': { agendado: true, palletizado: true, urgente: false },
-            '006896': { agendado: true, palletizado: false, urgente: false }, '007981': { agendado: false, palletizado: true, urgente: false },
-            '011238': { agendado: true, palletizado: true, urgente: false }, '014066': { agendado: false, palletizado: true, urgente: false },
-            '014776': { agendado: false, palletizado: true, urgente: false }, '017163': { agendado: true, palletizado: true, urgente: false },
-            '019622': { agendado: true, palletizado: true, urgente: false }, '020350': { agendado: true, palletizado: false, urgente: false },
-            '022545': { agendado: true, palletizado: true, urgente: false }, '023024': { agendado: false, palletizado: true, urgente: false },
-            '023556': { agendado: true, palletizado: false, urgente: false }, '023761': { agendado: true, palletizado: true, urgente: false },
-            '024465': { agendado: true, palletizado: true, urgente: false }, '024581': { agendado: false, palletizado: true, urgente: false },
-            '026778': { agendado: false, palletizado: true, urgente: false }, '029302': { agendado: true, palletizado: true, urgente: false },
-            '032462': { agendado: true, palletizado: true, urgente: false }, '032680': { agendado: false, palletizado: true, urgente: false },
-            '032831': { agendado: true, palletizado: true, urgente: false }, '032851': { agendado: true, palletizado: true, urgente: false },
-            '032869': { agendado: true, palletizado: true, urgente: false }, '032905': { agendado: true, palletizado: false, urgente: false },
-            '033039': { agendado: true, palletizado: false, urgente: false }, '033046': { agendado: true, palletizado: false, urgente: false },
-            '033047': { agendado: true, palletizado: true, urgente: false }, '033107': { agendado: true, palletizado: false, urgente: false },
-            '033388': { agendado: true, palletizado: false, urgente: false }, '033392': { agendado: true, palletizado: false, urgente: false },
-            '033400': { agendado: true, palletizado: false, urgente: false }, '033401': { agendado: true, palletizado: true, urgente: false },
-            '033403': { agendado: true, palletizado: true, urgente: false }, '033406': { agendado: true, palletizado: false, urgente: false },
-            '033420': { agendado: true, palletizado: false, urgente: false }, '033494': { agendado: true, palletizado: false, urgente: false },
-            '033676': { agendado: true, palletizado: false, urgente: false }, '033762': { agendado: true, palletizado: true, urgente: false },
-            '033818': { agendado: true, palletizado: false, urgente: false }, '033859': { agendado: true, palletizado: true, urgente: false },
-            '033884': { agendado: false, palletizado: true, urgente: false }, '033907': { agendado: true, palletizado: false, urgente: false },
-            '033971': { agendado: true, palletizado: true, urgente: false }, '034011': { agendado: true, palletizado: false, urgente: false },
-            '034080': { agendado: false, palletizado: true, urgente: false }, '034096': { agendado: true, palletizado: false, urgente: false },
-            '034167': { agendado: true, palletizado: false, urgente: false }, '034425': { agendado: true, palletizado: false, urgente: false },
-            '034511': { agendado: true, palletizado: true, urgente: false }, '034810': { agendado: true, palletizado: true, urgente: false },
-            '034981': { agendado: true, palletizado: false, urgente: false }, '035050': { agendado: true, palletizado: true, urgente: false },
-            '035054': { agendado: true, palletizado: false, urgente: false }, '035798': { agendado: true, palletizado: false, urgente: false },
-            '036025': { agendado: true, palletizado: true, urgente: false }, '036580': { agendado: true, palletizado: true, urgente: false },
-            '036743': { agendado: false, palletizado: true, urgente: false }, '036792': { agendado: true, palletizado: true, urgente: false },
-            '036853': { agendado: true, palletizado: false, urgente: false }, '036945': { agendado: true, palletizado: false, urgente: false },
-            '037101': { agendado: true, palletizado: false, urgente: false }, '037589': { agendado: true, palletizado: false, urgente: false },
-            '037634': { agendado: true, palletizado: false, urgente: false }, '037699': { agendado: false, palletizado: true, urgente: false },
-            '038207': { agendado: true, palletizado: false, urgente: false }, '038448': { agendado: true, palletizado: false, urgente: false },
-            '038482': { agendado: true, palletizado: false, urgente: false }, '038564': { agendado: true, palletizado: true, urgente: false },
-            '038681': { agendado: true, palletizado: true, urgente: false }, '038735': { agendado: true, palletizado: true, urgente: false },
-            '038896': { agendado: true, palletizado: true, urgente: false }, '039081': { agendado: true, palletizado: true, urgente: false },
-            '039177': { agendado: true, palletizado: false, urgente: false }, '039620': { agendado: true, palletizado: false, urgente: false },
-            '040144': { agendado: true, palletizado: false, urgente: false }, '040159': { agendado: false, palletizado: true, urgente: false },
-            '040442': { agendado: true, palletizado: false, urgente: false }, '040702': { agendado: true, palletizado: true, urgente: false },
-            '040844': { agendado: true, palletizado: true, urgente: false }, '041233': { agendado: true, palletizado: false, urgente: false },
-            '042200': { agendado: true, palletizado: false, urgente: false }, '042765': { agendado: true, palletizado: false, urgente: false },
-            '045265': { agendado: false, palletizado: true, urgente: false }, '047244': { agendado: true, palletizado: false, urgente: false },
-            '047253': { agendado: true, palletizado: true, urgente: false }, '047349': { agendado: false, palletizado: true, urgente: false },
-            '050151': { agendado: true, palletizado: false, urgente: false }, '050816': { agendado: true, palletizado: true, urgente: false },
-            '051818': { agendado: false, palletizado: true, urgente: false }, '051993': { agendado: true, palletizado: false, urgente: false },
-            '052780': { agendado: true, palletizado: true, urgente: false }, '053134': { agendado: false, palletizado: true, urgente: false },
-            '057593': { agendado: false, palletizado: true, urgente: false }, '058645': { agendado: true, palletizado: true, urgente: false },
-            '060900': { agendado: true, palletizado: false, urgente: false }, '061182': { agendado: true, palletizado: false, urgente: false },
-            '061315': { agendado: false, palletizado: true, urgente: false }, '061316': { agendado: true, palletizado: true, urgente: false },
-            '061317': { agendado: true, palletizado: true, urgente: false }, '061318': { agendado: true, palletizado: true, urgente: false },
-            '061324': { agendado: true, palletizado: true, urgente: false }, '063080': { agendado: true, palletizado: true, urgente: false },
-            '063500': { agendado: true, palletizado: true, urgente: false }, '063705': { agendado: true, palletizado: true, urgente: false },
-            '064288': { agendado: true, palletizado: false, urgente: false }, '066208': { agendado: true, palletizado: false, urgente: false },
-            '066590': { agendado: false, palletizado: true, urgente: false }, '067660': { agendado: true, palletizado: false, urgente: false },
-            '067884': { agendado: true, palletizado: true, urgente: false }, '069281': { agendado: true, palletizado: false, urgente: false },
-            '069286': { agendado: true, palletizado: true, urgente: false }, '069318': { agendado: false, palletizado: true, urgente: false },
-            '070968': { agendado: true, palletizado: true, urgente: false }, '071659': { agendado: true, palletizado: false, urgente: false },
-            '072388': { agendado: false, palletizado: true, urgente: false }, '073847': { agendado: true, palletizado: true, urgente: false },
-            '076019': { agendado: true, palletizado: true, urgente: false }, '076580': { agendado: true, palletizado: true, urgente: false },
-            '077475': { agendado: true, palletizado: false, urgente: false }, '077520': { agendado: true, palletizado: false, urgente: false },
-            '078895': { agendado: true, palletizado: false, urgente: false }, '079838': { agendado: true, palletizado: true, urgente: false },
-            '080727': { agendado: true, palletizado: true, urgente: false }, '081353': { agendado: true, palletizado: true, urgente: false },
-            '082255': { agendado: false, palletizado: true, urgente: false }, '083183': { agendado: true, palletizado: true, urgente: false },
-            '083184': { agendado: true, palletizado: false, urgente: false }, '083634': { agendado: true, palletizado: false, urgente: false },
-            '085534': { agendado: true, palletizado: false, urgente: false }, '086159': { agendado: true, palletizado: true, urgente: false },
-            '086350': { agendado: true, palletizado: false, urgente: false }, '086641': { agendado: true, palletizado: true, urgente: false },
-            '089073': { agendado: true, palletizado: false, urgente: false }, '089151': { agendado: true, palletizado: true, urgente: false },
-            '090373': { agendado: false, palletizado: true, urgente: false }, '091725': { agendado: false, palletizado: true, urgente: false },
-            '092017': { agendado: true, palletizado: true, urgente: false }, '095092': { agendado: true, palletizado: true, urgente: false },
-            '095660': { agendado: true, palletizado: false, urgente: false }, '096758': { agendado: true, palletizado: true, urgente: false },
-            '098227': { agendado: true, palletizado: true, urgente: false }, '099268': { agendado: true, palletizado: false, urgente: false },
-            '1': { agendado: false, palletizado: false, urgente: true }, '100087': { agendado: true, palletizado: true, urgente: false },
-            '100522': { agendado: false, palletizado: true, urgente: false }, '101246': { agendado: false, palletizado: true, urgente: false },
-            '101253': { agendado: true, palletizado: true, urgente: false }, '101346': { agendado: true, palletizado: true, urgente: false },
-            '102066': { agendado: false, palletizado: true, urgente: false }, '103518': { agendado: true, palletizado: false, urgente: false },
-            '105394': { agendado: true, palletizado: true, urgente: false }, '106198': { agendado: true, palletizado: false, urgente: false },
-            '108416': { agendado: false, palletizado: true, urgente: false }, '108765': { agendado: true, palletizado: false, urgente: false },
-            '109288': { agendado: true, palletizado: true, urgente: false }, '109409': { agendado: false, palletizado: true, urgente: false },
-            '110023': { agendado: true, palletizado: false, urgente: false }, '110894': { agendado: false, palletizado: true, urgente: false },
-            '111145': { agendado: true, palletizado: true, urgente: false }, '111154': { agendado: true, palletizado: false, urgente: false },
-            '111302': { agendado: true, palletizado: true, urgente: false }, '112207': { agendado: true, palletizado: false, urgente: false },
-            '112670': { agendado: true, palletizado: false, urgente: false }, '117028': { agendado: true, palletizado: true, urgente: false },
-            '117123': { agendado: true, palletizado: true, urgente: false }, '120423': { agendado: true, palletizado: false, urgente: false },
-            '120455': { agendado: false, palletizado: true, urgente: false }, '120473': { agendado: true, palletizado: false, urgente: false },
-            '120533': { agendado: true, palletizado: true, urgente: false }, '121747': { agendado: true, palletizado: true, urgente: false },
-            '122155': { agendado: true, palletizado: false, urgente: false }, '122785': { agendado: false, palletizado: true, urgente: false },
-            '123815': { agendado: true, palletizado: false, urgente: false }, '124320': { agendado: true, palletizado: true, urgente: false },
-            '125228': { agendado: true, palletizado: false, urgente: false }, '125517': { agendado: false, palletizado: true, urgente: false },
-            '126430': { agendado: true, palletizado: false, urgente: false }, '131476': { agendado: true, palletizado: true, urgente: false },
-            '132397': { agendado: true, palletizado: false, urgente: false }, '133916': { agendado: true, palletizado: false, urgente: false },
-            '135395': { agendado: true, palletizado: true, urgente: false }, '135928': { agendado: true, palletizado: false, urgente: false },
-            '136086': { agendado: true, palletizado: false, urgente: false }, '136260': { agendado: true, palletizado: true, urgente: false },
-            '137919': { agendado: true, palletizado: true, urgente: false }, '138825': { agendado: true, palletizado: true, urgente: false },
-            '139013': { agendado: true, palletizado: true, urgente: false }, '139329': { agendado: true, palletizado: true, urgente: false },
-            '139611': { agendado: true, palletizado: true, urgente: false }, '143102': { agendado: true, palletizado: true, urgente: false },
-            '144192': { agendado: true, palletizado: false, urgente: false }, '144457': { agendado: true, palletizado: true, urgente: false },
-            '145014': { agendado: true, palletizado: true, urgente: false }, '145237': { agendado: true, palletizado: true, urgente: false },
-            '145322': { agendado: true, palletizado: false, urgente: false }, '146644': { agendado: true, palletizado: false, urgente: false },
-            '146988': { agendado: true, palletizado: false, urgente: false }, '148071': { agendado: true, palletizado: false, urgente: false },
-            '149598': { agendado: true, palletizado: false, urgente: false }, '150503': { agendado: true, palletizado: true, urgente: false },
-            '151981': { agendado: true, palletizado: false, urgente: false }, '152601': { agendado: true, palletizado: true, urgente: false },
-            '152835': { agendado: true, palletizado: false, urgente: false }, '152925': { agendado: true, palletizado: true, urgente: false },
-            '153289': { agendado: true, palletizado: false, urgente: false }, '154423': { agendado: true, palletizado: false, urgente: false },
-            '154778': { agendado: true, palletizado: true, urgente: false }, '154808': { agendado: true, palletizado: true, urgente: false },
-            '155177': { agendado: true, palletizado: true, urgente: false }, '155313': { agendado: true, palletizado: false, urgente: false },
-            '155368': { agendado: false, palletizado: true, urgente: false }, '155419': { agendado: true, palletizado: true, urgente: false },
-            '155475': { agendado: true, palletizado: false, urgente: false }, '155823': { agendado: false, palletizado: true, urgente: false },
-            '155888': { agendado: true, palletizado: true, urgente: false }, '156009': { agendado: true, palletizado: true, urgente: false },
-            '156585': { agendado: false, palletizado: true, urgente: false }, '156696': { agendado: true, palletizado: false, urgente: false },
-            '157403': { agendado: true, palletizado: true, urgente: false }, '158235': { agendado: true, palletizado: false, urgente: false },
-            '159054': { agendado: true, palletizado: false, urgente: false }, '159168': { agendado: true, palletizado: false, urgente: false },
-            '160382': { agendado: false, palletizado: true, urgente: false }, '160982': { agendado: true, palletizado: true, urgente: false },
-            '161737': { agendado: true, palletizado: true, urgente: false }, '162499': { agendado: true, palletizado: false, urgente: false },
-            '162789': { agendado: true, palletizado: false, urgente: false }, '163234': { agendado: true, palletizado: false, urgente: false },
-            '163382': { agendado: false, palletizado: true, urgente: false }, '163458': { agendado: true, palletizado: false, urgente: false },
-            '164482': { agendado: false, palletizado: true, urgente: false }, '164721': { agendado: true, palletizado: false, urgente: false },
-            '164779': { agendado: true, palletizado: true, urgente: false }, '164780': { agendado: true, palletizado: true, urgente: false },
-            '164924': { agendado: true, palletizado: false, urgente: false }, '165512': { agendado: true, palletizado: false, urgente: false },
-            '166195': { agendado: true, palletizado: true, urgente: false }, '166337': { agendado: true, palletizado: false, urgente: false },
-            '166353': { agendado: true, palletizado: true, urgente: false }, '166468': { agendado: true, palletizado: false, urgente: false },
-            '166469': { agendado: true, palletizado: false, urgente: false }, '167353': { agendado: false, palletizado: true, urgente: false },
-            '167810': { agendado: true, palletizado: false, urgente: false }, '167819': { agendado: true, palletizado: true, urgente: false },
-            '168464': { agendado: true, palletizado: true, urgente: false }, '169863': { agendado: true, palletizado: true, urgente: false },
-            '169971': { agendado: true, palletizado: false, urgente: false }, '170219': { agendado: true, palletizado: false, urgente: false },
-            '170220': { agendado: true, palletizado: false, urgente: false }, '170516': { agendado: true, palletizado: true, urgente: false },
-            '171147': { agendado: true, palletizado: false, urgente: false }, '171160': { agendado: true, palletizado: false, urgente: false },
-            '171191': { agendado: false, palletizado: true, urgente: false }, '171200': { agendado: true, palletizado: false, urgente: false },
-            '171320': { agendado: true, palletizado: true, urgente: false }, '171529': { agendado: true, palletizado: true, urgente: false },
-            '171642': { agendado: true, palletizado: false, urgente: false }, '171863': { agendado: false, palletizado: true, urgente: false },
-            '172270': { agendado: false, palletizado: true, urgente: false }, '172490': { agendado: true, palletizado: true, urgente: false },
-            '172656': { agendado: true, palletizado: false, urgente: false }, '172859': { agendado: true, palletizado: true, urgente: false },
-            '173621': { agendado: false, palletizado: true, urgente: false }, '173964': { agendado: true, palletizado: false, urgente: false },
-            '173977': { agendado: true, palletizado: false, urgente: false }, '174249': { agendado: true, palletizado: false, urgente: false },
-            '174339': { agendado: false, palletizado: false, urgente: true }, '174593': { agendado: true, palletizado: false, urgente: false },
-            '174662': { agendado: true, palletizado: false, urgente: false }, '174901': { agendado: true, palletizado: true, urgente: false },
-            '175108': { agendado: false, palletizado: false, urgente: true }, '175365': { agendado: true, palletizado: true, urgente: false },
-            '175425': { agendado: true, palletizado: false, urgente: false }, '175762': { agendado: true, palletizado: false, urgente: false },
-            '175767': { agendado: true, palletizado: false, urgente: false }, '175783': { agendado: true, palletizado: false, urgente: false },
-            '176166': { agendado: true, palletizado: false, urgente: false }, '176278': { agendado: true, palletizado: false, urgente: false },
-            '176453': { agendado: true, palletizado: false, urgente: false }, '176747': { agendado: true, palletizado: false, urgente: false },
-            '177075': { agendado: false, palletizado: true, urgente: false }, '177327': { agendado: true, palletizado: false, urgente: false },
-            '177488': { agendado: true, palletizado: true, urgente: false }, '177529': { agendado: true, palletizado: true, urgente: false },
-            '177883': { agendado: true, palletizado: false, urgente: false }, '177951': { agendado: true, palletizado: true, urgente: false },
-            '177995': { agendado: true, palletizado: false, urgente: false }, '178255': { agendado: true, palletizado: false, urgente: false },
-            '178377': { agendado: true, palletizado: false, urgente: false }, '178666': { agendado: true, palletizado: false, urgente: false },
-            '179104': { agendado: true, palletizado: false, urgente: false }, '179302': { agendado: false, palletizado: true, urgente: false },
-            '179510': { agendado: true, palletizado: false, urgente: false }, '179542': { agendado: true, palletizado: false, urgente: false },
-            '179690': { agendado: true, palletizado: false, urgente: false }, '180028': { agendado: true, palletizado: false, urgente: false },
-            '180269': { agendado: true, palletizado: false, urgente: false }, '180342': { agendado: true, palletizado: true, urgente: false },
-            '180427': { agendado: true, palletizado: true, urgente: false }, '180472': { agendado: true, palletizado: false, urgente: false },
-            '180494': { agendado: true, palletizado: true, urgente: false }, '180594': { agendado: true, palletizado: false, urgente: false },
-            '180772': { agendado: true, palletizado: true, urgente: false }, '181012': { agendado: true, palletizado: true, urgente: false },
-            '181052': { agendado: true, palletizado: true, urgente: false }, '181179': { agendado: true, palletizado: true, urgente: false },
-            '181199': { agendado: false, palletizado: true, urgente: false }, '182292': { agendado: false, palletizado: true, urgente: false },
-            '182349': { agendado: true, palletizado: true, urgente: false }, '182571': { agendado: false, palletizado: true, urgente: false },
-            '182614': { agendado: false, palletizado: true, urgente: false }, '182629': { agendado: false, palletizado: true, urgente: false },
-            '182696': { agendado: true, palletizado: false, urgente: false }, '182809': { agendado: true, palletizado: false, urgente: false },
-            '182885': { agendado: true, palletizado: true, urgente: false }, '182901': { agendado: true, palletizado: true, urgente: false },
-            '183011': { agendado: true, palletizado: true, urgente: false }, '183016': { agendado: true, palletizado: false, urgente: false },
-            '183046': { agendado: true, palletizado: true, urgente: false }, '183048': { agendado: true, palletizado: false, urgente: false },
-            '183069': { agendado: true, palletizado: true, urgente: false }, '183070': { agendado: true, palletizado: false, urgente: false },
-            '183091': { agendado: true, palletizado: false, urgente: false }, '183093': { agendado: true, palletizado: true, urgente: false },
-            '183256': { agendado: false, palletizado: false, urgente: true }, '183477': { agendado: true, palletizado: false, urgente: false },
-            '183676': { agendado: true, palletizado: true, urgente: false }, '183787': { agendado: true, palletizado: true, urgente: false },
-            '184011': { agendado: true, palletizado: true, urgente: false }, '184038': { agendado: true, palletizado: true, urgente: false },
-            '189677': { agendado: true, palletizado: false, urgente: false }, '190163': { agendado: true, palletizado: true, urgente: false },
-            '190241': { agendado: true, palletizado: true, urgente: false }, '190687': { agendado: true, palletizado: false, urgente: false },
-            '190733': { agendado: true, palletizado: true, urgente: false }, '191148': { agendado: true, palletizado: false, urgente: false },
-            '191149': { agendado: true, palletizado: false, urgente: false }, '191191': { agendado: true, palletizado: true, urgente: false },
-            '191230': { agendado: false, palletizado: true, urgente: false }, '191271': { agendado: false, palletizado: true, urgente: false },
-            '191283': { agendado: true, palletizado: false, urgente: false }, '191387': { agendado: true, palletizado: false, urgente: false },
-            '191506': { agendado: false, palletizado: true, urgente: false }, '191902': { agendado: true, palletizado: false, urgente: false },
-            '191972': { agendado: true, palletizado: true, urgente: false }, '192138': { agendado: true, palletizado: true, urgente: false },
-            '192369': { agendado: true, palletizado: false, urgente: false }, '192638': { agendado: true, palletizado: false, urgente: false },
-            '192713': { agendado: true, palletizado: false, urgente: false }, '193211': { agendado: true, palletizado: true, urgente: false },
-            '193445': { agendado: true, palletizado: false, urgente: false }, '193509': { agendado: true, palletizado: false, urgente: false },
-            '193772': { agendado: false, palletizado: true, urgente: false }, '194333': { agendado: false, palletizado: true, urgente: false },
-            '194432': { agendado: true, palletizado: true, urgente: false }, '194508': { agendado: true, palletizado: true, urgente: false },
-            '194750': { agendado: true, palletizado: false, urgente: false }, '194751': { agendado: true, palletizado: false, urgente: false },
-            '194821': { agendado: true, palletizado: true, urgente: false }, '194831': { agendado: true, palletizado: true, urgente: false },
-            '195287': { agendado: true, palletizado: false, urgente: false }, '195338': { agendado: true, palletizado: true, urgente: false },
-            '195446': { agendado: true, palletizado: false, urgente: false }, '196083': { agendado: true, palletizado: false, urgente: false },
-            '196084': { agendado: true, palletizado: true, urgente: false }, '196118': { agendado: true, palletizado: false, urgente: false },
-            '196405': { agendado: true, palletizado: false, urgente: false }, '196446': { agendado: true, palletizado: false, urgente: false },
-            '196784': { agendado: true, palletizado: false, urgente: false }, '197168': { agendado: true, palletizado: true, urgente: false },
-            '197249': { agendado: true, palletizado: true, urgente: false }, '197983': { agendado: true, palletizado: true, urgente: false },
-            '198187': { agendado: true, palletizado: true, urgente: false }, '198438': { agendado: true, palletizado: true, urgente: false },
-            '198747': { agendado: false, palletizado: true, urgente: false }, '198774': { agendado: true, palletizado: true, urgente: false },
-            '198796': { agendado: true, palletizado: true, urgente: false }, '198844': { agendado: false, palletizado: true, urgente: false },
-            '198895': { agendado: true, palletizado: true, urgente: false }, '198907': { agendado: true, palletizado: false, urgente: false },
-            '198908': { agendado: true, palletizado: false, urgente: false }, '199172': { agendado: true, palletizado: false, urgente: false },
-            '199615': { agendado: true, palletizado: true, urgente: false }, '199625': { agendado: true, palletizado: false, urgente: false },
-            '199650': { agendado: true, palletizado: false, urgente: false }, '199651': { agendado: true, palletizado: false, urgente: false },
-            '199713': { agendado: true, palletizado: false, urgente: false }, '199733': { agendado: true, palletizado: false, urgente: false },
-            '199927': { agendado: true, palletizado: true, urgente: false }, '199991': { agendado: true, palletizado: false, urgente: false },
-            '200091': { agendado: true, palletizado: false, urgente: false }, '200194': { agendado: true, palletizado: true, urgente: false },
-            '200239': { agendado: true, palletizado: true, urgente: false }, '200253': { agendado: true, palletizado: true, urgente: false },
-            '200382': { agendado: true, palletizado: true, urgente: false }, '200404': { agendado: true, palletizado: false, urgente: false },
-            '200597': { agendado: true, palletizado: false, urgente: false }, '200917': { agendado: true, palletizado: false, urgente: false },
-            '201294': { agendado: true, palletizado: false, urgente: false }, '201455': { agendado: false, palletizado: true, urgente: false },
-            '201754': { agendado: true, palletizado: false, urgente: false }, '201853': { agendado: true, palletizado: true, urgente: false },
-            '201936': { agendado: true, palletizado: false, urgente: false }, '201948': { agendado: true, palletizado: false, urgente: false },
-            '201956': { agendado: false, palletizado: true, urgente: false }, '201958': { agendado: true, palletizado: true, urgente: false },
-            '201961': { agendado: true, palletizado: true, urgente: false }, '201974': { agendado: true, palletizado: true, urgente: false },
-            '202022': { agendado: false, palletizado: true, urgente: false }, '202185': { agendado: false, palletizado: true, urgente: false },
-            '202187': { agendado: true, palletizado: true, urgente: false }, '202199': { agendado: false, palletizado: true, urgente: false },
-            '202714': { agendado: true, palletizado: true, urgente: false }, '202931': { agendado: true, palletizado: false, urgente: false },
-            '203072': { agendado: true, palletizado: false, urgente: false }, '203093': { agendado: true, palletizado: false, urgente: false },
-            '203201': { agendado: false, palletizado: true, urgente: false }, '203435': { agendado: true, palletizado: false, urgente: false },
-            '203436': { agendado: true, palletizado: false, urgente: false }, '203451': { agendado: true, palletizado: false, urgente: false },
-            '203512': { agendado: true, palletizado: false, urgente: false }, '203769': { agendado: false, palletizado: true, urgente: false },
-            '204198': { agendado: true, palletizado: true, urgente: false }, '204659': { agendado: false, palletizado: true, urgente: false },
-            '204895': { agendado: true, palletizado: true, urgente: false }, '204910': { agendado: true, palletizado: true, urgente: false },
-            '204911': { agendado: true, palletizado: true, urgente: false }, '204913': { agendado: true, palletizado: true, urgente: false },
-            '204914': { agendado: true, palletizado: true, urgente: false }, '204915': { agendado: true, palletizado: true, urgente: false },
-            '204917': { agendado: true, palletizado: true, urgente: false }, '204924': { agendado: false, palletizado: true, urgente: false },
-            '204971': { agendado: true, palletizado: true, urgente: false }, '204979': { agendado: true, palletizado: true, urgente: false },
-            '205108': { agendado: true, palletizado: true, urgente: false }, '205121': { agendado: true, palletizado: false, urgente: false },
-            '205220': { agendado: false, palletizado: true, urgente: false }, '205276': { agendado: true, palletizado: false, urgente: false },
-            '205744': { agendado: false, palletizado: true, urgente: false }, '205787': { agendado: true, palletizado: false, urgente: false },
-            '205803': { agendado: false, palletizado: true, urgente: false }, '205868': { agendado: true, palletizado: true, urgente: false },
-            '205903': { agendado: true, palletizado: false, urgente: false }, '206116': { agendado: true, palletizado: false, urgente: false },
-            '206163': { agendado: true, palletizado: false, urgente: false }, '206208': { agendado: true, palletizado: false, urgente: false },
-            '206294': { agendado: true, palletizado: true, urgente: false }, '206380': { agendado: true, palletizado: true, urgente: false },
-            '206543': { agendado: true, palletizado: false, urgente: false }, '206628': { agendado: true, palletizado: false, urgente: false },
-            '206730': { agendado: true, palletizado: false, urgente: false }, '206731': { agendado: true, palletizado: false, urgente: false },
-            '206994': { agendado: true, palletizado: true, urgente: false }, '207024': { agendado: false, palletizado: true, urgente: false },
-            '207029': { agendado: true, palletizado: false, urgente: false }, '207166': { agendado: true, palletizado: false, urgente: false },
-            '207403': { agendado: true, palletizado: true, urgente: false }, '207689': { agendado: true, palletizado: false, urgente: false },
-            '207881': { agendado: false, palletizado: true, urgente: false }, '207902': { agendado: true, palletizado: false, urgente: false },
-            '208489': { agendado: true, palletizado: false, urgente: false }, '208613': { agendado: true, palletizado: false, urgente: false },
-            '208622': { agendado: true, palletizado: true, urgente: false }, '208741': { agendado: true, palletizado: true, urgente: false },
-            '208804': { agendado: false, palletizado: true, urgente: false }, '208822': { agendado: true, palletizado: true, urgente: false },
-            '208844': { agendado: true, palletizado: false, urgente: false }, '208853': { agendado: true, palletizado: true, urgente: false },
-            '208922': { agendado: true, palletizado: true, urgente: false }, '209002': { agendado: true, palletizado: true, urgente: false },
-            '209004': { agendado: true, palletizado: true, urgente: false }, '209248': { agendado: true, palletizado: true, urgente: false },
-            '209281': { agendado: true, palletizado: true, urgente: false }, '209321': { agendado: true, palletizado: true, urgente: false },
-            '209322': { agendado: true, palletizado: true, urgente: false }, '209684': { agendado: true, palletizado: false, urgente: false },
-            '209716': { agendado: false, palletizado: true, urgente: false }, '209729': { agendado: true, palletizado: true, urgente: false },
-            '210124': { agendado: false, palletizado: true, urgente: false }, '210230': { agendado: true, palletizado: false, urgente: false },
-            '210490': { agendado: true, palletizado: false, urgente: false }, '210747': { agendado: true, palletizado: false, urgente: false },
-            '210759': { agendado: true, palletizado: false, urgente: false }, '210819': { agendado: true, palletizado: true, urgente: false },
-            '210852': { agendado: true, palletizado: false, urgente: false }, '211059': { agendado: true, palletizado: false, urgente: false },
-            '211110': { agendado: true, palletizado: true, urgente: false }, '211276': { agendado: true, palletizado: false, urgente: false },
-            '211277': { agendado: true, palletizado: false, urgente: false }, '211279': { agendado: true, palletizado: false, urgente: false },
-            '211332': { agendado: true, palletizado: false, urgente: false }, '211411': { agendado: true, palletizado: true, urgente: false },
-            '211936': { agendado: false, palletizado: true, urgente: false }, '211944': { agendado: false, palletizado: true, urgente: false },
-            '211989': { agendado: false, palletizado: true, urgente: false }, '212078': { agendado: true, palletizado: false, urgente: false },
-            '212401': { agendado: true, palletizado: true, urgente: false }, '212417': { agendado: true, palletizado: false, urgente: false },
-            '212573': { agendado: true, palletizado: false, urgente: false }, '212590': { agendado: true, palletizado: true, urgente: false },
-            '212900': { agendado: true, palletizado: false, urgente: false }, '213188': { agendado: true, palletizado: false, urgente: false },
-            '213189': { agendado: true, palletizado: false, urgente: false }, '213190': { agendado: true, palletizado: false, urgente: false },
-            '213202': { agendado: true, palletizado: false, urgente: false }, '213203': { agendado: true, palletizado: false, urgente: false },
-            '213242': { agendado: true, palletizado: false, urgente: false }, '213442': { agendado: true, palletizado: false, urgente: false },
-            '213454': { agendado: true, palletizado: true, urgente: false }, '213529': { agendado: false, palletizado: true, urgente: false },
-            '213552': { agendado: false, palletizado: true, urgente: false }, '213578': { agendado: false, palletizado: true, urgente: false },
-            '213582': { agendado: true, palletizado: true, urgente: false }, '213855': { agendado: true, palletizado: false, urgente: false },
-            '213909': { agendado: true, palletizado: true, urgente: false }, '213910': { agendado: true, palletizado: true, urgente: false },
-            '213967': { agendado: true, palletizado: false, urgente: false }, '214046': { agendado: true, palletizado: false, urgente: false },
-            '214150': { agendado: true, palletizado: false, urgente: false }, '214387': { agendado: true, palletizado: true, urgente: false },
-            '214433': { agendado: true, palletizado: false, urgente: false }, '214442': { agendado: false, palletizado: true, urgente: false },
-            '214490': { agendado: false, palletizado: true, urgente: false }, '214526': { agendado: false, palletizado: true, urgente: false },
-            '214594': { agendado: false, palletizado: true, urgente: false }, '214746': { agendado: true, palletizado: false, urgente: false },
-            '215022': { agendado: true, palletizado: true, urgente: false }, '215116': { agendado: true, palletizado: true, urgente: false },
-            '215160': { agendado: true, palletizado: true, urgente: false }, '215161': { agendado: true, palletizado: true, urgente: false },
-            '215493': { agendado: true, palletizado: false, urgente: false }, '215494': { agendado: true, palletizado: false, urgente: false },
-            '215651': { agendado: true, palletizado: false, urgente: false }, '215687': { agendado: true, palletizado: false, urgente: false },
-            '215733': { agendado: true, palletizado: true, urgente: false }, '215777': { agendado: true, palletizado: false, urgente: false },
-            '215779': { agendado: false, palletizado: true, urgente: false }, '215942': { agendado: true, palletizado: false, urgente: false },
-            '216112': { agendado: true, palletizado: true, urgente: false }, '216245': { agendado: false, palletizado: true, urgente: false },
-            '216393': { agendado: true, palletizado: false, urgente: false }, '216400': { agendado: true, palletizado: false, urgente: false },
-            '216630': { agendado: true, palletizado: true, urgente: false }, '216684': { agendado: true, palletizado: false, urgente: false },
-            '217190': { agendado: true, palletizado: false, urgente: false }, '217283': { agendado: false, palletizado: true, urgente: false },
-            '217310': { agendado: true, palletizado: false, urgente: false }, '217343': { agendado: true, palletizado: false, urgente: false },
-            '217545': { agendado: false, palletizado: true, urgente: false }, '217605': { agendado: true, palletizado: true, urgente: false },
-            '217828': { agendado: true, palletizado: true, urgente: false }, '217871': { agendado: true, palletizado: true, urgente: false },
-            '217872': { agendado: true, palletizado: true, urgente: false }, '217877': { agendado: true, palletizado: true, urgente: false },
-            '217949': { agendado: true, palletizado: false, urgente: false }, '217965': { agendado: false, palletizado: true, urgente: false },
-            '218169': { agendado: true, palletizado: false, urgente: false }, '218196': { agendado: true, palletizado: false, urgente: false },
-            '218383': { agendado: true, palletizado: false, urgente: false }, '218578': { agendado: true, palletizado: true, urgente: false },
-            '218580': { agendado: true, palletizado: true, urgente: false }, '218628': { agendado: false, palletizado: true, urgente: false },
-            '218640': { agendado: true, palletizado: true, urgente: false }, '218820': { agendado: true, palletizado: true, urgente: false },
-            '218845': { agendado: true, palletizado: true, urgente: false }, '219539': { agendado: true, palletizado: false, urgente: false },
-            '219698': { agendado: true, palletizado: true, urgente: false }, '219715': { agendado: true, palletizado: true, urgente: false },
-            '219884': { agendado: true, palletizado: true, urgente: false }, '220158': { agendado: false, palletizado: true, urgente: false },
-            '220183': { agendado: true, palletizado: true, urgente: false }, '220645': { agendado: true, palletizado: false, urgente: false },
-            '220950': { agendado: true, palletizado: true, urgente: false }, '221023': { agendado: true, palletizado: false, urgente: false },
-            '221248': { agendado: false, palletizado: true, urgente: false }, '221251': { agendado: true, palletizado: true, urgente: false },
-            '222164': { agendado: false, palletizado: true, urgente: false }, '222165': { agendado: false, palletizado: true, urgente: false },
-            '223025': { agendado: true, palletizado: false, urgente: false }, '223379': { agendado: false, palletizado: true, urgente: false },
-            '223525': { agendado: true, palletizado: true, urgente: false }, '223703': { agendado: true, palletizado: false, urgente: false },
-            '223727': { agendado: true, palletizado: false, urgente: false }, '223877': { agendado: true, palletizado: false, urgente: false },
-            '223899': { agendado: true, palletizado: false, urgente: false }, '223900': { agendado: true, palletizado: false, urgente: false },
-            '223954': { agendado: true, palletizado: false, urgente: false }, '223997': { agendado: false, palletizado: true, urgente: false },
-            '224956': { agendado: true, palletizado: true, urgente: false }, '224957': { agendado: true, palletizado: true, urgente: false },
-            '224958': { agendado: true, palletizado: true, urgente: false }, '224959': { agendado: true, palletizado: true, urgente: false },
-            '224961': { agendado: true, palletizado: true, urgente: false }, '224962': { agendado: true, palletizado: true, urgente: false },
-            '225112': { agendado: true, palletizado: false, urgente: false }, '225408': { agendado: true, palletizado: true, urgente: false },
-            '225449': { agendado: true, palletizado: false, urgente: false }, '225904': { agendado: true, palletizado: false, urgente: false },
-            '226903': { agendado: true, palletizado: false, urgente: false }, '226939': { agendado: true, palletizado: false, urgente: false },
-            '227190': { agendado: true, palletizado: true, urgente: false }, '227290': { agendado: false, palletizado: true, urgente: false },
-            '227291': { agendado: false, palletizado: true, urgente: false }, '227292': { agendado: false, palletizado: true, urgente: false },
-            '227293': { agendado: false, palletizado: true, urgente: false }, '227294': { agendado: false, palletizado: true, urgente: false },
-            '227300': { agendado: false, palletizado: true, urgente: false }, '227301': { agendado: false, palletizado: true, urgente: false },
-            '227302': { agendado: false, palletizado: true, urgente: false }, '227303': { agendado: false, palletizado: true, urgente: false },
-            '227304': { agendado: false, palletizado: true, urgente: false }, '227305': { agendado: false, palletizado: true, urgente: false },
-            '227306': { agendado: false, palletizado: true, urgente: false }, '227307': { agendado: false, palletizado: true, urgente: false },
-            '227308': { agendado: false, palletizado: true, urgente: false }, '227309': { agendado: false, palletizado: true, urgente: false },
-            '227310': { agendado: false, palletizado: true, urgente: false }, '227311': { agendado: false, palletizado: true, urgente: false },
-            '227312': { agendado: false, palletizado: true, urgente: false }, '227387': { agendado: true, palletizado: true, urgente: false },
-            '227405': { agendado: false, palletizado: true, urgente: false }, '227406': { agendado: false, palletizado: true, urgente: false },
-            '228469': { agendado: false, palletizado: true, urgente: false }, '228589': { agendado: true, palletizado: false, urgente: false },
-            '228693': { agendado: true, palletizado: true, urgente: false }, '228695': { agendado: true, palletizado: false, urgente: false },
-        };
-
         let CargasFiorinoFinalizadas = new Map();
 
         const matrizDeDistancias = {
@@ -647,7 +330,68 @@
             'URAÍ': { 'ARAPONGAS': 85, 'ASTORGA': 94, 'BELA VISTA DO PARAÍSO': 90, 'BOM SUCESSO': 142, 'CAMBÉ': 69, 'CENTENÁRIO DO SUL': 98, 'FAXINAL': 163, 'FLORESTÓPOLIS': 84, 'GUARACI': 118, 'IBIPORÃ': 55, 'ITAMBARACÁ': 45, 'JAGUAPITÃ': 92, 'JANDAIA DO SUL': 114, 'JATAIZINHO': 45, 'KALORÉ': 130, 'LONDRINA': 60, 'MANDAGUARI': 103, 'MARIALVA': 115, 'MARILÂNDIA DO SUL': 130, 'MUNHOZ DE MELO': 98, 'PORECATU': 110, 'PRADO FERREIRA': 92, 'PRIMEIRO DE MAIO': 110, 'ROLÂNDIA': 71, 'SABAUDIA': 90, 'SANTA FÉ': 102, 'SANTO INÁCIO': 106, 'SERTANÓPOLIS': 60 }
         };
 
-        let CargasFiorinoFinalizadas = new Map();
+        function calcularDistanciaLocal(loadId) {
+            const resultSpan = document.getElementById(`dist-${loadId}`);
+            const loadData = CargasFiorinoFinalizadas.get(loadId);
+            
+            if (!loadData) {
+                resultSpan.textContent = "Erro: Carga não encontrada.";
+                return;
+            }
+
+            resultSpan.innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculando...`;
+            
+            let cidadesNaCarga = [...new Set(loadData.pedidos.map(p => String(p.Cidade).toUpperCase().trim()))];
+            
+            if (cidadesNaCarga.length === 0) {
+                resultSpan.textContent = "Nenhuma cidade para calcular.";
+                return;
+            }
+
+            cidadesNaCarga = cidadesNaCarga.filter(cidade => matrizDeDistancias[cidade]);
+            
+            if (cidadesNaCarga.length === 0) {
+                resultSpan.innerHTML = `<strong class="text-warning">Cidades não mapeadas.</strong>`;
+                return;
+            }
+
+            let totalDistance = 0;
+            let currentCity = 'ROLÂNDIA';
+            let unvisitedCities = [...cidadesNaCarga];
+
+            while (unvisitedCities.length > 0) {
+                let closestCity = '';
+                let shortestDistance = Infinity;
+
+                for (const city of unvisitedCities) {
+                    const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
+                    if (!currentCityNormalized) break;
+
+                    const distance = matrizDeDistancias[currentCityNormalized]?.[city];
+                    if (distance !== undefined && distance < shortestDistance) {
+                        shortestDistance = distance;
+                        closestCity = city;
+                    }
+                }
+
+                if (closestCity) {
+                    totalDistance += shortestDistance;
+                    currentCity = closestCity;
+                    unvisitedCities = unvisitedCities.filter(city => city !== closestCity);
+                } else {
+                    console.warn("Não foi possível encontrar rota para as cidades restantes:", unvisitedCities);
+                    break;
+                }
+            }
+
+            const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
+            const returnDistance = matrizDeDistancias[currentCityNormalized]?.['ROLÂNDIA'];
+            if (returnDistance) {
+                totalDistance += returnDistance;
+            }
+
+            resultSpan.innerHTML = `<strong>Distância Estimada: ${totalDistance.toFixed(0)} km</strong>`;
+        }
         
         let planilhaData = [];
         let pedidosGeraisAtuais = [];
@@ -656,7 +400,7 @@
         let tocoPedidoIds = new Set();
 
         const defaultConfigs = {
-            fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.6,
+            fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.5,
             vanMaxCapacity: 1560, vanMinCapacity: 1100, vanCubage: 5.0,
             tresQuartosMaxCapacity: 4100, tresQuartosMinCapacity: 2300, tresQuartosCubage: 15.0,
             tocoMaxCapacity: 8500, tocoMinCapacity: 5000, tocoCubage: 30.0
@@ -909,32 +653,11 @@
 
         function createTable(pedidos, columnsToDisplay) {
             if (!pedidos || pedidos.length === 0) return '';
-            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Status', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade'];
+            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
             let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped"><thead><tr>';
             colunasExibir.forEach(c => table += `<th>${c}</th>`);
             table += '</tr></thead><tbody>';
-            pedidos.forEach(p => {
-                table += `<tr id="pedido-${p.Num_Pedido}">`;
-                colunasExibir.forEach(c => {
-                    if (c === 'Status') {
-                        let clientCode = String(p.Cliente).trim();
-                        if (/^\d+$/.test(clientCode)) {
-                            clientCode = clientCode.padStart(6, '0');
-                        }
-                        let statusHtml = '';
-                        const statusInfo = clientStatusMap[clientCode];
-                        if (statusInfo) {
-                            if (statusInfo.agendado) statusHtml += '<span class="badge bg-primary me-1">Agendado</span>';
-                            if (statusInfo.palletizado) statusHtml += '<span class="badge bg-secondary me-1">Palletizado</span>';
-                            if (statusInfo.urgente) statusHtml += '<span class="badge bg-danger me-1">Urgente</span>';
-                        }
-                        table += `<td>${statusHtml || '-'}</td>`;
-                    } else {
-                        table += `<td>${p[c] === undefined || p[c] === null ? '' : p[c]}</td>`;
-                    }
-                });
-                table += '</tr>';
-            });
+            pedidos.forEach(p => { table += `<tr id="pedido-${p.Num_Pedido}">`; colunasExibir.forEach(c => table += `<td>${p[c] === undefined || p[c] === null ? '' : p[c]}</td>`); table += '</tr>'; });
             table += '</tbody></table></div>';
             return table;
         }
@@ -960,6 +683,10 @@
             });
             div.innerHTML = html;
         }
+        
+        // ==========================================================================================
+        // NOVA LÓGICA DE MONTAGEM DE CARGAS - INÍCIO
+        // ==========================================================================================
 
         function packLoads(pedidos, vehicleType) {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
@@ -1058,22 +785,27 @@
             const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
             const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
 
+            // PASSO 1: Tenta montar as cargas com o veículo primário
             const primaryResult = packLoads(pedidosRota, vehicleType);
             let primaryLoads = primaryResult.loads;
             let currentLeftovers = primaryResult.leftovers;
             let promotedLoads = [];
 
+            // PASSO 2: LÓGICA DE PROMOÇÃO DE VEÍCULO
+            // Se for Fiorino, verifica se pode promover para Van
             if (vehicleType === 'fiorino' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 600)) {
                 const promotedResult = packLoads(currentLeftovers, 'van');
                 promotedLoads = promotedResult.loads;
-                currentLeftovers = promotedResult.leftovers;
+                currentLeftovers = promotedResult.leftovers; // Sobras Finais
             }
+            // Se for Van, verifica se pode promover para 3/4
             else if (vehicleType === 'van' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 1650)) {
                 const promotedResult = packLoads(currentLeftovers, 'tresQuartos');
                 promotedLoads = promotedResult.loads;
-                currentLeftovers = promotedResult.leftovers;
+                currentLeftovers = promotedResult.leftovers; // Sobras Finais
             }
             
+            // PASSO 3: EXIBIÇÃO DOS RESULTADOS
             primaryLoads.forEach((load, index) => { load.numero = index + 1; });
             promotedLoads.forEach((load, index) => { load.numero = index + 1; });
             
@@ -1094,6 +826,7 @@
 
             let html = '';
             
+            // Exibe cargas primárias
             const vInfo = vehicleInfo[vehicleType];
             html += `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${primaryLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${(primaryLoads.length > 0 || promotedLoads.length > 0) ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}</div>`;
             if (primaryLoads.length === 0) { html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; }
@@ -1102,6 +835,7 @@
                 html += renderLoadCard(load, vehicleType, vInfo);
             });
 
+            // Exibe cargas promovidas, se houver
             if (promotedLoads.length > 0) {
                 const promotedVehicleType = (vehicleType === 'fiorino') ? 'van' : 'tresQuartos';
                 const pVInfo = vehicleInfo[promotedVehicleType];
@@ -1112,6 +846,7 @@
                 });
             }
 
+            // Exibe sobras finais
             if (currentLeftovers.length > 0) {
                 const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}</div></div>`;
@@ -1121,20 +856,26 @@
         }
 
         function renderLoadCard(load, vehicleType, vInfo, isPromoted = false) {
+            // Ordena os pedidos dentro da carga por cliente e depois por número do pedido, para agrupá-los visualmente na tabela.
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente);
                 const clienteB = String(b.Cliente);
                 const pedidoA = String(a.Num_Pedido);
                 const pedidoB = String(b.Num_Pedido);
+
                 if (clienteA < clienteB) return -1;
                 if (clienteA > clienteB) return 1;
+                
+                // Se os clientes forem iguais, ordena pelo número do pedido
                 return pedidoA.localeCompare(pedidoB);
             });
+
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
             const promotedBadge = isPromoted ? '<span class="badge bg-info-subtle text-info-emphasis ms-3">PROMOVIDA</span>' : '';
+
             let fiorinoDistanceHtml = '';
             if (vehicleType === 'fiorino') {
                 fiorinoDistanceHtml = `
@@ -1143,6 +884,7 @@
                        <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
                     </div>`;
             }
+
             return `
                 <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
                     <div class="card-header ${vInfo.colorClass} ${vInfo.textColor}">
@@ -1155,6 +897,10 @@
                 </div>`;
         }
         
+        // ==========================================================================================
+        // NOVA LÓGICA DE MONTAGEM DE CARGAS - FIM
+        // ==========================================================================================
+
         function separarCargasFiorino(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'fiorino'); }
         function separarCargasVan(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'van'); }
         function separarCargas34(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'tresQuartos'); }
@@ -1180,11 +926,16 @@
         function imprimirCargasGeneric(divId, title) {
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
+
+            // <-- MUDANÇA PRINCIPAL AQUI: Seleciona todos os cabeçalhos de card que NÃO são o de sobras (bg-danger).
+            // Isso garante que cargas primárias e promovidas (com cores diferentes) sejam impressas juntas.
             const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
+            
             if (completedLoadsCards.length === 0) {
                 alert("Nenhuma carga concluída para imprimir.");
                 return;
             }
+
             const printWindow = window.open('', '', 'height=800,width=1200');
             printWindow.document.write('<html><head><title>Imprimir: ' + title + '</title>');
             printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
@@ -1192,6 +943,7 @@
                 body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                 .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; }
                 .no-print { display: none !important; }
+                /* Mantém as cores dos cabeçalhos na impressão */
                 .bg-success { background-color: #198754 !important; color: white !important; }
                 .bg-primary { background-color: #0d6efd !important; color: white !important; }
                 .bg-warning { background-color: #ffc107 !important; color: black !important; }
@@ -1199,10 +951,12 @@
                 table, th, td { border: 1px solid #dee2e6 !important; }
                 h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
             </style></head><body>`);
+            
             let contentToPrint = `<h3>${title}</h3>`;
             completedLoadsCards.forEach(header => { 
                 contentToPrint += header.closest('.card.mb-3').outerHTML; 
             });
+
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus(); 
@@ -1213,6 +967,7 @@
             if (!gruposToco[cf]) { alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`); return; }
             const grupo = gruposToco[cf]; const pedidos = grupo.pedidos;
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
             const printWindow = window.open('', '', 'height=800,width=1200');
             printWindow.document.write('<html><head><title>Imprimir Carga Toco CF: ' + cf + '</title>');
             printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
@@ -1222,7 +977,9 @@
                 table, th, td { border: 1px solid #dee2e6 !important; }
                 h3 { margin-bottom: 1rem; }
             </style></head><body>`);
+            
             let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos);
+
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus(); 
