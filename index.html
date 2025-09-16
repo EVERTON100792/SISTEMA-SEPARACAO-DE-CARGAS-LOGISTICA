@@ -310,7 +310,7 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
-        // *** INÍCIO DAS NOVAS FUNÇÕES DE FEEDBACK VISUAL ***
+        // *** FUNÇÕES DE FEEDBACK VISUAL ***
         function showToast(title, message, type = 'info') {
             const toastEl = document.getElementById('appToast');
             const toastTitle = document.getElementById('toastTitle');
@@ -362,6 +362,7 @@
                 <p class="text-center text-muted">${text}</p>`;
         }
         
+        // *** LÓGICA DE CÁLCULO DE DISTÂNCIA 100% GRATUITA ***
         let CargasFiorinoFinalizadas = new Map();
         const matrizDeDistancias = {
             'ARAPONGAS': { 'ASTORGA': 34, 'BELA VISTA DO PARAÍSO': 75, 'BOM SUCESSO': 75, 'CAMBÉ': 22, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 96, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'IBIPORÃ': 46, 'ITAMBARACÁ': 122, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 46, 'JATAIZINHO': 52, 'KALORÉ': 61, 'LONDRINA': 38, 'MANDAGUARI': 48, 'MARIALVA': 60, 'MARILÂNDIA DO SUL': 62, 'MUNHOZ DE MELO': 49, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 87, 'ROLÂNDIA': 10, 'SABAUDIA': 16, 'SANTA FÉ': 54, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 80, 'URAÍ': 85 },
@@ -377,7 +378,7 @@
             'ITAMBARACÁ': { 'ARAPONGAS': 122, 'ASTORGA': 130, 'BELA VISTA DO PARAÍSO': 127, 'BOM SUCESSO': 179, 'CAMBÉ': 108, 'CENTENÁRIO DO SUL': 136, 'FAXINAL': 200, 'FLORESTÓPOLIS': 121, 'GUARACI': 134, 'IBIPORÃ': 91, 'JAGUAPITÃ': 129, 'JANDAIA DO SUL': 151, 'JATAIZINHO': 88, 'KALORÉ': 166, 'LONDRINA': 99, 'MANDAGUARI': 140, 'MARIALVA': 152, 'MARILÂNDIA DO SUL': 166, 'MUNHOZ DE MELO': 135, 'PORECATU': 142, 'PRADO FERREIRA': 129, 'PRIMEIRO DE MAIO': 126, 'ROLÂNDIA': 108, 'SABAUDIA': 125, 'SANTA FÉ': 139, 'SANTO INÁCIO': 121, 'SERTANÓPOLIS': 87, 'URAÍ': 45 },
             'JAGUAPITÃ': { 'ARAPONGAS': 46, 'ASTORGA': 53, 'BELA VISTA DO PARAÍSO': 46, 'BOM SUCESSO': 92, 'CAMBÉ': 40, 'CENTENÁRIO DO SUL': 37, 'FAXINAL': 113, 'FLORESTÓPOLIS': 23, 'GUARACI': 57, 'IBIPORÃ': 46, 'ITAMBARACÁ': 129, 'JANDAIA DO SUL': 70, 'JATAIZINHO': 52, 'KALORÉ': 85, 'LONDRINA': 43, 'MANDAGUARI': 61, 'MARIALVA': 73, 'MARILÂNDIA DO SUL': 86, 'MUNHOZ DE MELO': 56, 'PORECATU': 48, 'PRADO FERREIRA': 20, 'PRIMEIRO DE MAIO': 59, 'ROLÂNDIA': 32, 'SABAUDIA': 50, 'SANTA FÉ': 60, 'SANTO INÁCIO': 54, 'SERTANÓPOLIS': 56, 'URAÍ': 92 },
             'JANDAIA DO SUL': { 'ARAPONGAS': 46, 'ASTORGA': 39, 'BELA VISTA DO PARAÍSO': 103, 'BOM SUCESSO': 20, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 94, 'FAXINAL': 41, 'FLORESTÓPOLIS': 81, 'GUARACI': 114, 'IBIPORÃ': 73, 'ITAMBARACÁ': 151, 'JAGUAPITÃ': 70, 'JATAIZINHO': 80, 'KALORÉ': 15, 'LONDRINA': 65, 'MANDAGUARI': 18, 'MARIALVA': 30, 'MARILÂNDIA DO SUL': 25, 'MUNHOZ DE MELO': 35, 'PORECATU': 106, 'PRADO FERREIRA': 88, 'PRIMEIRO DE MAIO': 115, 'ROLÂNDIA': 39, 'SABAUDIA': 30, 'SANTA FÉ': 43, 'SANTO INÁCIO': 101, 'SERTANÓPOLIS': 109, 'URAÍ': 114 },
-            'JATAIZINHO': { 'ARAPONGAS': 52, 'ASTORGA': 62, 'BELA VISTA DO PARAÍSO': 71, 'BOM SUCESSO': 108, 'CAMBÉ': 35, 'CENTENÁRIO DO SUL': 72, 'FAXINAL': 129, 'FLORESTÓPOLIS': 58, 'GUARACI': 92, 'IBIPORÃ': 18, 'ITAMBARACÁ': 88, 'JAGUAPITÃ': 52, 'JANDAIA DO SUL': 80, 'KALORÉ': 95, 'LONDRINA': 28, 'MANDAGUARI': 72, 'MARIALVA': 84, 'MARILÂNDIA DO SUL': 96, 'MUNHOZ DE MELO': 77, 'PORECATU': 84, 'PRADO FERREIRA': 65, 'PRIMEIRO DE MAIO': 84, 'ROLÂNDIA': 38, 'SABAUDIA': 46, 'SANTA FÉ': 79, 'SANTO INÁCIO': 79, 'SERTANÓPOLIS': 56, 'URAÍ': 45 },
+            'JATAIZINHO': { 'ARAPONGAS': 52, 'ASTORGA': 62, 'BELA VISTA DO PARAÍSO': 71, 'BOM SUCESSO': 108, 'CAMBÉ': 35, 'CENTENÁRIO DO SUL': 72, 'FAXINAL': 129, 'FLORESTÓPOLIS': 58, 'GUARACI': 92, 'IBIPORÃ': 18, 'ITAMBARACÁ': 88, 'JAGUAPITÃ': 52, 'JANDAIA DO SUL': 80, 'KALORÉ': 95, 'LONDRINA': 28, 'MANDAGUARI': 72, 'MARIALVA': 84, 'MARILÂNDIA DO SUL': 96, 'MUNHOZ DE MELO': 77, 'PORECATU': 84, 'PRADO FERREIRA': 65, 'PRIMEIRO DE MAIO': 84, 'ROLÂNDIA': 38, 'SABAUDia': 46, 'SANTA FÉ': 79, 'SANTO INÁCIO': 79, 'SERTANÓPOLIS': 56, 'URAÍ': 45 },
             'KALORÉ': { 'ARAPONGAS': 61, 'ASTORGA': 54, 'BELA VISTA DO PARAÍSO': 118, 'BOM SUCESSO': 15, 'CAMBÉ': 74, 'CENTENÁRIO DO SUL': 109, 'FAXINAL': 24, 'FLORESTÓPOLIS': 96, 'GUARACI': 130, 'IBIPORÃ': 88, 'ITAMBARACÁ': 166, 'JAGUAPITÃ': 85, 'JANDAIA DO SUL': 15, 'JATAIZINHO': 95, 'LONDRINA': 80, 'MANDAGUARI': 33, 'MARIALVA': 45, 'MARILÂNDIA DO SUL': 24, 'MUNHOZ DE MELO': 50, 'PORECATU': 121, 'PRADO FERREIRA': 103, 'PRIMEIRO DE MAIO': 131, 'ROLÂNDIA': 54, 'SABAUDIA': 45, 'SANTA FÉ': 58, 'SANTO INÁCIO': 117, 'SERTANÓPOLIS': 125, 'URAÍ': 130 },
             'LONDRINA': { 'ARAPONGAS': 38, 'ASTORGA': 48, 'BELA VISTA DO PARAÍSO': 45, 'BOM SUCESSO': 94, 'CAMBÉ': 16, 'CENTENÁRIO DO SUL': 58, 'FAXINAL': 115, 'FLORESTÓPOLIS': 44, 'GUARACI': 78, 'IBIPORÃ': 22, 'ITAMBARACÁ': 99, 'JAGUAPITÃ': 43, 'JANDAIA DO SUL': 65, 'JATAIZINHO': 28, 'KALORÉ': 80, 'MANDAGUARI': 57, 'MARIALVA': 69, 'MARILÂNDIA DO SUL': 81, 'MUNHOZ DE MELO': 62, 'PORECATU': 70, 'PRADO FERREIRA': 52, 'PRIMEIRO DE MAIO': 70, 'ROLÂNDIA': 25, 'SABAUDIA': 32, 'SANTA FÉ': 65, 'SANTO INÁCIO': 65, 'SERTANÓPOLIS': 54, 'URAÍ': 60 },
             'MANDAGUARI': { 'ARAPONGAS': 48, 'ASTORGA': 21, 'BELA VISTA DO PARAÍSO': 90, 'BOM SUCESSO': 47, 'CAMBÉ': 51, 'CENTENÁRIO DO SUL': 81, 'FAXINAL': 68, 'FLORESTÓPOLIS': 67, 'GUARACI': 101, 'IBIPORÃ': 65, 'ITAMBARACÁ': 140, 'JAGUAPITÃ': 61, 'JANDAIA DO SUL': 18, 'JATAIZINHO': 72, 'KALORÉ': 33, 'LONDRINA': 57, 'MARIALVA': 12, 'MARILÂNDIA DO SUL': 34, 'MUNHOZ DE MELO': 23, 'PORECATU': 92, 'PRADO FERREIRA': 74, 'PRIMEIRO DE MAIO': 102, 'ROLÂNDIA': 38, 'SABAUDIA': 28, 'SANTA FÉ': 31, 'SANTO INÁCIO': 88, 'SERTANÓPOLIS': 98, 'URAÍ': 103 },
@@ -394,7 +395,7 @@
             'SERTANÓPOLIS': { 'ARAPONGAS': 80, 'ASTORGA': 89, 'BELA VISTA DO PARAÍSO': 54, 'BOM SUCESSO': 137, 'CAMBÉ': 64, 'CENTENÁRIO DO SUL': 62, 'FAXINAL': 158, 'FLORESTÓPOLIS': 48, 'GUARACI': 82, 'IBIPORÃ': 50, 'ITAMBARACÁ': 87, 'JAGUAPITÃ': 56, 'JANDAIA DO SUL': 109, 'JATAIZINHO': 56, 'KALORÉ': 125, 'LONDRINA': 54, 'MANDAGUARI': 98, 'MARIALVA': 110, 'MARILÂNDIA DO SUL': 125, 'MUNHOZ DE MELO': 93, 'PORECATU': 74, 'PRADO FERREIRA': 56, 'PRIMEIRO DE MAIO': 74, 'ROLÂNDIA': 66, 'SABAUDIA': 85, 'SANTA FÉ': 97, 'SANTO INÁCIO': 70, 'URAÍ': 60 },
             'URAÍ': { 'ARAPONGAS': 85, 'ASTORGA': 94, 'BELA VISTA DO PARAÍSO': 90, 'BOM SUCESSO': 142, 'CAMBÉ': 69, 'CENTENÁRIO DO SUL': 98, 'FAXINAL': 163, 'FLORESTÓPOLIS': 84, 'GUARACI': 118, 'IBIPORÃ': 55, 'ITAMBARACÁ': 45, 'JAGUAPITÃ': 92, 'JANDAIA DO SUL': 114, 'JATAIZINHO': 45, 'KALORÉ': 130, 'LONDRINA': 60, 'MANDAGUARI': 103, 'MARIALVA': 115, 'MARILÂNDIA DO SUL': 130, 'MUNHOZ DE MELO': 98, 'PORECATU': 110, 'PRADO FERREIRA': 92, 'PRIMEIRO DE MAIO': 110, 'ROLÂNDIA': 71, 'SABAUDIA': 90, 'SANTA FÉ': 102, 'SANTO INÁCIO': 106, 'SERTANÓPOLIS': 60 }
         };
-
+        
         let planilhaData = [];
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
@@ -427,13 +428,53 @@
             tocoMaxCapacity: 8500, tocoMinCapacity: 5000, tocoCubage: 30.0
         };
 
-        function saveConfigurations() { /* ... */ }
-        function loadConfigurations() { /* ... */ }
-        function resetFiorino() { /* ... */ }
-        function resetVan() { /* ... */ }
-        function resetTresQuartos() { /* ... */ }
-        function resetToco() { /* ... */ }
-        function resetAll() { /* ... */ }
+        function saveConfigurations() {
+            Object.keys(defaultConfigs).forEach(key => {
+                const value = document.getElementById(key).value;
+                localStorage.setItem(key, value);
+            });
+        }
+        function loadConfigurations() {
+             Object.keys(defaultConfigs).forEach(key => {
+                const savedValue = localStorage.getItem(key);
+                document.getElementById(key).value = savedValue || defaultConfigs[key];
+            });
+        }
+        function resetFiorino() {
+            document.getElementById('fiorinoMaxCapacity').value = defaultConfigs.fiorinoMaxCapacity;
+            document.getElementById('fiorinoMinCapacity').value = defaultConfigs.fiorinoMinCapacity;
+            document.getElementById('fiorinoCubage').value = defaultConfigs.fiorinoCubage;
+            saveConfigurations();
+            showToast('Reset', 'Configurações da Fiorino restauradas.', 'info');
+        }
+        function resetVan() {
+            document.getElementById('vanMaxCapacity').value = defaultConfigs.vanMaxCapacity;
+            document.getElementById('vanMinCapacity').value = defaultConfigs.vanMinCapacity;
+            document.getElementById('vanCubage').value = defaultConfigs.vanCubage;
+            saveConfigurations();
+            showToast('Reset', 'Configurações da Van restauradas.', 'info');
+        }
+        function resetTresQuartos() {
+            document.getElementById('tresQuartosMaxCapacity').value = defaultConfigs.tresQuartosMaxCapacity;
+            document.getElementById('tresQuartosMinCapacity').value = defaultConfigs.tresQuartosMinCapacity;
+            document.getElementById('tresQuartosCubage').value = defaultConfigs.tresQuartosCubage;
+            saveConfigurations();
+            showToast('Reset', 'Configurações do 3/4 restauradas.', 'info');
+        }
+        function resetToco() {
+            document.getElementById('tocoMaxCapacity').value = defaultConfigs.tocoMaxCapacity;
+            document.getElementById('tocoMinCapacity').value = defaultConfigs.tocoMinCapacity;
+            document.getElementById('tocoCubage').value = defaultConfigs.tocoCubage;
+            saveConfigurations();
+            showToast('Reset', 'Configurações do Toco restauradas.', 'info');
+        }
+        function resetAll() {
+            Object.keys(defaultConfigs).forEach(key => {
+                document.getElementById(key).value = defaultConfigs[key];
+            });
+            saveConfigurations();
+            showToast('Reset', 'Todas as configurações foram restauradas.', 'info');
+        }
 
         function handleFile(file) {
             if (!file) return;
@@ -556,6 +597,63 @@
                 showToast('Erro Crítico', `Ocorreu um erro durante o processamento: ${error.message}`, 'danger');
                 console.error(error);
                 resultadoGeralDiv.innerHTML = `<div class="alert alert-danger">Falha no processamento. Verifique o console para mais detalhes.</div>`;
+            } finally {
+                setButtonLoading(button, false);
+            }
+        }
+
+        async function calcularDistanciaLocal(button, loadId) {
+            setButtonLoading(button, true);
+            const resultSpan = document.getElementById(`dist-${loadId}`);
+            try {
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                const loadData = CargasFiorinoFinalizadas.get(loadId);
+                if (!loadData) {
+                    resultSpan.textContent = "Erro: Carga não encontrada.";
+                    return;
+                }
+                let cidadesNaCarga = [...new Set(loadData.pedidos.map(p => String(p.Cidade).toUpperCase().trim()))];
+                if (cidadesNaCarga.length === 0) {
+                    resultSpan.textContent = "Nenhuma cidade para calcular.";
+                    return;
+                }
+                cidadesNaCarga = cidadesNaCarga.filter(cidade => matrizDeDistancias[cidade]);
+                if (cidadesNaCarga.length === 0) {
+                    resultSpan.innerHTML = `<strong class="text-warning">Cidades não mapeadas.</strong>`;
+                    return;
+                }
+                let totalDistance = 0;
+                let currentCity = 'ROLÂNDIA';
+                let unvisitedCities = [...cidadesNaCarga];
+                while (unvisitedCities.length > 0) {
+                    let closestCity = '';
+                    let shortestDistance = Infinity;
+                    for (const city of unvisitedCities) {
+                        const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
+                        if (!currentCityNormalized) break;
+                        const distance = matrizDeDistancias[currentCityNormalized]?.[city];
+                        if (distance !== undefined && distance < shortestDistance) {
+                            shortestDistance = distance;
+                            closestCity = city;
+                        }
+                    }
+                    if (closestCity) {
+                        totalDistance += shortestDistance;
+                        currentCity = closestCity;
+                        unvisitedCities = unvisitedCities.filter(city => city !== closestCity);
+                    } else {
+                        break;
+                    }
+                }
+                const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
+                const returnDistance = matrizDeDistancias[currentCityNormalized]?.['ROLÂNDIA'];
+                if (returnDistance) {
+                    totalDistance += returnDistance;
+                }
+                resultSpan.innerHTML = `<strong>Distância Estimada: ${totalDistance.toFixed(0)} km</strong>`;
+            } catch (error) {
+                resultSpan.innerHTML = `<strong class="text-danger">Erro no cálculo.</strong>`;
             } finally {
                 setButtonLoading(button, false);
             }
@@ -685,71 +783,109 @@
                 setButtonLoading(button, false);
             }
         }
-
-        async function calcularDistanciaLocal(button, loadId) {
-            setButtonLoading(button, true);
-            const resultSpan = document.getElementById(`dist-${loadId}`);
-            try {
-                await new Promise(resolve => setTimeout(resolve, 50));
-                
-                const loadData = CargasFiorinoFinalizadas.get(loadId);
-                if (!loadData) {
-                    resultSpan.textContent = "Erro: Carga não encontrada.";
-                    return;
-                }
-                let cidadesNaCarga = [...new Set(loadData.pedidos.map(p => String(p.Cidade).toUpperCase().trim()))];
-                if (cidadesNaCarga.length === 0) {
-                    resultSpan.textContent = "Nenhuma cidade para calcular.";
-                    return;
-                }
-                cidadesNaCarga = cidadesNaCarga.filter(cidade => matrizDeDistancias[cidade]);
-                if (cidadesNaCarga.length === 0) {
-                    resultSpan.innerHTML = `<strong class="text-warning">Cidades não mapeadas.</strong>`;
-                    return;
-                }
-                let totalDistance = 0;
-                let currentCity = 'ROLÂNDIA';
-                let unvisitedCities = [...cidadesNaCarga];
-                while (unvisitedCities.length > 0) {
-                    let closestCity = '';
-                    let shortestDistance = Infinity;
-                    for (const city of unvisitedCities) {
-                        const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
-                        if (!currentCityNormalized) break;
-                        const distance = matrizDeDistancias[currentCityNormalized]?.[city];
-                        if (distance !== undefined && distance < shortestDistance) {
-                            shortestDistance = distance;
-                            closestCity = city;
-                        }
-                    }
-                    if (closestCity) {
-                        totalDistance += shortestDistance;
-                        currentCity = closestCity;
-                        unvisitedCities = unvisitedCities.filter(city => city !== closestCity);
-                    } else {
-                        break;
-                    }
-                }
-                const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
-                const returnDistance = matrizDeDistancias[currentCityNormalized]?.['ROLÂNDIA'];
-                if (returnDistance) {
-                    totalDistance += returnDistance;
-                }
-                resultSpan.innerHTML = `<strong>Distância Estimada: ${totalDistance.toFixed(0)} km</strong>`;
-            } catch (error) {
-                resultSpan.innerHTML = `<strong class="text-danger">Erro no cálculo.</strong>`;
-            } finally {
-                setButtonLoading(button, false);
-            }
-        }
         
         function separarCargasFiorino(btn, r, div, t) { separarCargasGeneric(btn, r, div, t, 'fiorino'); }
         function separarCargasVan(btn, r, div, t) { separarCargasGeneric(btn, r, div, t, 'van'); }
         function separarCargas34(btn, r, div, t) { separarCargasGeneric(btn, r, div, t, 'tresQuartos'); }
 
-        // O restante das funções (displayToco, imprimir, etc.) permanecem iguais
-        // ...
+        function createTable(pedidos, columnsToDisplay) {
+            if (!pedidos || pedidos.length === 0) return '';
+            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
+            let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped"><thead><tr>';
+            colunasExibir.forEach(c => table += `<th>${c}</th>`);
+            table += '</tr></thead><tbody>';
+            pedidos.forEach(p => { table += `<tr id="pedido-${p.Num_Pedido}">`; colunasExibir.forEach(c => table += `<td>${p[c] === undefined || p[c] === null ? '' : p[c]}</td>`); table += '</tr>'; });
+            table += '</tbody></table></div>';
+            return table;
+        }
 
+        function displayToco(div, grupos) {
+            if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhuma carga toco encontrada.</div>'; return; }
+            const MAX_KG_TOCO = parseFloat(document.getElementById('tocoMaxCapacity').value);
+            
+            let accordionHtml = '<div class="accordion accordion-flush" id="accordionToco">';
+            Object.keys(grupos).sort().forEach((cf, index) => {
+                const grupo = grupos[cf]; const pedidos = grupo.pedidos;
+                const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const overWeight = grupo.totalKg > MAX_KG_TOCO;
+                const weightBadge = overWeight
+                    ? `<span class="badge bg-danger ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>${totalKgFormatado} kg (ACIMA DO PESO!)</span>`
+                    : `<span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>`;
+                
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} pedidos</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir esta Carga Toco</button>${createTable(pedidos)}</div></div></div>`;
+            });
+            accordionHtml += '</div>';
+            div.innerHTML = accordionHtml;
+        }
+
+        function displayGerais(div, grupos) {
+            if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhum pedido geral encontrado.</div>'; return; }
+            let accordionHtml = '<div class="accordion accordion-flush" id="accordionGeral">';
+            Object.keys(grupos).sort().forEach((rota, index) => {
+                const grupo = grupos[rota];
+                const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const veiculo = rotaVeiculoMap[rota] || 'Toco';
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota} (${veiculo})</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length} pedidos</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
+            });
+            accordionHtml += '</div>';
+            div.innerHTML = accordionHtml;
+        }
+
+        function imprimirCargasGeneric(divId, title, headerBgClass, headerTextClass) {
+            const divToPrint = document.getElementById(divId);
+            if (!divToPrint) return;
+
+            const completedLoadsCards = divToPrint.querySelectorAll(`.card-header.${headerBgClass}`);
+            if (completedLoadsCards.length === 0) {
+                alert("Nenhuma carga concluída para imprimir."); return;
+            }
+
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>Imprimir: ' + title + '</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">');
+            printWindow.document.write(`<style>
+                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; }
+                .no-print { display: none !important; }
+                .${headerBgClass} { background-color: ${getComputedStyle(document.querySelector(`.${headerBgClass}`)).backgroundColor} !important; }
+                .${headerTextClass} { color: ${getComputedStyle(document.querySelector(`.${headerTextClass}`)).color} !important; }
+                .table-responsive { overflow: visible !important; }
+                table, th, td { border: 1px solid #dee2e6 !important; }
+                h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
+            </style></head><body>`);
+            
+            let contentToPrint = `<h3>${title}</h3>`;
+            completedLoadsCards.forEach(header => { contentToPrint += header.closest('.card.mb-3').outerHTML; });
+
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+        }
+
+        function imprimirTocoIndividual(cf) {
+            if (!gruposToco[cf]) { alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`); return; }
+            const grupo = gruposToco[cf]; const pedidos = grupo.pedidos;
+            const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>Imprimir Carga Toco CF: ' + cf + '</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
+            printWindow.document.write(`<style>
+                body { margin: 20px; }
+                .table-responsive { overflow: visible !important; }
+                table, th, td { border: 1px solid #dee2e6 !important; }
+                h3 { margin-bottom: 1rem; }
+            </style></head><body>`);
+            
+            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos);
+
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+        }
+        
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
