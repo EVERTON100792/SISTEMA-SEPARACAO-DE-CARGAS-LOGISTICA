@@ -331,6 +331,118 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
+        let planilhaData = [];
+        let pedidosGeraisAtuais = [];
+        let gruposToco = {};
+        let pedidosComCFNumericoIsolado = [];
+        let pedidosPrioritarios = [];
+        let tocoPedidoIds = new Set();
+        let pedidosAtrasados = []; 
+        let CargasFiorinoFinalizadas = new Map();
+        const rotaVeiculoMap = {};
+
+        // <<< CÓDIGO CORRIGIDO: FUNCIONALIDADE DE UPLOAD E DRAG-AND-DROP >>>
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('drop-zone');
+        const processarBtn = document.getElementById('processarBtn');
+        const statusDiv = document.getElementById('status');
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('border-primary'); });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('border-primary'); });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('border-primary');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                fileInput.files = e.dataTransfer.files;
+                handleFile(file);
+            }
+        });
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    planilhaData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                    planilhaData.forEach(p => {
+                        const sanitizedEntry = {};
+                        for (const key in p) { sanitizedEntry[key.trim()] = p[key]; }
+                        
+                        sanitizedEntry.Num_Pedido = String(sanitizedEntry.Num_Pedido || '');
+                        sanitizedEntry.Quilos_Saldo = String(sanitizedEntry.Quilos_Saldo || '0').replace(',', '.');
+                        sanitizedEntry.Cubagem = String(sanitizedEntry.Cubagem || '0').replace(',', '.');
+                        sanitizedEntry.Cliente = String(sanitizedEntry.Cliente || '');
+                        sanitizedEntry.Nome_Cliente = String(sanitizedEntry.Nome_Cliente || '');
+                        sanitizedEntry.Cidade = String(sanitizedEntry.Cidade || '');
+                        sanitizedEntry.Cod_Rota = String(sanitizedEntry.Cod_Rota || '');
+                        sanitizedEntry['BLOQ.'] = String(sanitizedEntry['BLOQ.'] || '');
+                        sanitizedEntry.Coluna4 = String(sanitizedEntry.Coluna4 || '');
+                        sanitizedEntry.Coluna5 = String(sanitizedEntry.Coluna5 || '');
+                        sanitizedEntry.CF = String(sanitizedEntry.CF || '');
+                        
+                        checkAgendamento(sanitizedEntry);
+
+                        const veiculo = sanitizedEntry.Coluna5 ? String(sanitizedEntry.Coluna5).trim() : 'N/D';
+                        if (sanitizedEntry.Cod_Rota && !rotaVeiculoMap[sanitizedEntry.Cod_Rota]) {
+                            rotaVeiculoMap[sanitizedEntry.Cod_Rota] = veiculo;
+                        }
+                        Object.assign(p, sanitizedEntry);
+                    });
+                    statusDiv.innerHTML = `<p class="text-success fw-bold"><i class="bi bi-check-circle-fill me-2"></i>Arquivo <strong>${file.name}</strong> carregado com sucesso! ${planilhaData.length} pedidos encontrados.</p>`;
+                    processarBtn.disabled = false;
+                } catch (error) {
+                    statusDiv.innerHTML = `<p class="text-danger"><strong>Erro ao ler o arquivo:</strong> ${error.message}. Verifique se é uma planilha válida.</p>`;
+                    console.error(error);
+                    processarBtn.disabled = true;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function isNumeric(n) {
+            return !isNaN(parseFloat(n)) && isFinite(n);
+        }
+
+        function calcularDistanciaLocal(loadId) {
+            const spanResult = document.getElementById(`dist-${loadId}`);
+            if (!spanResult) return;
+            const carga = CargasFiorinoFinalizadas.get(loadId);
+            if (!carga || carga.pedidos.length === 0) {
+                spanResult.innerHTML = '<span class="text-danger">Erro: Carga não encontrada.</span>'; return;
+            }
+            const cidades = [...new Set(carga.pedidos.map(p => p.Cidade ? p.Cidade.toUpperCase().trim() : null).filter(c => c))];
+            if (cidades.length < 2) { spanResult.innerHTML = '<strong>Distância:</strong> -- km (Rota com menos de 2 cidades).'; return; }
+            let distanciaTotal = 0; let cidadeAtual = 'ROLÂNDIA'; 
+            try {
+                if (matrizDeDistancias[cidadeAtual] && matrizDeDistancias[cidadeAtual][cidades[0]]) {
+                    distanciaTotal += matrizDeDistancias[cidadeAtual][cidades[0]];
+                    cidadeAtual = cidades[0];
+                } else { throw new Error(`Distância não encontrada de ROLÂNDIA para ${cidades[0]}`); }
+                for (let i = 0; i < cidades.length - 1; i++) {
+                    const origem = cidades[i]; const destino = cidades[i + 1];
+                    if (matrizDeDistancias[origem] && matrizDeDistancias[origem][destino]) { distanciaTotal += matrizDeDistancias[origem][destino]; } 
+                    else { throw new Error(`Distância não encontrada de ${origem} para ${destino}`); }
+                }
+                const ultimaCidade = cidades[cidades.length - 1];
+                if (matrizDeDistancias[ultimaCidade] && matrizDeDistancias[ultimaCidade]['ROLÂNDIA']) { distanciaTotal += matrizDeDistancias[ultimaCidade]['ROLÂNDIA']; } 
+                else { throw new Error(`Distância não encontrada de ${ultimaCidade} para ROLÂNDIA`); }
+                spanResult.innerHTML = `<strong>Distância Estimada (Ida e Volta):</strong> <span class="badge bg-info">${distanciaTotal} km</span>`;
+            } catch (error) {
+                console.error(error);
+                spanResult.innerHTML = `<span class="text-warning small">${error.message}. Verifique o nome das cidades.</span>`;
+            }
+        }
+        
         // <<< INÍCIO DA FUNCIONALIDADE: LISTA DE CLIENTES COM AGENDAMENTO >>>
         const agendamentoClientCodes = new Set([
             '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', 
@@ -379,9 +491,6 @@
             pedido.Agendamento = agendamentoClientCodes.has(normalizedCode) ? 'Sim' : 'Não';
         }
         
-        let CargasFiorinoFinalizadas = new Map();
-        
-        // Objeto matrizDeDistancias (não alterado)
         const matrizDeDistancias = {
             'ARAPONGAS': { 'ASTORGA': 34, 'BELA VISTA DO PARAÍSO': 75, 'BOM SUCESSO': 75, 'CAMBÉ': 22, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 96, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'IBIPORÃ': 46, 'ITAMBARACÁ': 122, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 46, 'JATAIZINHO': 52, 'KALORÉ': 61, 'LONDRINA': 38, 'MANDAGUARI': 48, 'MARIALVA': 60, 'MARILÂNDIA DO SUL': 62, 'MUNHOZ DE MELO': 49, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 87, 'ROLÂNDIA': 10, 'SABAUDIA': 16, 'SANTA FÉ': 54, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 80, 'URAÍ': 85 },
             'ASTORGA': { 'ARAPONGAS': 34, 'BELA VISTA DO PARAÍSO': 82, 'BOM SUCESSO': 68, 'CAMBÉ': 42, 'CENTENÁRIO DO SUL': 73, 'FAXINAL': 89, 'FLORESTÓPOLIS': 59, 'GUARACI': 93, 'IBIPORÃ': 56, 'ITAMBARACÁ': 130, 'JAGUAPITÃ': 53, 'JANDAIA DO SUL': 39, 'JATAIZINHO': 62, 'KALORÉ': 54, 'LONDRINA': 48, 'MANDAGUARI': 21, 'MARIALVA': 33, 'MARILÂNDIA DO SUL': 55, 'MUNHOZ DE MELO': 22, 'PORECATU': 84, 'PRADO FERREIRA': 66, 'PRIMEIRO DE MAIO': 94, 'ROLÂNDIA': 27, 'SABAUDIA': 18, 'SANTA FÉ': 27, 'SANTO INÁCIO': 80, 'SERTANÓPOLIS': 89, 'URAÍ': 94 },
@@ -414,14 +523,6 @@
             'URAÍ': { 'ARAPONGAS': 85, 'ASTORGA': 94, 'BELA VISTA DO PARAÍSO': 90, 'BOM SUCESSO': 142, 'CAMBÉ': 69, 'CENTENÁRIO DO SUL': 98, 'FAXINAL': 163, 'FLORESTÓPOLIS': 84, 'GUARACI': 118, 'IBIPORÃ': 55, 'ITAMBARACÁ': 45, 'JAGUAPITÃ': 92, 'JANDAIA DO SUL': 114, 'JATAIZINHO': 45, 'KALORÉ': 130, 'LONDRINA': 60, 'MANDAGUARI': 103, 'MARIALVA': 115, 'MARILÂNDIA DO SUL': 130, 'MUNHOZ DE MELO': 98, 'PORECATU': 110, 'PRADO FERREIRA': 92, 'PRIMEIRO DE MAIO': 110, 'ROLÂNDIA': 71, 'SABAUDIA': 90, 'SANTA FÉ': 102, 'SANTO INÁCIO': 106, 'SERTANÓPOLIS': 60 }
         };
         
-        let planilhaData = [];
-        let pedidosGeraisAtuais = [];
-        let gruposToco = {};
-        let pedidosComCFNumericoIsolado = [];
-        let pedidosPrioritarios = [];
-        let tocoPedidoIds = new Set();
-        let pedidosAtrasados = []; 
-
         const defaultConfigs = {
             fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.5,
             vanMaxCapacity: 1560, vanMinCapacity: 1100, vanCubage: 5.0,
@@ -429,61 +530,38 @@
             tocoMaxCapacity: 8500, tocoMinCapacity: 5000, tocoCubage: 30.0
         };
 
-        // Funções de configuração (save, load, reset) não alteradas...
-
-        // Funções de busca e UI (buscarPedido, highlightPedido) não alteradas...
-
-        /**
-         * NOVA FUNÇÃO CORRIGIDA
-         * Procura de forma flexível pelo valor da pré-data em um objeto de pedido.
-         */
         function getPredtValue(pedido) {
             if (!pedido) return null;
-            // Lista de possíveis nomes para o cabeçalho da coluna, em minúsculas
             const possibleKeys = ['predt', 'pré-data', 'pre-data', 'predata'];
             for (const key in pedido) {
                 if (possibleKeys.includes(key.toLowerCase().trim())) {
                     return pedido[key];
                 }
             }
-            return null; // Retorna null se nenhuma coluna correspondente for encontrada
+            return null; 
         }
         
-        /**
-         * Converte um valor (número serial do Excel ou string DD/MM/AAAA) para um objeto Date.
-         */
         function parseDate(predtValue) {
             if (!predtValue) return null;
-
-            // Se for número (formato serial do Excel)
             if (typeof predtValue === 'number') {
                 if (predtValue > 0) {
                     return new Date(Math.round((predtValue - 25569) * 86400 * 1000));
                 }
                 return null;
             }
-
-            // Se for string, tenta parsear como DD/MM/AAAA
             if (typeof predtValue === 'string') {
                 const parts = predtValue.split('/');
                 if (parts.length === 3) {
                     const day = parseInt(parts[0], 10);
-                    const month = parseInt(parts[1], 10) - 1; // Mês em JS é 0-indexed
+                    const month = parseInt(parts[1], 10) - 1; 
                     const year = parseInt(parts[2], 10);
                     if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
                         return new Date(year, month, day);
                     }
                 }
             }
-            return null; // Retorna null se não conseguir converter
+            return null; 
         }
-
-        // rest of the functions from previous response (handleFile, processar, createTable etc.) are here,
-        // but the key changes are inside processar() and createTable() to use getPredtValue()
-        // ...
-        
-        // <<< O CÓDIGO COMPLETO DAS OUTRAS FUNÇÕES ESTÁ ABAIXO >>>
-        // ... (Funções de configuração, UI, e lógica de separação) ...
 
         function processar() {
             const resultadoGeralDiv = document.getElementById('resultado-geral');
@@ -496,11 +574,10 @@
                 if (planilhaData.length === 0) { statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return; }
                 const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
                 resultadoGeralDiv.innerHTML = ''; resultadoTocoDiv.innerHTML = ''; resultadoTresQuartosDiv.innerHTML = ''; resultadoCfNumericoDiv.innerHTML = ''; resultadoAtrasadosDiv.innerHTML = '';
-                pedidosAtrasados = []; // Limpa a lista de atrasados
+                pedidosAtrasados = []; 
 
                 const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
 
-                // 1. Identificar e separar as cargas TOCO
                 const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                 const cfCounts = {};
                 pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
@@ -513,13 +590,11 @@
                 
                 tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
 
-                // 2. Regras de bloqueio e de cliente
                 const clientesComBloqueio = new Set(); const clientesSemBloqueio = new Set();
                 pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
                 const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
                 const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
                 
-                // 3. Filtrar e separar os pedidos restantes + LÓGICA DE DATAS CORRIGIDA
                 let pedidosParaProcessamento = [];
                 pedidosComCFNumericoIsolado = [];
 
@@ -527,8 +602,7 @@
                 today.setHours(0, 0, 0, 0);
 
                 const allProcessablePedidos = pedidos.filter(p => {
-                     // Adiciona a lógica de pré-data aqui, aplicada a todos os pedidos antes da separação
-                    const predtValue = getPredtValue(p); // <<< USA A NOVA FUNÇÃO
+                     const predtValue = getPredtValue(p);
                     const predtDate = parseDate(predtValue);
                     if (predtDate && predtDate < today) {
                         p.isAtrasado = true;
@@ -538,7 +612,7 @@
                     } else {
                         p.isAtrasado = false;
                     }
-                    return true; // mantém todos para a próxima fase de filtros
+                    return true; 
                 });
                 
                 allProcessablePedidos.forEach(p => {
@@ -561,7 +635,6 @@
                 displayToco(resultadoTocoDiv, gruposToco);
                 displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
 
-                // 4. Montagem de cargas 3/4 automático
                 let tresQuartosLoads = [];
                 const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value) || defaultConfigs.tresQuartosMinCapacity;
                 const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value) || defaultConfigs.tresQuartosMaxCapacity;
@@ -589,7 +662,6 @@
                 tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
                 displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
 
-                // 5. Definir a lista final de Resultados Gerais
                 pedidosGeraisAtuais = pedidosParaProcessamento.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
                 
                 const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
@@ -614,7 +686,7 @@
                     if (c === 'Agendamento' && cellContent === 'Sim') {
                         table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
                     } else if (c === 'Predt') {
-                        const predtValue = getPredtValue(p); // <<< USA A NOVA FUNÇÃO
+                        const predtValue = getPredtValue(p);
                         const predtDate = parseDate(predtValue);
                         table += `<td>${predtDate ? predtDate.toLocaleDateString('pt-BR') : predtValue || ''}</td>`;
                     } else {
@@ -627,7 +699,6 @@
             return table;
         }
 
-        // <<< NOVAS FUNÇÕES E FUNÇÕES ATUALIZADAS >>>
         function displayAtrasados(div, pedidos) {
             const exportBtn = document.getElementById('exportarAtrasadosBtn');
             if (pedidos.length === 0) {
@@ -636,7 +707,6 @@
                 return;
             }
             exportBtn.disabled = false;
-            // Ordena por data, da mais antiga para a mais nova
             pedidos.sort((a,b) => {
                 const dateA = parseDate(getPredtValue(a)) || 0;
                 const dateB = parseDate(getPredtValue(b)) || 0;
@@ -650,9 +720,8 @@
                 alert("Não há pedidos com pré-data atrasada para exportar.");
                 return;
             }
-
             const dataToExport = pedidosAtrasados.map(p => {
-                const predtValue = getPredtValue(p); // <<< USA A NOVA FUNÇÃO
+                const predtValue = getPredtValue(p); 
                 const predtDate = parseDate(predtValue);
                 return {
                     'Nº Pedido': p.Num_Pedido,
@@ -663,19 +732,12 @@
                     'Rota': p.Cod_Rota
                 };
             });
-
             const worksheet = XLSX.utils.json_to_sheet(dataToExport);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
             XLSX.writeFile(workbook, "Pedidos_Predata_Atrasada.xlsx");
         }
 
-        // O restante do seu código JavaScript original (displayGerais, packLoads, separarCargas, imprimir, etc.)
-        // pode ser colado aqui sem alterações, pois as modificações necessárias já foram feitas
-        // nas funções `processar` e `createTable` que elas utilizam.
-        // Colei todas elas abaixo para garantir que o arquivo esteja 100% completo.
-
-        // Demais funções...
         function displayGerais(div, grupos) {
             if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido para os "Resultados Gerais" (sem CF numérico).</div>'; return; }
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionGeral">';
@@ -867,29 +929,21 @@
                 const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Predt', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div></div>`;
             }
-
             resultadoDiv.innerHTML = html;
         }
 
         function renderLoadCard(load, vehicleType, vInfo, isPromoted = false) {
             load.pedidos.sort((a, b) => {
-                const clienteA = String(a.Cliente);
-                const clienteB = String(b.Cliente);
-                const pedidoA = String(a.Num_Pedido);
-                const pedidoB = String(b.Num_Pedido);
-
-                if (clienteA < clienteB) return -1;
-                if (clienteA > clienteB) return 1;
-                
+                const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
+                const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
+                if (clienteA < clienteB) return -1; if (clienteA > clienteB) return 1;
                 return pedidoA.localeCompare(pedidoB);
             });
-
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
             const promotedBadge = isPromoted ? '<span class="badge bg-info-subtle text-info-emphasis ms-3">PROMOVIDA</span>' : '';
-
             let fiorinoDistanceHtml = '';
             if (vehicleType === 'fiorino') {
                 fiorinoDistanceHtml = `
@@ -898,7 +952,6 @@
                         <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
                     </div>`;
             }
-
             return `
                 <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
                     <div class="card-header ${vInfo.colorClass} ${vInfo.textColor}">
@@ -952,7 +1005,6 @@
                 .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; }
                 .no-print { display: none !important; }
                 .pedido-atrasado { background-color: #f8d7da !important; color: #58151c !important; }
-                /* Mantém as cores dos cabeçalhos na impressão */
                 .bg-success { background-color: #198754 !important; color: white !important; }
                 .bg-primary { background-color: #0d6efd !important; color: white !important; }
                 .bg-warning { background-color: #ffc107 !important; color: black !important; }
