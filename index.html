@@ -450,26 +450,37 @@
             if (!file) return;
             statusDiv.innerHTML = '<p class="text-info">Carregando planilha...</p>';
             processarBtn.disabled = true;
-            // CORREÇÃO: Limpa os dados e resultados antigos ao carregar um novo arquivo
             planilhaData = [];
             document.getElementById('resultado-geral').innerHTML = '';
             document.getElementById('resultado-toco').innerHTML = '';
             document.getElementById('resultado-tres-quartos').innerHTML = '';
             document.getElementById('filtro-atraso-container').style.display = 'none';
-            mostrandoApenasAtrasados = false; // Reseta o estado do filtro
+            mostrandoApenasAtrasados = false; 
 
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    // CORREÇÃO: Usar { cellDates: true } para o XLSX ler as datas corretamente
                     const workbook = XLSX.read(data, {type: 'array', cellDates: true});
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
                     const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                    let headerRowIndex = -1, headers = [];
-                    for (let i = 0; i < rawData.length; i++) { const row = rawData[i]; if (row && row.includes('Cod_Rota')) { headerRowIndex = i; headers = row.map(h => String(h).trim()); break; } }
-                    if (headerRowIndex === -1) throw new Error("Não foi possível encontrar a linha de cabeçalho com 'Cod_Rota'.");
+                    
+                    let headerRowIndex = -1;
+                    let headers = [];
+                    for (let i = 0; i < rawData.length; i++) {
+                        const row = rawData[i];
+                        if (row && row.map(h => String(h).trim()).includes('Cod_Rota')) {
+                            headerRowIndex = i;
+                            headers = row.map(h => String(h).trim());
+                            break;
+                        }
+                    }
+
+                    if (headerRowIndex === -1) {
+                        throw new Error("Não foi possível encontrar a linha de cabeçalho com 'Cod_Rota'.");
+                    }
+
                     const dataRows = rawData.slice(headerRowIndex + 1);
                     planilhaData = dataRows.map(row => { const pedido = {}; headers.forEach((header, i) => { if (header) { pedido[header] = row[i] !== undefined ? row[i] : ''; } }); return pedido; });
                     
@@ -483,15 +494,12 @@
                     let contadorAtrasados = 0;
                     planilhaData.forEach(p => {
                         checkAgendamento(p);
-                        
                         const predatValue = getCaseInsensitiveProp(p, 'predat');
                         
                         if (predatValue instanceof Date && !isNaN(predatValue)) {
                             p.Predat = predatValue.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-                            
                             const dataPedido = new Date(predatValue);
                             dataPedido.setHours(0, 0, 0, 0);
-
                             if (dataPedido < hoje && dataPedido >= dezDiasAtras) { 
                                 p.Atrasado = 'Sim'; 
                                 contadorAtrasados++; 
@@ -504,9 +512,16 @@
                         }
                     });
 
-                    document.getElementById('contador-atrasados').textContent = contadorAtrasados;
+                    const contadorEl = document.getElementById('contador-atrasados');
+                    // CORREÇÃO: Garante que o elemento existe antes de tentar modificá-lo
+                    if (contadorEl) {
+                        contadorEl.textContent = contadorAtrasados;
+                    }
+                    
                     const filtroContainer = document.getElementById('filtro-atraso-container');
-                    filtroContainer.style.display = contadorAtrasados > 0 ? 'flex' : 'none';
+                    if(filtroContainer) {
+                        filtroContainer.style.display = contadorAtrasados > 0 ? 'flex' : 'none';
+                    }
 
                     statusDiv.innerHTML = `<p class="text-success">Planilha \"${file.name}\" carregada. ${planilhaData.length} linhas prontas para processar.</p>`;
                     processarBtn.disabled = false;
