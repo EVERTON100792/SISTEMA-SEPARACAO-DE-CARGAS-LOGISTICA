@@ -450,6 +450,14 @@
             if (!file) return;
             statusDiv.innerHTML = '<p class="text-info">Carregando planilha...</p>';
             processarBtn.disabled = true;
+            // CORREÇÃO: Limpa os dados e resultados antigos ao carregar um novo arquivo
+            planilhaData = [];
+            document.getElementById('resultado-geral').innerHTML = '';
+            document.getElementById('resultado-toco').innerHTML = '';
+            document.getElementById('resultado-tres-quartos').innerHTML = '';
+            document.getElementById('filtro-atraso-container').style.display = 'none';
+            mostrandoApenasAtrasados = false; // Reseta o estado do filtro
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
@@ -476,11 +484,9 @@
                     planilhaData.forEach(p => {
                         checkAgendamento(p);
                         
-                        // CORREÇÃO: Lógica de data simplificada
                         const predatValue = getCaseInsensitiveProp(p, 'predat');
                         
                         if (predatValue instanceof Date && !isNaN(predatValue)) {
-                            // Formata a data para exibição correta (DD/MM/YYYY)
                             p.Predat = predatValue.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
                             
                             const dataPedido = new Date(predatValue);
@@ -493,7 +499,7 @@
                                 p.Atrasado = 'Não'; 
                             }
                         } else {
-                             p.Predat = predatValue || ''; // Mostra o que tiver na célula se não for data
+                             p.Predat = predatValue || '';
                              p.Atrasado = 'Não';
                         }
                     });
