@@ -65,6 +65,7 @@
             .accordion-button { display: block !important; background-color: #f8f9fa !important; color: #000 !important; border: 1px solid #dee2e6 !important; margin-bottom: 0.5rem; }
             .accordion-button strong, .accordion-button .badge { color: #000 !important; }
             .bg-warning { background-color: #ffc107 !important; color: black !important; }
+            td[style*="color: #ff6b6b"] { color: #dc3545 !important; }
         }
         #drop-zone-text {
             border: 2px dashed #495057;
@@ -201,6 +202,16 @@
                             <button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()"><i class="bi bi-search"></i></button>
                         </div>
                         <div id="search-result" class="mb-3"></div>
+
+                        <div id="filtro-atraso-container" class="d-flex justify-content-between align-items-center mb-3 p-2 rounded bg-body-tertiary no-print" style="display: none;">
+                            <button class="btn btn-warning" id="filtrarAtrasadosBtn" onclick="toggleAtrasadosView()">
+                                <i class="bi bi-calendar-x me-2"></i>Mostrar <span id="contador-atrasados">0</span> Pedidos Atrasados
+                            </button>
+                            <button class="btn btn-success" onclick="exportarAtrasados()">
+                                <i class="bi bi-file-earmark-excel-fill me-2"></i>Exportar Atrasados (Excel)
+                            </button>
+                        </div>
+
                         <div id="resultado-geral"></div>
                     </div>
                 </div>
@@ -296,7 +307,6 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
-        // <<< INÍCIO DA NOVA FUNCIONALIDADE: LISTA DE CLIENTES COM AGENDAMENTO >>>
         const agendamentoClientCodes = new Set([
             '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', 
             '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', 
@@ -340,196 +350,146 @@
                 pedido.Agendamento = 'Não';
                 return;
             }
-            // Normaliza o código do cliente (remove zeros à esquerda) para garantir a correspondência
             const normalizedCode = String(pedido.Cliente).replace(/^0+/, '');
             pedido.Agendamento = agendamentoClientCodes.has(normalizedCode) ? 'Sim' : 'Não';
         }
-        // <<< FIM DA NOVA FUNCIONALIDADE >>>
+        
+        let mostrandoApenasAtrasados = false;
 
-        let CargasFiorinoFinalizadas = new Map();
-
-        const matrizDeDistancias = {
-            'ARAPONGAS': { 'ASTORGA': 34, 'BELA VISTA DO PARAÍSO': 75, 'BOM SUCESSO': 75, 'CAMBÉ': 22, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 96, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'IBIPORÃ': 46, 'ITAMBARACÁ': 122, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 46, 'JATAIZINHO': 52, 'KALORÉ': 61, 'LONDRINA': 38, 'MANDAGUARI': 48, 'MARIALVA': 60, 'MARILÂNDIA DO SUL': 62, 'MUNHOZ DE MELO': 49, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 87, 'ROLÂNDIA': 10, 'SABAUDIA': 16, 'SANTA FÉ': 54, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 80, 'URAÍ': 85 },
-            'ASTORGA': { 'ARAPONGAS': 34, 'BELA VISTA DO PARAÍSO': 82, 'BOM SUCESSO': 68, 'CAMBÉ': 42, 'CENTENÁRIO DO SUL': 73, 'FAXINAL': 89, 'FLORESTÓPOLIS': 59, 'GUARACI': 93, 'IBIPORÃ': 56, 'ITAMBARACÁ': 130, 'JAGUAPITÃ': 53, 'JANDAIA DO SUL': 39, 'JATAIZINHO': 62, 'KALORÉ': 54, 'LONDRINA': 48, 'MANDAGUARI': 21, 'MARIALVA': 33, 'MARILÂNDIA DO SUL': 55, 'MUNHOZ DE MELO': 22, 'PORECATU': 84, 'PRADO FERREIRA': 66, 'PRIMEIRO DE MAIO': 94, 'ROLÂNDIA': 27, 'SABAUDIA': 18, 'SANTA FÉ': 27, 'SANTO INÁCIO': 80, 'SERTANÓPOLIS': 89, 'URAÍ': 94 },
-            'BELA VISTA DO PARAÍSO': { 'ARAPONGAS': 75, 'ASTORGA': 82, 'BOM SUCESSO': 130, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 32, 'FAXINAL': 151, 'FLORESTÓPOLIS': 27, 'GUARACI': 51, 'IBIPORÃ': 65, 'ITAMBARACÁ': 127, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 103, 'JATAIZINHO': 71, 'KALORÉ': 118, 'LONDRINA': 45, 'MANDAGUARI': 90, 'MARIALVA': 102, 'MARILÂNDIA DO SUL': 119, 'MUNHOZ DE MELO': 85, 'PORECATU': 42, 'PRADO FERREIRA': 34, 'PRIMEIRO DE MAIO': 53, 'ROLÂNDIA': 61, 'SABAUDIA': 79, 'SANTA FÉ': 89, 'SANTO INÁCIO': 57, 'SERTANÓPOLIS': 54, 'URAÍ': 90 },
-            'BOM SUCESSO': { 'ARAPONGAS': 75, 'ASTORGA': 68, 'BELA VISTA DO PARAÍSO': 130, 'CAMBÉ': 88, 'CENTENÁRIO DO SUL': 121, 'FAXINAL': 26, 'FLORESTÓPOLIS': 108, 'GUARACI': 142, 'IBIPORÃ': 102, 'ITAMBARACÁ': 179, 'JAGUAPITÃ': 92, 'JANDAIA DO SUL': 20, 'JATAIZINHO': 108, 'KALORÉ': 15, 'LONDRINA': 94, 'MANDAGUARI': 47, 'MARIALVA': 59, 'MARILÂNDIA DO SUL': 25, 'MUNHOZ DE MELO': 64, 'PORECATU': 133, 'PRADO FERREIRA': 115, 'PRIMEIRO DE MAIO': 143, 'ROLÂNDIA': 68, 'SABAUDIA': 59, 'SANTA FÉ': 72, 'SANTO INÁCIO': 129, 'SERTANÓPOLIS': 137, 'URAÍ': 142 },
-            'CAMBÉ': { 'ARAPONGAS': 22, 'ASTORGA': 42, 'BELA VISTA DO PARAÍSO': 59, 'BOM SUCESSO': 88, 'CENTENÁRIO DO SUL': 60, 'FAXINAL': 109, 'FLORESTÓPOLIS': 46, 'GUARACI': 80, 'IBIPORÃ': 29, 'ITAMBARACÁ': 108, 'JAGUAPITÃ': 40, 'JANDAIA DO SUL': 59, 'JATAIZINHO': 35, 'KALORÉ': 74, 'LONDRINA': 16, 'MANDAGUARI': 51, 'MARIALVA': 63, 'MARILÂNDIA DO SUL': 75, 'MUNHOZ DE MELO': 56, 'PORECATU': 71, 'PRADO FERREIRA': 53, 'PRIMEIRO DE MAIO': 72, 'ROLÂNDIA': 15, 'SABAUDIA': 26, 'SANTA FÉ': 59, 'SANTO INÁCIO': 67, 'SERTANÓPOLIS': 64, 'URAÍ': 69 },
-            'CENTENÁRIO DO SUL': { 'ARAPONGAS': 66, 'ASTORGA': 73, 'BELA VISTA DO PARAÍSO': 32, 'BOM SUCESSO': 121, 'CAMBÉ': 60, 'FAXINAL': 142, 'FLORESTÓPOLIS': 18, 'GUARACI': 20, 'IBIPORÃ': 66, 'ITAMBARACÁ': 136, 'JAGUAPITÃ': 37, 'JANDAIA DO SUL': 94, 'JATAIZINHO': 72, 'KALORÉ': 109, 'LONDRINA': 58, 'MANDAGUARI': 81, 'MARIALVA': 93, 'MARILÂNDIA DO SUL': 110, 'MUNHOZ DE MELO': 76, 'PORECATU': 24, 'PRADO FERREIRA': 25, 'PRIMEIRO DE MAIO': 35, 'ROLÂNDIA': 52, 'SABAUDIA': 70, 'SANTA FÉ': 80, 'SANTO INÁCIO': 28, 'SERTANÓPOLIS': 62, 'URAÍ': 98 },
-            'FAXINAL': { 'ARAPONGAS': 96, 'ASTORGA': 89, 'BELA VISTA DO PARAÍSO': 151, 'BOM SUCESSO': 26, 'CAMBÉ': 109, 'CENTENÁRIO DO SUL': 142, 'FLORESTÓPOLIS': 129, 'GUARACI': 163, 'IBIPORÃ': 123, 'ITAMBARACÁ': 200, 'JAGUAPITÃ': 113, 'JANDAIA DO SUL': 41, 'JATAIZINHO': 129, 'KALORÉ': 24, 'LONDRINA': 115, 'MANDAGUARI': 68, 'MARIALVA': 80, 'MARILÂNDIA DO SUL': 32, 'MUNHOZ DE MELO': 85, 'PORECATU': 154, 'PRADO FERREIRA': 136, 'PRIMEIRO DE MAIO': 164, 'ROLÂNDIA': 89, 'SABAUDIA': 80, 'SANTA FÉ': 93, 'SANTO INÁCIO': 150, 'SERTANÓPOLIS': 158, 'URAÍ': 163 },
-            'FLORESTÓPOLIS': { 'ARAPONGAS': 52, 'ASTORGA': 59, 'BELA VISTA DO PARAÍSO': 27, 'BOM SUCESSO': 108, 'CAMBÉ': 46, 'CENTENÁRIO DO SUL': 18, 'FAXINAL': 129, 'GUARACI': 37, 'IBIPORÃ': 52, 'ITAMBARACÁ': 121, 'JAGUAPITÃ': 23, 'JANDAIA DO SUL': 81, 'JATAIZINHO': 58, 'KALORÉ': 96, 'LONDRINA': 44, 'MANDAGUARI': 67, 'MARIALVA': 79, 'MARILÂNDIA DO SUL': 97, 'MUNHOZ DE MELO': 62, 'PORECATU': 29, 'PRADO FERREIRA': 20, 'PRIMEIRO DE MAIO': 39, 'ROLÂNDIA': 38, 'SABAUDIA': 56, 'SANTA FÉ': 66, 'SANTO INÁCIO': 43, 'SERTANÓPOLIS': 48, 'URAÍ': 84 },
-            'GUARACI': { 'ARAPONGAS': 86, 'ASTORGA': 93, 'BELA VISTA DO PARAÍSO': 51, 'BOM SUCESSO': 142, 'CAMBÉ': 80, 'CENTENÁRIO DO SUL': 20, 'FAXINAL': 163, 'FLORESTÓPOLIS': 37, 'IBIPORÃ': 86, 'ITAMBARACÁ': 134, 'JAGUAPITÃ': 57, 'JANDAIA DO SUL': 114, 'JATAIZINHO': 92, 'KALORÉ': 130, 'LONDRINA': 78, 'MANDAGUARI': 101, 'MARIALVA': 113, 'MARILÂNDIA DO SUL': 130, 'MUNHOZ DE MELO': 96, 'PORECATU': 28, 'PRADO FERREIRA': 45, 'PRIMEIRO DE MAIO': 15, 'ROLÂNDIA': 72, 'SABAUDIA': 90, 'SANTA FÉ': 100, 'SANTO INÁCIO': 8, 'SERTANÓPOLIS': 82, 'URAÍ': 118 },
-            'IBIPORÃ': { 'ARAPONGAS': 46, 'ASTORGA': 56, 'BELA VISTA DO PARAÍSO': 65, 'BOM SUCESSO': 102, 'CAMBÉ': 29, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 123, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'ITAMBARACÁ': 91, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 73, 'JATAIZINHO': 18, 'KALORÉ': 88, 'LONDRINA': 22, 'MANDAGUARI': 65, 'MARIALVA': 77, 'MARILÂNDIA DO SUL': 89, 'MUNHOZ DE MELO': 70, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 78, 'ROLÂNDIA': 32, 'SABAUDIA': 40, 'SANTA FÉ': 73, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 50, 'URAÍ': 55 },
-            'ITAMBARACÁ': { 'ARAPONGAS': 122, 'ASTORGA': 130, 'BELA VISTA DO PARAÍSO': 127, 'BOM SUCESSO': 179, 'CAMBÉ': 108, 'CENTENÁRIO DO SUL': 136, 'FAXINAL': 200, 'FLORESTÓPOLIS': 121, 'GUARACI': 134, 'IBIPORÃ': 91, 'JAGUAPITÃ': 129, 'JANDAIA DO SUL': 151, 'JATAIZINHO': 88, 'KALORÉ': 166, 'LONDRINA': 99, 'MANDAGUARI': 140, 'MARIALVA': 152, 'MARILÂNDIA DO SUL': 166, 'MUNHOZ DE MELO': 135, 'PORECATU': 142, 'PRADO FERREIRA': 129, 'PRIMEIRO DE MAIO': 126, 'ROLÂNDIA': 108, 'SABAUDIA': 125, 'SANTA FÉ': 139, 'SANTO INÁCIO': 121, 'SERTANÓPOLIS': 87, 'URAÍ': 45 },
-            'JAGUAPITÃ': { 'ARAPONGAS': 46, 'ASTORGA': 53, 'BELA VISTA DO PARAÍSO': 46, 'BOM SUCESSO': 92, 'CAMBÉ': 40, 'CENTENÁRIO DO SUL': 37, 'FAXINAL': 113, 'FLORESTÓPOLIS': 23, 'GUARACI': 57, 'IBIPORÃ': 46, 'ITAMBARACÁ': 129, 'JANDAIA DO SUL': 70, 'JATAIZINHO': 52, 'KALORÉ': 85, 'LONDRINA': 43, 'MANDAGUARI': 61, 'MARIALVA': 73, 'MARILÂNDIA DO SUL': 86, 'MUNHOZ DE MELO': 56, 'PORECATU': 48, 'PRADO FERREIRA': 20, 'PRIMEIRO DE MAIO': 59, 'ROLÂNDIA': 32, 'SABAUDIA': 50, 'SANTA FÉ': 60, 'SANTO INÁCIO': 54, 'SERTANÓPOLIS': 56, 'URAÍ': 92 },
-            'JANDAIA DO SUL': { 'ARAPONGAS': 46, 'ASTORGA': 39, 'BELA VISTA DO PARAÍSO': 103, 'BOM SUCESSO': 20, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 94, 'FAXINAL': 41, 'FLORESTÓPOLIS': 81, 'GUARACI': 114, 'IBIPORÃ': 73, 'ITAMBARACÁ': 151, 'JAGUAPITÃ': 70, 'JATAIZINHO': 80, 'KALORÉ': 15, 'LONDRINA': 65, 'MANDAGUARI': 18, 'MARIALVA': 30, 'MARILÂNDIA DO SUL': 25, 'MUNHOZ DE MELO': 35, 'PORECATU': 106, 'PRADO FERREIRA': 88, 'PRIMEIRO DE MAIO': 115, 'ROLÂNDIA': 39, 'SABAUDIA': 30, 'SANTA FÉ': 43, 'SANTO INÁCIO': 101, 'SERTANÓPOLIS': 109, 'URAÍ': 114 },
-            'JATAIZINHO': { 'ARAPONGAS': 52, 'ASTORGA': 62, 'BELA VISTA DO PARAÍSO': 71, 'BOM SUCESSO': 108, 'CAMBÉ': 35, 'CENTENÁRIO DO SUL': 72, 'FAXINAL': 129, 'FLORESTÓPOLIS': 58, 'GUARACI': 92, 'IBIPORÃ': 18, 'ITAMBARACÁ': 88, 'JAGUAPITÃ': 52, 'JANDAIA DO SUL': 80, 'KALORÉ': 95, 'LONDRINA': 28, 'MANDAGUARI': 72, 'MARIALVA': 84, 'MARILÂNDIA DO SUL': 96, 'MUNHOZ DE MELO': 77, 'PORECATU': 84, 'PRADO FERREIRA': 65, 'PRIMEIRO DE MAIO': 84, 'ROLÂNDIA': 38, 'SABAUDIA': 46, 'SANTA FÉ': 79, 'SANTO INÁCIO': 79, 'SERTANÓPOLIS': 56, 'URAÍ': 45 },
-            'KALORÉ': { 'ARAPONGAS': 61, 'ASTORGA': 54, 'BELA VISTA DO PARAÍSO': 118, 'BOM SUCESSO': 15, 'CAMBÉ': 74, 'CENTENÁRIO DO SUL': 109, 'FAXINAL': 24, 'FLORESTÓPOLIS': 96, 'GUARACI': 130, 'IBIPORÃ': 88, 'ITAMBARACÁ': 166, 'JAGUAPITÃ': 85, 'JANDAIA DO SUL': 15, 'JATAIZINHO': 95, 'LONDRINA': 80, 'MANDAGUARI': 33, 'MARIALVA': 45, 'MARILÂNDIA DO SUL': 24, 'MUNHOZ DE MELO': 50, 'PORECATU': 121, 'PRADO FERREIRA': 103, 'PRIMEIRO DE MAIO': 131, 'ROLÂNDIA': 54, 'SABAUDIA': 45, 'SANTA FÉ': 58, 'SANTO INÁCIO': 117, 'SERTANÓPOLIS': 125, 'URAÍ': 130 },
-            'LONDRINA': { 'ARAPONGAS': 38, 'ASTORGA': 48, 'BELA VISTA DO PARAÍSO': 45, 'BOM SUCESSO': 94, 'CAMBÉ': 16, 'CENTENÁRIO DO SUL': 58, 'FAXINAL': 115, 'FLORESTÓPOLIS': 44, 'GUARACI': 78, 'IBIPORÃ': 22, 'ITAMBARACÁ': 99, 'JAGUAPITÃ': 43, 'JANDAIA DO SUL': 65, 'JATAIZINHO': 28, 'KALORÉ': 80, 'MANDAGUARI': 57, 'MARIALVA': 69, 'MARILÂNDIA DO SUL': 81, 'MUNHOZ DE MELO': 62, 'PORECATU': 70, 'PRADO FERREIRA': 52, 'PRIMEIRO DE MAIO': 70, 'ROLÂNDIA': 25, 'SABAUDIA': 32, 'SANTA FÉ': 65, 'SANTO INÁCIO': 65, 'SERTANÓPOLIS': 54, 'URAÍ': 60 },
-            'MANDAGUARI': { 'ARAPONGAS': 48, 'ASTORGA': 21, 'BELA VISTA DO PARAÍSO': 90, 'BOM SUCESSO': 47, 'CAMBÉ': 51, 'CENTENÁRIO DO SUL': 81, 'FAXINAL': 68, 'FLORESTÓPOLIS': 67, 'GUARACI': 101, 'IBIPORÃ': 65, 'ITAMBARACÁ': 140, 'JAGUAPITÃ': 61, 'JANDAIA DO SUL': 18, 'JATAIZINHO': 72, 'KALORÉ': 33, 'LONDRINA': 57, 'MARIALVA': 12, 'MARILÂNDIA DO SUL': 34, 'MUNHOZ DE MELO': 23, 'PORECATU': 92, 'PRADO FERREIRA': 74, 'PRIMEIRO DE MAIO': 102, 'ROLÂNDIA': 38, 'SABAUDIA': 28, 'SANTA FÉ': 31, 'SANTO INÁCIO': 88, 'SERTANÓPOLIS': 98, 'URAÍ': 103 },
-            'MARIALVA': { 'ARAPONGAS': 60, 'ASTORGA': 33, 'BELA VISTA DO PARAÍSO': 102, 'BOM SUCESSO': 59, 'CAMBÉ': 63, 'CENTENÁRIO DO SUL': 93, 'FAXINAL': 80, 'FLORESTÓPOLIS': 79, 'GUARACI': 113, 'IBIPORÃ': 77, 'ITAMBARACÁ': 152, 'JAGUAPITÃ': 73, 'JANDAIA DO SUL': 30, 'JATAIZINHO': 84, 'KALORÉ': 45, 'LONDRINA': 69, 'MANDAGUARI': 12, 'MARILÂNDIA DO SUL': 46, 'MUNHOZ DE MELO': 18, 'PORECATU': 104, 'PRADO FERREIRA': 86, 'PRIMEIRO DE MAIO': 114, 'ROLÂNDIA': 50, 'SABAUDIA': 40, 'SANTA FÉ': 25, 'SANTO INÁCIO': 100, 'SERTANÓPOLIS': 110, 'URAÍ': 115 },
-            'MARILÂNDIA DO SUL': { 'ARAPONGAS': 62, 'ASTORGA': 55, 'BELA VISTA DO PARAÍSO': 119, 'BOM SUCESSO': 25, 'CAMBÉ': 75, 'CENTENÁRIO DO SUL': 110, 'FAXINAL': 32, 'FLORESTÓPOLIS': 97, 'GUARACI': 130, 'IBIPORÃ': 89, 'ITAMBARACÁ': 166, 'JAGUAPITÃ': 86, 'JANDAIA DO SUL': 25, 'JATAIZINHO': 96, 'KALORÉ': 24, 'LONDRINA': 81, 'MANDAGUARI': 34, 'MARIALVA': 46, 'MUNHOZ DE MELO': 51, 'PORECATU': 122, 'PRADO FERREIRA': 104, 'PRIMEIRO DE MAIO': 131, 'ROLÂNDIA': 55, 'SABAUDIA': 46, 'SANTA FÉ': 59, 'SANTO INÁCIO': 117, 'SERTANÓPOLIS': 125, 'URAÍ': 130 },
-            'MUNHOZ DE MELO': { 'ARAPONGAS': 49, 'ASTORGA': 22, 'BELA VISTA DO PARAÍSO': 85, 'BOM SUCESSO': 64, 'CAMBÉ': 56, 'CENTENÁRIO DO SUL': 76, 'FAXINAL': 85, 'FLORESTÓPOLIS': 62, 'GUARACI': 96, 'IBIPORÃ': 70, 'ITAMBARACÁ': 135, 'JAGUAPITÃ': 56, 'JANDAIA DO SUL': 35, 'JATAIZINHO': 77, 'KALORÉ': 50, 'LONDRINA': 62, 'MANDAGUARI': 23, 'MARIALVA': 18, 'MARILÂNDIA DO SUL': 51, 'PORECATU': 87, 'PRADO FERREIRA': 69, 'PRIMEIRO DE MAIO': 97, 'ROLÂNDIA': 39, 'SABAUDIA': 30, 'SANTA FÉ': 9, 'SANTO INÁCIO': 83, 'SERTANÓPOLIS': 93, 'URAÍ': 98 },
-            'PORECATU': { 'ARAPONGAS': 77, 'ASTORGA': 84, 'BELA VISTA DO PARAÍSO': 42, 'BOM SUCESSO': 133, 'CAMBÉ': 71, 'CENTENÁRIO DO SUL': 24, 'FAXINAL': 154, 'FLORESTÓPOLIS': 29, 'GUARACI': 28, 'IBIPORÃ': 77, 'ITAMBARACÁ': 142, 'JAGUAPITÃ': 48, 'JANDAIA DO SUL': 106, 'JATAIZINHO': 84, 'KALORÉ': 121, 'LONDRINA': 70, 'MANDAGUARI': 92, 'MARIALVA': 104, 'MARILÂNDIA DO SUL': 122, 'MUNHOZ DE MELO': 87, 'PRADO FERREIRA': 44, 'PRIMEIRO DE MAIO': 36, 'ROLÂNDIA': 63, 'SABAUDIA': 81, 'SANTA FÉ': 91, 'SANTO INÁCIO': 34, 'SERTANÓPOLIS': 74, 'URAÍ': 110 },
-            'PRADO FERREIRA': { 'ARAPONGAS': 59, 'ASTORGA': 66, 'BELA VISTA DO PARAÍSO': 34, 'BOM SUCESSO': 115, 'CAMBÉ': 53, 'CENTENÁRIO DO SUL': 25, 'FAXINAL': 136, 'FLORESTÓPOLIS': 20, 'GUARACI': 45, 'IBIPORÃ': 59, 'ITAMBARACÁ': 129, 'JAGUAPITÃ': 20, 'JANDAIA DO SUL': 88, 'JATAIZINHO': 65, 'KALORÉ': 103, 'LONDRINA': 52, 'MANDAGUARI': 74, 'MARIALVA': 86, 'MARILÂNDIA DO SUL': 104, 'MUNHOZ DE MELO': 69, 'PORECATU': 44, 'PRIMEIRO DE MAIO': 47, 'ROLÂNDIA': 45, 'SABAUDIA': 63, 'SANTA FÉ': 73, 'SANTO INÁCIO': 41, 'SERTANÓPOLIS': 56, 'URAÍ': 92 },
-            'PRIMEIRO DE MAIO': { 'ARAPONGAS': 87, 'ASTORGA': 94, 'BELA VISTA DO PARAÍSO': 53, 'BOM SUCESSO': 143, 'CAMBÉ': 72, 'CENTENÁRIO DO SUL': 35, 'FAXINAL': 164, 'FLORESTÓPOLIS': 39, 'GUARACI': 15, 'IBIPORÃ': 78, 'ITAMBARACÁ': 126, 'JAGUAPITÃ': 59, 'JANDAIA DO SUL': 115, 'JATAIZINHO': 84, 'KALORÉ': 131, 'LONDRINA': 70, 'MANDAGUARI': 102, 'MARIALVA': 114, 'MARILÂNDIA DO SUL': 131, 'MUNHOZ DE MELO': 97, 'PORECATU': 36, 'PRADO FERREIRA': 47, 'ROLÂNDIA': 73, 'SABAUDIA': 91, 'SANTA FÉ': 101, 'SANTO INÁCIO': 21, 'SERTANÓPOLIS': 74, 'URAÍ': 110 },
-            'ROLÂNDIA': { 'ARAPONGAS': 10, 'ASTORGA': 27, 'BELA VISTA DO PARAÍSO': 61, 'BOM SUCESSO': 68, 'CAMBÉ': 15, 'CENTENÁRIO DO SUL': 52, 'FAXINAL': 89, 'FLORESTÓPOLIS': 38, 'GUARACI': 72, 'IBIPORÃ': 32, 'ITAMBARACÁ': 108, 'JAGUAPITÃ': 32, 'JANDAIA DO SUL': 39, 'JATAIZINHO': 38, 'KALORÉ': 54, 'LONDRINA': 25, 'MANDAGUARI': 38, 'MARIALVA': 50, 'MARILÂNDIA DO SUL': 55, 'MUNHOZ DE MELO': 39, 'PORECATU': 63, 'PRADO FERREIRA': 45, 'PRIMEIRO DE MAIO': 73, 'SABAUDIA': 17, 'SANTA FÉ': 44, 'SANTO INÁCIO': 60, 'SERTANÓPOLIS': 66, 'URAÍ': 71 },
-            'SABAUDIA': { 'ARAPONGAS': 16, 'ASTORGA': 18, 'BELA VISTA DO PARAÍSO': 79, 'BOM SUCESSO': 59, 'CAMBÉ': 26, 'CENTENÁRIO DO SUL': 70, 'FAXINAL': 80, 'FLORESTÓPOLIS': 56, 'GUARACI': 90, 'IBIPORÃ': 40, 'ITAMBARACÁ': 125, 'JAGUAPITÃ': 50, 'JANDAIA DO SUL': 30, 'JATAIZINHO': 46, 'KALORÉ': 45, 'LONDRINA': 32, 'MANDAGUARI': 28, 'MARIALVA': 40, 'MARILÂNDIA DO SUL': 46, 'MUNHOZ DE MELO': 30, 'PORECATU': 81, 'PRADO FERREIRA': 63, 'PRIMEIRO DE MAIO': 91, 'ROLÂNDIA': 17, 'SANTA FÉ': 35, 'SANTO INÁCIO': 77, 'SERTANÓPOLIS': 85, 'URAÍ': 90 },
-            'SANTA FÉ': { 'ARAPONGAS': 54, 'ASTORGA': 27, 'BELA VISTA DO PARAÍSO': 89, 'BOM SUCESSO': 72, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 80, 'FAXINAL': 93, 'FLORESTÓPOLIS': 66, 'GUARACI': 100, 'IBIPORÃ': 73, 'ITAMBARACÁ': 139, 'JAGUAPITÃ': 60, 'JANDAIA DO SUL': 43, 'JATAIZINHO': 79, 'KALORÉ': 58, 'LONDRINA': 65, 'MANDAGUARI': 31, 'MARIALVA': 25, 'MARILÂNDIA DO SUL': 59, 'MUNHOZ DE MELO': 9, 'PORECATU': 91, 'PRADO FERREIRA': 73, 'PRIMEIRO DE MAIO': 101, 'ROLÂNDIA': 44, 'SABAUDIA': 35, 'SANTO INÁCIO': 87, 'SERTANÓPOLIS': 97, 'URAÍ': 102 },
-            'SANTO INÁCIO': { 'ARAPONGAS': 73, 'ASTORGA': 80, 'BELA VISTA DO PARAÍSO': 57, 'BOM SUCESSO': 129, 'CAMBÉ': 67, 'CENTENÁRIO DO SUL': 28, 'FAXINAL': 150, 'FLORESTÓPOLIS': 43, 'GUARACI': 8, 'IBIPORÃ': 73, 'ITAMBARACÁ': 121, 'JAGUAPITÃ': 54, 'JANDAIA DO SUL': 101, 'JATAIZINHO': 79, 'KALORÉ': 117, 'LONDRINA': 65, 'MANDAGUARI': 88, 'MARIALVA': 100, 'MARILÂNDIA DO SUL': 117, 'MUNHOZ DE MELO': 83, 'PORECATU': 34, 'PRADO FERREIRA': 41, 'PRIMEIRO DE MAIO': 21, 'ROLÂNDIA': 60, 'SABAUDIA': 77, 'SANTA FÉ': 87, 'SERTANÓPOLIS': 70, 'URAÍ': 106 },
-            'SERTANÓPOLIS': { 'ARAPONGAS': 80, 'ASTORGA': 89, 'BELA VISTA DO PARAÍSO': 54, 'BOM SUCESSO': 137, 'CAMBÉ': 64, 'CENTENÁRIO DO SUL': 62, 'FAXINAL': 158, 'FLORESTÓPOLIS': 48, 'GUARACI': 82, 'IBIPORÃ': 50, 'ITAMBARACÁ': 87, 'JAGUAPITÃ': 56, 'JANDAIA DO SUL': 109, 'JATAIZINHO': 56, 'KALORÉ': 125, 'LONDRINA': 54, 'MANDAGUARI': 98, 'MARIALVA': 110, 'MARILÂNDIA DO SUL': 125, 'MUNHOZ DE MELO': 93, 'PORECATU': 74, 'PRADO FERREIRA': 56, 'PRIMEIRO DE MAIO': 74, 'ROLÂNDIA': 66, 'SABAUDIA': 85, 'SANTA FÉ': 97, 'SANTO INÁCIO': 70, 'URAÍ': 60 },
-            'URAÍ': { 'ARAPONGAS': 85, 'ASTORGA': 94, 'BELA VISTA DO PARAÍSO': 90, 'BOM SUCESSO': 142, 'CAMBÉ': 69, 'CENTENÁRIO DO SUL': 98, 'FAXINAL': 163, 'FLORESTÓPOLIS': 84, 'GUARACI': 118, 'IBIPORÃ': 55, 'ITAMBARACÁ': 45, 'JAGUAPITÃ': 92, 'JANDAIA DO SUL': 114, 'JATAIZINHO': 45, 'KALORÉ': 130, 'LONDRINA': 60, 'MANDAGUARI': 103, 'MARIALVA': 115, 'MARILÂNDIA DO SUL': 130, 'MUNHOZ DE MELO': 98, 'PORECATU': 110, 'PRADO FERREIRA': 92, 'PRIMEIRO DE MAIO': 110, 'ROLÂNDIA': 71, 'SABAUDIA': 90, 'SANTA FÉ': 102, 'SANTO INÁCIO': 106, 'SERTANÓPOLIS': 60 }
-        };
-
-        function calcularDistanciaLocal(loadId) {
-            const resultSpan = document.getElementById(`dist-${loadId}`);
-            const loadData = CargasFiorinoFinalizadas.get(loadId);
-            
-            if (!loadData) {
-                resultSpan.textContent = "Erro: Carga não encontrada.";
-                return;
+        function parsePredat(predatValue) {
+            if (!predatValue) return null;
+            if (typeof predatValue === 'number') {
+                const utc_days  = Math.floor(predatValue - 25569);
+                const utc_value = utc_days * 86400;                                        
+                const date_info = new Date(utc_value * 1000);
+                return new Date(date_info.getUTCFullYear(), date_info.getUTCMonth(), date_info.getUTCDate());
             }
-
-            resultSpan.innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculando...`;
-            
-            let cidadesNaCarga = [...new Set(loadData.pedidos.map(p => String(p.Cidade).toUpperCase().trim()))];
-            
-            if (cidadesNaCarga.length === 0) {
-                resultSpan.textContent = "Nenhuma cidade para calcular.";
-                return;
-            }
-
-            cidadesNaCarga = cidadesNaCarga.filter(cidade => matrizDeDistancias[cidade]);
-            
-            if (cidadesNaCarga.length === 0) {
-                resultSpan.innerHTML = `<strong class="text-warning">Cidades não mapeadas.</strong>`;
-                return;
-            }
-
-            let totalDistance = 0;
-            let currentCity = 'ROLÂNDIA';
-            let unvisitedCities = [...cidadesNaCarga];
-
-            while (unvisitedCities.length > 0) {
-                let closestCity = '';
-                let shortestDistance = Infinity;
-
-                for (const city of unvisitedCities) {
-                    const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
-                    if (!currentCityNormalized) break;
-
-                    const distance = matrizDeDistancias[currentCityNormalized]?.[city];
-                    if (distance !== undefined && distance < shortestDistance) {
-                        shortestDistance = distance;
-                        closestCity = city;
+            if (typeof predatValue === 'string') {
+                const parts = predatValue.split('/');
+                if (parts.length === 3) {
+                    const day = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1; // Mês é base 0
+                    const year = parseInt(parts[2], 10);
+                    if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                        return new Date(year, month, day);
                     }
                 }
-
-                if (closestCity) {
-                    totalDistance += shortestDistance;
-                    currentCity = closestCity;
-                    unvisitedCities = unvisitedCities.filter(city => city !== closestCity);
-                } else {
-                    console.warn("Não foi possível encontrar rota para as cidades restantes:", unvisitedCities);
-                    break;
-                }
             }
-
-            const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
-            const returnDistance = matrizDeDistancias[currentCityNormalized]?.['ROLÂNDIA'];
-            if (returnDistance) {
-                totalDistance += returnDistance;
-            }
-
-            resultSpan.innerHTML = `<strong>Distância Estimada: ${totalDistance.toFixed(0)} km</strong>`;
+            return null;
         }
-        
+
+        function toggleAtrasadosView() {
+            mostrandoApenasAtrasados = !mostrandoApenasAtrasados;
+            const btn = document.getElementById('filtrarAtrasadosBtn');
+            const resultadoDiv = document.getElementById('resultado-geral');
+            const totalAtrasados = pedidosGeraisAtuais.filter(p => p.Atrasado === 'Sim').length;
+
+            if (mostrandoApenasAtrasados) {
+                const pedidosFiltrados = pedidosGeraisAtuais.filter(p => p.Atrasado === 'Sim');
+                const gruposFiltrados = reagruparPedidos(pedidosFiltrados);
+                displayGerais(resultadoDiv, gruposFiltrados);
+                btn.innerHTML = `<i class="bi bi-calendar-check me-2"></i>Mostrar Todos os Pedidos`;
+                btn.classList.replace('btn-warning', 'btn-info');
+            } else {
+                const gruposOriginais = reagruparPedidos(pedidosGeraisAtuais);
+                displayGerais(resultadoDiv, gruposOriginais);
+                btn.innerHTML = `<i class="bi bi-calendar-x me-2"></i>Mostrar ${totalAtrasados} Pedidos Atrasados`;
+                btn.classList.replace('btn-info', 'btn-warning');
+            }
+        }
+
+        function reagruparPedidos(listaPedidos) {
+             return listaPedidos.reduce((acc, p) => {
+                 const rota = p.Cod_Rota;
+                 if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; }
+                 acc[rota].pedidos.push(p);
+                 acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                 return acc;
+             }, {});
+        }
+
+        function exportarAtrasados() {
+            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => p.Atrasado === 'Sim');
+            if (pedidosAtrasados.length === 0) {
+                alert("Não há pedidos atrasados para exportar.");
+                return;
+            }
+
+            const dadosExportar = pedidosAtrasados.map(p => ({
+                'Rota': p.Cod_Rota,
+                'Nº Pedido': p.Num_Pedido,
+                'Cód. Cliente': p.Cliente,
+                'Nome Cliente': p.Nome_Cliente,
+                'Predat': p.predat,
+                'Peso (kg)': parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0,
+                'Cidade': p.Cidade,
+                'Agendamento': p.Agendamento
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(dadosExportar);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
+            XLSX.writeFile(workbook, "Relatorio_Pedidos_Atrasados.xlsx");
+        }
+
+        let CargasFiorinoFinalizadas = new Map();
+        const matrizDeDistancias = { 'ARAPONGAS': { 'ASTORGA': 34, 'BELA VISTA DO PARAÍSO': 75, 'BOM SUCESSO': 75, 'CAMBÉ': 22, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 96, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'IBIPORÃ': 46, 'ITAMBARACÁ': 122, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 46, 'JATAIZINHO': 52, 'KALORÉ': 61, 'LONDRINA': 38, 'MANDAGUARI': 48, 'MARIALVA': 60, 'MARILÂNDIA DO SUL': 62, 'MUNHOZ DE MELO': 49, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 87, 'ROLÂNDIA': 10, 'SABAUDIA': 16, 'SANTA FÉ': 54, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 80, 'URAÍ': 85 }, 'ASTORGA': { 'ARAPONGAS': 34, 'BELA VISTA DO PARAÍSO': 82, 'BOM SUCESSO': 68, 'CAMBÉ': 42, 'CENTENÁRIO DO SUL': 73, 'FAXINAL': 89, 'FLORESTÓPOLIS': 59, 'GUARACI': 93, 'IBIPORÃ': 56, 'ITAMBARACÁ': 130, 'JAGUAPITÃ': 53, 'JANDAIA DO SUL': 39, 'JATAIZINHO': 62, 'KALORÉ': 54, 'LONDRINA': 48, 'MANDAGUARI': 21, 'MARIALVA': 33, 'MARILÂNDIA DO SUL': 55, 'MUNHOZ DE MELO': 22, 'PORECATU': 84, 'PRADO FERREIRA': 66, 'PRIMEIRO DE MAIO': 94, 'ROLÂNDIA': 27, 'SABAUDIA': 18, 'SANTA FÉ': 27, 'SANTO INÁCIO': 80, 'SERTANÓPOLIS': 89, 'URAÍ': 94 }, 'BELA VISTA DO PARAÍSO': { 'ARAPONGAS': 75, 'ASTORGA': 82, 'BOM SUCESSO': 130, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 32, 'FAXINAL': 151, 'FLORESTÓPOLIS': 27, 'GUARACI': 51, 'IBIPORÃ': 65, 'ITAMBARACÁ': 127, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 103, 'JATAIZINHO': 71, 'KALORÉ': 118, 'LONDRINA': 45, 'MANDAGUARI': 90, 'MARIALVA': 102, 'MARILÂNDIA DO SUL': 119, 'MUNHOZ DE MELO': 85, 'PORECATU': 42, 'PRADO FERREIRA': 34, 'PRIMEIRO DE MAIO': 53, 'ROLÂNDIA': 61, 'SABAUDIA': 79, 'SANTA FÉ': 89, 'SANTO INÁCIO': 57, 'SERTANÓPOLIS': 54, 'URAÍ': 90 }, 'BOM SUCESSO': { 'ARAPONGAS': 75, 'ASTORGA': 68, 'BELA VISTA DO PARAÍSO': 130, 'CAMBÉ': 88, 'CENTENÁRIO DO SUL': 121, 'FAXINAL': 26, 'FLORESTÓPOLIS': 108, 'GUARACI': 142, 'IBIPORÃ': 102, 'ITAMBARACÁ': 179, 'JAGUAPITÃ': 92, 'JANDAIA DO SUL': 20, 'JATAIZINHO': 108, 'KALORÉ': 15, 'LONDRINA': 94, 'MANDAGUARI': 47, 'MARIALVA': 59, 'MARILÂNDIA DO SUL': 25, 'MUNHOZ DE MELO': 64, 'PORECATU': 133, 'PRADO FERREIRA': 115, 'PRIMEIRO DE MAIO': 143, 'ROLÂNDIA': 68, 'SABAUDIA': 59, 'SANTA FÉ': 72, 'SANTO INÁCIO': 129, 'SERTANÓPOLIS': 137, 'URAÍ': 142 }, 'CAMBÉ': { 'ARAPONGAS': 22, 'ASTORGA': 42, 'BELA VISTA DO PARAÍSO': 59, 'BOM SUCESSO': 88, 'CENTENÁRIO DO SUL': 60, 'FAXINAL': 109, 'FLORESTÓPOLIS': 46, 'GUARACI': 80, 'IBIPORÃ': 29, 'ITAMBARACÁ': 108, 'JAGUAPITÃ': 40, 'JANDAIA DO SUL': 59, 'JATAIZINHO': 35, 'KALORÉ': 74, 'LONDRINA': 16, 'MANDAGUARI': 51, 'MARIALVA': 63, 'MARILÂNDIA DO SUL': 75, 'MUNHOZ DE MELO': 56, 'PORECATU': 71, 'PRADO FERREIRA': 53, 'PRIMEIRO DE MAIO': 72, 'ROLÂNDIA': 15, 'SABAUDIA': 26, 'SANTA FÉ': 59, 'SANTO INÁCIO': 67, 'SERTANÓPOLIS': 64, 'URAÍ': 69 }, 'CENTENÁRIO DO SUL': { 'ARAPONGAS': 66, 'ASTORGA': 73, 'BELA VISTA DO PARAÍSO': 32, 'BOM SUCESSO': 121, 'CAMBÉ': 60, 'FAXINAL': 142, 'FLORESTÓPOLIS': 18, 'GUARACI': 20, 'IBIPORÃ': 66, 'ITAMBARACÁ': 136, 'JAGUAPITÃ': 37, 'JANDAIA DO SUL': 94, 'JATAIZINHO': 72, 'KALORÉ': 109, 'LONDRINA': 58, 'MANDAGUARI': 81, 'MARIALVA': 93, 'MARILÂNDIA DO SUL': 110, 'MUNHOZ DE MELO': 76, 'PORECATU': 24, 'PRADO FERREIRA': 25, 'PRIMEIRO DE MAIO': 35, 'ROLÂNDIA': 52, 'SABAUDIA': 70, 'SANTA FÉ': 80, 'SANTO INÁCIO': 28, 'SERTANÓPOLIS': 62, 'URAÍ': 98 }, 'FAXINAL': { 'ARAPONGAS': 96, 'ASTORGA': 89, 'BELA VISTA DO PARAÍSO': 151, 'BOM SUCESSO': 26, 'CAMBÉ': 109, 'CENTENÁRIO DO SUL': 142, 'FLORESTÓPOLIS': 129, 'GUARACI': 163, 'IBIPORÃ': 123, 'ITAMBARACÁ': 200, 'JAGUAPITÃ': 113, 'JANDAIA DO SUL': 41, 'JATAIZINHO': 129, 'KALORÉ': 24, 'LONDRINA': 115, 'MANDAGUARI': 68, 'MARIALVA': 80, 'MARILÂNDIA DO SUL': 32, 'MUNHOZ DE MELO': 85, 'PORECATU': 154, 'PRADO FERREIRA': 136, 'PRIMEIRO DE MAIO': 164, 'ROLÂNDIA': 89, 'SABAUDIA': 80, 'SANTA FÉ': 93, 'SANTO INÁCIO': 150, 'SERTANÓPOLIS': 158, 'URAÍ': 163 }, 'FLORESTÓPOLIS': { 'ARAPONGAS': 52, 'ASTORGA': 59, 'BELA VISTA DO PARAÍSO': 27, 'BOM SUCESSO': 108, 'CAMBÉ': 46, 'CENTENÁRIO DO SUL': 18, 'FAXINAL': 129, 'GUARACI': 37, 'IBIPORÃ': 52, 'ITAMBARACÁ': 121, 'JAGUAPITÃ': 23, 'JANDAIA DO SUL': 81, 'JATAIZINHO': 58, 'KALORÉ': 96, 'LONDRINA': 44, 'MANDAGUARI': 67, 'MARIALVA': 79, 'MARILÂNDIA DO SUL': 97, 'MUNHOZ DE MELO': 62, 'PORECATU': 29, 'PRADO FERREIRA': 20, 'PRIMEIRO DE MAIO': 39, 'ROLÂNDIA': 38, 'SABAUDIA': 56, 'SANTA FÉ': 66, 'SANTO INÁCIO': 43, 'SERTANÓPOLIS': 48, 'URAÍ': 84 }, 'GUARACI': { 'ARAPONGAS': 86, 'ASTORGA': 93, 'BELA VISTA DO PARAÍSO': 51, 'BOM SUCESSO': 142, 'CAMBÉ': 80, 'CENTENÁRIO DO SUL': 20, 'FAXINAL': 163, 'FLORESTÓPOLIS': 37, 'IBIPORÃ': 86, 'ITAMBARACÁ': 134, 'JAGUAPITÃ': 57, 'JANDAIA DO SUL': 114, 'JATAIZINHO': 92, 'KALORÉ': 130, 'LONDRINA': 78, 'MANDAGUARI': 101, 'MARIALVA': 113, 'MARILÂNDIA DO SUL': 130, 'MUNHOZ DE MELO': 96, 'PORECATU': 28, 'PRADO FERREIRA': 45, 'PRIMEIRO DE MAIO': 15, 'ROLÂNDIA': 72, 'SABAUDIA': 90, 'SANTA FÉ': 100, 'SANTO INÁCIO': 8, 'SERTANÓPOLIS': 82, 'URAÍ': 118 }, 'IBIPORÃ': { 'ARAPONGAS': 46, 'ASTORGA': 56, 'BELA VISTA DO PARAÍSO': 65, 'BOM SUCESSO': 102, 'CAMBÉ': 29, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 123, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'ITAMBARACÁ': 91, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 73, 'JATAIZINHO': 18, 'KALORÉ': 88, 'LONDRINA': 22, 'MANDAGUARI': 65, 'MARIALVA': 77, 'MARILÂNDIA DO SUL': 89, 'MUNHOZ DE MELO': 70, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 78, 'ROLÂNDIA': 32, 'SABAUDIA': 40, 'SANTA FÉ': 73, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 50, 'URAÍ': 55 }, 'ITAMBARACÁ': { 'ARAPONGAS': 122, 'ASTORGA': 130, 'BELA VISTA DO PARAÍSO': 127, 'BOM SUCESSO': 179, 'CAMBÉ': 108, 'CENTENÁRIO DO SUL': 136, 'FAXINAL': 200, 'FLORESTÓPOLIS': 121, 'GUARACI': 134, 'IBIPORÃ': 91, 'JAGUAPITÃ': 129, 'JANDAIA DO SUL': 151, 'JATAIZINHO': 88, 'KALORÉ': 166, 'LONDRINA': 99, 'MANDAGUARI': 140, 'MARIALVA': 152, 'MARILÂNDIA DO SUL': 166, 'MUNHOZ DE MELO': 135, 'PORECATU': 142, 'PRADO FERREIRA': 129, 'PRIMEIRO DE MAIO': 126, 'ROLÂNDIA': 108, 'SABAUDIA': 125, 'SANTA FÉ': 139, 'SANTO INÁCIO': 121, 'SERTANÓPOLIS': 87, 'URAÍ': 45 }, 'JAGUAPITÃ': { 'ARAPONGAS': 46, 'ASTORGA': 53, 'BELA VISTA DO PARAÍSO': 46, 'BOM SUCESSO': 92, 'CAMBÉ': 40, 'CENTENÁRIO DO SUL': 37, 'FAXINAL': 113, 'FLORESTÓPOLIS': 23, 'GUARACI': 57, 'IBIPORÃ': 46, 'ITAMBARACÁ': 129, 'JANDAIA DO SUL': 70, 'JATAIZINHO': 52, 'KALORÉ': 85, 'LONDRINA': 43, 'MANDAGUARI': 61, 'MARIALVA': 73, 'MARILÂNDIA DO SUL': 86, 'MUNHOZ DE MELO': 56, 'PORECATU': 48, 'PRADO FERREIRA': 20, 'PRIMEIRO DE MAIO': 59, 'ROLÂNDIA': 32, 'SABAUDIA': 50, 'SANTA FÉ': 60, 'SANTO INÁCIO': 54, 'SERTANÓPOLIS': 56, 'URAÍ': 92 }, 'JANDAIA DO SUL': { 'ARAPONGAS': 46, 'ASTORGA': 39, 'BELA VISTA DO PARAÍSO': 103, 'BOM SUCESSO': 20, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 94, 'FAXINAL': 41, 'FLORESTÓPOLIS': 81, 'GUARACI': 114, 'IBIPORÃ': 73, 'ITAMBARACÁ': 151, 'JAGUAPITÃ': 70, 'JATAIZINHO': 80, 'KALORÉ': 15, 'LONDRINA': 65, 'MANDAGUARI': 18, 'MARIALVA': 30, 'MARILÂNDIA DO SUL': 25, 'MUNHOZ DE MELO': 35, 'PORECATU': 106, 'PRADO FERREIRA': 88, 'PRIMEIRO DE MAIO': 115, 'ROLÂNDIA': 39, 'SABAUDIA': 30, 'SANTA FÉ': 43, 'SANTO INÁCIO': 101, 'SERTANÓPOLIS': 109, 'URAÍ': 114 }, 'JATAIZINHO': { 'ARAPONGAS': 52, 'ASTORGA': 62, 'BELA VISTA DO PARAÍSO': 71, 'BOM SUCESSO': 108, 'CAMBÉ': 35, 'CENTENÁRIO DO SUL': 72, 'FAXINAL': 129, 'FLORESTÓPOLIS': 58, 'GUARACI': 92, 'IBIPORÃ': 18, 'ITAMBARACÁ': 88, 'JAGUAPITÃ': 52, 'JANDAIA DO SUL': 80, 'KALORÉ': 95, 'LONDRINA': 28, 'MANDAGUARI': 72, 'MARIALVA': 84, 'MARILÂNDIA DO SUL': 96, 'MUNHOZ DE MELO': 77, 'PORECATU': 84, 'PRADO FERREIRA': 65, 'PRIMEIRO DE MAIO': 84, 'ROLÂNDIA': 38, 'SABAUDIA': 46, 'SANTA FÉ': 79, 'SANTO INÁCIO': 79, 'SERTANÓPOLIS': 56, 'URAÍ': 45 }, 'KALORÉ': { 'ARAPONGAS': 61, 'ASTORGA': 54, 'BELA VISTA DO PARAÍSO': 118, 'BOM SUCESSO': 15, 'CAMBÉ': 74, 'CENTENÁRIO DO SUL': 109, 'FAXINAL': 24, 'FLORESTÓPOLIS': 96, 'GUARACI': 130, 'IBIPORÃ': 88, 'ITAMBARACÁ': 166, 'JAGUAPITÃ': 85, 'JANDAIA DO SUL': 15, 'JATAIZINHO': 95, 'LONDRINA': 80, 'MANDAGUARI': 33, 'MARIALVA': 45, 'MARILÂNDIA DO SUL': 24, 'MUNHOZ DE MELO': 50, 'PORECATU': 121, 'PRADO FERREIRA': 103, 'PRIMEIRO DE MAIO': 131, 'ROLÂNDIA': 54, 'SABAUDIA': 45, 'SANTA FÉ': 58, 'SANTO INÁCIO': 117, 'SERTANÓPOLIS': 125, 'URAÍ': 130 }, 'LONDRINA': { 'ARAPONGAS': 38, 'ASTORGA': 48, 'BELA VISTA DO PARAÍSO': 45, 'BOM SUCESSO': 94, 'CAMBÉ': 16, 'CENTENÁRIO DO SUL': 58, 'FAXINAL': 115, 'FLORESTÓPOLIS': 44, 'GUARACI': 78, 'IBIPORÃ': 22, 'ITAMBARACÁ': 99, 'JAGUAPITÃ': 43, 'JANDAIA DO SUL': 65, 'JATAIZINHO': 28, 'KALORÉ': 80, 'MANDAGUARI': 57, 'MARIALVA': 69, 'MARILÂNDIA DO SUL': 81, 'MUNHOZ DE MELO': 62, 'PORECATU': 70, 'PRADO FERREIRA': 52, 'PRIMEIRO DE MAIO': 70, 'ROLÂNDIA': 25, 'SABAUDIA': 32, 'SANTA FÉ': 65, 'SANTO INÁCIO': 65, 'SERTANÓPOLIS': 54, 'URAÍ': 60 }, 'MANDAGUARI': { 'ARAPONGAS': 48, 'ASTORGA': 21, 'BELA VISTA DO PARAÍSO': 90, 'BOM SUCESSO': 47, 'CAMBÉ': 51, 'CENTENÁRIO DO SUL': 81, 'FAXINAL': 68, 'FLORESTÓPOLIS': 67, 'GUARACI': 101, 'IBIPORÃ': 65, 'ITAMBARACÁ': 140, 'JAGUAPITÃ': 61, 'JANDAIA DO SUL': 18, 'JATAIZINHO': 72, 'KALORÉ': 33, 'LONDRINA': 57, 'MARIALVA': 12, 'MARILÂNDIA DO SUL': 34, 'MUNHOZ DE MELO': 23, 'PORECATU': 92, 'PRADO FERREIRA': 74, 'PRIMEIRO DE MAIO': 102, 'ROLÂNDIA': 38, 'SABAUDIA': 28, 'SANTA FÉ': 31, 'SANTO INÁCIO': 88, 'SERTANÓPOLIS': 98, 'URAÍ': 103 }, 'MARIALVA': { 'ARAPONGAS': 60, 'ASTORGA': 33, 'BELA VISTA DO PARAÍSO': 102, 'BOM SUCESSO': 59, 'CAMBÉ': 63, 'CENTENÁRIO DO SUL': 93, 'FAXINAL': 80, 'FLORESTÓPOLIS': 79, 'GUARACI': 113, 'IBIPORÃ': 77, 'ITAMBARACÁ': 152, 'JAGUAPITÃ': 73, 'JANDAIA DO SUL': 30, 'JATAIZINHO': 84, 'KALORÉ': 45, 'LONDRINA': 69, 'MANDAGUARI': 12, 'MARILÂNDIA DO SUL': 46, 'MUNHOZ DE MELO': 18, 'PORECATU': 104, 'PRADO FERREIRA': 86, 'PRIMEIRO DE MAIO': 114, 'ROLÂNDIA': 50, 'SABAUDIA': 40, 'SANTA FÉ': 25, 'SANTO INÁCIO': 100, 'SERTANÓPOLIS': 110, 'URAÍ': 115 }, 'MARILÂNDIA DO SUL': { 'ARAPONGAS': 62, 'ASTORGA': 55, 'BELA VISTA DO PARAÍSO': 119, 'BOM SUCESSO': 25, 'CAMBÉ': 75, 'CENTENÁRIO DO SUL': 110, 'FAXINAL': 32, 'FLORESTÓPOLIS': 97, 'GUARACI': 130, 'IBIPORÃ': 89, 'ITAMBARACÁ': 166, 'JAGUAPITÃ': 86, 'JANDAIA DO SUL': 25, 'JATAIZINHO': 96, 'KALORÉ': 24, 'LONDRINA': 81, 'MANDAGUARI': 34, 'MARIALVA': 46, 'MUNHOZ DE MELO': 51, 'PORECATU': 122, 'PRADO FERREIRA': 104, 'PRIMEIRO DE MAIO': 131, 'ROLÂNDIA': 55, 'SABAUDIA': 46, 'SANTA FÉ': 59, 'SANTO INÁCIO': 117, 'SERTANÓPOLIS': 125, 'URAÍ': 130 }, 'MUNHOZ DE MELO': { 'ARAPONGAS': 49, 'ASTORGA': 22, 'BELA VISTA DO PARAÍSO': 85, 'BOM SUCESSO': 64, 'CAMBÉ': 56, 'CENTENÁRIO DO SUL': 76, 'FAXINAL': 85, 'FLORESTÓPOLIS': 62, 'GUARACI': 96, 'IBIPORÃ': 70, 'ITAMBARACÁ': 135, 'JAGUAPITÃ': 56, 'JANDAIA DO SUL': 35, 'JATAIZINHO': 77, 'KALORÉ': 50, 'LONDRINA': 62, 'MANDAGUARI': 23, 'MARIALVA': 18, 'MARILÂNDIA DO SUL': 51, 'PORECATU': 87, 'PRADO FERREIRA': 69, 'PRIMEIRO DE MAIO': 97, 'ROLÂNDIA': 39, 'SABAUDIA': 30, 'SANTA FÉ': 9, 'SANTO INÁCIO': 83, 'SERTANÓPOLIS': 93, 'URAÍ': 98 }, 'PORECATU': { 'ARAPONGAS': 77, 'ASTORGA': 84, 'BELA VISTA DO PARAÍSO': 42, 'BOM SUCESSO': 133, 'CAMBÉ': 71, 'CENTENÁRIO DO SUL': 24, 'FAXINAL': 154, 'FLORESTÓPOLIS': 29, 'GUARACI': 28, 'IBIPORÃ': 77, 'ITAMBARACÁ': 142, 'JAGUAPITÃ': 48, 'JANDAIA DO SUL': 106, 'JATAIZINHO': 84, 'KALORÉ': 121, 'LONDRINA': 70, 'MANDAGUARI': 92, 'MARIALVA': 104, 'MARILÂNDIA DO SUL': 122, 'MUNHOZ DE MELO': 87, 'PRADO FERREIRA': 44, 'PRIMEIRO DE MAIO': 36, 'ROLÂNDIA': 63, 'SABAUDIA': 81, 'SANTA FÉ': 91, 'SANTO INÁCIO': 34, 'SERTANÓPOLIS': 74, 'URAÍ': 110 }, 'PRADO FERREIRA': { 'ARAPONGAS': 59, 'ASTORGA': 66, 'BELA VISTA DO PARAÍSO': 34, 'BOM SUCESSO': 115, 'CAMBÉ': 53, 'CENTENÁRIO DO SUL': 25, 'FAXINAL': 136, 'FLORESTÓPOLIS': 20, 'GUARACI': 45, 'IBIPORÃ': 59, 'ITAMBARACÁ': 129, 'JAGUAPITÃ': 20, 'JANDAIA DO SUL': 88, 'JATAIZINHO': 65, 'KALORÉ': 103, 'LONDRINA': 52, 'MANDAGUARI': 74, 'MARIALVA': 86, 'MARILÂNDIA DO SUL': 104, 'MUNHOZ DE MELO': 69, 'PORECATU': 44, 'PRIMEIRO DE MAIO': 47, 'ROLÂNDIA': 45, 'SABAUDIA': 63, 'SANTA FÉ': 73, 'SANTO INÁCIO': 41, 'SERTANÓPOLIS': 56, 'URAÍ': 92 }, 'PRIMEIRO DE MAIO': { 'ARAPONGAS': 87, 'ASTORGA': 94, 'BELA VISTA DO PARAÍSO': 53, 'BOM SUCESSO': 143, 'CAMBÉ': 72, 'CENTENÁRIO DO SUL': 35, 'FAXINAL': 164, 'FLORESTÓPOLIS': 39, 'GUARACI': 15, 'IBIPORÃ': 78, 'ITAMBARACÁ': 126, 'JAGUAPITÃ': 59, 'JANDAIA DO SUL': 115, 'JATAIZINHO': 84, 'KALORÉ': 131, 'LONDRINA': 70, 'MANDAGUARI': 102, 'MARIALVA': 114, 'MARILÂNDIA DO SUL': 131, 'MUNHOZ DE MELO': 97, 'PORECATU': 36, 'PRADO FERREIRA': 47, 'ROLÂNDIA': 73, 'SABAUDIA': 91, 'SANTA FÉ': 101, 'SANTO INÁCIO': 21, 'SERTANÓPOLIS': 74, 'URAÍ': 110 }, 'ROLÂNDIA': { 'ARAPONGAS': 10, 'ASTORGA': 27, 'BELA VISTA DO PARAÍSO': 61, 'BOM SUCESSO': 68, 'CAMBÉ': 15, 'CENTENÁRIO DO SUL': 52, 'FAXINAL': 89, 'FLORESTÓPOLIS': 38, 'GUARACI': 72, 'IBIPORÃ': 32, 'ITAMBARACÁ': 108, 'JAGUAPITÃ': 32, 'JANDAIA DO SUL': 39, 'JATAIZINHO': 38, 'KALORÉ': 54, 'LONDRINA': 25, 'MANDAGUARI': 38, 'MARIALVA': 50, 'MARILÂNDIA DO SUL': 55, 'MUNHOZ DE MELO': 39, 'PORECATU': 63, 'PRADO FERREIRA': 45, 'PRIMEIRO DE MAIO': 73, 'SABAUDIA': 17, 'SANTA FÉ': 44, 'SANTO INÁCIO': 60, 'SERTANÓPOLIS': 66, 'URAÍ': 71 }, 'SABAUDIA': { 'ARAPONGAS': 16, 'ASTORGA': 18, 'BELA VISTA DO PARAÍSO': 79, 'BOM SUCESSO': 59, 'CAMBÉ': 26, 'CENTENÁRIO DO SUL': 70, 'FAXINAL': 80, 'FLORESTÓPOLIS': 56, 'GUARACI': 90, 'IBIPORÃ': 40, 'ITAMBARACÁ': 125, 'JAGUAPITÃ': 50, 'JANDAIA DO SUL': 30, 'JATAIZINHO': 46, 'KALORÉ': 45, 'LONDRINA': 32, 'MANDAGUARI': 28, 'MARIALVA': 40, 'MARILÂNDIA DO SUL': 46, 'MUNHOZ DE MELO': 30, 'PORECATU': 81, 'PRADO FERREIRA': 63, 'PRIMEIRO DE MAIO': 91, 'ROLÂNDIA': 17, 'SANTA FÉ': 35, 'SANTO INÁCIO': 77, 'SERTANÓPOLIS': 85, 'URAÍ': 90 }, 'SANTA FÉ': { 'ARAPONGAS': 54, 'ASTORGA': 27, 'BELA VISTA DO PARAÍSO': 89, 'BOM SUCESSO': 72, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 80, 'FAXINAL': 93, 'FLORESTÓPOLIS': 66, 'GUARACI': 100, 'IBIPORÃ': 73, 'ITAMBARACÁ': 139, 'JAGUAPITÃ': 60, 'JANDAIA DO SUL': 43, 'JATAIZINHO': 79, 'KALORÉ': 58, 'LONDRINA': 65, 'MANDAGUARI': 31, 'MARIALVA': 25, 'MARILÂNDIA DO SUL': 59, 'MUNHOZ DE MELO': 9, 'PORECATU': 91, 'PRADO FERREIRA': 73, 'PRIMEIRO DE MAIO': 101, 'ROLÂNDIA': 44, 'SABAUDIA': 35, 'SANTO INÁCIO': 87, 'SERTANÓPOLIS': 97, 'URAÍ': 102 }, 'SANTO INÁCIO': { 'ARAPONGAS': 73, 'ASTORGA': 80, 'BELA VISTA DO PARAÍSO': 57, 'BOM SUCESSO': 129, 'CAMBÉ': 67, 'CENTENÁRIO DO SUL': 28, 'FAXINAL': 150, 'FLORESTÓPOLIS': 43, 'GUARACI': 8, 'IBIPORÃ': 73, 'ITAMBARACÁ': 121, 'JAGUAPITÃ': 54, 'JANDAIA DO SUL': 101, 'JATAIZINHO': 79, 'KALORÉ': 117, 'LONDRINA': 65, 'MANDAGUARI': 88, 'MARIALVA': 100, 'MARILÂNDIA DO SUL': 117, 'MUNHOZ DE MELO': 83, 'PORECATU': 34, 'PRADO FERREIRA': 41, 'PRIMEIRO DE MAIO': 21, 'ROLÂNDIA': 60, 'SABAUDIA': 77, 'SANTA FÉ': 87, 'SERTANÓPOLIS': 70, 'URAÍ': 106 }, 'SERTANÓPOLIS': { 'ARAPONGAS': 80, 'ASTORGA': 89, 'BELA VISTA DO PARAÍSO': 54, 'BOM SUCESSO': 137, 'CAMBÉ': 64, 'CENTENÁRIO DO SUL': 62, 'FAXINAL': 158, 'FLORESTÓPOLIS': 48, 'GUARACI': 82, 'IBIPORÃ': 50, 'ITAMBARACÁ': 87, 'JAGUAPITÃ': 56, 'JANDAIA DO SUL': 109, 'JATAIZINHO': 56, 'KALORÉ': 125, 'LONDRINA': 54, 'MANDAGUARI': 98, 'MARIALVA': 110, 'MARILÂNDIA DO SUL': 125, 'MUNHOZ DE MELO': 93, 'PORECATU': 74, 'PRADO FERREIRA': 56, 'PRIMEIRO DE MAIO': 74, 'ROLÂNDIA': 66, 'SABAUDIA': 85, 'SANTA FÉ': 97, 'SANTO INÁCIO': 70, 'URAÍ': 60 }, 'URAÍ': { 'ARAPONGAS': 85, 'ASTORGA': 94, 'BELA VISTA DO PARAÍSO': 90, 'BOM SUCESSO': 142, 'CAMBÉ': 69, 'CENTENÁRIO DO SUL': 98, 'FAXINAL': 163, 'FLORESTÓPOLIS': 84, 'GUARACI': 118, 'IBIPORÃ': 55, 'ITAMBARACÁ': 45, 'JAGUAPITÃ': 92, 'JANDAIA DO SUL': 114, 'JATAIZINHO': 45, 'KALORÉ': 130, 'LONDRINA': 60, 'MANDAGUARI': 103, 'MARIALVA': 115, 'MARILÂNDIA DO SUL': 130, 'MUNHOZ DE MELO': 98, 'PORECATU': 110, 'PRADO FERREIRA': 92, 'PRIMEIRO DE MAIO': 110, 'ROLÂNDIA': 71, 'SABAUDIA': 90, 'SANTA FÉ': 102, 'SANTO INÁCIO': 106, 'SERTANÓPOLIS': 60 } };
         let planilhaData = [];
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
         let pedidosPrioritarios = [];
         let tocoPedidoIds = new Set();
+        const defaultConfigs = { fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.5, vanMaxCapacity: 1560, vanMinCapacity: 1100, vanCubage: 5.0, tresQuartosMaxCapacity: 4100, tresQuartosMinCapacity: 2300, tresQuartosCubage: 15.0, tocoMaxCapacity: 8500, tocoMinCapacity: 5000, tocoCubage: 30.0 };
 
-        const defaultConfigs = {
-            fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.5,
-            vanMaxCapacity: 1560, vanMinCapacity: 1100, vanCubage: 5.0,
-            tresQuartosMaxCapacity: 4100, tresQuartosMinCapacity: 2300, tresQuartosCubage: 15.0,
-            tocoMaxCapacity: 8500, tocoMinCapacity: 5000, tocoCubage: 30.0
-        };
-
-        function saveConfigurations() {
-            const configStatus = document.getElementById('configStatus');
-            try {
-                const configs = {};
-                Object.keys(defaultConfigs).forEach(key => { configs[key] = document.getElementById(key).value; });
-                localStorage.setItem('vehicleConfigs', JSON.stringify(configs));
-                configStatus.innerHTML = '<p class="text-success">Configurações salvas com sucesso!</p>';
-                setTimeout(() => { configStatus.innerHTML = ''; }, 3000);
-            } catch (error) {
-                configStatus.innerHTML = '<p class="text-danger">Erro ao salvar as configurações.</p>';
+        function calcularDistanciaLocal(loadId) {
+            const resultSpan = document.getElementById(`dist-${loadId}`);
+            const loadData = CargasFiorinoFinalizadas.get(loadId);
+            if (!loadData) { resultSpan.textContent = "Erro: Carga não encontrada."; return; }
+            resultSpan.innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculando...`;
+            let cidadesNaCarga = [...new Set(loadData.pedidos.map(p => String(p.Cidade).toUpperCase().trim()))];
+            if (cidadesNaCarga.length === 0) { resultSpan.textContent = "Nenhuma cidade para calcular."; return; }
+            cidadesNaCarga = cidadesNaCarga.filter(cidade => matrizDeDistancias[cidade]);
+            if (cidadesNaCarga.length === 0) { resultSpan.innerHTML = `<strong class="text-warning">Cidades não mapeadas.</strong>`; return; }
+            let totalDistance = 0;
+            let currentCity = 'ROLÂNDIA';
+            let unvisitedCities = [...cidadesNaCarga];
+            while (unvisitedCities.length > 0) {
+                let closestCity = '';
+                let shortestDistance = Infinity;
+                for (const city of unvisitedCities) {
+                    const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
+                    if (!currentCityNormalized) break;
+                    const distance = matrizDeDistancias[currentCityNormalized]?.[city];
+                    if (distance !== undefined && distance < shortestDistance) { shortestDistance = distance; closestCity = city; }
+                }
+                if (closestCity) { totalDistance += shortestDistance; currentCity = closestCity; unvisitedCities = unvisitedCities.filter(city => city !== closestCity); } else { console.warn("Não foi possível encontrar rota para as cidades restantes:", unvisitedCities); break; }
             }
+            const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
+            const returnDistance = matrizDeDistancias[currentCityNormalized]?.['ROLÂNDIA'];
+            if (returnDistance) { totalDistance += returnDistance; }
+            resultSpan.innerHTML = `<strong>Distância Estimada: ${totalDistance.toFixed(0)} km</strong>`;
         }
 
-        function loadConfigurations() {
-            const savedConfigs = localStorage.getItem('vehicleConfigs');
-            const configs = savedConfigs ? JSON.parse(savedConfigs) : defaultConfigs;
-            Object.keys(configs).forEach(key => {
-                const element = document.getElementById(key);
-                if (element) { element.value = configs[key]; }
-            });
-        }
+        function saveConfigurations() { const configStatus = document.getElementById('configStatus'); try { const configs = {}; Object.keys(defaultConfigs).forEach(key => { configs[key] = document.getElementById(key).value; }); localStorage.setItem('vehicleConfigs', JSON.stringify(configs)); configStatus.innerHTML = '<p class="text-success">Configurações salvas com sucesso!</p>'; setTimeout(() => { configStatus.innerHTML = ''; }, 3000); } catch (error) { configStatus.innerHTML = '<p class="text-danger">Erro ao salvar as configurações.</p>'; } }
         
-        function resetFiorino() {
-            document.getElementById('fiorinoMaxCapacity').value = defaultConfigs.fiorinoMaxCapacity;
-            document.getElementById('fiorinoMinCapacity').value = defaultConfigs.fiorinoMinCapacity;
-            document.getElementById('fiorinoCubage').value = defaultConfigs.fiorinoCubage;
-            saveConfigurations();
-        }
-        function resetVan() {
-            document.getElementById('vanMaxCapacity').value = defaultConfigs.vanMaxCapacity;
-            document.getElementById('vanMinCapacity').value = defaultConfigs.vanMinCapacity;
-            document.getElementById('vanCubage').value = defaultConfigs.vanCubage;
-            saveConfigurations();
-        }
-        function resetTresQuartos() {
-            document.getElementById('tresQuartosMaxCapacity').value = defaultConfigs.tresQuartosMaxCapacity;
-            document.getElementById('tresQuartosMinCapacity').value = defaultConfigs.tresQuartosMinCapacity;
-            document.getElementById('tresQuartosCubage').value = defaultConfigs.tresQuartosCubage;
-            saveConfigurations();
-        }
-        function resetToco() {
-            document.getElementById('tocoMaxCapacity').value = defaultConfigs.tocoMaxCapacity;
-            document.getElementById('tocoMinCapacity').value = defaultConfigs.tocoMinCapacity;
-            document.getElementById('tocoCubage').value = defaultConfigs.tocoCubage;
-            saveConfigurations();
-        }
-        function resetAll() {
-            Object.keys(defaultConfigs).forEach(key => { document.getElementById(key).value = defaultConfigs[key]; });
-            saveConfigurations();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadConfigurations();
-            document.getElementById('saveConfig').addEventListener('click', saveConfigurations);
-            document.getElementById('resetFiorino').addEventListener('click', resetFiorino);
-            document.getElementById('resetVan').addEventListener('click', resetVan);
-            document.getElementById('resetTresQuartos').addEventListener('click', resetTresQuartos);
-            document.getElementById('resetToco').addEventListener('click', resetToco);
-            document.getElementById('resetAllConfigs').addEventListener('click', resetAll);
-        });
-
-        const rotaVeiculoMap = {
-            '11101': 'Fiorino', '11301': 'Fiorino', '11311': 'Fiorino', '11561': 'Fiorino', '11721': 'Fiorino', '11731': 'Fiorino',
-            '11102': 'Van', '11331': 'Van', '11341': 'Van', '11342': 'Van', '11351': 'Van', '11521': 'Van', '11531': 'Van', '11551': 'Van', '11571': 'Van', '11701': 'Van', '11711': 'Van',
-            '11361': '3/4', '11501': '3/4', '11502': '3/4', '11511': '3/4', '11541': '3/4',
-        };
+        function loadConfigurations() { const savedConfigs = localStorage.getItem('vehicleConfigs'); const configs = savedConfigs ? JSON.parse(savedConfigs) : defaultConfigs; Object.keys(configs).forEach(key => { const element = document.getElementById(key); if (element) { element.value = configs[key]; } }); }
         
-        const fileInput = document.getElementById('fileInput');
-        const processarBtn = document.getElementById('processarBtn');
-        const statusDiv = document.getElementById('status');
-        const dropZone = document.getElementById('drop-zone');
-        const dropZoneText = document.getElementById('drop-zone-text');
-        const isNumeric = (str) => str && /^\d+$/.test(String(str).trim());
+        function resetFiorino() { document.getElementById('fiorinoMaxCapacity').value = defaultConfigs.fiorinoMaxCapacity; document.getElementById('fiorinoMinCapacity').value = defaultConfigs.fiorinoMinCapacity; document.getElementById('fiorinoCubage').value = defaultConfigs.fiorinoCubage; saveConfigurations(); }
+        
+        function resetVan() { document.getElementById('vanMaxCapacity').value = defaultConfigs.vanMaxCapacity; document.getElementById('vanMinCapacity').value = defaultConfigs.vanMinCapacity; document.getElementById('vanCubage').value = defaultConfigs.vanCubage; saveConfigurations(); }
+        
+        function resetTresQuartos() { document.getElementById('tresQuartosMaxCapacity').value = defaultConfigs.tresQuartosMaxCapacity; document.getElementById('tresQuartosMinCapacity').value = defaultConfigs.tresQuartosMinCapacity; document.getElementById('tresQuartosCubage').value = defaultConfigs.tresQuartosCubage; saveConfigurations(); }
+        
+        function resetToco() { document.getElementById('tocoMaxCapacity').value = defaultConfigs.tocoMaxCapacity; document.getElementById('tocoMinCapacity').value = defaultConfigs.tocoMinCapacity; document.getElementById('tocoCubage').value = defaultConfigs.tocoCubage; saveConfigurations(); }
+        
+        function resetAll() { Object.keys(defaultConfigs).forEach(key => { document.getElementById(key).value = defaultConfigs[key]; }); saveConfigurations(); }
+        
+        document.addEventListener('DOMContentLoaded', () => { loadConfigurations(); document.getElementById('saveConfig').addEventListener('click', saveConfigurations); document.getElementById('resetFiorino').addEventListener('click', resetFiorino); document.getElementById('resetVan').addEventListener('click', resetVan); document.getElementById('resetTresQuartos').addEventListener('click', resetTresQuartos); document.getElementById('resetToco').addEventListener('click', resetToco); document.getElementById('resetAllConfigs').addEventListener('click', resetAll); });
 
+        const rotaVeiculoMap = { '11101': 'Fiorino', '11301': 'Fiorino', '11311': 'Fiorino', '11561': 'Fiorino', '11721': 'Fiorino', '11731': 'Fiorino', '11102': 'Van', '11331': 'Van', '11341': 'Van', '11342': 'Van', '11351': 'Van', '11521': 'Van', '11531': 'Van', '11551': 'Van', '11571': 'Van', '11701': 'Van', '11711': 'Van', '11361': '3/4', '11501': '3/4', '11502': '3/4', '11511': '3/4', '11541': '3/4', };
+        
+        const fileInput = document.getElementById('fileInput'); const processarBtn = document.getElementById('processarBtn'); const statusDiv = document.getElementById('status'); const dropZone = document.getElementById('drop-zone'); const dropZoneText = document.getElementById('drop-zone-text'); const isNumeric = (str) => str && /^\d+$/.test(String(str).trim());
+        
         fileInput.addEventListener('change', (event) => { handleFile(event.target.files[0]); });
         dropZone.addEventListener('dragover', (event) => { event.stopPropagation(); event.preventDefault(); dropZone.classList.add('border-primary'); });
         dropZone.addEventListener('dragleave', (event) => { event.stopPropagation(); event.preventDefault(); dropZone.classList.remove('border-primary'); });
@@ -546,18 +506,26 @@
                     const workbook = XLSX.read(data, {type: 'array'});
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
-                    const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
                     let headerRowIndex = -1, headers = [];
-                    for (let i = 0; i < rawData.length; i++) {
-                        const row = rawData[i];
-                        if (row && row.includes('Cod_Rota')) { headerRowIndex = i; headers = row.map(h => String(h).trim()); break; }
-                    }
+                    for (let i = 0; i < rawData.length; i++) { const row = rawData[i]; if (row && row.includes('Cod_Rota')) { headerRowIndex = i; headers = row.map(h => String(h).trim()); break; } }
                     if (headerRowIndex === -1) throw new Error("Não foi possível encontrar a linha de cabeçalho com 'Cod_Rota'.");
                     const dataRows = rawData.slice(headerRowIndex + 1);
                     planilhaData = dataRows.map(row => { const pedido = {}; headers.forEach((header, i) => { if (header) { pedido[header] = row[i] !== undefined ? row[i] : ''; } }); return pedido; });
                     
-                    // <<< ALTERAÇÃO: Adiciona a verificação de agendamento a todos os pedidos carregados >>>
-                    planilhaData.forEach(checkAgendamento);
+                    const hoje = new Date();
+                    hoje.setHours(0, 0, 0, 0);
+                    let contadorAtrasados = 0;
+                    planilhaData.forEach(p => {
+                        checkAgendamento(p);
+                        const dataPedido = parsePredat(p.predat);
+                        p.Predat = p.predat || '';
+                        if (dataPedido && dataPedido < hoje) { p.Atrasado = 'Sim'; contadorAtrasados++; } else { p.Atrasado = 'Não'; }
+                    });
+
+                    document.getElementById('contador-atrasados').textContent = contadorAtrasados;
+                    const filtroContainer = document.getElementById('filtro-atraso-container');
+                    filtroContainer.style.display = contadorAtrasados > 0 ? 'flex' : 'none';
 
                     statusDiv.innerHTML = `<p class="text-success">Planilha \"${file.name}\" carregada. ${planilhaData.length} linhas prontas para processar.</p>`;
                     processarBtn.disabled = false;
@@ -575,59 +543,18 @@
             const searchResultDiv = document.getElementById('search-result');
             searchResultDiv.innerHTML = '';
             if (!searchInput) return;
-
             if (planilhaData.length === 0) { searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>'; return; }
-
             let pedidoEncontrado = null; let local = 'Não encontrado'; let accordionId = '';
-
             pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
             if (pedidoEncontrado) { local = 'Resultados Gerais'; accordionId = 'accordionGeral'; }
-
-            if (!pedidoEncontrado) {
-                for (const cf in gruposToco) {
-                    pedidoEncontrado = gruposToco[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
-                    if (pedidoEncontrado) { local = `Cargas "Toco" (CF: ${cf})`; accordionId = 'accordionToco'; break; }
-                }
-            }
-            
-            if (!pedidoEncontrado) {
-                const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
-                if (originalPedido) {
-                    pedidoEncontrado = originalPedido;
-                    if (tocoPedidoIds.has(String(originalPedido.Num_Pedido))) { local = 'Filtrado (pertence a um grupo Toco)'; }
-                    else if (isNumeric(originalPedido.CF)) { local = 'Filtrado (possui CF numérico)'; }
-                    else if (['21', '23', '17'].includes(String(originalPedido.Coluna4))) { local = 'Filtrado (Coluna4 é 21, 23, ou 17)'; } 
-                    else if (String(originalPedido['BLOQ.']) === 'C' || String(originalPedido['BLOQ.']) === 'V') { local = 'Filtrado (Bloqueio C ou V)'; } 
-                    else { local = 'Filtrado (outro motivo, verifique filtros)'; }
-                }
-            }
-
-            if (pedidoEncontrado) {
-                let buttons = '';
-                if (local === 'Resultados Gerais') {
-                    const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
-                    buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
-                } else if (accordionId) {
-                             buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
-                }
-                searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
-            } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
+            if (!pedidoEncontrado) { for (const cf in gruposToco) { pedidoEncontrado = gruposToco[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput); if (pedidoEncontrado) { local = `Cargas "Toco" (CF: ${cf})`; accordionId = 'accordionToco'; break; } } }
+            if (!pedidoEncontrado) { const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput); if (originalPedido) { pedidoEncontrado = originalPedido; if (tocoPedidoIds.has(String(originalPedido.Num_Pedido))) { local = 'Filtrado (pertence a um grupo Toco)'; } else if (isNumeric(originalPedido.CF)) { local = 'Filtrado (possui CF numérico)'; } else if (['21', '23', '17'].includes(String(originalPedido.Coluna4))) { local = 'Filtrado (Coluna4 é 21, 23, ou 17)'; } else if (String(originalPedido['BLOQ.']) === 'C' || String(originalPedido['BLOQ.']) === 'V') { local = 'Filtrado (Bloqueio C ou V)'; } else { local = 'Filtrado (outro motivo, verifique filtros)'; } } }
+            if (pedidoEncontrado) { let buttons = ''; if (local === 'Resultados Gerais') { const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido)); buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button> <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`; } else if (accordionId) { buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`; } searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`; } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
         }
 
         function priorizarPedido(numPedido) { if (!pedidosPrioritarios.includes(numPedido)) { pedidosPrioritarios.push(numPedido); buscarPedido(); } }
-
-        function highlightPedido(numPedido) {
-            const row = document.getElementById(`pedido-${numPedido}`);
-            if (row) {
-                row.classList.toggle('table-info');
-                if (row.classList.contains('table-info')) {
-                    const collapseEl = row.closest('.accordion-collapse');
-                    if (collapseEl && !collapseEl.classList.contains('show')) { bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); }
-                    setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350);
-                }
-            }
-        }
+        
+        function highlightPedido(numPedido) { const row = document.getElementById(`pedido-${numPedido}`); if (row) { row.classList.toggle('table-info'); if (row.classList.contains('table-info')) { const collapseEl = row.closest('.accordion-collapse'); if (collapseEl && !collapseEl.classList.contains('show')) { bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); } setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350); } } }
 
         function processar() {
             const resultadoGeralDiv = document.getElementById('resultado-geral');
@@ -637,78 +564,38 @@
                 if (planilhaData.length === 0) { statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return; }
                 const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
                 resultadoGeralDiv.innerHTML = ''; resultadoTocoDiv.innerHTML = ''; resultadoTresQuartosDiv.innerHTML = '';
-
                 const pedidos = planilhaData.filter(p => String(p.Coluna4) != '500');
-
                 const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                 const cfCounts = {};
                 pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
                 const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
                 const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
-                gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
-                    const cf = p.CF;
-                    if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; } acc[cf].pedidos.push(p); acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
-                }, {});
+                gruposToco = pedidosTocoFiltrados.reduce((acc, p) => { const cf = p.CF; if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; } acc[cf].pedidos.push(p); acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc; }, {});
                 displayToco(resultadoTocoDiv, gruposToco);
-
                 tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
                 const clientesComBloqueio = new Set(); const clientesSemBloqueio = new Set();
                 pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
                 const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
                 const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
-                
-                const pedidosGeraisFiltrados = pedidos.filter(p => {
-                    if (tocoPedidoIds.has(String(p.Num_Pedido))) return false;
-                    if (['21', '23', '17'].includes(String(p.Coluna4))) return false;
-                    if (isNumeric(p.CF)) { return false; }
-                    const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
-                    if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return false;
-                    if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return false;
-                    if (clientesParaRemover.has(String(p.Cliente))) return false;
-                    return true;
-                });
-
+                const pedidosGeraisFiltrados = pedidos.filter(p => { if (tocoPedidoIds.has(String(p.Num_Pedido))) return false; if (['21', '23', '17'].includes(String(p.Coluna4))) return false; if (isNumeric(p.CF)) { return false; } const rotaAtualNum = parseInt(String(p.Cod_Rota), 10); if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return false; if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return false; if (clientesParaRemover.has(String(p.Cliente))) return false; return true; });
                 let tresQuartosLoads = [];
                 const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value) || defaultConfigs.tresQuartosMinCapacity;
                 const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value) || defaultConfigs.tresQuartosMaxCapacity;
                 const LARGE_ORDER_KG = 1700;
-
-                const largeOrdersByRoute = pedidosGeraisFiltrados.reduce((acc, p) => {
-                    const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                    if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } return acc;
-                }, {});
+                const largeOrdersByRoute = pedidosGeraisFiltrados.reduce((acc, p) => { const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } return acc; }, {});
                 const pedidosEmCargas3_4 = new Set();
-                Object.keys(largeOrdersByRoute).forEach(rota => {
-                    const largeOrders = largeOrdersByRoute[rota];
-                    if (largeOrders.length === 1) {
-                        const largeOrder = largeOrders[0]; if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
-                        let newLoad = { pedidos: [largeOrder], totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0, rota: rota };
-                        const otherOrdersInRoute = pedidosGeraisFiltrados.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
-                        for (const order of otherOrdersInRoute) {
-                            if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue;
-                            const orderKg = parseFloat(String(order.Quilos_Saldo).replace(',', '.')) || 0;
-                            if (newLoad.totalKg + orderKg <= MAX_KG_3_4) { newLoad.pedidos.push(order); newLoad.totalKg += orderKg; }
-                        }
-                        if (newLoad.totalKg >= MIN_KG_3_4) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); }
-                    }
-                });
+                Object.keys(largeOrdersByRoute).forEach(rota => { const largeOrders = largeOrdersByRoute[rota]; if (largeOrders.length === 1) { const largeOrder = largeOrders[0]; if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return; let newLoad = { pedidos: [largeOrder], totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0, rota: rota }; const otherOrdersInRoute = pedidosGeraisFiltrados.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0)); for (const order of otherOrdersInRoute) { if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue; const orderKg = parseFloat(String(order.Quilos_Saldo).replace(',', '.')) || 0; if (newLoad.totalKg + orderKg <= MAX_KG_3_4) { newLoad.pedidos.push(order); newLoad.totalKg += orderKg; } } if (newLoad.totalKg >= MIN_KG_3_4) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); } } });
                 tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
                 displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
-
                 pedidosGeraisAtuais = pedidosGeraisFiltrados.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
-                
-                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
-                    const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
-                }, {});
+                const gruposGerais = reagruparPedidos(pedidosGeraisAtuais);
                 displayGerais(resultadoGeralDiv, gruposGerais);
-
             } catch (error) { statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; console.error(error); }
         }
 
-        // <<< ALTERAÇÃO: Adicionada a coluna 'Agendamento' à lista padrão e à lógica da tabela >>>
         function createTable(pedidos, columnsToDisplay) {
             if (!pedidos || pedidos.length === 0) return '';
-            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
+            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Predat', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade'];
             let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped"><thead><tr>';
             colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
@@ -716,11 +603,9 @@
                 table += `<tr id="pedido-${p.Num_Pedido}">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
-                    if (c === 'Agendamento' && cellContent === 'Sim') {
-                        table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
-                    } else {
-                        table += `<td>${cellContent}</td>`;
-                    }
+                    let cellStyle = '';
+                    if (c === 'Predat' && p.Atrasado === 'Sim') { cellStyle = 'style="color: #ff6b6b; font-weight: bold;"'; }
+                    if (c === 'Agendamento' && cellContent === 'Sim') { table += `<td ${cellStyle}><span class="badge bg-warning text-dark">${cellContent}</span></td>`; } else { table += `<td ${cellStyle}>${cellContent}</td>`; }
                 });
                 table += '</tr>';
             });
@@ -729,7 +614,7 @@
         }
 
         function displayGerais(div, grupos) {
-            if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhum pedido geral encontrado.</div>'; return; }
+            if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhum pedido geral encontrado para o filtro atual.</div>'; return; }
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionGeral">';
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
@@ -737,7 +622,8 @@
                 const veiculo = rotaVeiculoMap[rota] || 'Toco';
                 accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota} (${veiculo})</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length} pedidos</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
             });
-            accordionHtml += '</div>'; div.innerHTML = accordionHtml;
+            accordionHtml += '</div>';
+            div.innerHTML = accordionHtml;
         }
 
         function displayTresQuartos(div, loads) {
@@ -754,266 +640,99 @@
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
             const MAX_CUBAGEM = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
-            
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
-
             let packableItems = [];
             const otherPedidos = pedidos.filter(p => !isSpecialClient(p));
             const specialPedidos = pedidos.filter(p => isSpecialClient(p));
-
-            specialPedidos.forEach(pedido => {
-                packableItems.push({
-                    isSpecial: true,
-                    pedidos: [pedido],
-                    totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
-                    totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
-                });
-            });
-
-            const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
-                const clienteId = pedido.Cliente;
-                if (!acc[clienteId]) {
-                    acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
-                }
-                acc[clienteId].pedidos.push(pedido);
-                return acc;
-            }, {});
-            
-            Object.values(otherClientGroupsMap).forEach(group => {
-                group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
-                packableItems.push(group);
-            });
-
+            specialPedidos.forEach(pedido => { packableItems.push({ isSpecial: true, pedidos: [pedido], totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0, totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0, }); });
+            const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => { const clienteId = pedido.Cliente; if (!acc[clienteId]) { acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 }; } acc[clienteId].pedidos.push(pedido); return acc; }, {});
+            Object.values(otherClientGroupsMap).forEach(group => { group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0); group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0); packableItems.push(group); });
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             priorityItems.sort((a, b) => b.totalKg - a.totalKg);
             regularItems.sort((a, b) => b.totalKg - a.totalKg);
             packableItems = [...priorityItems, ...regularItems];
-
             let loads = [];
             let leftoverItems = [];
-            packableItems.forEach(item => {
-                if (item.totalKg > MAX_KG || item.totalCubagem > MAX_CUBAGEM) {
-                    leftoverItems.push(item);
-                    return;
-                }
-                let placed = false;
-                for (const load of loads) {
-                    const specialCountInLoad = load.pedidos.filter(p => isSpecialClient(p)).length;
-                    const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
-                    if ((load.totalKg + item.totalKg <= MAX_KG) && (load.totalCubagem + item.totalCubagem <= MAX_CUBAGEM) && (specialCountInLoad + specialOrdersInItem <= 2)) {
-                        load.pedidos.push(...item.pedidos);
-                        load.totalKg += item.totalKg;
-                        load.totalCubagem += item.totalCubagem;
-                        placed = true;
-                        break;
-                    }
-                }
-                if (!placed) {
-                    loads.push({
-                        pedidos: [...item.pedidos],
-                        totalKg: item.totalKg,
-                        totalCubagem: item.totalCubagem,
-                    });
-                }
-            });
-
+            packableItems.forEach(item => { if (item.totalKg > MAX_KG || item.totalCubagem > MAX_CUBAGEM) { leftoverItems.push(item); return; } let placed = false; for (const load of loads) { const specialCountInLoad = load.pedidos.filter(p => isSpecialClient(p)).length; const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0; if ((load.totalKg + item.totalKg <= MAX_KG) && (load.totalCubagem + item.totalCubagem <= MAX_CUBAGEM) && (specialCountInLoad + specialOrdersInItem <= 2)) { load.pedidos.push(...item.pedidos); load.totalKg += item.totalKg; load.totalCubagem += item.totalCubagem; placed = true; break; } } if (!placed) { loads.push({ pedidos: [...item.pedidos], totalKg: item.totalKg, totalCubagem: item.totalCubagem, }); } });
             let finalLoads = [];
             let unplacedFromMinRule = [];
-            loads.forEach(load => {
-                const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                if (hasPriority || load.totalKg >= MIN_KG) {
-                    finalLoads.push(load);
-                } else {
-                    unplacedFromMinRule.push(...load.pedidos);
-                }
-            });
-            
+            loads.forEach(load => { const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))); if (hasPriority || load.totalKg >= MIN_KG) { finalLoads.push(load); } else { unplacedFromMinRule.push(...load.pedidos); } });
             const leftovers = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             return { loads: finalLoads, leftovers };
         }
 
-
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '';
-            if (planilhaData.length === 0) {
-                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
-                return;
-            }
-
+            if (planilhaData.length === 0) { resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return; }
             const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
             const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
-
-            // PASSO 1: Tenta montar as cargas com o veículo primário
             const primaryResult = packLoads(pedidosRota, vehicleType);
             let primaryLoads = primaryResult.loads;
             let currentLeftovers = primaryResult.leftovers;
             let promotedLoads = [];
-
-            // PASSO 2: LÓGICA DE PROMOÇÃO DE VEÍCULO
-            // Se for Fiorino, verifica se pode promover para Van
-            if (vehicleType === 'fiorino' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 600)) {
-                const promotedResult = packLoads(currentLeftovers, 'van');
-                promotedLoads = promotedResult.loads;
-                currentLeftovers = promotedResult.leftovers; // Sobras Finais
-            }
-            // Se for Van, verifica se pode promover para 3/4
-            else if (vehicleType === 'van' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 1650)) {
-                const promotedResult = packLoads(currentLeftovers, 'tresQuartos');
-                promotedLoads = promotedResult.loads;
-                currentLeftovers = promotedResult.leftovers; // Sobras Finais
-            }
-            
-            // PASSO 3: EXIBIÇÃO DOS RESULTADOS
+            if (vehicleType === 'fiorino' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 600)) { const promotedResult = packLoads(currentLeftovers, 'van'); promotedLoads = promotedResult.loads; currentLeftovers = promotedResult.leftovers; } else if (vehicleType === 'van' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 1650)) { const promotedResult = packLoads(currentLeftovers, 'tresQuartos'); promotedLoads = promotedResult.loads; currentLeftovers = promotedResult.leftovers; }
             primaryLoads.forEach((load, index) => { load.numero = index + 1; });
             promotedLoads.forEach((load, index) => { load.numero = index + 1; });
-            
-            if (vehicleType === 'fiorino') {
-                CargasFiorinoFinalizadas.clear();
-                primaryLoads.forEach(load => {
-                    const loadId = `fiorino-${title.replace(/\s+/g, '-')}-${load.numero}`;
-                    load.id = loadId;
-                    CargasFiorinoFinalizadas.set(loadId, load);
-                });
-            }
-
-            const vehicleInfo = {
-                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white' },
-                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white' },
-                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark' }
-            };
-
+            if (vehicleType === 'fiorino') { CargasFiorinoFinalizadas.clear(); primaryLoads.forEach(load => { const loadId = `fiorino-${title.replace(/\s+/g, '-')}-${load.numero}`; load.id = loadId; CargasFiorinoFinalizadas.set(loadId, load); }); }
+            const vehicleInfo = { fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white' }, van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white' }, tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark' } };
             let html = '';
-            
-            // Exibe cargas primárias
             const vInfo = vehicleInfo[vehicleType];
             html += `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${primaryLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${(primaryLoads.length > 0 || promotedLoads.length > 0) ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}</div>`;
             if (primaryLoads.length === 0) { html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; }
-
-            primaryLoads.forEach(load => {
-                html += renderLoadCard(load, vehicleType, vInfo);
-            });
-
-            // Exibe cargas promovidas, se houver
-            if (promotedLoads.length > 0) {
-                const promotedVehicleType = (vehicleType === 'fiorino') ? 'van' : 'tresQuartos';
-                const pVInfo = vehicleInfo[promotedVehicleType];
-                html += `<hr class="my-4"><div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0 text-info"><i class="bi bi-star-fill me-2"></i>${promotedLoads.length} Carga(s) Promovida(s) para ${pVInfo.name}:</h4></div>`;
-                
-                promotedLoads.forEach(load => {
-                    html += renderLoadCard(load, promotedVehicleType, pVInfo, true);
-                });
-            }
-
-            // Exibe sobras finais
-            if (currentLeftovers.length > 0) {
-                const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}</div></div>`;
-            }
-
+            primaryLoads.forEach(load => { html += renderLoadCard(load, vehicleType, vInfo); });
+            if (promotedLoads.length > 0) { const promotedVehicleType = (vehicleType === 'fiorino') ? 'van' : 'tresQuartos'; const pVInfo = vehicleInfo[promotedVehicleType]; html += `<hr class="my-4"><div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0 text-info"><i class="bi bi-star-fill me-2"></i>${promotedLoads.length} Carga(s) Promovida(s) para ${pVInfo.name}:</h4></div>`; promotedLoads.forEach(load => { html += renderLoadCard(load, promotedVehicleType, pVInfo, true); }); }
+            if (currentLeftovers.length > 0) { const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0); html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Predat', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade'])}</div></div>`; }
             resultadoDiv.innerHTML = html;
         }
 
         function renderLoadCard(load, vehicleType, vInfo, isPromoted = false) {
-            load.pedidos.sort((a, b) => {
-                const clienteA = String(a.Cliente);
-                const clienteB = String(b.Cliente);
-                const pedidoA = String(a.Num_Pedido);
-                const pedidoB = String(b.Num_Pedido);
-
-                if (clienteA < clienteB) return -1;
-                if (clienteA > clienteB) return 1;
-                
-                return pedidoA.localeCompare(pedidoB);
-            });
-
+            load.pedidos.sort((a, b) => { const clienteA = String(a.Cliente); const clienteB = String(b.Cliente); const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido); if (clienteA < clienteB) return -1; if (clienteA > clienteB) return 1; return pedidoA.localeCompare(pedidoB); });
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
             const promotedBadge = isPromoted ? '<span class="badge bg-info-subtle text-info-emphasis ms-3">PROMOVIDA</span>' : '';
-
             let fiorinoDistanceHtml = '';
-            if (vehicleType === 'fiorino') {
-                fiorinoDistanceHtml = `
-                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
-                       <span id="dist-${load.id}"></span>
-                       <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
-                    </div>`;
-            }
-
-            return `
-                <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
-                    <div class="card-header ${vInfo.colorClass} ${vInfo.textColor}">
-                        <i class="bi bi-box-seam-fill me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${promotedBadge}
-                    </div>
-                    <div class="card-body">
-                        ${createTable(load.pedidos)}
-                        ${fiorinoDistanceHtml}
-                    </div>
-                </div>`;
+            if (vehicleType === 'fiorino') { fiorinoDistanceHtml = ` <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary"> <span id="dist-${load.id}"></span> <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button> </div>`; }
+            return ` <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}"> <div class="card-header ${vInfo.colorClass} ${vInfo.textColor}"> <i class="bi bi-box-seam-fill me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${promotedBadge} </div> <div class="card-body"> ${createTable(load.pedidos)} ${fiorinoDistanceHtml} </div> </div>`;
         }
         
         function separarCargasFiorino(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'fiorino'); }
         function separarCargasVan(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'van'); }
         function separarCargas34(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'tresQuartos'); }
-
+        
         function displayToco(div, grupos) {
             if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="text-center p-3">Nenhuma carga toco encontrada.</div>'; return; }
             const MAX_KG_TOCO = parseFloat(document.getElementById('tocoMaxCapacity').value) || defaultConfigs.tocoMaxCapacity;
-            
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionToco">';
             Object.keys(grupos).sort().forEach((cf, index) => {
                 const grupo = grupos[cf]; const pedidos = grupo.pedidos;
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const overWeight = grupo.totalKg > MAX_KG_TOCO;
-                const weightBadge = overWeight
-                    ? `<span class="badge bg-danger ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>${totalKgFormatado} kg (ACIMA DO PESO!)</span>`
-                    : `<span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>`;
-                
+                const weightBadge = overWeight ? `<span class="badge bg-danger ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>${totalKgFormatado} kg (ACIMA DO PESO!)</span>` : `<span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>`;
                 accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} pedidos</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir esta Carga Toco</button>${createTable(pedidos)}</div></div></div>`;
             });
-            accordionHtml += '</div>'; div.innerHTML = accordionHtml;
+            accordionHtml += '</div>';
+            div.innerHTML = accordionHtml;
         }
 
         function imprimirCargasGeneric(divId, title) {
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
-
             const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
-            
-            if (completedLoadsCards.length === 0) {
-                alert("Nenhuma carga concluída para imprimir.");
-                return;
-            }
-
+            if (completedLoadsCards.length === 0) { alert("Nenhuma carga concluída para imprimir."); return; }
             const printWindow = window.open('', '', 'height=800,width=1200');
             printWindow.document.write('<html><head><title>Imprimir: ' + title + '</title>');
             printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write(`<style>
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; }
-                .no-print { display: none !important; }
-                /* Mantém as cores dos cabeçalhos na impressão */
-                .bg-success { background-color: #198754 !important; color: white !important; }
-                .bg-primary { background-color: #0d6efd !important; color: white !important; }
-                .bg-warning { background-color: #ffc107 !important; color: black !important; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            </style></head><body>`);
-            
+            printWindow.document.write(`<style> body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; } .no-print { display: none !important; } .bg-success { background-color: #198754 !important; color: white !important; } .bg-primary { background-color: #0d6efd !important; color: white !important; } .bg-warning { background-color: #ffc107 !important; color: black !important; } .table-responsive { overflow: visible !important; } table, th, td { border: 1px solid #dee2e6 !important; } h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; } </style></head><body>`);
             let contentToPrint = `<h3>${title}</h3>`;
-            completedLoadsCards.forEach(header => { 
-                contentToPrint += header.closest('.card.mb-3').outerHTML; 
-            });
-
+            completedLoadsCards.forEach(header => { contentToPrint += header.closest('.card.mb-3').outerHTML; });
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
-            printWindow.focus(); 
+            printWindow.focus();
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
 
@@ -1021,22 +740,14 @@
             if (!gruposToco[cf]) { alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`); return; }
             const grupo = gruposToco[cf]; const pedidos = grupo.pedidos;
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
             const printWindow = window.open('', '', 'height=800,width=1200');
             printWindow.document.write('<html><head><title>Imprimir Carga Toco CF: ' + cf + '</title>');
             printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write(`<style>
-                body { margin: 20px; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h3 { margin-bottom: 1rem; }
-            </style></head><body>`);
-            
+            printWindow.document.write(`<style> body { margin: 20px; } .table-responsive { overflow: visible !important; } table, th, td { border: 1px solid #dee2e6 !important; } h3 { margin-bottom: 1rem; } </style></head><body>`);
             let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos);
-
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
-            printWindow.focus(); 
+            printWindow.focus();
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
     </script>
