@@ -54,6 +54,10 @@
             filter: brightness(1.1);
             transform: translateY(-2px);
         }
+        .pedido-atrasado {
+            --bs-table-bg-type: #582121 !important; /* Cor de fundo para linhas vencidas */
+            color: #fff;
+        }
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .container, .card, .accordion-item, .accordion-body { background-color: #fff !important; color: #000 !important; border: none !important; box-shadow: none !important; }
@@ -65,6 +69,10 @@
             .accordion-button { display: block !important; background-color: #f8f9fa !important; color: #000 !important; border: 1px solid #dee2e6 !important; margin-bottom: 0.5rem; }
             .accordion-button strong, .accordion-button .badge { color: #000 !important; }
             .bg-warning { background-color: #ffc107 !important; color: black !important; }
+             .pedido-atrasado {
+                background-color: #f8d7da !important; /* Cor mais suave para impressão */
+                color: #58151c !important;
+            }
         }
         #drop-zone-text {
             border: 2px dashed #495057;
@@ -189,6 +197,21 @@
 
         <div class="row">
             <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm h-100 border-danger">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h2 class="card-title h5 text-danger"><i class="bi bi-calendar-x-fill me-2"></i>Pedidos com Pré-data Atrasada</h2>
+                            <button class="btn btn-sm btn-outline-danger no-print" id="exportarAtrasadosBtn" onclick="exportarPredatadosAtrasados()" disabled><i class="bi bi-file-earmark-excel-fill me-1"></i> Exportar para Excel</button>
+                        </div>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos cuja data em "Predt" é anterior a hoje. Estes pedidos precisam de atenção para prorrogação.</p>
+                        <div id="resultado-predatados-atrasados"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -308,7 +331,7 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
-        // <<< INÍCIO DA NOVA FUNCIONALIDADE: LISTA DE CLIENTES COM AGENDAMENTO >>>
+        // <<< INÍCIO DA FUNCIONALIDADE: LISTA DE CLIENTES COM AGENDAMENTO >>>
         const agendamentoClientCodes = new Set([
             '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', 
             '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', 
@@ -355,10 +378,11 @@
             const normalizedCode = String(pedido.Cliente).replace(/^0+/, '');
             pedido.Agendamento = agendamentoClientCodes.has(normalizedCode) ? 'Sim' : 'Não';
         }
-        // <<< FIM DA NOVA FUNCIONALIDADE >>>
+        // <<< FIM DA FUNCIONALIDADE >>>
 
         let CargasFiorinoFinalizadas = new Map();
-
+        
+        // ... (matrizDeDistancias object remains the same)
         const matrizDeDistancias = {
             'ARAPONGAS': { 'ASTORGA': 34, 'BELA VISTA DO PARAÍSO': 75, 'BOM SUCESSO': 75, 'CAMBÉ': 22, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 96, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'IBIPORÃ': 46, 'ITAMBARACÁ': 122, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 46, 'JATAIZINHO': 52, 'KALORÉ': 61, 'LONDRINA': 38, 'MANDAGUARI': 48, 'MARIALVA': 60, 'MARILÂNDIA DO SUL': 62, 'MUNHOZ DE MELO': 49, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 87, 'ROLÂNDIA': 10, 'SABAUDIA': 16, 'SANTA FÉ': 54, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 80, 'URAÍ': 85 },
             'ASTORGA': { 'ARAPONGAS': 34, 'BELA VISTA DO PARAÍSO': 82, 'BOM SUCESSO': 68, 'CAMBÉ': 42, 'CENTENÁRIO DO SUL': 73, 'FAXINAL': 89, 'FLORESTÓPOLIS': 59, 'GUARACI': 93, 'IBIPORÃ': 56, 'ITAMBARACÁ': 130, 'JAGUAPITÃ': 53, 'JANDAIA DO SUL': 39, 'JATAIZINHO': 62, 'KALORÉ': 54, 'LONDRINA': 48, 'MANDAGUARI': 21, 'MARIALVA': 33, 'MARILÂNDIA DO SUL': 55, 'MUNHOZ DE MELO': 22, 'PORECATU': 84, 'PRADO FERREIRA': 66, 'PRIMEIRO DE MAIO': 94, 'ROLÂNDIA': 27, 'SABAUDIA': 18, 'SANTA FÉ': 27, 'SANTO INÁCIO': 80, 'SERTANÓPOLIS': 89, 'URAÍ': 94 },
@@ -460,6 +484,7 @@
         let pedidosComCFNumericoIsolado = [];
         let pedidosPrioritarios = [];
         let tocoPedidoIds = new Set();
+        let pedidosAtrasados = []; // << NOVA VARIÁVEL GLOBAL
 
         const defaultConfigs = {
             fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.5,
@@ -630,15 +655,47 @@
         function priorizarPedido(numPedido) { if (!pedidosPrioritarios.includes(numPedido)) { pedidosPrioritarios.push(numPedido); buscarPedido(); } }
 
         function highlightPedido(numPedido) {
-            const row = document.getElementById(`pedido-${numPedido}`);
-            if (row) {
-                row.classList.toggle('table-info');
-                if (row.classList.contains('table-info')) {
-                    const collapseEl = row.closest('.accordion-collapse');
-                    if (collapseEl && !collapseEl.classList.contains('show')) { bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); }
-                    setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350);
+            const rows = document.querySelectorAll(`#pedido-${numPedido}`); // Pode haver mais de uma linha com o mesmo ID em diferentes tabelas
+            rows.forEach(row => {
+                 if (row) {
+                    row.classList.toggle('table-info');
+                    if (row.classList.contains('table-info')) {
+                        const collapseEl = row.closest('.accordion-collapse');
+                        if (collapseEl && !collapseEl.classList.contains('show')) { bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); }
+                        setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350);
+                    }
+                }
+            });
+        }
+        
+        /**
+         * Converte um valor (número serial do Excel ou string DD/MM/AAAA) para um objeto Date.
+         */
+        function parseDate(predtValue) {
+            if (!predtValue) return null;
+
+            // Se for número (formato serial do Excel)
+            if (typeof predtValue === 'number') {
+                if (predtValue > 0) {
+                    // O epoch do Excel é 25569 dias antes do epoch do Unix (1/1/1970)
+                    return new Date(Math.round((predtValue - 25569) * 86400 * 1000));
+                }
+                return null;
+            }
+
+            // Se for string, tenta parsear como DD/MM/AAAA
+            if (typeof predtValue === 'string') {
+                const parts = predtValue.split('/');
+                if (parts.length === 3) {
+                    const day = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1; // Mês em JS é 0-indexed
+                    const year = parseInt(parts[2], 10);
+                    if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                        return new Date(year, month, day);
+                    }
                 }
             }
+            return null; // Retorna null se não conseguir converter
         }
 
         function processar() {
@@ -646,11 +703,13 @@
             const resultadoTocoDiv = document.getElementById('resultado-toco');
             const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
             const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
+            const resultadoAtrasadosDiv = document.getElementById('resultado-predatados-atrasados');
 
             try {
                 if (planilhaData.length === 0) { statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return; }
                 const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
-                resultadoGeralDiv.innerHTML = ''; resultadoTocoDiv.innerHTML = ''; resultadoTresQuartosDiv.innerHTML = ''; resultadoCfNumericoDiv.innerHTML = '';
+                resultadoGeralDiv.innerHTML = ''; resultadoTocoDiv.innerHTML = ''; resultadoTresQuartosDiv.innerHTML = ''; resultadoCfNumericoDiv.innerHTML = ''; resultadoAtrasadosDiv.innerHTML = '';
+                pedidosAtrasados = []; // Limpa a lista de atrasados
 
                 const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
 
@@ -664,7 +723,7 @@
                     const cf = p.CF;
                     if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; } acc[cf].pedidos.push(p); acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
                 }, {});
-                displayToco(resultadoTocoDiv, gruposToco);
+                
                 tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
 
                 // 2. Regras de bloqueio e de cliente
@@ -677,7 +736,19 @@
                 let pedidosParaProcessamento = [];
                 pedidosComCFNumericoIsolado = [];
 
+                // NOVA LÓGICA: Identificar datas atrasadas
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Normaliza para o início do dia
+
                 pedidos.forEach(p => {
+                    const predtDate = parseDate(p.Predt);
+                    if (predtDate && predtDate < today) {
+                        p.isAtrasado = true;
+                        pedidosAtrasados.push(p);
+                    } else {
+                        p.isAtrasado = false;
+                    }
+
                     if (tocoPedidoIds.has(String(p.Num_Pedido))) return; // Já é TOCO
                     if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return;
                     if (clientesParaRemover.has(String(p.Cliente))) return;
@@ -693,6 +764,8 @@
                     }
                 });
                 
+                displayAtrasados(resultadoAtrasadosDiv, pedidosAtrasados); // Mostra a lista de atrasados
+                displayToco(resultadoTocoDiv, gruposToco);
                 displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
 
                 // 4. Montagem de cargas 3/4 automático
@@ -736,16 +809,20 @@
         
         function createTable(pedidos, columnsToDisplay) {
             if (!pedidos || pedidos.length === 0) return '';
-            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
+            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Predt', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
             let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped"><thead><tr>';
-            colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
+            colunasExibir.forEach(c => table += `<th>${c.replace(/_/g, ' ')}</th>`);
             table += '</tr></thead><tbody>';
             pedidos.forEach(p => {
-                table += `<tr id="pedido-${p.Num_Pedido}">`;
+                const rowClass = p.isAtrasado ? 'pedido-atrasado' : '';
+                table += `<tr id="pedido-${p.Num_Pedido}" class="${rowClass}">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Agendamento' && cellContent === 'Sim') {
                         table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
+                    } else if (c === 'Predt') {
+                        const predtDate = parseDate(p.Predt);
+                        table += `<td>${predtDate ? predtDate.toLocaleDateString('pt-BR') : p.Predt || ''}</td>`;
                     } else {
                         table += `<td>${cellContent}</td>`;
                     }
@@ -768,6 +845,8 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
         
+        // ... (resto das funções display, packLoads, etc. permanecem as mesmas, pois `createTable` já foi atualizado)
+
         function displayPedidosCFNumerico(div, pedidos) {
             if (pedidos.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido com CF numérico encontrado para esta seção.</div>'; return; }
             const grupos = pedidos.reduce((acc, p) => {
@@ -946,7 +1025,7 @@
 
             if (currentLeftovers.length > 0) {
                 const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div></div>`;
+                html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Predt', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div></div>`;
             }
 
             resultadoDiv.innerHTML = html;
@@ -975,8 +1054,8 @@
             if (vehicleType === 'fiorino') {
                 fiorinoDistanceHtml = `
                     <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
-                       <span id="dist-${load.id}"></span>
-                       <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
+                        <span id="dist-${load.id}"></span>
+                        <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
                     </div>`;
             }
 
@@ -1014,6 +1093,43 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
+        // <<<< NOVAS FUNÇÕES >>>>
+        function displayAtrasados(div, pedidos) {
+            const exportBtn = document.getElementById('exportarAtrasadosBtn');
+            if (pedidos.length === 0) {
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido com pré-data atrasada encontrado.</div>';
+                exportBtn.disabled = true;
+                return;
+            }
+            exportBtn.disabled = false;
+            div.innerHTML = createTable(pedidos, ['Num_Pedido', 'Predt', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cod_Rota']);
+        }
+        
+        function exportarPredatadosAtrasados() {
+            if (pedidosAtrasados.length === 0) {
+                alert("Não há pedidos com pré-data atrasada para exportar.");
+                return;
+            }
+
+            const dataToExport = pedidosAtrasados.map(p => {
+                const predtDate = parseDate(p.Predt);
+                return {
+                    'Nº Pedido': p.Num_Pedido,
+                    'Pré-data': predtDate ? predtDate.toLocaleDateString('pt-BR') : p.Predt || '',
+                    'Cód. Cliente': p.Cliente,
+                    'Nome Cliente': p.Nome_Cliente,
+                    'Peso (Kg)': parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0,
+                    'Rota': p.Cod_Rota
+                };
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
+            XLSX.writeFile(workbook, "Pedidos_Predata_Atrasada.xlsx");
+        }
+        // <<<< FIM DAS NOVAS FUNÇÕES >>>>
+
         function imprimirCargasGeneric(divId, title) {
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
@@ -1032,6 +1148,7 @@
                 body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                 .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; }
                 .no-print { display: none !important; }
+                .pedido-atrasado { background-color: #f8d7da !important; color: #58151c !important; }
                 /* Mantém as cores dos cabeçalhos na impressão */
                 .bg-success { background-color: #198754 !important; color: white !important; }
                 .bg-primary { background-color: #0d6efd !important; color: white !important; }
@@ -1061,7 +1178,8 @@
             printWindow.document.write('<html><head><title>Imprimir Carga Toco CF: ' + cf + '</title>');
             printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
             printWindow.document.write(`<style>
-                body { margin: 20px; }
+                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .pedido-atrasado { background-color: #f8d7da !important; color: #58151c !important; }
                 .table-responsive { overflow: visible !important; }
                 table, th, td { border: 1px solid #dee2e6 !important; }
                 h3 { margin-bottom: 1rem; }
