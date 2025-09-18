@@ -312,7 +312,6 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
-        // <<< INÍCIO DA NOVA FUNCIONALIDADE: LISTA DE CLIENTES COM AGENDAMENTO >>>
         const agendamentoClientCodes = new Set([
             '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', 
             '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', 
@@ -359,8 +358,7 @@
             const normalizedCode = String(pedido.Cliente).replace(/^0+/, '');
             pedido.Agendamento = agendamentoClientCodes.has(normalizedCode) ? 'Sim' : 'Não';
         }
-        // <<< FIM DA NOVA FUNCIONALIDADE >>>
-
+        
         let CargasFiorinoFinalizadas = new Map();
 
         const matrizDeDistancias = {
@@ -575,7 +573,6 @@
                         headers.forEach((header, i) => { 
                             if (header) { 
                                  if (header.toLowerCase() === 'predat' && typeof row[i] === 'number') {
-                                    // Handle Excel date serial number
                                     pedido[header] = new Date(Math.round((row[i] - 25569) * 86400 * 1000));
                                 } else {
                                     pedido[header] = row[i] !== undefined ? row[i] : ''; 
@@ -782,7 +779,7 @@
             ];
 
             const dataToExport = pedidosAtrasados.map(p => {
-                const newP = {...p}; // create a shallow copy
+                const newP = {...p}; 
                 if (newP.Predat instanceof Date) {
                     newP.Predat = newP.Predat.toLocaleDateString('pt-BR');
                 }
@@ -889,7 +886,7 @@
                 });
             });
 
-            // CORREÇÃO: Agrupa os pedidos por CLIENTE e por CIDADE
+            // CORREÇÃO APLICADA: Agrupa os pedidos por CLIENTE e por CIDADE
             const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
                 const clienteId = pedido.Cliente;
                 const cidade = String(pedido.Cidade).trim().toUpperCase();
@@ -968,18 +965,16 @@
             const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
             const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
 
-            // 1. Tenta montar as cargas com o veículo PADRÃO da rota.
             const primaryResult = packLoads(pedidosRota, vehicleType);
             let primaryLoads = primaryResult.loads;
             let currentLeftovers = primaryResult.leftovers;
             let promotedLoads = [];
 
-            // 2. Lógica de promoção CONDICIONAL
             let shouldPromote = false;
             if ((vehicleType === 'fiorino' || vehicleType === 'van') && currentLeftovers.length > 0) {
                 const MAX_PRIMARY_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
 
-                // Agrupa as sobras por cliente para verificar a condição de promoção
+                // CORREÇÃO APLICADA: A verificação de promoção também deve usar Cliente+Cidade
                 const leftoverClientGroups = currentLeftovers.reduce((acc, pedido) => {
                     const clienteId = pedido.Cliente;
                     const cidade = String(pedido.Cidade).trim().toUpperCase();
@@ -992,29 +987,24 @@
                     return acc;
                 }, {});
 
-                // Verifica se o peso SOMADO de algum cliente/cidade nas sobras excede a capacidade do veículo principal
                 for (const groupKey in leftoverClientGroups) {
                     if (leftoverClientGroups[groupKey].totalKg > MAX_PRIMARY_KG) {
-                        shouldPromote = true; // Gatilho para promoção!
+                        shouldPromote = true;
                         break;
                     }
                 }
             }
 
-            // 3. Se a promoção foi acionada, tenta montar cargas com o PRÓXIMO veículo
             if (shouldPromote) {
                 const nextVehicle = (vehicleType === 'fiorino') ? 'van' : 'tresQuartos';
-                // Usa TODAS as sobras para tentar formar o novo tipo de carga
                 const promotedResult = packLoads(currentLeftovers, nextVehicle);
                 promotedLoads = promotedResult.loads;
-                currentLeftovers = promotedResult.leftovers; // Atualiza as sobras finais
+                currentLeftovers = promotedResult.leftovers;
             }
 
-            // Numera as cargas para exibição
             primaryLoads.forEach((load, index) => { load.numero = index + 1; });
             promotedLoads.forEach((load, index) => { load.numero = index + 1; });
             
-            // Lógica para registrar cargas de Fiorino para cálculo de distância
             if (vehicleType === 'fiorino') {
                 CargasFiorinoFinalizadas.clear();
                 primaryLoads.forEach(load => {
@@ -1024,7 +1014,6 @@
                 });
             }
 
-            // 4. Exibição dos resultados
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white' },
                 van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white' },
@@ -1033,7 +1022,6 @@
 
             let html = '';
             
-            // Exibe cargas primárias
             const vInfo = vehicleInfo[vehicleType];
             html += `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${primaryLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${(primaryLoads.length > 0 || promotedLoads.length > 0) ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}</div>`;
             if (primaryLoads.length === 0 && promotedLoads.length === 0) { 
@@ -1046,7 +1034,6 @@
                 html += renderLoadCard(load, vehicleType, vInfo);
             });
 
-            // Exibe cargas promovidas, se houver
             if (promotedLoads.length > 0) {
                 const promotedVehicleType = (vehicleType === 'fiorino') ? 'van' : 'tresQuartos';
                 const pVInfo = vehicleInfo[promotedVehicleType];
@@ -1057,7 +1044,6 @@
                 });
             }
 
-            // Exibe as sobras finais
             if (currentLeftovers.length > 0) {
                 const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div></div>`;
@@ -1119,9 +1105,6 @@
                 const grupo = grupos[cf]; 
                 const pedidos = grupo.pedidos;
 
-                // =================================================================================
-                // <<< INÍCIO DA ALTERAÇÃO: Ordenação dos pedidos dentro da carga Toco >>>
-                // =================================================================================
                 pedidos.sort((a, b) => {
                     const clienteA = String(a.Cliente);
                     const clienteB = String(b.Cliente);
@@ -1131,12 +1114,8 @@
                     if (clienteA < clienteB) return -1;
                     if (clienteA > clienteB) return 1;
                     
-                    // Se os clientes forem iguais, ordena por número do pedido
                     return pedidoA.localeCompare(pedidoB);
                 });
-                // =================================================================================
-                // <<< FIM DA ALTERAÇÃO >>>
-                // =================================================================================
 
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const overWeight = grupo.totalKg > MAX_KG_TOCO;
@@ -1167,7 +1146,6 @@
                 body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                 .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; }
                 .no-print { display: none !important; }
-                /* Mantém as cores dos cabeçalhos na impressão */
                 .bg-success { background-color: #198754 !important; color: white !important; }
                 .bg-primary { background-color: #0d6efd !important; color: white !important; }
                 .bg-warning { background-color: #ffc107 !important; color: black !important; }
