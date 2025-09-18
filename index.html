@@ -216,7 +216,7 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5 text-success"><i class="bi bi-box-seam me-2"></i>Separação de Cargas (Fiorino)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Fiorino para separar as cargas. O sistema tentará promover sobras para uma Van se houver pedidos grandes.</p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota para montar cargas de Fiorino. O sistema tentará promover sobras para uma Van <strong>apenas se um cliente não couber na Fiorino.</strong></p>
                         <div class="no-print">
                             <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11101', 'resultado-fiorino-geral', 'Rota 11101')">Rota 11101</button>
                             <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11301', 'resultado-fiorino-geral', 'Rota 11301')">Rota 11301</button>
@@ -235,7 +235,7 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5 text-primary"><i class="bi bi-truck-front me-2"></i>Separação de Cargas (Van)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Van para separar as cargas. O sistema tentará promover sobras para um 3/4 se houver pedidos grandes.</p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota para montar cargas de Van. O sistema tentará promover sobras para um 3/4 <strong>apenas se um cliente não couber na Van.</strong></p>
                         <div class="no-print">
                             <button class="btn btn-primary mt-2" onclick="separarCargasVan('11102', 'resultado-van-geral', 'Rota 11102')">Rota 11102</button>
                             <button class="btn btn-primary mt-2" onclick="separarCargasVan('11331', 'resultado-van-geral', 'Rota 11331')">Rota 11331</button>
@@ -260,7 +260,7 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5 text-warning"><i class="bi bi-truck-flatbed me-2"></i>Separação de Cargas (3/4)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de 3/4 para separar as cargas.</p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota para montar cargas de 3/4.</p>
                          <div class="no-print">
                             <button class="btn btn-warning mt-2" onclick="separarCargas34('11361', 'resultado-34-geral', 'Rota 11361')">Rota 11361</button>
                             <button class="btn btn-warning mt-2" onclick="separarCargas34(['11501', '11502', '11511'], 'resultado-34-geral', 'Rotas 11501, 11502 & 11511')">Rotas 11501, 11502 & 11511</button>
@@ -277,7 +277,7 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5"><i class="bi bi-lightning-charge-fill me-2"></i>Resultados Cargas 3/4 (Automático)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Cargas formadas a partir de um pedido muito grande.</p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Cargas formadas a partir de um pedido muito grande na análise geral.</p>
                         <div id="resultado-tres-quartos"></div>
                     </div>
                 </div>
@@ -636,9 +636,9 @@
                 if (local === 'Resultados Gerais') {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -953,7 +953,10 @@
             return { loads: finalLoads, leftovers };
         }
 
-
+        // =================================================================================
+        // <<< INÍCIO DO BLOCO DE CÓDIGO MODIFICADO >>>
+        // Esta função foi reescrita para atender à nova lógica de promoção condicional.
+        // =================================================================================
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '';
@@ -965,25 +968,50 @@
             const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
             const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
 
+            // 1. Tenta montar as cargas com o veículo PADRÃO da rota.
             const primaryResult = packLoads(pedidosRota, vehicleType);
             let primaryLoads = primaryResult.loads;
             let currentLeftovers = primaryResult.leftovers;
             let promotedLoads = [];
 
-            if (vehicleType === 'fiorino' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 600)) {
-                const promotedResult = packLoads(currentLeftovers, 'van');
-                promotedLoads = promotedResult.loads;
-                currentLeftovers = promotedResult.leftovers;
+            // 2. Lógica de promoção CONDICIONAL
+            let shouldPromote = false;
+            if ((vehicleType === 'fiorino' || vehicleType === 'van') && currentLeftovers.length > 0) {
+                const MAX_PRIMARY_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
+
+                // Agrupa as sobras por cliente para verificar a condição de promoção
+                const leftoverClientGroups = currentLeftovers.reduce((acc, pedido) => {
+                    const clienteId = pedido.Cliente;
+                    if (!acc[clienteId]) {
+                        acc[clienteId] = { totalKg: 0 };
+                    }
+                    acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                    return acc;
+                }, {});
+
+                // Verifica se o peso SOMADO de algum cliente nas sobras excede a capacidade do veículo principal
+                for (const clienteId in leftoverClientGroups) {
+                    if (leftoverClientGroups[clienteId].totalKg > MAX_PRIMARY_KG) {
+                        shouldPromote = true; // Gatilho para promoção!
+                        break;
+                    }
+                }
             }
-            else if (vehicleType === 'van' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 1650)) {
-                const promotedResult = packLoads(currentLeftovers, 'tresQuartos');
+
+            // 3. Se a promoção foi acionada, tenta montar cargas com o PRÓXIMO veículo
+            if (shouldPromote) {
+                const nextVehicle = (vehicleType === 'fiorino') ? 'van' : 'tresQuartos';
+                // Usa TODAS as sobras para tentar formar o novo tipo de carga
+                const promotedResult = packLoads(currentLeftovers, nextVehicle);
                 promotedLoads = promotedResult.loads;
-                currentLeftovers = promotedResult.leftovers;
+                currentLeftovers = promotedResult.leftovers; // Atualiza as sobras finais
             }
-            
+
+            // Numera as cargas para exibição
             primaryLoads.forEach((load, index) => { load.numero = index + 1; });
             promotedLoads.forEach((load, index) => { load.numero = index + 1; });
             
+            // Lógica para registrar cargas de Fiorino para cálculo de distância
             if (vehicleType === 'fiorino') {
                 CargasFiorinoFinalizadas.clear();
                 primaryLoads.forEach(load => {
@@ -993,6 +1021,7 @@
                 });
             }
 
+            // 4. Exibição dos resultados
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white' },
                 van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white' },
@@ -1001,14 +1030,20 @@
 
             let html = '';
             
+            // Exibe cargas primárias
             const vInfo = vehicleInfo[vehicleType];
             html += `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${primaryLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${(primaryLoads.length > 0 || promotedLoads.length > 0) ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}</div>`;
-            if (primaryLoads.length === 0) { html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; }
+            if (primaryLoads.length === 0 && promotedLoads.length === 0) { 
+                html += `<p>Nenhuma carga foi formada para ${title}.</p>`; 
+            } else if(primaryLoads.length === 0) {
+                 html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; 
+            }
 
             primaryLoads.forEach(load => {
                 html += renderLoadCard(load, vehicleType, vInfo);
             });
 
+            // Exibe cargas promovidas, se houver
             if (promotedLoads.length > 0) {
                 const promotedVehicleType = (vehicleType === 'fiorino') ? 'van' : 'tresQuartos';
                 const pVInfo = vehicleInfo[promotedVehicleType];
@@ -1019,6 +1054,7 @@
                 });
             }
 
+            // Exibe as sobras finais
             if (currentLeftovers.length > 0) {
                 const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div></div>`;
@@ -1026,6 +1062,9 @@
 
             resultadoDiv.innerHTML = html;
         }
+        // =================================================================================
+        // <<< FIM DO BLOCO DE CÓDIGO MODIFICADO >>>
+        // =================================================================================
 
         function renderLoadCard(load, vehicleType, vInfo, isPromoted = false) {
             load.pedidos.sort((a, b) => {
@@ -1050,8 +1089,8 @@
             if (vehicleType === 'fiorino') {
                 fiorinoDistanceHtml = `
                     <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
-                       <span id="dist-${load.id}"></span>
-                       <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
+                        <span id="dist-${load.id}"></span>
+                        <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
                     </div>`;
             }
 
