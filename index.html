@@ -952,11 +952,7 @@
             const leftovers = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             return { loads: finalLoads, leftovers };
         }
-
-        // =================================================================================
-        // <<< INÍCIO DO BLOCO DE CÓDIGO MODIFICADO >>>
-        // Esta função foi reescrita para atender à nova lógica de promoção condicional.
-        // =================================================================================
+        
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '';
@@ -1062,9 +1058,6 @@
 
             resultadoDiv.innerHTML = html;
         }
-        // =================================================================================
-        // <<< FIM DO BLOCO DE CÓDIGO MODIFICADO >>>
-        // =================================================================================
 
         function renderLoadCard(load, vehicleType, vInfo, isPromoted = false) {
             load.pedidos.sort((a, b) => {
@@ -1116,7 +1109,28 @@
             
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionToco">';
             Object.keys(grupos).sort().forEach((cf, index) => {
-                const grupo = grupos[cf]; const pedidos = grupo.pedidos;
+                const grupo = grupos[cf]; 
+                const pedidos = grupo.pedidos;
+
+                // =================================================================================
+                // <<< INÍCIO DA ALTERAÇÃO: Ordenação dos pedidos dentro da carga Toco >>>
+                // =================================================================================
+                pedidos.sort((a, b) => {
+                    const clienteA = String(a.Cliente);
+                    const clienteB = String(b.Cliente);
+                    const pedidoA = String(a.Num_Pedido);
+                    const pedidoB = String(b.Num_Pedido);
+
+                    if (clienteA < clienteB) return -1;
+                    if (clienteA > clienteB) return 1;
+                    
+                    // Se os clientes forem iguais, ordena por número do pedido
+                    return pedidoA.localeCompare(pedidoB);
+                });
+                // =================================================================================
+                // <<< FIM DA ALTERAÇÃO >>>
+                // =================================================================================
+
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const overWeight = grupo.totalKg > MAX_KG_TOCO;
                 const weightBadge = overWeight
