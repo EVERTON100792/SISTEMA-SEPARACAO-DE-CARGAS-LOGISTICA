@@ -772,16 +772,24 @@
                 return;
             }
             
-            // Format date for Excel
+            const header = [
+                "Empresa", "Cod_Rota", "Den_Rota", "Cliente", "Nome_Cliente", "AGENDAS/PALLET",
+                "Nome_Repres", "Cod_Supervisor", "Nome_Supervisor", "Cod_Regional", "Nome_Regional",
+                "Num_Pedido", "Quilos_Saldo", "OBS", "Predat", "Cidade", "UF", "Dat_Ped",
+                "BLOQ.", "Coluna4", "Coluna5", "CF", "Descricao_CF", "Cubagem",
+                "PED. ATRASO 3D.", "PED. ATRASO 3D.2", "PED. ATRASO 4D.", "PED. ATRASO 4D.2",
+                "PED. ATRASO 6D.", "PED. ATRASO 6D.2"
+            ];
+
             const dataToExport = pedidosAtrasados.map(p => {
-                const newP = {...p};
+                const newP = {...p}; // create a shallow copy
                 if (newP.Predat instanceof Date) {
                     newP.Predat = newP.Predat.toLocaleDateString('pt-BR');
                 }
                 return newP;
             });
 
-            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: header });
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
             XLSX.writeFile(workbook, "pedidos_atrasados.xlsx");
