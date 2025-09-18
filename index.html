@@ -119,7 +119,7 @@
             <div class="row g-3">
                 <div class="col-md-3">
                     <label for="fiorinoMaxCapacity" class="form-label">Fiorino - Peso Máx (kg)</label>
-                    <input type="number" class="form-control config-input" id="fiorinoMaxCapacity" value="570" step="10">
+                    <input type="number" class="form-control config-input" id="fiorinoMaxCapacity" value="500" step="10">
                 </div>
                 <div class="col-md-3">
                     <label for="fiorinoMinCapacity" class="form-label">Fiorino - Peso Mín (kg)</label>
@@ -889,12 +889,16 @@
                 });
             });
 
+            // CORREÇÃO: Agrupa os pedidos por CLIENTE e por CIDADE
             const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
                 const clienteId = pedido.Cliente;
-                if (!acc[clienteId]) {
-                    acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                const cidade = String(pedido.Cidade).trim().toUpperCase();
+                const groupKey = `${clienteId}-${cidade}`; // Cria uma chave única para Cliente+Cidade
+
+                if (!acc[groupKey]) {
+                    acc[groupKey] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
                 }
-                acc[clienteId].pedidos.push(pedido);
+                acc[groupKey].pedidos.push(pedido);
                 return acc;
             }, {});
             
@@ -978,16 +982,19 @@
                 // Agrupa as sobras por cliente para verificar a condição de promoção
                 const leftoverClientGroups = currentLeftovers.reduce((acc, pedido) => {
                     const clienteId = pedido.Cliente;
-                    if (!acc[clienteId]) {
-                        acc[clienteId] = { totalKg: 0 };
+                    const cidade = String(pedido.Cidade).trim().toUpperCase();
+                    const groupKey = `${clienteId}-${cidade}`;
+
+                    if (!acc[groupKey]) {
+                        acc[groupKey] = { totalKg: 0 };
                     }
-                    acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                    acc[groupKey].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
                     return acc;
                 }, {});
 
-                // Verifica se o peso SOMADO de algum cliente nas sobras excede a capacidade do veículo principal
-                for (const clienteId in leftoverClientGroups) {
-                    if (leftoverClientGroups[clienteId].totalKg > MAX_PRIMARY_KG) {
+                // Verifica se o peso SOMADO de algum cliente/cidade nas sobras excede a capacidade do veículo principal
+                for (const groupKey in leftoverClientGroups) {
+                    if (leftoverClientGroups[groupKey].totalKg > MAX_PRIMARY_KG) {
                         shouldPromote = true; // Gatilho para promoção!
                         break;
                     }
