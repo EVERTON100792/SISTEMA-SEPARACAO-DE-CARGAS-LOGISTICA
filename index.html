@@ -872,7 +872,7 @@
         // ======================= CÓDIGO MODIFICADO COM A NOVA LÓGICA =======================
         // =========================================================================================
 
-        function packLoads(pedidos, vehicleType, sortDirection = 'descending') { // Adicionado 'sortDirection'
+        function packLoads(pedidos, vehicleType, sortDirection = 'descending') {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
             const MAX_CUBAGEM = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
@@ -880,38 +880,33 @@
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
 
-            let packableItems = [];
-            const otherPedidos = pedidos.filter(p => !isSpecialClient(p));
-            const specialPedidos = pedidos.filter(p => isSpecialClient(p));
-
-            specialPedidos.forEach(pedido => {
-                packableItems.push({
-                    isSpecial: true,
-                    pedidos: [pedido],
-                    totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
-                    totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
-                });
-            });
-
-            const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
+            // LÓGICA DE AGRUPAMENTO UNIFICADA: Garante que todos os pedidos do mesmo cliente virem um bloco único.
+            const clientGroupsMap = pedidos.reduce((acc, pedido) => {
                 const clienteId = pedido.Cliente;
                 if (!acc[clienteId]) {
-                    acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                    acc[clienteId] = {
+                        pedidos: [],
+                        isSpecial: isSpecialClient(pedido)
+                    };
                 }
                 acc[clienteId].pedidos.push(pedido);
                 return acc;
             }, {});
-            
-            Object.values(otherClientGroupsMap).forEach(group => {
-                group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
-                packableItems.push(group);
-            });
 
+            let packableItems = Object.values(clientGroupsMap).map(group => {
+                const totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                const totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+                return {
+                    ...group,
+                    totalKg,
+                    totalCubagem
+                };
+            });
+            
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             
-            // <<< LÓGICA DE ORDENAÇÃO MODIFICADA >>>
+            // Lógica de ordenação (menor -> maior para fiorino, maior -> menor para os outros)
             if (sortDirection === 'ascending') {
                 priorityItems.sort((a, b) => a.totalKg - b.totalKg);
                 regularItems.sort((a, b) => a.totalKg - b.totalKg);
@@ -930,9 +925,19 @@
                 }
                 let placed = false;
                 for (const load of loads) {
-                    const specialCountInLoad = load.pedidos.filter(p => isSpecialClient(p)).length;
-                    const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
-                    if ((load.totalKg + item.totalKg <= MAX_KG) && (load.totalCubagem + item.totalCubagem <= MAX_CUBAGEM) && (specialCountInLoad + specialOrdersInItem <= 2)) {
+                    // Regra para limitar a 2 clientes "especiais" por carga.
+                    const specialClientCountInLoad = new Set(load.pedidos.filter(p => isSpecialClient(p)).map(p => p.Cliente)).size;
+                    const isItemSpecial = item.isSpecial;
+                    
+                    let canPlace = true;
+                    if (isItemSpecial) {
+                        const clientAlreadyInLoad = load.pedidos.some(p => p.Cliente === item.pedidos[0].Cliente);
+                        if (!clientAlreadyInLoad && specialClientCountInLoad >= 2) {
+                            canPlace = false;
+                        }
+                    }
+
+                    if (canPlace && (load.totalKg + item.totalKg <= MAX_KG) && (load.totalCubagem + item.totalCubagem <= MAX_CUBAGEM)) {
                         load.pedidos.push(...item.pedidos);
                         load.totalKg += item.totalKg;
                         load.totalCubagem += item.totalCubagem;
@@ -979,31 +984,24 @@
             let currentLeftovers = [];
             let promotedLoads = [];
 
-            // <<< INÍCIO DA NOVA LÓGICA ESPECIAL PARA FIORINO >>>
             if (vehicleType === 'fiorino') {
                 const FIORINO_PROMOTION_THRESHOLD = 700;
-                const FIORINO_PROMOTION_MAX_KG = 1200; // O limite que você mencionou
+                const FIORINO_PROMOTION_MAX_KG = 1200;
 
-                // 1. Regra especial: Procurar pedidos únicos > 700kg para promover a uma Van (com limite de 1200kg)
                 let pedidosParaMontagemNormal = [...pedidosRota];
                 const pedidosGrandes = pedidosRota
                     .filter(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) > FIORINO_PROMOTION_THRESHOLD)
                     .sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
 
                 if (pedidosGrandes.length > 0) {
-                    const pedidoBase = pedidosGrandes[0]; // Pega o maior de todos como base
-
-                    // Cria uma carga de Van temporária com este pedido grande
+                    const pedidoBase = pedidosGrandes[0];
                     let cargaPromovida = {
                         pedidos: [pedidoBase],
                         totalKg: parseFloat(String(pedidoBase.Quilos_Saldo).replace(',', '.')) || 0,
                         totalCubagem: parseFloat(String(pedidoBase.Cubagem).replace(',', '.')) || 0
                     };
-                    
-                    // Remove o pedido base da lista de montagem
                     pedidosParaMontagemNormal = pedidosParaMontagemNormal.filter(p => p.Num_Pedido !== pedidoBase.Num_Pedido);
                     
-                    // Tenta adicionar outros pedidos à carga promovida, sem passar de 1200kg
                     const outrosPedidosOrdenados = pedidosParaMontagemNormal.sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
 
                     outrosPedidosOrdenados.forEach(outroPedido => {
@@ -1012,41 +1010,32 @@
                             cargaPromovida.pedidos.push(outroPedido);
                             cargaPromovida.totalKg += pesoOutroPedido;
                             cargaPromovida.totalCubagem += parseFloat(String(outroPedido.Cubagem).replace(',', '.')) || 0;
-                            // Remove também este pedido da lista de montagem normal
                             pedidosParaMontagemNormal = pedidosParaMontagemNormal.filter(p => p.Num_Pedido !== outroPedido.Num_Pedido);
                         }
                     });
-
-                    // Adiciona a carga promovida à lista de 'promotedLoads'
                     promotedLoads.push(cargaPromovida);
                 }
                 
-                // 2. Lógica de montagem para Fiorinos restantes: do MENOR para o MAIOR
-                const resultadoFiorino = packLoads(pedidosParaMontagemNormal, 'fiorino', 'ascending'); // Adiciona um parâmetro para a ordenação
+                const resultadoFiorino = packLoads(pedidosParaMontagemNormal, 'fiorino', 'ascending');
                 primaryLoads = resultadoFiorino.loads;
                 currentLeftovers = resultadoFiorino.leftovers;
 
             } else {
-                // <<< LÓGICA ORIGINAL PARA VAN E 3/4 (do MAIOR para o MENOR) >>>
-                const primaryResult = packLoads(pedidosRota, vehicleType, 'descending'); // Ordenação padrão
+                const primaryResult = packLoads(pedidosRota, vehicleType, 'descending');
                 primaryLoads = primaryResult.loads;
                 currentLeftovers = primaryResult.leftovers;
 
-                // Lógica de promoção para Vans (se sobras forem grandes o suficiente para um 3/4)
                 if (vehicleType === 'van' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 1650)) {
                     const promotedResult = packLoads(currentLeftovers, 'tresQuartos', 'descending');
                     promotedLoads = promotedResult.loads;
                     currentLeftovers = promotedResult.leftovers;
                 }
             }
-            // <<< FIM DA NOVA LÓGICA >>>
 
-            // O restante da função para exibir os resultados permanece o mesmo...
             primaryLoads.forEach((load, index) => { load.numero = index + 1; });
             promotedLoads.forEach((load, index) => { load.numero = index + 1; });
             
             if (vehicleType === 'fiorino') {
-                // Limpa e preenche o mapa de cargas de fiorino para cálculo de distância
                 CargasFiorinoFinalizadas.clear();
                 primaryLoads.forEach(load => {
                     const loadId = `fiorino-${title.replace(/\s+/g, '-')}-${load.numero}`;
