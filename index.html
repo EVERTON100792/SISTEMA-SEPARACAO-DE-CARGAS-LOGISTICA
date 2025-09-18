@@ -54,6 +54,36 @@
             filter: brightness(1.1);
             transform: translateY(-2px);
         }
+        .kpi-card {
+            background-color: #343a40;
+            padding: 1rem;
+            border-radius: .5rem;
+            text-align: center;
+            color: #f8f9fa;
+        }
+        .kpi-card .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .kpi-card .kpi-label {
+            font-size: 0.9rem;
+            color: #adb5bd;
+        }
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+        }
+        #loading-modal .modal-content {
+            background-color: transparent;
+            border: none;
+            color: white;
+            text-align: center;
+        }
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .container, .card, .accordion-item, .accordion-body { background-color: #fff !important; color: #000 !important; border: none !important; box-shadow: none !important; }
@@ -82,9 +112,72 @@
 </head>
 <body>
     <div class="container mt-4 mb-4">
-        <div class="d-flex align-items-center mb-3">
-            <i class="bi bi-truck display-4 me-3"></i>
-            <h1 class="mb-0">Dashboard de Separação de Cargas</h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex align-items-center">
+                 <i class="bi bi-truck display-4 me-3"></i>
+                 <h1 class="mb-0">Dashboard de Separação de Cargas</h1>
+            </div>
+            <div class="dropdown notification-bell no-print">
+                <i class="bi bi-bell-fill fs-3 text-secondary" data-bs-toggle="dropdown" aria-expanded="false"></i>
+                <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;"></span>
+                <ul class="dropdown-menu dropdown-menu-end" id="notification-list">
+                    <li><a class="dropdown-item" href="#">Nenhum alerta.</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-2 no-print" id="kpi-dashboard-geral">
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div id="kpi-total-kg" class="kpi-value">0 kg</div>
+                    <div class="kpi-label"><i class="bi bi-box-seam me-1"></i>Peso Total Processado</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div id="kpi-pedidos-atrasados" class="kpi-value">0</div>
+                    <div class="kpi-label"><i class="bi bi-calendar-x me-1"></i>Pedidos Atrasados</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div id="kpi-cargas-auto" class="kpi-value">0</div>
+                    <div class="kpi-label"><i class="bi bi-lightning-charge-fill me-1"></i>Cargas Automáticas</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div id="kpi-pedidos-gerais" class="kpi-value">0</div>
+                    <div class="kpi-label"><i class="bi bi-list-check me-1"></i>Pedidos na Lista Geral</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4 no-print" id="kpi-dashboard-veiculos">
+             <div class="col-md-3">
+                <div class="kpi-card">
+                    <div id="kpi-cargas-fiorino" class="kpi-value">0</div>
+                    <div class="kpi-label"><i class="bi bi-box me-1"></i>Cargas Fiorino</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div id="kpi-cargas-van" class="kpi-value">0</div>
+                    <div class="kpi-label"><i class="bi bi-truck-front me-1"></i>Cargas Van</div>
+                </div>
+            </div>
+             <div class="col-md-3">
+                <div class="kpi-card">
+                    <div id="kpi-cargas-34" class="kpi-value">0</div>
+                    <div class="kpi-label"><i class="bi bi-truck-flatbed me-1"></i>Cargas 3/4</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div id="kpi-cargas-toco" class="kpi-value">0</div>
+                    <div class="kpi-label"><i class="bi bi-inboxes-fill me-1"></i>Cargas Toco</div>
+                </div>
+            </div>
         </div>
 
         <div class="card p-3 mb-4 no-print" id="drop-zone">
@@ -107,7 +200,7 @@
                     </div>
                 </div>
                 <div class="col-md-3 align-self-end">
-                    <button class="btn btn-primary w-100 py-2" id="processarBtn" onclick="processar()" disabled><i class="bi bi-gear-fill me-2"></i>Processar Cargas</button>
+                    <button class="btn btn-primary w-100 py-2" id="processarBtn" onclick="iniciarProcessamento()" disabled><i class="bi bi-gear-fill me-2"></i>Processar Cargas</button>
                 </div>
             </div>
             <div id="status" class="mt-2 status-message"></div>
@@ -309,6 +402,17 @@
         </div>
     </div>
 
+    <div class="modal fade" id="loading-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="spinner-border text-light" style="width: 3rem; height: 3rem;" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5 class="mt-3">Processando...</h5>
+            </div>
+        </div>
+    </div>
+
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
@@ -464,6 +568,8 @@
         let pedidosComCFNumericoIsolado = [];
         let pedidosPrioritarios = [];
         let tocoPedidoIds = new Set();
+        let loadingModal;
+
 
         const defaultConfigs = {
             fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.5,
@@ -524,6 +630,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            loadingModal = new bootstrap.Modal(document.getElementById('loading-modal'));
             loadConfigurations();
             document.getElementById('saveConfig').addEventListener('click', saveConfigurations);
             document.getElementById('resetFiorino').addEventListener('click', resetFiorino);
@@ -658,16 +765,32 @@
             }
         }
 
-        function processar() {
-            const resultadoGeralDiv = document.getElementById('resultado-geral');
-            const resultadoTocoDiv = document.getElementById('resultado-toco');
-            const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
-            const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
+        function iniciarProcessamento() {
+            loadingModal.show();
+            // Use a short timeout to allow the modal to render before the heavy processing starts
+            setTimeout(() => {
+                processar();
+            }, 50);
+        }
 
+        function processar() {
             try {
-                if (planilhaData.length === 0) { statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return; }
-                const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
-                resultadoGeralDiv.innerHTML = ''; resultadoTocoDiv.innerHTML = ''; resultadoTresQuartosDiv.innerHTML = ''; resultadoCfNumericoDiv.innerHTML = '';
+                const resultadoGeralDiv = document.getElementById('resultado-geral');
+                const resultadoTocoDiv = document.getElementById('resultado-toco');
+                const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
+                const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
+
+                if (planilhaData.length === 0) { 
+                    statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; 
+                    loadingModal.hide();
+                    return; 
+                }
+                const rotaInicialInput = document.getElementById('rotaInicialInput').value; 
+                const rotaFinalInput = document.getElementById('rotaFinalInput').value;
+                resultadoGeralDiv.innerHTML = ''; 
+                resultadoTocoDiv.innerHTML = ''; 
+                resultadoTresQuartosDiv.innerHTML = ''; 
+                resultadoCfNumericoDiv.innerHTML = '';
 
                 const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
 
@@ -679,16 +802,21 @@
                 const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
                 gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
                     const cf = p.CF;
-                    if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; } acc[cf].pedidos.push(p); acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
+                    if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; } 
+                    acc[cf].pedidos.push(p); 
+                    acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; 
+                    return acc;
                 }, {});
                 displayToco(resultadoTocoDiv, gruposToco);
                 tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
 
                 // 2. Regras de bloqueio e de cliente
-                const clientesComBloqueio = new Set(); const clientesSemBloqueio = new Set();
+                const clientesComBloqueio = new Set(); 
+                const clientesSemBloqueio = new Set();
                 pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
                 const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
-                const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
+                const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; 
+                const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
                 
                 // 3. Filtrar e separar os pedidos restantes
                 let pedidosParaProcessamento = [];
@@ -720,7 +848,8 @@
 
                 const largeOrdersByRoute = pedidosParaProcessamento.reduce((acc, p) => {
                     const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                    if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } return acc;
+                    if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } 
+                    return acc;
                 }, {});
                 const pedidosEmCargas3_4 = new Set();
                 Object.keys(largeOrdersByRoute).forEach(rota => {
@@ -744,11 +873,23 @@
                 pedidosGeraisAtuais = pedidosParaProcessamento.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
                 
                 const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
-                    const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
+                    const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } 
+                    acc[rota].pedidos.push(p); 
+                    acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; 
+                    return acc;
                 }, {});
                 displayGerais(resultadoGeralDiv, gruposGerais);
 
-            } catch (error) { statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; console.error(error); }
+                // 6. Update Dashboard and Notifications
+                atualizarDashboard(tresQuartosLoads);
+                gerarNotificacoes(tresQuartosLoads);
+
+            } catch (error) { 
+                statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; 
+                console.error(error); 
+            } finally {
+                loadingModal.hide();
+            }
         }
 
         function isOverdue(predat) {
@@ -772,16 +913,24 @@
                 return;
             }
             
-            // Format date for Excel
+            const header = [
+                "Empresa", "Cod_Rota", "Den_Rota", "Cliente", "Nome_Cliente", "AGENDAS/PALLET",
+                "Nome_Repres", "Cod_Supervisor", "Nome_Supervisor", "Cod_Regional", "Nome_Regional",
+                "Num_Pedido", "Quilos_Saldo", "OBS", "Predat", "Cidade", "UF", "Dat_Ped",
+                "BLOQ.", "Coluna4", "Coluna5", "CF", "Descricao_CF", "Cubagem",
+                "PED. ATRASO 3D.", "PED. ATRASO 3D.2", "PED. ATRASO 4D.", "PED. ATRASO 4D.2",
+                "PED. ATRASO 6D.", "PED. ATRASO 6D.2"
+            ];
+
             const dataToExport = pedidosAtrasados.map(p => {
-                const newP = {...p};
+                const newP = {...p}; // create a shallow copy
                 if (newP.Predat instanceof Date) {
                     newP.Predat = newP.Predat.toLocaleDateString('pt-BR');
                 }
                 return newP;
             });
 
-            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: header });
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
             XLSX.writeFile(workbook, "pedidos_atrasados.xlsx");
@@ -977,13 +1126,20 @@
             promotedLoads.forEach((load, index) => { load.numero = index + 1; });
             
             if (vehicleType === 'fiorino') {
+                document.getElementById('kpi-cargas-fiorino').textContent = primaryLoads.length + promotedLoads.length;
                 CargasFiorinoFinalizadas.clear();
                 primaryLoads.forEach(load => {
                     const loadId = `fiorino-${title.replace(/\s+/g, '-')}-${load.numero}`;
                     load.id = loadId;
                     CargasFiorinoFinalizadas.set(loadId, load);
                 });
+            } else if (vehicleType === 'van') {
+                document.getElementById('kpi-cargas-van').textContent = primaryLoads.length + promotedLoads.length;
+            } else if (vehicleType === 'tresQuartos') {
+                const autoLoads = parseInt(document.getElementById('kpi-cargas-34').dataset.auto || 0);
+                document.getElementById('kpi-cargas-34').textContent = autoLoads + primaryLoads.length + promotedLoads.length;
             }
+
 
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white' },
@@ -1140,6 +1296,59 @@
             printWindow.document.close();
             printWindow.focus(); 
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+        }
+
+        function atualizarDashboard(tresQuartosLoads) {
+            const todosPedidosProcessados = [...pedidosGeraisAtuais, ...pedidosComCFNumericoIsolado, ...Object.values(gruposToco).flatMap(g => g.pedidos), ...tresQuartosLoads.flatMap(l => l.pedidos)];
+            
+            const totalKg = todosPedidosProcessados.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+            const pedidosAtrasados = todosPedidosProcessados.filter(p => isOverdue(p.Predat)).length;
+            const tocoCount = Object.keys(gruposToco).length;
+            const tresQuartosAutoCount = tresQuartosLoads.length;
+
+            document.getElementById('kpi-total-kg').textContent = `${(totalKg / 1000).toFixed(2)} t`;
+            document.getElementById('kpi-pedidos-atrasados').textContent = pedidosAtrasados;
+            document.getElementById('kpi-cargas-auto').textContent = tocoCount + tresQuartosAutoCount;
+            document.getElementById('kpi-pedidos-gerais').textContent = pedidosGeraisAtuais.length;
+
+            document.getElementById('kpi-cargas-fiorino').textContent = 0;
+            document.getElementById('kpi-cargas-van').textContent = 0;
+            document.getElementById('kpi-cargas-34').textContent = tresQuartosAutoCount;
+            document.getElementById('kpi-cargas-34').dataset.auto = tresQuartosAutoCount; // Store auto count
+            document.getElementById('kpi-cargas-toco').textContent = tocoCount;
+        }
+
+        function gerarNotificacoes(tresQuartosLoads) {
+            const todosPedidosProcessados = [...pedidosGeraisAtuais, ...pedidosComCFNumericoIsolado, ...Object.values(gruposToco).flatMap(g => g.pedidos), ...tresQuartosLoads.flatMap(l => l.pedidos)];
+            const MAX_KG_TOCO = parseFloat(document.getElementById('tocoMaxCapacity').value) || defaultConfigs.tocoMaxCapacity;
+            
+            const notifications = [];
+            const pedidosAtrasados = todosPedidosProcessados.filter(p => isOverdue(p.Predat)).length;
+            if (pedidosAtrasados > 0) {
+                notifications.push({ text: `${pedidosAtrasados} pedido(s) está(ão) atrasado(s).`, type: 'danger' });
+            }
+
+            Object.keys(gruposToco).forEach(cf => {
+                if (gruposToco[cf].totalKg > MAX_KG_TOCO) {
+                    notifications.push({ text: `Carga Toco (CF: ${cf}) está acima do peso!`, type: 'warning' });
+                }
+            });
+
+            const badge = document.getElementById('notification-badge');
+            const list = document.getElementById('notification-list');
+            
+            if (notifications.length > 0) {
+                badge.textContent = notifications.length;
+                badge.style.display = 'block';
+                list.innerHTML = '';
+                notifications.forEach(notif => {
+                    const icon = notif.type === 'danger' ? 'bi-calendar-x-fill text-danger' : 'bi-exclamation-triangle-fill text-warning';
+                    list.innerHTML += `<li><a class="dropdown-item" href="#"><i class="bi ${icon} me-2"></i>${notif.text}</a></li>`;
+                });
+            } else {
+                badge.style.display = 'none';
+                list.innerHTML = '<li><a class="dropdown-item" href="#">Nenhum alerta.</a></li>';
+            }
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
