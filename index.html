@@ -78,12 +78,6 @@
             top: -5px;
             right: -10px;
         }
-        #loading-modal .modal-content {
-            background-color: transparent;
-            border: none;
-            color: white;
-            text-align: center;
-        }
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .container, .card, .accordion-item, .accordion-body { background-color: #fff !important; color: #000 !important; border: none !important; box-shadow: none !important; }
@@ -141,8 +135,8 @@
             </div>
             <div class="col-md-3">
                 <div class="kpi-card">
-                    <div id="kpi-cargas-auto" class="kpi-value">0</div>
-                    <div class="kpi-label"><i class="bi bi-lightning-charge-fill me-1"></i>Cargas Automáticas</div>
+                    <div id="kpi-peso-cargas" class="kpi-value">0 kg</div>
+                    <div class="kpi-label"><i class="bi bi-truck me-1"></i>Peso em Cargas Montadas</div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -200,7 +194,7 @@
                     </div>
                 </div>
                 <div class="col-md-3 align-self-end">
-                    <button class="btn btn-primary w-100 py-2" id="processarBtn" onclick="iniciarProcessamento()" disabled><i class="bi bi-gear-fill me-2"></i>Processar Cargas</button>
+                    <button class="btn btn-primary w-100 py-2" id="processarBtn" onclick="processar()" disabled><i class="bi bi-gear-fill me-2"></i>Processar Cargas</button>
                 </div>
             </div>
             <div id="status" class="mt-2 status-message"></div>
@@ -402,18 +396,6 @@
         </div>
     </div>
 
-    <div class="modal fade" id="loading-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="spinner-border text-light" style="width: 3rem; height: 3rem;" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <h5 class="mt-3">Processando...</h5>
-            </div>
-        </div>
-    </div>
-
-
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
         // <<< INÍCIO DA NOVA FUNCIONALIDADE: LISTA DE CLIENTES COM AGENDAMENTO >>>
@@ -505,7 +487,10 @@
         let pedidosComCFNumericoIsolado = [];
         let pedidosPrioritarios = [];
         let tocoPedidoIds = new Set();
-        let loadingModal;
+        
+        // Global state for assembled loads
+        let pesoCargasAuto = { toco: 0, tresQuartos: 0 };
+        let pesoCargasManuais = { fiorino: 0, van: 0, tresQuartos: 0 };
 
 
         const defaultConfigs = {
@@ -567,7 +552,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadingModal = new bootstrap.Modal(document.getElementById('loading-modal'));
             loadConfigurations();
             document.getElementById('saveConfig').addEventListener('click', saveConfigurations);
             document.getElementById('resetFiorino').addEventListener('click', resetFiorino);
@@ -702,131 +686,121 @@
             }
         }
         
-        // Wrapper function to show modal and handle errors
-        function iniciarProcessamento() {
-            loadingModal.show();
-            // Use a short timeout to allow the modal to render before the heavy processing starts
-            setTimeout(() => {
-                try {
-                    processar();
-                } catch (error) {
-                    statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro no processamento:</strong></p><pre>${error.stack}</pre>`;
-                    console.error(error);
-                } finally {
-                    loadingModal.hide();
-                }
-            }, 50);
-        }
-        
         // Core processing logic
         function processar() {
-            const resultadoGeralDiv = document.getElementById('resultado-geral');
-            const resultadoTocoDiv = document.getElementById('resultado-toco');
-            const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
-            const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
+            try {
+                const resultadoGeralDiv = document.getElementById('resultado-geral');
+                const resultadoTocoDiv = document.getElementById('resultado-toco');
+                const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
+                const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
 
-            if (planilhaData.length === 0) { 
-                statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; 
-                return; 
-            }
-            const rotaInicialInput = document.getElementById('rotaInicialInput').value; 
-            const rotaFinalInput = document.getElementById('rotaFinalInput').value;
-            resultadoGeralDiv.innerHTML = ''; 
-            resultadoTocoDiv.innerHTML = ''; 
-            resultadoTresQuartosDiv.innerHTML = ''; 
-            resultadoCfNumericoDiv.innerHTML = '';
+                if (planilhaData.length === 0) { 
+                    statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; 
+                    return; 
+                }
+                const rotaInicialInput = document.getElementById('rotaInicialInput').value; 
+                const rotaFinalInput = document.getElementById('rotaFinalInput').value;
+                resultadoGeralDiv.innerHTML = ''; 
+                resultadoTocoDiv.innerHTML = ''; 
+                resultadoTresQuartosDiv.innerHTML = ''; 
+                resultadoCfNumericoDiv.innerHTML = '';
 
-            const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
+                const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
 
-            // 1. Identificar e separar as cargas TOCO
-            const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
-            const cfCounts = {};
-            pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
-            const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
-            const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
-            gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
-                const cf = p.CF;
-                if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; } 
-                acc[cf].pedidos.push(p); 
-                acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; 
-                return acc;
-            }, {});
-            displayToco(resultadoTocoDiv, gruposToco);
-            tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
+                // 1. Identificar e separar as cargas TOCO
+                const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
+                const cfCounts = {};
+                pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
+                const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
+                const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
+                gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
+                    const cf = p.CF;
+                    if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; } 
+                    acc[cf].pedidos.push(p); 
+                    acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; 
+                    return acc;
+                }, {});
+                displayToco(resultadoTocoDiv, gruposToco);
+                tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
 
-            // 2. Regras de bloqueio e de cliente
-            const clientesComBloqueio = new Set(); 
-            const clientesSemBloqueio = new Set();
-            pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
-            const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
-            const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; 
-            const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
-            
-            // 3. Filtrar e separar os pedidos restantes
-            let pedidosParaProcessamento = [];
-            pedidosComCFNumericoIsolado = [];
-
-            pedidos.forEach(p => {
-                if (tocoPedidoIds.has(String(p.Num_Pedido))) return; // Já é TOCO
-                if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return;
-                if (clientesParaRemover.has(String(p.Cliente))) return;
-                if (['21', '23', '17'].includes(String(p.Coluna4))) return;
+                // 2. Regras de bloqueio e de cliente
+                const clientesComBloqueio = new Set(); 
+                const clientesSemBloqueio = new Set();
+                pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
+                const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
+                const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; 
+                const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
                 
-                const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
-                if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return;
+                // 3. Filtrar e separar os pedidos restantes
+                let pedidosParaProcessamento = [];
+                pedidosComCFNumericoIsolado = [];
 
-                if (isNumeric(p.CF)) {
-                    pedidosComCFNumericoIsolado.push(p);
-                } else {
-                    pedidosParaProcessamento.push(p);
-                }
-            });
-            
-            displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
+                pedidos.forEach(p => {
+                    if (tocoPedidoIds.has(String(p.Num_Pedido))) return; // Já é TOCO
+                    if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return;
+                    if (clientesParaRemover.has(String(p.Cliente))) return;
+                    if (['21', '23', '17'].includes(String(p.Coluna4))) return;
+                    
+                    const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
+                    if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return;
 
-            // 4. Montagem de cargas 3/4 automático
-            let tresQuartosLoads = [];
-            const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value) || defaultConfigs.tresQuartosMinCapacity;
-            const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value) || defaultConfigs.tresQuartosMaxCapacity;
-            const LARGE_ORDER_KG = 1700;
-
-            const largeOrdersByRoute = pedidosParaProcessamento.reduce((acc, p) => {
-                const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } 
-                return acc;
-            }, {});
-            const pedidosEmCargas3_4 = new Set();
-            Object.keys(largeOrdersByRoute).forEach(rota => {
-                const largeOrders = largeOrdersByRoute[rota];
-                if (largeOrders.length === 1) {
-                    const largeOrder = largeOrders[0]; if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
-                    let newLoad = { pedidos: [largeOrder], totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0, rota: rota };
-                    const otherOrdersInRoute = pedidosParaProcessamento.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
-                    for (const order of otherOrdersInRoute) {
-                        if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue;
-                        const orderKg = parseFloat(String(order.Quilos_Saldo).replace(',', '.')) || 0;
-                        if (newLoad.totalKg + orderKg <= MAX_KG_3_4) { newLoad.pedidos.push(order); newLoad.totalKg += orderKg; }
+                    if (isNumeric(p.CF)) {
+                        pedidosComCFNumericoIsolado.push(p);
+                    } else {
+                        pedidosParaProcessamento.push(p);
                     }
-                    if (newLoad.totalKg >= MIN_KG_3_4) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); }
-                }
-            });
-            tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
-            displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
+                });
+                
+                displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
 
-            // 5. Definir a lista final de Resultados Gerais
-            pedidosGeraisAtuais = pedidosParaProcessamento.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
-            
-            const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
-                const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } 
-                acc[rota].pedidos.push(p); 
-                acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; 
-                return acc;
-            }, {});
-            displayGerais(resultadoGeralDiv, gruposGerais);
+                // 4. Montagem de cargas 3/4 automático
+                let tresQuartosLoads = [];
+                const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value) || defaultConfigs.tresQuartosMinCapacity;
+                const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value) || defaultConfigs.tresQuartosMaxCapacity;
+                const LARGE_ORDER_KG = 1700;
 
-            // 6. Update Dashboard and Notifications
-            atualizarDashboard(tresQuartosLoads);
-            gerarNotificacoes(tresQuartosLoads);
+                const largeOrdersByRoute = pedidosParaProcessamento.reduce((acc, p) => {
+                    const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                    if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } 
+                    return acc;
+                }, {});
+                const pedidosEmCargas3_4 = new Set();
+                Object.keys(largeOrdersByRoute).forEach(rota => {
+                    const largeOrders = largeOrdersByRoute[rota];
+                    if (largeOrders.length === 1) {
+                        const largeOrder = largeOrders[0]; if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
+                        let newLoad = { pedidos: [largeOrder], totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0, rota: rota };
+                        const otherOrdersInRoute = pedidosParaProcessamento.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
+                        for (const order of otherOrdersInRoute) {
+                            if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue;
+                            const orderKg = parseFloat(String(order.Quilos_Saldo).replace(',', '.')) || 0;
+                            if (newLoad.totalKg + orderKg <= MAX_KG_3_4) { newLoad.pedidos.push(order); newLoad.totalKg += orderKg; }
+                        }
+                        if (newLoad.totalKg >= MIN_KG_3_4) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); }
+                    }
+                });
+                tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
+                displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
+
+                // 5. Definir a lista final de Resultados Gerais
+                pedidosGeraisAtuais = pedidosParaProcessamento.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
+                
+                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
+                    const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } 
+                    acc[rota].pedidos.push(p); 
+                    acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; 
+                    return acc;
+                }, {});
+                displayGerais(resultadoGeralDiv, gruposGerais);
+
+                // 6. Update Dashboard and Notifications
+                atualizarDashboard(tresQuartosLoads);
+                gerarNotificacoes(tresQuartosLoads);
+
+            } catch (error) { 
+                statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; 
+                console.error(error); 
+            }
         }
 
         function isOverdue(predat) {
@@ -1062,8 +1036,12 @@
             primaryLoads.forEach((load, index) => { load.numero = index + 1; });
             promotedLoads.forEach((load, index) => { load.numero = index + 1; });
             
+            const novasCargas = [...primaryLoads, ...promotedLoads];
+            const pesoNovasCargas = novasCargas.reduce((sum, l) => sum + l.totalKg, 0);
+
             if (vehicleType === 'fiorino') {
-                document.getElementById('kpi-cargas-fiorino').textContent = primaryLoads.length + promotedLoads.length;
+                document.getElementById('kpi-cargas-fiorino').textContent = novasCargas.length;
+                pesoCargasManuais.fiorino = pesoNovasCargas;
                 CargasFiorinoFinalizadas.clear();
                 primaryLoads.forEach(load => {
                     const loadId = `fiorino-${title.replace(/\s+/g, '-')}-${load.numero}`;
@@ -1071,12 +1049,15 @@
                     CargasFiorinoFinalizadas.set(loadId, load);
                 });
             } else if (vehicleType === 'van') {
-                document.getElementById('kpi-cargas-van').textContent = primaryLoads.length + promotedLoads.length;
+                document.getElementById('kpi-cargas-van').textContent = novasCargas.length;
+                pesoCargasManuais.van = pesoNovasCargas;
             } else if (vehicleType === 'tresQuartos') {
                 const autoLoads = parseInt(document.getElementById('kpi-cargas-34').dataset.auto || 0);
-                document.getElementById('kpi-cargas-34').textContent = autoLoads + primaryLoads.length + promotedLoads.length;
+                document.getElementById('kpi-cargas-34').textContent = autoLoads + novasCargas.length;
+                pesoCargasManuais.tresQuartos = pesoNovasCargas;
             }
-
+            
+            atualizarPesoTotalCargas();
 
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white' },
@@ -1236,6 +1217,9 @@
         }
 
         function atualizarDashboard(tresQuartosLoads) {
+            // Reset manual counters on new processing
+            pesoCargasManuais = { fiorino: 0, van: 0, tresQuartos: 0 };
+
             const todosPedidosProcessados = [...pedidosGeraisAtuais, ...pedidosComCFNumericoIsolado, ...Object.values(gruposToco).flatMap(g => g.pedidos), ...tresQuartosLoads.flatMap(l => l.pedidos)];
             
             const totalKg = todosPedidosProcessados.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
@@ -1243,9 +1227,11 @@
             const tocoCount = Object.keys(gruposToco).length;
             const tresQuartosAutoCount = tresQuartosLoads.length;
 
+            pesoCargasAuto.toco = Object.values(gruposToco).reduce((sum, g) => sum + g.totalKg, 0);
+            pesoCargasAuto.tresQuartos = tresQuartosLoads.reduce((sum, l) => sum + l.totalKg, 0);
+
             document.getElementById('kpi-total-kg').textContent = `${(totalKg / 1000).toFixed(2)} t`;
             document.getElementById('kpi-pedidos-atrasados').textContent = pedidosAtrasados;
-            document.getElementById('kpi-cargas-auto').textContent = tocoCount + tresQuartosAutoCount;
             document.getElementById('kpi-pedidos-gerais').textContent = pedidosGeraisAtuais.length;
 
             document.getElementById('kpi-cargas-fiorino').textContent = 0;
@@ -1253,6 +1239,13 @@
             document.getElementById('kpi-cargas-34').textContent = tresQuartosAutoCount;
             document.getElementById('kpi-cargas-34').dataset.auto = tresQuartosAutoCount; // Store auto count
             document.getElementById('kpi-cargas-toco').textContent = tocoCount;
+
+            atualizarPesoTotalCargas();
+        }
+
+        function atualizarPesoTotalCargas() {
+            const total = pesoCargasAuto.toco + pesoCargasAuto.tresQuartos + pesoCargasManuais.fiorino + pesoCargasManuais.van + pesoCargasManuais.tresQuartos;
+            document.getElementById('kpi-peso-cargas').textContent = `${(total / 1000).toFixed(2)} t`;
         }
 
         function gerarNotificacoes(tresQuartosLoads) {
