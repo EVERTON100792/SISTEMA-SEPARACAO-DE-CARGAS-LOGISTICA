@@ -499,69 +499,6 @@
             'URAÍ': { 'ARAPONGAS': 85, 'ASTORGA': 94, 'BELA VISTA DO PARAÍSO': 90, 'BOM SUCESSO': 142, 'CAMBÉ': 69, 'CENTENÁRIO DO SUL': 98, 'FAXINAL': 163, 'FLORESTÓPOLIS': 84, 'GUARACI': 118, 'IBIPORÃ': 55, 'ITAMBARACÁ': 45, 'JAGUAPITÃ': 92, 'JANDAIA DO SUL': 114, 'JATAIZINHO': 45, 'KALORÉ': 130, 'LONDRINA': 60, 'MANDAGUARI': 103, 'MARIALVA': 115, 'MARILÂNDIA DO SUL': 130, 'MUNHOZ DE MELO': 98, 'PORECATU': 110, 'PRADO FERREIRA': 92, 'PRIMEIRO DE MAIO': 110, 'ROLÂNDIA': 71, 'SABAUDIA': 90, 'SANTA FÉ': 102, 'SANTO INÁCIO': 106, 'SERTANÓPOLIS': 60 }
         };
 
-        function calcularDistanciaLocal(loadId) {
-            const resultSpan = document.getElementById(`dist-${loadId}`);
-            const loadData = CargasFiorinoFinalizadas.get(loadId);
-            
-            if (!loadData) {
-                resultSpan.textContent = "Erro: Carga não encontrada.";
-                return;
-            }
-
-            resultSpan.innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculando...`;
-            
-            let cidadesNaCarga = [...new Set(loadData.pedidos.map(p => String(p.Cidade).toUpperCase().trim()))];
-            
-            if (cidadesNaCarga.length === 0) {
-                resultSpan.textContent = "Nenhuma cidade para calcular.";
-                return;
-            }
-
-            cidadesNaCarga = cidadesNaCarga.filter(cidade => matrizDeDistancias[cidade]);
-            
-            if (cidadesNaCarga.length === 0) {
-                resultSpan.innerHTML = `<strong class="text-warning">Cidades não mapeadas.</strong>`;
-                return;
-            }
-
-            let totalDistance = 0;
-            let currentCity = 'ROLÂNDIA';
-            let unvisitedCities = [...cidadesNaCarga];
-
-            while (unvisitedCities.length > 0) {
-                let closestCity = '';
-                let shortestDistance = Infinity;
-
-                for (const city of unvisitedCities) {
-                    const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
-                    if (!currentCityNormalized) break;
-
-                    const distance = matrizDeDistancias[currentCityNormalized]?.[city];
-                    if (distance !== undefined && distance < shortestDistance) {
-                        shortestDistance = distance;
-                        closestCity = city;
-                    }
-                }
-
-                if (closestCity) {
-                    totalDistance += shortestDistance;
-                    currentCity = closestCity;
-                    unvisitedCities = unvisitedCities.filter(city => city !== closestCity);
-                } else {
-                    console.warn("Não foi possível encontrar rota para as cidades restantes:", unvisitedCities);
-                    break;
-                }
-            }
-
-            const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
-            const returnDistance = matrizDeDistancias[currentCityNormalized]?.['ROLÂNDIA'];
-            if (returnDistance) {
-                totalDistance += returnDistance;
-            }
-
-            resultSpan.innerHTML = `<strong>Distância Estimada: ${totalDistance.toFixed(0)} km</strong>`;
-        }
-        
         let planilhaData = [];
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
@@ -764,132 +701,132 @@
                 }
             }
         }
-
+        
+        // Wrapper function to show modal and handle errors
         function iniciarProcessamento() {
             loadingModal.show();
             // Use a short timeout to allow the modal to render before the heavy processing starts
             setTimeout(() => {
-                processar();
+                try {
+                    processar();
+                } catch (error) {
+                    statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro no processamento:</strong></p><pre>${error.stack}</pre>`;
+                    console.error(error);
+                } finally {
+                    loadingModal.hide();
+                }
             }, 50);
         }
-
+        
+        // Core processing logic
         function processar() {
-            try {
-                const resultadoGeralDiv = document.getElementById('resultado-geral');
-                const resultadoTocoDiv = document.getElementById('resultado-toco');
-                const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
-                const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
+            const resultadoGeralDiv = document.getElementById('resultado-geral');
+            const resultadoTocoDiv = document.getElementById('resultado-toco');
+            const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
+            const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
 
-                if (planilhaData.length === 0) { 
-                    statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; 
-                    loadingModal.hide();
-                    return; 
-                }
-                const rotaInicialInput = document.getElementById('rotaInicialInput').value; 
-                const rotaFinalInput = document.getElementById('rotaFinalInput').value;
-                resultadoGeralDiv.innerHTML = ''; 
-                resultadoTocoDiv.innerHTML = ''; 
-                resultadoTresQuartosDiv.innerHTML = ''; 
-                resultadoCfNumericoDiv.innerHTML = '';
-
-                const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
-
-                // 1. Identificar e separar as cargas TOCO
-                const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
-                const cfCounts = {};
-                pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
-                const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
-                const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
-                gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
-                    const cf = p.CF;
-                    if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; } 
-                    acc[cf].pedidos.push(p); 
-                    acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; 
-                    return acc;
-                }, {});
-                displayToco(resultadoTocoDiv, gruposToco);
-                tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
-
-                // 2. Regras de bloqueio e de cliente
-                const clientesComBloqueio = new Set(); 
-                const clientesSemBloqueio = new Set();
-                pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
-                const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
-                const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; 
-                const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
-                
-                // 3. Filtrar e separar os pedidos restantes
-                let pedidosParaProcessamento = [];
-                pedidosComCFNumericoIsolado = [];
-
-                pedidos.forEach(p => {
-                    if (tocoPedidoIds.has(String(p.Num_Pedido))) return; // Já é TOCO
-                    if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return;
-                    if (clientesParaRemover.has(String(p.Cliente))) return;
-                    if (['21', '23', '17'].includes(String(p.Coluna4))) return;
-                    
-                    const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
-                    if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return;
-
-                    if (isNumeric(p.CF)) {
-                        pedidosComCFNumericoIsolado.push(p);
-                    } else {
-                        pedidosParaProcessamento.push(p);
-                    }
-                });
-                
-                displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
-
-                // 4. Montagem de cargas 3/4 automático
-                let tresQuartosLoads = [];
-                const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value) || defaultConfigs.tresQuartosMinCapacity;
-                const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value) || defaultConfigs.tresQuartosMaxCapacity;
-                const LARGE_ORDER_KG = 1700;
-
-                const largeOrdersByRoute = pedidosParaProcessamento.reduce((acc, p) => {
-                    const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                    if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } 
-                    return acc;
-                }, {});
-                const pedidosEmCargas3_4 = new Set();
-                Object.keys(largeOrdersByRoute).forEach(rota => {
-                    const largeOrders = largeOrdersByRoute[rota];
-                    if (largeOrders.length === 1) {
-                        const largeOrder = largeOrders[0]; if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
-                        let newLoad = { pedidos: [largeOrder], totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0, rota: rota };
-                        const otherOrdersInRoute = pedidosParaProcessamento.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
-                        for (const order of otherOrdersInRoute) {
-                            if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue;
-                            const orderKg = parseFloat(String(order.Quilos_Saldo).replace(',', '.')) || 0;
-                            if (newLoad.totalKg + orderKg <= MAX_KG_3_4) { newLoad.pedidos.push(order); newLoad.totalKg += orderKg; }
-                        }
-                        if (newLoad.totalKg >= MIN_KG_3_4) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); }
-                    }
-                });
-                tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
-                displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
-
-                // 5. Definir a lista final de Resultados Gerais
-                pedidosGeraisAtuais = pedidosParaProcessamento.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
-                
-                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
-                    const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } 
-                    acc[rota].pedidos.push(p); 
-                    acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; 
-                    return acc;
-                }, {});
-                displayGerais(resultadoGeralDiv, gruposGerais);
-
-                // 6. Update Dashboard and Notifications
-                atualizarDashboard(tresQuartosLoads);
-                gerarNotificacoes(tresQuartosLoads);
-
-            } catch (error) { 
-                statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; 
-                console.error(error); 
-            } finally {
-                loadingModal.hide();
+            if (planilhaData.length === 0) { 
+                statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; 
+                return; 
             }
+            const rotaInicialInput = document.getElementById('rotaInicialInput').value; 
+            const rotaFinalInput = document.getElementById('rotaFinalInput').value;
+            resultadoGeralDiv.innerHTML = ''; 
+            resultadoTocoDiv.innerHTML = ''; 
+            resultadoTresQuartosDiv.innerHTML = ''; 
+            resultadoCfNumericoDiv.innerHTML = '';
+
+            const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
+
+            // 1. Identificar e separar as cargas TOCO
+            const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
+            const cfCounts = {};
+            pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
+            const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
+            const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
+            gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
+                const cf = p.CF;
+                if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; } 
+                acc[cf].pedidos.push(p); 
+                acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; 
+                return acc;
+            }, {});
+            displayToco(resultadoTocoDiv, gruposToco);
+            tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
+
+            // 2. Regras de bloqueio e de cliente
+            const clientesComBloqueio = new Set(); 
+            const clientesSemBloqueio = new Set();
+            pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
+            const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
+            const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; 
+            const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
+            
+            // 3. Filtrar e separar os pedidos restantes
+            let pedidosParaProcessamento = [];
+            pedidosComCFNumericoIsolado = [];
+
+            pedidos.forEach(p => {
+                if (tocoPedidoIds.has(String(p.Num_Pedido))) return; // Já é TOCO
+                if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return;
+                if (clientesParaRemover.has(String(p.Cliente))) return;
+                if (['21', '23', '17'].includes(String(p.Coluna4))) return;
+                
+                const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
+                if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return;
+
+                if (isNumeric(p.CF)) {
+                    pedidosComCFNumericoIsolado.push(p);
+                } else {
+                    pedidosParaProcessamento.push(p);
+                }
+            });
+            
+            displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
+
+            // 4. Montagem de cargas 3/4 automático
+            let tresQuartosLoads = [];
+            const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value) || defaultConfigs.tresQuartosMinCapacity;
+            const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value) || defaultConfigs.tresQuartosMaxCapacity;
+            const LARGE_ORDER_KG = 1700;
+
+            const largeOrdersByRoute = pedidosParaProcessamento.reduce((acc, p) => {
+                const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } 
+                return acc;
+            }, {});
+            const pedidosEmCargas3_4 = new Set();
+            Object.keys(largeOrdersByRoute).forEach(rota => {
+                const largeOrders = largeOrdersByRoute[rota];
+                if (largeOrders.length === 1) {
+                    const largeOrder = largeOrders[0]; if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
+                    let newLoad = { pedidos: [largeOrder], totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0, rota: rota };
+                    const otherOrdersInRoute = pedidosParaProcessamento.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
+                    for (const order of otherOrdersInRoute) {
+                        if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue;
+                        const orderKg = parseFloat(String(order.Quilos_Saldo).replace(',', '.')) || 0;
+                        if (newLoad.totalKg + orderKg <= MAX_KG_3_4) { newLoad.pedidos.push(order); newLoad.totalKg += orderKg; }
+                    }
+                    if (newLoad.totalKg >= MIN_KG_3_4) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); }
+                }
+            });
+            tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
+            displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
+
+            // 5. Definir a lista final de Resultados Gerais
+            pedidosGeraisAtuais = pedidosParaProcessamento.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
+            
+            const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
+                const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } 
+                acc[rota].pedidos.push(p); 
+                acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; 
+                return acc;
+            }, {});
+            displayGerais(resultadoGeralDiv, gruposGerais);
+
+            // 6. Update Dashboard and Notifications
+            atualizarDashboard(tresQuartosLoads);
+            gerarNotificacoes(tresQuartosLoads);
         }
 
         function isOverdue(predat) {
