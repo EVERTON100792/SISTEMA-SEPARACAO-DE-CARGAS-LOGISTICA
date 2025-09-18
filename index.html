@@ -65,6 +65,7 @@
             .accordion-button { display: block !important; background-color: #f8f9fa !important; color: #000 !important; border: 1px solid #dee2e6 !important; margin-bottom: 0.5rem; }
             .accordion-button strong, .accordion-button .badge { color: #000 !important; }
             .bg-warning { background-color: #ffc107 !important; color: black !important; }
+            .text-danger { color: #dc3545 !important; }
         }
         #drop-zone-text {
             border: 2px dashed #495057;
@@ -363,7 +364,7 @@
         let CargasFiorinoFinalizadas = new Map();
 
         const matrizDeDistancias = {
-            'ARAPONGAS': { 'ASTORGA': 34, 'BELA VISTA DO PARAÍSO': 75, 'BOM SUCESSO': 75, 'CAMBÉ': 22, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 96, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'IBIPORÃ': 46, 'ITAMBARACÁ': 122, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 46, 'JATAIZINHO': 52, 'KALORÉ': 61, 'LONDRINA': 38, 'MANDAGUARI': 48, 'MARIALVA': 60, 'MARILÂNDIA DO SUL': 62, 'MUNHOZ DE MELO': 49, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 87, 'ROLÂNDIA': 10, 'SABAUDia': 16, 'SANTA FÉ': 54, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 80, 'URAÍ': 85 },
+            'ARAPONGAS': { 'ASTORGA': 34, 'BELA VISTA DO PARAÍSO': 75, 'BOM SUCESSO': 75, 'CAMBÉ': 22, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 96, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'IBIPORÃ': 46, 'ITAMBARACÁ': 122, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 46, 'JATAIZINHO': 52, 'KALORÉ': 61, 'LONDRINA': 38, 'MANDAGUARI': 48, 'MARIALVA': 60, 'MARILÂNDIA DO SUL': 62, 'MUNHOZ DE MELO': 49, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 87, 'ROLÂNDIA': 10, 'SABAUDIA': 16, 'SANTA FÉ': 54, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 80, 'URAÍ': 85 },
             'ASTORGA': { 'ARAPONGAS': 34, 'BELA VISTA DO PARAÍSO': 82, 'BOM SUCESSO': 68, 'CAMBÉ': 42, 'CENTENÁRIO DO SUL': 73, 'FAXINAL': 89, 'FLORESTÓPOLIS': 59, 'GUARACI': 93, 'IBIPORÃ': 56, 'ITAMBARACÁ': 130, 'JAGUAPITÃ': 53, 'JANDAIA DO SUL': 39, 'JATAIZINHO': 62, 'KALORÉ': 54, 'LONDRINA': 48, 'MANDAGUARI': 21, 'MARIALVA': 33, 'MARILÂNDIA DO SUL': 55, 'MUNHOZ DE MELO': 22, 'PORECATU': 84, 'PRADO FERREIRA': 66, 'PRIMEIRO DE MAIO': 94, 'ROLÂNDIA': 27, 'SABAUDIA': 18, 'SANTA FÉ': 27, 'SANTO INÁCIO': 80, 'SERTANÓPOLIS': 89, 'URAÍ': 94 },
             'BELA VISTA DO PARAÍSO': { 'ARAPONGAS': 75, 'ASTORGA': 82, 'BOM SUCESSO': 130, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 32, 'FAXINAL': 151, 'FLORESTÓPOLIS': 27, 'GUARACI': 51, 'IBIPORÃ': 65, 'ITAMBARACÁ': 127, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 103, 'JATAIZINHO': 71, 'KALORÉ': 118, 'LONDRINA': 45, 'MANDAGUARI': 90, 'MARIALVA': 102, 'MARILÂNDIA DO SUL': 119, 'MUNHOZ DE MELO': 85, 'PORECATU': 42, 'PRADO FERREIRA': 34, 'PRIMEIRO DE MAIO': 53, 'ROLÂNDIA': 61, 'SABAUDIA': 79, 'SANTA FÉ': 89, 'SANTO INÁCIO': 57, 'SERTANÓPOLIS': 54, 'URAÍ': 90 },
             'BOM SUCESSO': { 'ARAPONGAS': 75, 'ASTORGA': 68, 'BELA VISTA DO PARAÍSO': 130, 'CAMBÉ': 88, 'CENTENÁRIO DO SUL': 121, 'FAXINAL': 26, 'FLORESTÓPOLIS': 108, 'GUARACI': 142, 'IBIPORÃ': 102, 'ITAMBARACÁ': 179, 'JAGUAPITÃ': 92, 'JANDAIA DO SUL': 20, 'JATAIZINHO': 108, 'KALORÉ': 15, 'LONDRINA': 94, 'MANDAGUARI': 47, 'MARIALVA': 59, 'MARILÂNDIA DO SUL': 25, 'MUNHOZ DE MELO': 64, 'PORECATU': 133, 'PRADO FERREIRA': 115, 'PRIMEIRO DE MAIO': 143, 'ROLÂNDIA': 68, 'SABAUDIA': 59, 'SANTA FÉ': 72, 'SANTO INÁCIO': 129, 'SERTANÓPOLIS': 137, 'URAÍ': 142 },
@@ -807,7 +808,7 @@
                         }
                         
                         if (isOverdue(p.Predat)) {
-                            table += `<td>${formattedDate} <span class="badge bg-danger">Atrasado</span></td>`;
+                            table += `<td><span class="text-danger fw-bold">${formattedDate}</span></td>`;
                         } else {
                             table += `<td>${formattedDate}</td>`;
                         }
