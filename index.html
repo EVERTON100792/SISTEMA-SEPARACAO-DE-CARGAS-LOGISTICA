@@ -119,7 +119,7 @@
             <div class="row g-3">
                 <div class="col-md-3">
                     <label for="fiorinoMaxCapacity" class="form-label">Fiorino - Peso Máx (kg)</label>
-                    <input type="number" class="form-control config-input" id="fiorinoMaxCapacity" value="500" step="10">
+                    <input type="number" class="form-control config-input" id="fiorinoMaxCapacity" value="570" step="10">
                 </div>
                 <div class="col-md-3">
                     <label for="fiorinoMinCapacity" class="form-label">Fiorino - Peso Mín (kg)</label>
@@ -216,7 +216,7 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5 text-success"><i class="bi bi-box-seam me-2"></i>Separação de Cargas (Fiorino)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota para montar cargas de Fiorino. O sistema tentará promover sobras para uma Van <strong>apenas se um cliente não couber na Fiorino.</strong></p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Fiorino para separar as cargas. O sistema tentará promover sobras para uma Van se houver pedidos grandes.</p>
                         <div class="no-print">
                             <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11101', 'resultado-fiorino-geral', 'Rota 11101')">Rota 11101</button>
                             <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11301', 'resultado-fiorino-geral', 'Rota 11301')">Rota 11301</button>
@@ -235,7 +235,7 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5 text-primary"><i class="bi bi-truck-front me-2"></i>Separação de Cargas (Van)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota para montar cargas de Van. O sistema tentará promover sobras para um 3/4 <strong>apenas se um cliente não couber na Van.</strong></p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Van para separar as cargas. O sistema tentará promover sobras para um 3/4 se houver pedidos grandes.</p>
                         <div class="no-print">
                             <button class="btn btn-primary mt-2" onclick="separarCargasVan('11102', 'resultado-van-geral', 'Rota 11102')">Rota 11102</button>
                             <button class="btn btn-primary mt-2" onclick="separarCargasVan('11331', 'resultado-van-geral', 'Rota 11331')">Rota 11331</button>
@@ -260,7 +260,7 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5 text-warning"><i class="bi bi-truck-flatbed me-2"></i>Separação de Cargas (3/4)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota para montar cargas de 3/4.</p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de 3/4 para separar as cargas.</p>
                          <div class="no-print">
                             <button class="btn btn-warning mt-2" onclick="separarCargas34('11361', 'resultado-34-geral', 'Rota 11361')">Rota 11361</button>
                             <button class="btn btn-warning mt-2" onclick="separarCargas34(['11501', '11502', '11511'], 'resultado-34-geral', 'Rotas 11501, 11502 & 11511')">Rotas 11501, 11502 & 11511</button>
@@ -277,7 +277,7 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5"><i class="bi bi-lightning-charge-fill me-2"></i>Resultados Cargas 3/4 (Automático)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Cargas formadas a partir de um pedido muito grande na análise geral.</p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Cargas formadas a partir de um pedido muito grande.</p>
                         <div id="resultado-tres-quartos"></div>
                     </div>
                 </div>
@@ -312,6 +312,7 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
+        // <<< INÍCIO DA NOVA FUNCIONALIDADE: LISTA DE CLIENTES COM AGENDAMENTO >>>
         const agendamentoClientCodes = new Set([
             '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', 
             '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', 
@@ -358,7 +359,8 @@
             const normalizedCode = String(pedido.Cliente).replace(/^0+/, '');
             pedido.Agendamento = agendamentoClientCodes.has(normalizedCode) ? 'Sim' : 'Não';
         }
-        
+        // <<< FIM DA NOVA FUNCIONALIDADE >>>
+
         let CargasFiorinoFinalizadas = new Map();
 
         const matrizDeDistancias = {
@@ -464,7 +466,7 @@
         let tocoPedidoIds = new Set();
 
         const defaultConfigs = {
-            fiorinoMaxCapacity: 500, fiorinoMinCapacity: 330, fiorinoCubage: 1.5,
+            fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.5,
             vanMaxCapacity: 1560, vanMinCapacity: 1100, vanCubage: 5.0,
             tresQuartosMaxCapacity: 4100, tresQuartosMinCapacity: 2300, tresQuartosCubage: 15.0,
             tocoMaxCapacity: 8500, tocoMinCapacity: 5000, tocoCubage: 30.0
@@ -573,6 +575,7 @@
                         headers.forEach((header, i) => { 
                             if (header) { 
                                  if (header.toLowerCase() === 'predat' && typeof row[i] === 'number') {
+                                    // Handle Excel date serial number
                                     pedido[header] = new Date(Math.round((row[i] - 25569) * 86400 * 1000));
                                 } else {
                                     pedido[header] = row[i] !== undefined ? row[i] : ''; 
@@ -633,9 +636,9 @@
                 if (local === 'Resultados Gerais') {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                                       buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -779,7 +782,7 @@
             ];
 
             const dataToExport = pedidosAtrasados.map(p => {
-                const newP = {...p};
+                const newP = {...p}; // create a shallow copy
                 if (newP.Predat instanceof Date) {
                     newP.Predat = newP.Predat.toLocaleDateString('pt-BR');
                 }
@@ -888,13 +891,10 @@
 
             const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
                 const clienteId = pedido.Cliente;
-                const cidade = String(pedido.Cidade).trim().toUpperCase();
-                const groupKey = `${clienteId}-${cidade}`;
-
-                if (!acc[groupKey]) {
-                    acc[groupKey] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                if (!acc[clienteId]) {
+                    acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
                 }
-                acc[groupKey].pedidos.push(pedido);
+                acc[clienteId].pedidos.push(pedido);
                 return acc;
             }, {});
             
@@ -952,7 +952,8 @@
             const leftovers = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             return { loads: finalLoads, leftovers };
         }
-        
+
+
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '';
@@ -969,37 +970,17 @@
             let currentLeftovers = primaryResult.leftovers;
             let promotedLoads = [];
 
-            let shouldPromote = false;
-            if ((vehicleType === 'fiorino' || vehicleType === 'van') && currentLeftovers.length > 0) {
-                const MAX_PRIMARY_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
-
-                const leftoverClientGroups = currentLeftovers.reduce((acc, pedido) => {
-                    const clienteId = pedido.Cliente;
-                    const cidade = String(pedido.Cidade).trim().toUpperCase();
-                    const groupKey = `${clienteId}-${cidade}`;
-
-                    if (!acc[groupKey]) {
-                        acc[groupKey] = { totalKg: 0 };
-                    }
-                    acc[groupKey].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                    return acc;
-                }, {});
-
-                for (const groupKey in leftoverClientGroups) {
-                    if (leftoverClientGroups[groupKey].totalKg > MAX_PRIMARY_KG) {
-                        shouldPromote = true;
-                        break;
-                    }
-                }
-            }
-
-            if (shouldPromote) {
-                const nextVehicle = (vehicleType === 'fiorino') ? 'van' : 'tresQuartos';
-                const promotedResult = packLoads(currentLeftovers, nextVehicle);
+            if (vehicleType === 'fiorino' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 600)) {
+                const promotedResult = packLoads(currentLeftovers, 'van');
                 promotedLoads = promotedResult.loads;
                 currentLeftovers = promotedResult.leftovers;
             }
-
+            else if (vehicleType === 'van' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 1650)) {
+                const promotedResult = packLoads(currentLeftovers, 'tresQuartos');
+                promotedLoads = promotedResult.loads;
+                currentLeftovers = promotedResult.leftovers;
+            }
+            
             primaryLoads.forEach((load, index) => { load.numero = index + 1; });
             promotedLoads.forEach((load, index) => { load.numero = index + 1; });
             
@@ -1022,11 +1003,7 @@
             
             const vInfo = vehicleInfo[vehicleType];
             html += `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${primaryLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${(primaryLoads.length > 0 || promotedLoads.length > 0) ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}</div>`;
-            if (primaryLoads.length === 0 && promotedLoads.length === 0) { 
-                html += `<p>Nenhuma carga foi formada para ${title}.</p>`; 
-            } else if(primaryLoads.length === 0) {
-                 html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; 
-            }
+            if (primaryLoads.length === 0) { html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; }
 
             primaryLoads.forEach(load => {
                 html += renderLoadCard(load, vehicleType, vInfo);
@@ -1073,8 +1050,8 @@
             if (vehicleType === 'fiorino') {
                 fiorinoDistanceHtml = `
                     <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
-                        <span id="dist-${load.id}"></span>
-                        <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
+                       <span id="dist-${load.id}"></span>
+                       <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
                     </div>`;
             }
 
@@ -1100,21 +1077,7 @@
             
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionToco">';
             Object.keys(grupos).sort().forEach((cf, index) => {
-                const grupo = grupos[cf]; 
-                const pedidos = grupo.pedidos;
-
-                pedidos.sort((a, b) => {
-                    const clienteA = String(a.Cliente);
-                    const clienteB = String(b.Cliente);
-                    const pedidoA = String(a.Num_Pedido);
-                    const pedidoB = String(b.Num_Pedido);
-
-                    if (clienteA < clienteB) return -1;
-                    if (clienteA > clienteB) return 1;
-                    
-                    return pedidoA.localeCompare(pedidoB);
-                });
-
+                const grupo = grupos[cf]; const pedidos = grupo.pedidos;
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const overWeight = grupo.totalKg > MAX_KG_TOCO;
                 const weightBadge = overWeight
@@ -1144,6 +1107,7 @@
                 body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                 .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; }
                 .no-print { display: none !important; }
+                /* Mantém as cores dos cabeçalhos na impressão */
                 .bg-success { background-color: #198754 !important; color: white !important; }
                 .bg-primary { background-color: #0d6efd !important; color: white !important; }
                 .bg-warning { background-color: #ffc107 !important; color: black !important; }
