@@ -134,7 +134,7 @@
                 <div class="col-md-12"><strong class="text-success">Fiorino</strong></div>
                 <div class="col-md-3">
                     <label for="fiorinoMinCapacity" class="form-label">Peso Mín (kg)</label>
-                    <input type="number" class="form-control config-input" id="fiorinoMinCapacity" value="330" step="10">
+                    <input type="number" class="form-control config-input" id="fiorinoMinCapacity" value="300" step="10">
                 </div>
                 <div class="col-md-3">
                     <label for="fiorinoMaxCapacity" class="form-label">Peso Pref. (kg)</label>
@@ -331,8 +331,8 @@
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100 border-secondary">
                     <div class="card-body">
-                        <h2 class="card-title h5 text-secondary"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (CF Numérico)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Estes pedidos foram removidos da lista geral porque possuem um CF numérico, mas não formaram um grupo "Toco".</p>
+                        <h2 class="card-title h5 text-secondary"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (CF Numérico ou Bloqueados)</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos removidos da lista geral por possuírem CF numérico, ou por pertencerem a clientes com pedidos bloqueados.</p>
                         <div id="resultado-cf-numerico"></div>
                     </div>
                 </div>
@@ -365,7 +365,7 @@
         let currentLeftoversForPrinting = [];
 
         const defaultConfigs = {
-            fiorinoMinCapacity: 330, fiorinoMaxCapacity: 500, fiorinoCubage: 1.5, fiorinoHardMaxCapacity: 560, fiorinoHardCubage: 1.7,
+            fiorinoMinCapacity: 300, fiorinoMaxCapacity: 500, fiorinoCubage: 1.5, fiorinoHardMaxCapacity: 560, fiorinoHardCubage: 1.7,
             vanMinCapacity: 1100, vanMaxCapacity: 1560, vanCubage: 5.0, vanHardMaxCapacity: 1600, vanHardCubage: 5.6,
             tresQuartosMinCapacity: 2300, tresQuartosMaxCapacity: 4100, tresQuartosCubage: 15.0,
             tocoMinCapacity: 5000, tocoMaxCapacity: 8500, tocoCubage: 30.0
@@ -484,7 +484,12 @@
                         headers.forEach((header, i) => { 
                             if (header) { 
                                 if ((header.toLowerCase() === 'predat' || header.toLowerCase() === 'dat_ped') && typeof row[i] === 'number') {
-                                    pedido[header] = new Date(Math.round((row[i] - 25569) * 86400 * 1000));
+                                    const date = new Date(Math.round((row[i] - 25569) * 86400 * 1000));
+                                    if (!isNaN(date.getTime())) { // Validação de data
+                                        pedido[header] = date;
+                                    } else {
+                                        pedido[header] = '';
+                                    }
                                 } else {
                                     pedido[header] = row[i] !== undefined ? row[i] : ''; 
                                 }
@@ -515,7 +520,7 @@
             if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = 'accordionGeral'; }
             if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosComCFNumericoIsolado.find(p => String(p.Num_Pedido) === searchInput);
-                if (pedidoEncontrado) { local = 'Pedidos Filtrados (CF Numérico)'; accordionId = 'accordionCF'; }
+                if (pedidoEncontrado) { local = 'Pedidos Filtrados'; accordionId = 'accordionCF'; }
             }
             if (!pedidoEncontrado) {
                 for (const cf in gruposToco) {
@@ -575,11 +580,29 @@
                 const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
                 const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
                 try {
-                    if (planilhaData.length === 0) { statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return; }
+                    if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
+                    
                     resetarEstadoGlobal();
+                    // Limpeza da UI para nova análise
+                    ['resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 'resultado-toco', 'resultado-tres-quartos', 'resultado-cf-numerico'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if(el) el.innerHTML = '';
+                    });
+
+
                     const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
-                    resultadoGeralDiv.innerHTML = ''; resultadoTocoDiv.innerHTML = ''; resultadoTresQuartosDiv.innerHTML = ''; resultadoCfNumericoDiv.innerHTML = '';
                     const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
+
+                    // LÓGICA DE BLOQUEIO "TUDO OU NADA"
+                    // 1. Mapeia todos os clientes que têm pelo menos um pedido bloqueado.
+                    const clientesComBloqueio = new Set();
+                    pedidos.forEach(p => {
+                        if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') {
+                            clientesComBloqueio.add(String(p.Cliente));
+                        }
+                    });
+
+                    // FILTRAGEM PRINCIPAL
                     const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                     const cfCounts = {};
                     pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
@@ -591,16 +614,18 @@
                     }, {});
                     displayToco(resultadoTocoDiv, gruposToco);
                     tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
-                    const clientesComBloqueio = new Set(); const clientesSemBloqueio = new Set();
-                    pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
-                    const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
+
                     const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
                     let pedidosParaProcessamento = [];
-                    pedidosComCFNumericoIsolado = [];
+                    
                     pedidos.forEach(p => {
+                        // Aplica filtros um a um
                         if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
-                        if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return;
-                        if (clientesParaRemover.has(String(p.Cliente))) return;
+                        // REGRA DE BLOQUEIO: Se o cliente está na lista de bloqueio, pula todos os pedidos dele.
+                        if (clientesComBloqueio.has(String(p.Cliente))) {
+                            pedidosComCFNumericoIsolado.push(p); // Adiciona aos "filtrados" para referência
+                            return;
+                        }
                         if (['21', '23', '17'].includes(String(p.Coluna4))) return;
                         const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
                         if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return;
@@ -610,7 +635,9 @@
                             pedidosParaProcessamento.push(p);
                         }
                     });
+                    
                     displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
+
                     let tresQuartosLoads = [];
                     const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
                     const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
@@ -636,11 +663,13 @@
                     });
                     tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
                     displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
+
                     pedidosGeraisAtuais = pedidosParaProcessamento.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
                     const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
                         const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
                     }, {});
                     displayGerais(resultadoGeralDiv, gruposGerais);
+
                     statusDiv.innerHTML = `<p class="text-success">Processamento concluído com sucesso!</p>`;
                 } catch (error) { 
                     statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; 
@@ -752,7 +781,7 @@
         }
         
         function displayPedidosCFNumerico(div, pedidos) {
-            if (pedidos.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido com CF numérico encontrado para esta seção.</div>'; return; }
+            if (pedidos.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido filtrado por CF numérico ou por Regra de Bloqueio.</div>'; return; }
             const grupos = pedidos.reduce((acc, p) => {
                 const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
             }, {});
@@ -912,9 +941,7 @@
                 }
                 const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
                 let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
-                
                 const result = packLoads(pedidosRota, vehicleType);
-
                 let primaryLoads = result.loads;
                 let currentLeftovers = result.leftovers;
                 primaryLoads.forEach((load, index) => { load.numero = index + 1; });
