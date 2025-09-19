@@ -193,13 +193,13 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
-                             <h2 class="card-title h5"><i class="bi bi-list-check me-2"></i>Resultados Gerais</h2>
-                             <div>
-                                 <button class="btn btn-sm btn-outline-danger ms-2 no-print" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i> Exportar Atrasados</button>
-                                 <button class="btn btn-sm btn-outline-light no-print" onclick="window.print()"><i class="bi bi-printer-fill me-1"></i> Imprimir Tudo</button>
-                             </div>
+                              <h2 class="card-title h5"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis para Montagem</h2>
+                              <div>
+                                  <button class="btn btn-sm btn-outline-danger ms-2 no-print" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i> Exportar Atrasados</button>
+                                  <button class="btn btn-sm btn-outline-light no-print" onclick="window.print()"><i class="bi bi-printer-fill me-1"></i> Imprimir Tudo</button>
+                              </div>
                         </div>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos que <strong>não possuem CF numérico</strong>, agrupados por rota.</p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos que <strong>não possuem CF numérico</strong>, agrupados por rota. Use os botões nas seções abaixo para montar as cargas.</p>
                         <div class="input-group mb-3 no-print">
                             <input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar por Nº do Pedido...">
                             <button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()"><i class="bi bi-search"></i></button>
@@ -216,13 +216,9 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5 text-success"><i class="bi bi-box-seam me-2"></i>Separação de Cargas (Fiorino)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Fiorino para separar as cargas. O sistema tentará promover sobras para uma Van se houver pedidos grandes.</p>
-                        <div class="no-print">
-                            <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11101', 'resultado-fiorino-geral', 'Rota 11101')">Rota 11101</button>
-                            <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11301', 'resultado-fiorino-geral', 'Rota 11301')">Rota 11301</button>
-                            <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11311', 'resultado-fiorino-geral', 'Rota 11311')">Rota 11311</button>
-                            <button class="btn btn-success mt-2" onclick="separarCargasFiorino('11561', 'resultado-fiorino-geral', 'Rota 11561')">Rota 11561</button>
-                            <button class="btn btn-success mt-2" onclick="separarCargasFiorino(['11721', '11731'], 'resultado-fiorino-geral', 'Rotas 11721 & 11731')">Rotas 11721 & 11731</button>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota para montar as Fiorinos. Sobras com potencial de Van serão destacadas.</p>
+                        <div class="no-print" id="botoes-fiorino">
+                            <p class="text-muted">Processe um arquivo para ver as rotas de Fiorino disponíveis.</p>
                         </div>
                         <div id="resultado-fiorino-geral" class="mt-3"></div>
                     </div>
@@ -235,19 +231,9 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h2 class="card-title h5 text-primary"><i class="bi bi-truck-front me-2"></i>Separação de Cargas (Van)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Van para separar as cargas. O sistema tentará promover sobras para um 3/4 se houver pedidos grandes.</p>
-                        <div class="no-print">
-                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11102', 'resultado-van-geral', 'Rota 11102')">Rota 11102</button>
-                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11331', 'resultado-van-geral', 'Rota 11331')">Rota 11331</button>
-                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11341', 'resultado-van-geral', 'Rota 11341')">Rota 11341</button>
-                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11342', 'resultado-van-geral', 'Rota 11342')">Rota 11342</button>
-                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11351', 'resultado-van-geral', 'Rota 11351')">Rota 11351</button>
-                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11521', 'resultado-van-geral', 'Rota 11521')">Rota 11521</button>
-                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11531', 'resultado-van-geral', 'Rota 11531')">Rota 11531</button>
-                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11551', 'resultado-van-geral', 'Rota 11551')">Rota 11551</button>
-                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11571', 'resultado-van-geral', 'Rota 11571')">Rota 11571</button>
-                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11701', 'resultado-van-geral', 'Rota 11701')">Rota 11701</button>
-                            <button class="btn btn-primary mt-2" onclick="separarCargasVan('11711', 'resultado-van-geral', 'Rota 11711')">Rota 11711</button>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de Van para separar as cargas.</p>
+                        <div class="no-print" id="botoes-van">
+                           <p class="text-muted">Processe um arquivo para ver as rotas de Van disponíveis.</p>
                         </div>
                         <div id="resultado-van-geral" class="mt-3"></div>
                     </div>
@@ -261,10 +247,8 @@
                     <div class="card-body">
                         <h2 class="card-title h5 text-warning"><i class="bi bi-truck-flatbed me-2"></i>Separação de Cargas (3/4)</h2>
                         <p class="card-subtitle mb-2 text-body-secondary small">Selecione uma rota de 3/4 para separar as cargas.</p>
-                         <div class="no-print">
-                            <button class="btn btn-warning mt-2" onclick="separarCargas34('11361', 'resultado-34-geral', 'Rota 11361')">Rota 11361</button>
-                            <button class="btn btn-warning mt-2" onclick="separarCargas34(['11501', '11502', '11511'], 'resultado-34-geral', 'Rotas 11501, 11502 & 11511')">Rotas 11501, 11502 & 11511</button>
-                            <button class="btn btn-warning mt-2" onclick="separarCargas34('11541', 'resultado-34-geral', 'Rota 11541')">Rota 11541</button>
+                         <div class="no-print" id="botoes-34">
+                            <p class="text-muted">Processe um arquivo para ver as rotas de 3/4 disponíveis.</p>
                         </div>
                         <div id="resultado-34-geral" class="mt-3"></div>
                     </div>
@@ -276,8 +260,8 @@
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h2 class="card-title h5"><i class="bi bi-lightning-charge-fill me-2"></i>Resultados Cargas 3/4 (Automático)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Cargas formadas a partir de um pedido muito grande.</p>
+                        <h2 class="card-title h5"><i class="bi bi-lightning-charge-fill me-2"></i>Cargas 3/4 (Formadas Automaticamente)</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Cargas formadas a partir de um pedido muito grande na mesma rota.</p>
                         <div id="resultado-tres-quartos"></div>
                     </div>
                 </div>
@@ -288,7 +272,7 @@
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h2 class="card-title h5"><i class="bi bi-inboxes-fill me-2"></i>Resultados das Cargas "Toco"</h2>
+                        <h2 class="card-title h5"><i class="bi bi-inboxes-fill me-2"></i>Cargas "Toco"</h2>
                         <p class="card-subtitle mb-2 text-body-secondary small">Grupos de cargas onde a Coluna4/5 contém "TOCO" e o CF se repete.</p>
                         <div id="resultado-toco"></div>
                     </div>
@@ -312,43 +296,8 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
-        // <<< INÍCIO DA NOVA FUNCIONALIDADE: LISTA DE CLIENTES COM AGENDAMENTO >>>
         const agendamentoClientCodes = new Set([
-            '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', 
-            '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', 
-            '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', 
-            '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', 
-            '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', 
-            '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', 
-            '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', 
-            '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', 
-            '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', 
-            '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', 
-            '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '144192', '144457', '145014', '145237', '145322', '146644', '146988', 
-            '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', 
-            '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', 
-            '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', 
-            '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', 
-            '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', 
-            '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', 
-            '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', 
-            '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', 
-            '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', 
-            '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196084', '196118', '196405', '196446', '196784', 
-            '197168', '197249', '197983', '198187', '198438', '198747', '198774', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', 
-            '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', 
-            '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', 
-            '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', 
-            '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', 
-            '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', 
-            '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', 
-            '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', 
-            '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', 
-            '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', 
-            '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218578', '218580', '218640', '218820', '218845', '219539', 
-            '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', 
-            '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', 
-            '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
+            '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '144192', '144457', '145014', '145237', '145322', '146644', '146988', '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196084', '196118', '196405', '196446', '196784', '197168', '197249', '197983', '198187', '198438', '198747', '198774', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218578', '218580', '218640', '218820', '218845', '219539', '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
         ]);
 
         function checkAgendamento(pedido) {
@@ -359,111 +308,15 @@
             const normalizedCode = String(pedido.Cliente).replace(/^0+/, '');
             pedido.Agendamento = agendamentoClientCodes.has(normalizedCode) ? 'Sim' : 'Não';
         }
-        // <<< FIM DA NOVA FUNCIONALIDADE >>>
-
-        let CargasFiorinoFinalizadas = new Map();
-
-        const matrizDeDistancias = {
-            'ARAPONGAS': { 'ASTORGA': 34, 'BELA VISTA DO PARAÍSO': 75, 'BOM SUCESSO': 75, 'CAMBÉ': 22, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 96, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'IBIPORÃ': 46, 'ITAMBARACÁ': 122, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 46, 'JATAIZINHO': 52, 'KALORÉ': 61, 'LONDRINA': 38, 'MANDAGUARI': 48, 'MARIALVA': 60, 'MARILÂNDIA DO SUL': 62, 'MUNHOZ DE MELO': 49, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 87, 'ROLÂNDIA': 10, 'SABAUDIA': 16, 'SANTA FÉ': 54, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 80, 'URAÍ': 85 },
-            'ASTORGA': { 'ARAPONGAS': 34, 'BELA VISTA DO PARAÍSO': 82, 'BOM SUCESSO': 68, 'CAMBÉ': 42, 'CENTENÁRIO DO SUL': 73, 'FAXINAL': 89, 'FLORESTÓPOLIS': 59, 'GUARACI': 93, 'IBIPORÃ': 56, 'ITAMBARACÁ': 130, 'JAGUAPITÃ': 53, 'JANDAIA DO SUL': 39, 'JATAIZINHO': 62, 'KALORÉ': 54, 'LONDRINA': 48, 'MANDAGUARI': 21, 'MARIALVA': 33, 'MARILÂNDIA DO SUL': 55, 'MUNHOZ DE MELO': 22, 'PORECATU': 84, 'PRADO FERREIRA': 66, 'PRIMEIRO DE MAIO': 94, 'ROLÂNDIA': 27, 'SABAUDIA': 18, 'SANTA FÉ': 27, 'SANTO INÁCIO': 80, 'SERTANÓPOLIS': 89, 'URAÍ': 94 },
-            'BELA VISTA DO PARAÍSO': { 'ARAPONGAS': 75, 'ASTORGA': 82, 'BOM SUCESSO': 130, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 32, 'FAXINAL': 151, 'FLORESTÓPOLIS': 27, 'GUARACI': 51, 'IBIPORÃ': 65, 'ITAMBARACÁ': 127, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 103, 'JATAIZINHO': 71, 'KALORÉ': 118, 'LONDRINA': 45, 'MANDAGUARI': 90, 'MARIALVA': 102, 'MARILÂNDIA DO SUL': 119, 'MUNHOZ DE MELO': 85, 'PORECATU': 42, 'PRADO FERREIRA': 34, 'PRIMEIRO DE MAIO': 53, 'ROLÂNDIA': 61, 'SABAUDIA': 79, 'SANTA FÉ': 89, 'SANTO INÁCIO': 57, 'SERTANÓPOLIS': 54, 'URAÍ': 90 },
-            'BOM SUCESSO': { 'ARAPONGAS': 75, 'ASTORGA': 68, 'BELA VISTA DO PARAÍSO': 130, 'CAMBÉ': 88, 'CENTENÁRIO DO SUL': 121, 'FAXINAL': 26, 'FLORESTÓPOLIS': 108, 'GUARACI': 142, 'IBIPORÃ': 102, 'ITAMBARACÁ': 179, 'JAGUAPITÃ': 92, 'JANDAIA DO SUL': 20, 'JATAIZINHO': 108, 'KALORÉ': 15, 'LONDRINA': 94, 'MANDAGUARI': 47, 'MARIALVA': 59, 'MARILÂNDIA DO SUL': 25, 'MUNHOZ DE MELO': 64, 'PORECATU': 133, 'PRADO FERREIRA': 115, 'PRIMEIRO DE MAIO': 143, 'ROLÂNDIA': 68, 'SABAUDIA': 59, 'SANTA FÉ': 72, 'SANTO INÁCIO': 129, 'SERTANÓPOLIS': 137, 'URAÍ': 142 },
-            'CAMBÉ': { 'ARAPONGAS': 22, 'ASTORGA': 42, 'BELA VISTA DO PARAÍSO': 59, 'BOM SUCESSO': 88, 'CENTENÁRIO DO SUL': 60, 'FAXINAL': 109, 'FLORESTÓPOLIS': 46, 'GUARACI': 80, 'IBIPORÃ': 29, 'ITAMBARACÁ': 108, 'JAGUAPITÃ': 40, 'JANDAIA DO SUL': 59, 'JATAIZINHO': 35, 'KALORÉ': 74, 'LONDRINA': 16, 'MANDAGUARI': 51, 'MARIALVA': 63, 'MARILÂNDIA DO SUL': 75, 'MUNHOZ DE MELO': 56, 'PORECATU': 71, 'PRADO FERREIRA': 53, 'PRIMEIRO DE MAIO': 72, 'ROLÂNDIA': 15, 'SABAUDIA': 26, 'SANTA FÉ': 59, 'SANTO INÁCIO': 67, 'SERTANÓPOLIS': 64, 'URAÍ': 69 },
-            'CENTENÁRIO DO SUL': { 'ARAPONGAS': 66, 'ASTORGA': 73, 'BELA VISTA DO PARAÍSO': 32, 'BOM SUCESSO': 121, 'CAMBÉ': 60, 'FAXINAL': 142, 'FLORESTÓPOLIS': 18, 'GUARACI': 20, 'IBIPORÃ': 66, 'ITAMBARACÁ': 136, 'JAGUAPITÃ': 37, 'JANDAIA DO SUL': 94, 'JATAIZINHO': 72, 'KALORÉ': 109, 'LONDRINA': 58, 'MANDAGUARI': 81, 'MARIALVA': 93, 'MARILÂNDIA DO SUL': 110, 'MUNHOZ DE MELO': 76, 'PORECATU': 24, 'PRADO FERREIRA': 25, 'PRIMEIRO DE MAIO': 35, 'ROLÂNDIA': 52, 'SABAUDIA': 70, 'SANTA FÉ': 80, 'SANTO INÁCIO': 28, 'SERTANÓPOLIS': 62, 'URAÍ': 98 },
-            'FAXINAL': { 'ARAPONGAS': 96, 'ASTORGA': 89, 'BELA VISTA DO PARAÍSO': 151, 'BOM SUCESSO': 26, 'CAMBÉ': 109, 'CENTENÁRIO DO SUL': 142, 'FLORESTÓPOLIS': 129, 'GUARACI': 163, 'IBIPORÃ': 123, 'ITAMBARACÁ': 200, 'JAGUAPITÃ': 113, 'JANDAIA DO SUL': 41, 'JATAIZINHO': 129, 'KALORÉ': 24, 'LONDRINA': 115, 'MANDAGUARI': 68, 'MARIALVA': 80, 'MARILÂNDIA DO SUL': 32, 'MUNHOZ DE MELO': 85, 'PORECATU': 154, 'PRADO FERREIRA': 136, 'PRIMEIRO DE MAIO': 164, 'ROLÂNDIA': 89, 'SABAUDIA': 80, 'SANTA FÉ': 93, 'SANTO INÁCIO': 150, 'SERTANÓPOLIS': 158, 'URAÍ': 163 },
-            'FLORESTÓPOLIS': { 'ARAPONGAS': 52, 'ASTORGA': 59, 'BELA VISTA DO PARAÍSO': 27, 'BOM SUCESSO': 108, 'CAMBÉ': 46, 'CENTENÁRIO DO SUL': 18, 'FAXINAL': 129, 'GUARACI': 37, 'IBIPORÃ': 52, 'ITAMBARACÁ': 121, 'JAGUAPITÃ': 23, 'JANDAIA DO SUL': 81, 'JATAIZINHO': 58, 'KALORÉ': 96, 'LONDRINA': 44, 'MANDAGUARI': 67, 'MARIALVA': 79, 'MARILÂNDIA DO SUL': 97, 'MUNHOZ DE MELO': 62, 'PORECATU': 29, 'PRADO FERREIRA': 20, 'PRIMEIRO DE MAIO': 39, 'ROLÂNDIA': 38, 'SABAUDIA': 56, 'SANTA FÉ': 66, 'SANTO INÁCIO': 43, 'SERTANÓPOLIS': 48, 'URAÍ': 84 },
-            'GUARACI': { 'ARAPONGAS': 86, 'ASTORGA': 93, 'BELA VISTA DO PARAÍSO': 51, 'BOM SUCESSO': 142, 'CAMBÉ': 80, 'CENTENÁRIO DO SUL': 20, 'FAXINAL': 163, 'FLORESTÓPOLIS': 37, 'IBIPORÃ': 86, 'ITAMBARACÁ': 134, 'JAGUAPITÃ': 57, 'JANDAIA DO SUL': 114, 'JATAIZINHO': 92, 'KALORÉ': 130, 'LONDRINA': 78, 'MANDAGUARI': 101, 'MARIALVA': 113, 'MARILÂNDIA DO SUL': 130, 'MUNHOZ DE MELO': 96, 'PORECATU': 28, 'PRADO FERREIRA': 45, 'PRIMEIRO DE MAIO': 15, 'ROLÂNDIA': 72, 'SABAUDIA': 90, 'SANTA FÉ': 100, 'SANTO INÁCIO': 8, 'SERTANÓPOLIS': 82, 'URAÍ': 118 },
-            'IBIPORÃ': { 'ARAPONGAS': 46, 'ASTORGA': 56, 'BELA VISTA DO PARAÍSO': 65, 'BOM SUCESSO': 102, 'CAMBÉ': 29, 'CENTENÁRIO DO SUL': 66, 'FAXINAL': 123, 'FLORESTÓPOLIS': 52, 'GUARACI': 86, 'ITAMBARACÁ': 91, 'JAGUAPITÃ': 46, 'JANDAIA DO SUL': 73, 'JATAIZINHO': 18, 'KALORÉ': 88, 'LONDRINA': 22, 'MANDAGUARI': 65, 'MARIALVA': 77, 'MARILÂNDIA DO SUL': 89, 'MUNHOZ DE MELO': 70, 'PORECATU': 77, 'PRADO FERREIRA': 59, 'PRIMEIRO DE MAIO': 78, 'ROLÂNDIA': 32, 'SABAUDIA': 40, 'SANTA FÉ': 73, 'SANTO INÁCIO': 73, 'SERTANÓPOLIS': 50, 'URAÍ': 55 },
-            'ITAMBARACÁ': { 'ARAPONGAS': 122, 'ASTORGA': 130, 'BELA VISTA DO PARAÍSO': 127, 'BOM SUCESSO': 179, 'CAMBÉ': 108, 'CENTENÁRIO DO SUL': 136, 'FAXINAL': 200, 'FLORESTÓPOLIS': 121, 'GUARACI': 134, 'IBIPORÃ': 91, 'JAGUAPITÃ': 129, 'JANDAIA DO SUL': 151, 'JATAIZINHO': 88, 'KALORÉ': 166, 'LONDRINA': 99, 'MANDAGUARI': 140, 'MARIALVA': 152, 'MARILÂNDIA DO SUL': 166, 'MUNHOZ DE MELO': 135, 'PORECATU': 142, 'PRADO FERREIRA': 129, 'PRIMEIRO DE MAIO': 126, 'ROLÂNDIA': 108, 'SABAUDIA': 125, 'SANTA FÉ': 139, 'SANTO INÁCIO': 121, 'SERTANÓPOLIS': 87, 'URAÍ': 45 },
-            'JAGUAPITÃ': { 'ARAPONGAS': 46, 'ASTORGA': 53, 'BELA VISTA DO PARAÍSO': 46, 'BOM SUCESSO': 92, 'CAMBÉ': 40, 'CENTENÁRIO DO SUL': 37, 'FAXINAL': 113, 'FLORESTÓPOLIS': 23, 'GUARACI': 57, 'IBIPORÃ': 46, 'ITAMBARACÁ': 129, 'JANDAIA DO SUL': 70, 'JATAIZINHO': 52, 'KALORÉ': 85, 'LONDRINA': 43, 'MANDAGUARI': 61, 'MARIALVA': 73, 'MARILÂNDIA DO SUL': 86, 'MUNHOZ DE MELO': 56, 'PORECATU': 48, 'PRADO FERREIRA': 20, 'PRIMEIRO DE MAIO': 59, 'ROLÂNDIA': 32, 'SABAUDIA': 50, 'SANTA FÉ': 60, 'SANTO INÁCIO': 54, 'SERTANÓPOLIS': 56, 'URAÍ': 92 },
-            'JANDAIA DO SUL': { 'ARAPONGAS': 46, 'ASTORGA': 39, 'BELA VISTA DO PARAÍSO': 103, 'BOM SUCESSO': 20, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 94, 'FAXINAL': 41, 'FLORESTÓPOLIS': 81, 'GUARACI': 114, 'IBIPORÃ': 73, 'ITAMBARACÁ': 151, 'JAGUAPITÃ': 70, 'JATAIZINHO': 80, 'KALORÉ': 15, 'LONDRINA': 65, 'MANDAGUARI': 18, 'MARIALVA': 30, 'MARILÂNDIA DO SUL': 25, 'MUNHOZ DE MELO': 35, 'PORECATU': 106, 'PRADO FERREIRA': 88, 'PRIMEIRO DE MAIO': 115, 'ROLÂNDIA': 39, 'SABAUDIA': 30, 'SANTA FÉ': 43, 'SANTO INÁCIO': 101, 'SERTANÓPOLIS': 109, 'URAÍ': 114 },
-            'JATAIZINHO': { 'ARAPONGAS': 52, 'ASTORGA': 62, 'BELA VISTA DO PARAÍSO': 71, 'BOM SUCESSO': 108, 'CAMBÉ': 35, 'CENTENÁRIO DO SUL': 72, 'FAXINAL': 129, 'FLORESTÓPOLIS': 58, 'GUARACI': 92, 'IBIPORÃ': 18, 'ITAMBARACÁ': 88, 'JAGUAPITÃ': 52, 'JANDAIA DO SUL': 80, 'KALORÉ': 95, 'LONDRINA': 28, 'MANDAGUARI': 72, 'MARIALVA': 84, 'MARILÂNDIA DO SUL': 96, 'MUNHOZ DE MELO': 77, 'PORECATU': 84, 'PRADO FERREIRA': 65, 'PRIMEIRO DE MAIO': 84, 'ROLÂNDIA': 38, 'SABAUDIA': 46, 'SANTA FÉ': 79, 'SANTO INÁCIO': 79, 'SERTANÓPOLIS': 56, 'URAÍ': 45 },
-            'KALORÉ': { 'ARAPONGAS': 61, 'ASTORGA': 54, 'BELA VISTA DO PARAÍSO': 118, 'BOM SUCESSO': 15, 'CAMBÉ': 74, 'CENTENÁRIO DO SUL': 109, 'FAXINAL': 24, 'FLORESTÓPOLIS': 96, 'GUARACI': 130, 'IBIPORÃ': 88, 'ITAMBARACÁ': 166, 'JAGUAPITÃ': 85, 'JANDAIA DO SUL': 15, 'JATAIZINHO': 95, 'LONDRINA': 80, 'MANDAGUARI': 33, 'MARIALVA': 45, 'MARILÂNDIA DO SUL': 24, 'MUNHOZ DE MELO': 50, 'PORECATU': 121, 'PRADO FERREIRA': 103, 'PRIMEIRO DE MAIO': 131, 'ROLÂNDIA': 54, 'SABAUDIA': 45, 'SANTA FÉ': 58, 'SANTO INÁCIO': 117, 'SERTANÓPOLIS': 125, 'URAÍ': 130 },
-            'LONDRINA': { 'ARAPONGAS': 38, 'ASTORGA': 48, 'BELA VISTA DO PARAÍSO': 45, 'BOM SUCESSO': 94, 'CAMBÉ': 16, 'CENTENÁRIO DO SUL': 58, 'FAXINAL': 115, 'FLORESTÓPOLIS': 44, 'GUARACI': 78, 'IBIPORÃ': 22, 'ITAMBARACÁ': 99, 'JAGUAPITÃ': 43, 'JANDAIA DO SUL': 65, 'JATAIZINHO': 28, 'KALORÉ': 80, 'MANDAGUARI': 57, 'MARIALVA': 69, 'MARILÂNDIA DO SUL': 81, 'MUNHOZ DE MELO': 62, 'PORECATU': 70, 'PRADO FERREIRA': 52, 'PRIMEIRO DE MAIO': 70, 'ROLÂNDIA': 25, 'SABAUDIA': 32, 'SANTA FÉ': 65, 'SANTO INÁCIO': 65, 'SERTANÓPOLIS': 54, 'URAÍ': 60 },
-            'MANDAGUARI': { 'ARAPONGAS': 48, 'ASTORGA': 21, 'BELA VISTA DO PARAÍSO': 90, 'BOM SUCESSO': 47, 'CAMBÉ': 51, 'CENTENÁRIO DO SUL': 81, 'FAXINAL': 68, 'FLORESTÓPOLIS': 67, 'GUARACI': 101, 'IBIPORÃ': 65, 'ITAMBARACÁ': 140, 'JAGUAPITÃ': 61, 'JANDAIA DO SUL': 18, 'JATAIZINHO': 72, 'KALORÉ': 33, 'LONDRINA': 57, 'MARIALVA': 12, 'MARILÂNDIA DO SUL': 34, 'MUNHOZ DE MELO': 23, 'PORECATU': 92, 'PRADO FERREIRA': 74, 'PRIMEIRO DE MAIO': 102, 'ROLÂNDIA': 38, 'SABAUDIA': 28, 'SANTA FÉ': 31, 'SANTO INÁCIO': 88, 'SERTANÓPOLIS': 98, 'URAÍ': 103 },
-            'MARIALVA': { 'ARAPONGAS': 60, 'ASTORGA': 33, 'BELA VISTA DO PARAÍSO': 102, 'BOM SUCESSO': 59, 'CAMBÉ': 63, 'CENTENÁRIO DO SUL': 93, 'FAXINAL': 80, 'FLORESTÓPOLIS': 79, 'GUARACI': 113, 'IBIPORÃ': 77, 'ITAMBARACÁ': 152, 'JAGUAPITÃ': 73, 'JANDAIA DO SUL': 30, 'JATAIZINHO': 84, 'KALORÉ': 45, 'LONDRINA': 69, 'MANDAGUARI': 12, 'MARILÂNDIA DO SUL': 46, 'MUNHOZ DE MELO': 18, 'PORECATU': 104, 'PRADO FERREIRA': 86, 'PRIMEIRO DE MAIO': 114, 'ROLÂNDIA': 50, 'SABAUDIA': 40, 'SANTA FÉ': 25, 'SANTO INÁCIO': 100, 'SERTANÓPOLIS': 110, 'URAÍ': 115 },
-            'MARILÂNDIA DO SUL': { 'ARAPONGAS': 62, 'ASTORGA': 55, 'BELA VISTA DO PARAÍSO': 119, 'BOM SUCESSO': 25, 'CAMBÉ': 75, 'CENTENÁRIO DO SUL': 110, 'FAXINAL': 32, 'FLORESTÓPOLIS': 97, 'GUARACI': 130, 'IBIPORÃ': 89, 'ITAMBARACÁ': 166, 'JAGUAPITÃ': 86, 'JANDAIA DO SUL': 25, 'JATAIZINHO': 96, 'KALORÉ': 24, 'LONDRINA': 81, 'MANDAGUARI': 34, 'MARIALVA': 46, 'MUNHOZ DE MELO': 51, 'PORECATU': 122, 'PRADO FERREIRA': 104, 'PRIMEIRO DE MAIO': 131, 'ROLÂNDIA': 55, 'SABAUDIA': 46, 'SANTA FÉ': 59, 'SANTO INÁCIO': 117, 'SERTANÓPOLIS': 125, 'URAÍ': 130 },
-            'MUNHOZ DE MELO': { 'ARAPONGAS': 49, 'ASTORGA': 22, 'BELA VISTA DO PARAÍSO': 85, 'BOM SUCESSO': 64, 'CAMBÉ': 56, 'CENTENÁRIO DO SUL': 76, 'FAXINAL': 85, 'FLORESTÓPOLIS': 62, 'GUARACI': 96, 'IBIPORÃ': 70, 'ITAMBARACÁ': 135, 'JAGUAPITÃ': 56, 'JANDAIA DO SUL': 35, 'JATAIZINHO': 77, 'KALORÉ': 50, 'LONDRINA': 62, 'MANDAGUARI': 23, 'MARIALVA': 18, 'MARILÂNDIA DO SUL': 51, 'PORECATU': 87, 'PRADO FERREIRA': 69, 'PRIMEIRO DE MAIO': 97, 'ROLÂNDIA': 39, 'SABAUDIA': 30, 'SANTA FÉ': 9, 'SANTO INÁCIO': 83, 'SERTANÓPOLIS': 93, 'URAÍ': 98 },
-            'PORECATU': { 'ARAPONGAS': 77, 'ASTORGA': 84, 'BELA VISTA DO PARAÍSO': 42, 'BOM SUCESSO': 133, 'CAMBÉ': 71, 'CENTENÁRIO DO SUL': 24, 'FAXINAL': 154, 'FLORESTÓPOLIS': 29, 'GUARACI': 28, 'IBIPORÃ': 77, 'ITAMBARACÁ': 142, 'JAGUAPITÃ': 48, 'JANDAIA DO SUL': 106, 'JATAIZINHO': 84, 'KALORÉ': 121, 'LONDRINA': 70, 'MANDAGUARI': 92, 'MARIALVA': 104, 'MARILÂNDIA DO SUL': 122, 'MUNHOZ DE MELO': 87, 'PRADO FERREIRA': 44, 'PRIMEIRO DE MAIO': 36, 'ROLÂNDIA': 63, 'SABAUDIA': 81, 'SANTA FÉ': 91, 'SANTO INÁCIO': 34, 'SERTANÓPOLIS': 74, 'URAÍ': 110 },
-            'PRADO FERREIRA': { 'ARAPONGAS': 59, 'ASTORGA': 66, 'BELA VISTA DO PARAÍSO': 34, 'BOM SUCESSO': 115, 'CAMBÉ': 53, 'CENTENÁRIO DO SUL': 25, 'FAXINAL': 136, 'FLORESTÓPOLIS': 20, 'GUARACI': 45, 'IBIPORÃ': 59, 'ITAMBARACÁ': 129, 'JAGUAPITÃ': 20, 'JANDAIA DO SUL': 88, 'JATAIZINHO': 65, 'KALORÉ': 103, 'LONDRINA': 52, 'MANDAGUARI': 74, 'MARIALVA': 86, 'MARILÂNDIA DO SUL': 104, 'MUNHOZ DE MELO': 69, 'PORECATU': 44, 'PRIMEIRO DE MAIO': 47, 'ROLÂNDIA': 45, 'SABAUDIA': 63, 'SANTA FÉ': 73, 'SANTO INÁCIO': 41, 'SERTANÓPOLIS': 56, 'URAÍ': 92 },
-            'PRIMEIRO DE MAIO': { 'ARAPONGAS': 87, 'ASTORGA': 94, 'BELA VISTA DO PARAÍSO': 53, 'BOM SUCESSO': 143, 'CAMBÉ': 72, 'CENTENÁRIO DO SUL': 35, 'FAXINAL': 164, 'FLORESTÓPOLIS': 39, 'GUARACI': 15, 'IBIPORÃ': 78, 'ITAMBARACÁ': 126, 'JAGUAPITÃ': 59, 'JANDAIA DO SUL': 115, 'JATAIZINHO': 84, 'KALORÉ': 131, 'LONDRINA': 70, 'MANDAGUARI': 102, 'MARIALVA': 114, 'MARILÂNDIA DO SUL': 131, 'MUNHOZ DE MELO': 97, 'PORECATU': 36, 'PRADO FERREIRA': 47, 'ROLÂNDIA': 73, 'SABAUDIA': 91, 'SANTA FÉ': 101, 'SANTO INÁCIO': 21, 'SERTANÓPOLIS': 74, 'URAÍ': 110 },
-            'ROLÂNDIA': { 'ARAPONGAS': 10, 'ASTORGA': 27, 'BELA VISTA DO PARAÍSO': 61, 'BOM SUCESSO': 68, 'CAMBÉ': 15, 'CENTENÁRIO DO SUL': 52, 'FAXINAL': 89, 'FLORESTÓPOLIS': 38, 'GUARACI': 72, 'IBIPORÃ': 32, 'ITAMBARACÁ': 108, 'JAGUAPITÃ': 32, 'JANDAIA DO SUL': 39, 'JATAIZINHO': 38, 'KALORÉ': 54, 'LONDRINA': 25, 'MANDAGUARI': 38, 'MARIALVA': 50, 'MARILÂNDIA DO SUL': 55, 'MUNHOZ DE MELO': 39, 'PORECATU': 63, 'PRADO FERREIRA': 45, 'PRIMEIRO DE MAIO': 73, 'SABAUDIA': 17, 'SANTA FÉ': 44, 'SANTO INÁCIO': 60, 'SERTANÓPOLIS': 66, 'URAÍ': 71 },
-            'SABAUDIA': { 'ARAPONGAS': 16, 'ASTORGA': 18, 'BELA VISTA DO PARAÍSO': 79, 'BOM SUCESSO': 59, 'CAMBÉ': 26, 'CENTENÁRIO DO SUL': 70, 'FAXINAL': 80, 'FLORESTÓPOLIS': 56, 'GUARACI': 90, 'IBIPORÃ': 40, 'ITAMBARACÁ': 125, 'JAGUAPITÃ': 50, 'JANDAIA DO SUL': 30, 'JATAIZINHO': 46, 'KALORÉ': 45, 'LONDRINA': 32, 'MANDAGUARI': 28, 'MARIALVA': 40, 'MARILÂNDIA DO SUL': 46, 'MUNHOZ DE MELO': 30, 'PORECATU': 81, 'PRADO FERREIRA': 63, 'PRIMEIRO DE MAIO': 91, 'ROLÂNDIA': 17, 'SANTA FÉ': 35, 'SANTO INÁCIO': 77, 'SERTANÓPOLIS': 85, 'URAÍ': 90 },
-            'SANTA FÉ': { 'ARAPONGAS': 54, 'ASTORGA': 27, 'BELA VISTA DO PARAÍSO': 89, 'BOM SUCESSO': 72, 'CAMBÉ': 59, 'CENTENÁRIO DO SUL': 80, 'FAXINAL': 93, 'FLORESTÓPOLIS': 66, 'GUARACI': 100, 'IBIPORÃ': 73, 'ITAMBARACÁ': 139, 'JAGUAPITÃ': 60, 'JANDAIA DO SUL': 43, 'JATAIZINHO': 79, 'KALORÉ': 58, 'LONDRINA': 65, 'MANDAGUARI': 31, 'MARIALVA': 25, 'MARILÂNDIA DO SUL': 59, 'MUNHOZ DE MELO': 9, 'PORECATU': 91, 'PRADO FERREIRA': 73, 'PRIMEIRO DE MAIO': 101, 'ROLÂNDIA': 44, 'SABAUDIA': 35, 'SANTO INÁCIO': 87, 'SERTANÓPOLIS': 97, 'URAÍ': 102 },
-            'SANTO INÁCIO': { 'ARAPONGAS': 73, 'ASTORGA': 80, 'BELA VISTA DO PARAÍSO': 57, 'BOM SUCESSO': 129, 'CAMBÉ': 67, 'CENTENÁRIO DO SUL': 28, 'FAXINAL': 150, 'FLORESTÓPOLIS': 43, 'GUARACI': 8, 'IBIPORÃ': 73, 'ITAMBARACÁ': 121, 'JAGUAPITÃ': 54, 'JANDAIA DO SUL': 101, 'JATAIZINHO': 79, 'KALORÉ': 117, 'LONDRINA': 65, 'MANDAGUARI': 88, 'MARIALVA': 100, 'MARILÂNDIA DO SUL': 117, 'MUNHOZ DE MELO': 83, 'PORECATU': 34, 'PRADO FERREIRA': 41, 'PRIMEIRO DE MAIO': 21, 'ROLÂNDIA': 60, 'SABAUDIA': 77, 'SANTA FÉ': 87, 'SERTANÓPOLIS': 70, 'URAÍ': 106 },
-            'SERTANÓPOLIS': { 'ARAPONGAS': 80, 'ASTORGA': 89, 'BELA VISTA DO PARAÍSO': 54, 'BOM SUCESSO': 137, 'CAMBÉ': 64, 'CENTENÁRIO DO SUL': 62, 'FAXINAL': 158, 'FLORESTÓPOLIS': 48, 'GUARACI': 82, 'IBIPORÃ': 50, 'ITAMBARACÁ': 87, 'JAGUAPITÃ': 56, 'JANDAIA DO SUL': 109, 'JATAIZINHO': 56, 'KALORÉ': 125, 'LONDRINA': 54, 'MANDAGUARI': 98, 'MARIALVA': 110, 'MARILÂNDIA DO SUL': 125, 'MUNHOZ DE MELO': 93, 'PORECATU': 74, 'PRADO FERREIRA': 56, 'PRIMEIRO DE MAIO': 74, 'ROLÂNDIA': 66, 'SABAUDIA': 85, 'SANTA FÉ': 97, 'SANTO INÁCIO': 70, 'URAÍ': 60 },
-            'URAÍ': { 'ARAPONGAS': 85, 'ASTORGA': 94, 'BELA VISTA DO PARAÍSO': 90, 'BOM SUCESSO': 142, 'CAMBÉ': 69, 'CENTENÁRIO DO SUL': 98, 'FAXINAL': 163, 'FLORESTÓPOLIS': 84, 'GUARACI': 118, 'IBIPORÃ': 55, 'ITAMBARACÁ': 45, 'JAGUAPITÃ': 92, 'JANDAIA DO SUL': 114, 'JATAIZINHO': 45, 'KALORÉ': 130, 'LONDRINA': 60, 'MANDAGUARI': 103, 'MARIALVA': 115, 'MARILÂNDIA DO SUL': 130, 'MUNHOZ DE MELO': 98, 'PORECATU': 110, 'PRADO FERREIRA': 92, 'PRIMEIRO DE MAIO': 110, 'ROLÂNDIA': 71, 'SABAUDIA': 90, 'SANTA FÉ': 102, 'SANTO INÁCIO': 106, 'SERTANÓPOLIS': 60 }
-        };
-
-        function calcularDistanciaLocal(loadId) {
-            const resultSpan = document.getElementById(`dist-${loadId}`);
-            const loadData = CargasFiorinoFinalizadas.get(loadId);
-            
-            if (!loadData) {
-                resultSpan.textContent = "Erro: Carga não encontrada.";
-                return;
-            }
-
-            resultSpan.innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculando...`;
-            
-            let cidadesNaCarga = [...new Set(loadData.pedidos.map(p => String(p.Cidade).toUpperCase().trim()))];
-            
-            if (cidadesNaCarga.length === 0) {
-                resultSpan.textContent = "Nenhuma cidade para calcular.";
-                return;
-            }
-
-            cidadesNaCarga = cidadesNaCarga.filter(cidade => matrizDeDistancias[cidade]);
-            
-            if (cidadesNaCarga.length === 0) {
-                resultSpan.innerHTML = `<strong class="text-warning">Cidades não mapeadas.</strong>`;
-                return;
-            }
-
-            let totalDistance = 0;
-            let currentCity = 'ROLÂNDIA';
-            let unvisitedCities = [...cidadesNaCarga];
-
-            while (unvisitedCities.length > 0) {
-                let closestCity = '';
-                let shortestDistance = Infinity;
-
-                for (const city of unvisitedCities) {
-                    const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
-                    if (!currentCityNormalized) break;
-
-                    const distance = matrizDeDistancias[currentCityNormalized]?.[city];
-                    if (distance !== undefined && distance < shortestDistance) {
-                        shortestDistance = distance;
-                        closestCity = city;
-                    }
-                }
-
-                if (closestCity) {
-                    totalDistance += shortestDistance;
-                    currentCity = closestCity;
-                    unvisitedCities = unvisitedCities.filter(city => city !== closestCity);
-                } else {
-                    console.warn("Não foi possível encontrar rota para as cidades restantes:", unvisitedCities);
-                    break;
-                }
-            }
-
-            const currentCityNormalized = Object.keys(matrizDeDistancias).find(k => k.toUpperCase() === currentCity.toUpperCase());
-            const returnDistance = matrizDeDistancias[currentCityNormalized]?.['ROLÂNDIA'];
-            if (returnDistance) {
-                totalDistance += returnDistance;
-            }
-
-            resultSpan.innerHTML = `<strong>Distância Estimada: ${totalDistance.toFixed(0)} km</strong>`;
-        }
         
+        // --- Variáveis Globais ---
         let planilhaData = [];
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
         let pedidosComCFNumericoIsolado = [];
         let pedidosPrioritarios = [];
         let tocoPedidoIds = new Set();
+        let currentLeftoversForPrinting = [];
 
         const defaultConfigs = {
             fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.5,
@@ -533,10 +386,33 @@
             document.getElementById('resetAllConfigs').addEventListener('click', resetAll);
         });
 
+        // MELHORIA: Este mapa agora é usado para gerar os botões dinamicamente
         const rotaVeiculoMap = {
-            '11101': 'Fiorino', '11301': 'Fiorino', '11311': 'Fiorino', '11561': 'Fiorino', '11721': 'Fiorino', '11731': 'Fiorino',
-            '11102': 'Van', '11331': 'Van', '11341': 'Van', '11342': 'Van', '11351': 'Van', '11521': 'Van', '11531': 'Van', '11551': 'Van', '11571': 'Van', '11701': 'Van', '11711': 'Van',
-            '11361': '3/4', '11501': '3/4', '11502': '3/4', '11511': '3/4', '11541': '3/4',
+            // Fiorino
+            '11101': { type: 'fiorino', title: 'Rota 11101' }, 
+            '11301': { type: 'fiorino', title: 'Rota 11301' }, 
+            '11311': { type: 'fiorino', title: 'Rota 11311' }, 
+            '11561': { type: 'fiorino', title: 'Rota 11561' }, 
+            '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, 
+            '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
+            // Van
+            '11102': { type: 'van', title: 'Rota 11102' },
+            '11331': { type: 'van', title: 'Rota 11331' },
+            '11341': { type: 'van', title: 'Rota 11341' },
+            '11342': { type: 'van', title: 'Rota 11342' },
+            '11351': { type: 'van', title: 'Rota 11351' },
+            '11521': { type: 'van', title: 'Rota 11521' },
+            '11531': { type: 'van', title: 'Rota 11531' },
+            '11551': { type: 'van', title: 'Rota 11551' },
+            '11571': { type: 'van', title: 'Rota 11571' },
+            '11701': { type: 'van', title: 'Rota 11701' },
+            '11711': { type: 'van', title: 'Rota 11711' },
+            // 3/4
+            '11361': { type: 'tresQuartos', title: 'Rota 11361' },
+            '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] },
+            '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] },
+            '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] },
+            '11541': { type: 'tresQuartos', title: 'Rota 11541' }
         };
         
         const fileInput = document.getElementById('fileInput');
@@ -574,8 +450,7 @@
                         const pedido = {}; 
                         headers.forEach((header, i) => { 
                             if (header) { 
-                                 if (header.toLowerCase() === 'predat' && typeof row[i] === 'number') {
-                                    // Handle Excel date serial number
+                                if ((header.toLowerCase() === 'predat' || header.toLowerCase() === 'dat_ped') && typeof row[i] === 'number') {
                                     pedido[header] = new Date(Math.round((row[i] - 25569) * 86400 * 1000));
                                 } else {
                                     pedido[header] = row[i] !== undefined ? row[i] : ''; 
@@ -609,7 +484,7 @@
             let pedidoEncontrado = null; let local = 'Não encontrado'; let accordionId = '';
 
             pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
-            if (pedidoEncontrado) { local = 'Resultados Gerais'; accordionId = 'accordionGeral'; }
+            if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = 'accordionGeral'; }
 
             if (!pedidoEncontrado) {
                  pedidoEncontrado = pedidosComCFNumericoIsolado.find(p => String(p.Num_Pedido) === searchInput);
@@ -633,12 +508,12 @@
 
             if (pedidoEncontrado) {
                 let buttons = '';
-                if (local === 'Resultados Gerais') {
+                if (local === 'Pedidos Disponíveis para Montagem') {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -658,134 +533,133 @@
             }
         }
 
+        // BUGFIX: Nova função para limpar o estado global antes de um novo processamento
+        function resetarEstadoGlobal() {
+            pedidosGeraisAtuais = [];
+            gruposToco = {};
+            pedidosComCFNumericoIsolado = [];
+            pedidosPrioritarios = [];
+            tocoPedidoIds.clear();
+            currentLeftoversForPrinting = [];
+        }
+
         function processar() {
-            const resultadoGeralDiv = document.getElementById('resultado-geral');
-            const resultadoTocoDiv = document.getElementById('resultado-toco');
-            const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
-            const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
+            // MELHORIA: Feedback visual durante o processamento
+            statusDiv.innerHTML = '<div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div><span class="text-primary">Processando, por favor aguarde...</span>';
+            processarBtn.disabled = true;
 
-            try {
-                if (planilhaData.length === 0) { statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return; }
-                const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
-                resultadoGeralDiv.innerHTML = ''; resultadoTocoDiv.innerHTML = ''; resultadoTresQuartosDiv.innerHTML = ''; resultadoCfNumericoDiv.innerHTML = '';
+            // Adia a execução para que a UI possa atualizar
+            setTimeout(() => {
+                const resultadoGeralDiv = document.getElementById('resultado-geral');
+                const resultadoTocoDiv = document.getElementById('resultado-toco');
+                const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
+                const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
 
-                const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
-
-                // 1. Identificar e separar as cargas TOCO
-                const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
-                const cfCounts = {};
-                pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
-                const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
-                const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
-                gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
-                    const cf = p.CF;
-                    if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; } acc[cf].pedidos.push(p); acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
-                }, {});
-                displayToco(resultadoTocoDiv, gruposToco);
-                tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
-
-                // 2. Regras de bloqueio e de cliente
-                const clientesComBloqueio = new Set(); const clientesSemBloqueio = new Set();
-                pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
-                const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
-                const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
-                
-                // 3. Filtrar e separar os pedidos restantes
-                let pedidosParaProcessamento = [];
-                pedidosComCFNumericoIsolado = [];
-
-                pedidos.forEach(p => {
-                    if (tocoPedidoIds.has(String(p.Num_Pedido))) return; // Já é TOCO
-                    if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return;
-                    if (clientesParaRemover.has(String(p.Cliente))) return;
-                    if (['21', '23', '17'].includes(String(p.Coluna4))) return;
+                try {
+                    if (planilhaData.length === 0) { statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return; }
                     
-                    const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
-                    if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return;
+                    resetarEstadoGlobal(); // BUGFIX: Limpa os dados da execução anterior
 
-                    if (isNumeric(p.CF)) {
-                        pedidosComCFNumericoIsolado.push(p);
-                    } else {
-                        pedidosParaProcessamento.push(p);
-                    }
-                });
-                
-                displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
+                    const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
+                    resultadoGeralDiv.innerHTML = ''; resultadoTocoDiv.innerHTML = ''; resultadoTresQuartosDiv.innerHTML = ''; resultadoCfNumericoDiv.innerHTML = '';
 
-                // 4. Montagem de cargas 3/4 automático
-                let tresQuartosLoads = [];
-                const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value) || defaultConfigs.tresQuartosMinCapacity;
-                const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value) || defaultConfigs.tresQuartosMaxCapacity;
-                const LARGE_ORDER_KG = 1700;
+                    const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
 
-                const largeOrdersByRoute = pedidosParaProcessamento.reduce((acc, p) => {
-                    const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                    if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } return acc;
-                }, {});
-                const pedidosEmCargas3_4 = new Set();
-                Object.keys(largeOrdersByRoute).forEach(rota => {
-                    const largeOrders = largeOrdersByRoute[rota];
-                    if (largeOrders.length === 1) {
-                        const largeOrder = largeOrders[0]; if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
-                        let newLoad = { pedidos: [largeOrder], totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0, rota: rota };
-                        const otherOrdersInRoute = pedidosParaProcessamento.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
-                        for (const order of otherOrdersInRoute) {
-                            if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue;
-                            const orderKg = parseFloat(String(order.Quilos_Saldo).replace(',', '.')) || 0;
-                            if (newLoad.totalKg + orderKg <= MAX_KG_3_4) { newLoad.pedidos.push(order); newLoad.totalKg += orderKg; }
+                    const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
+                    const cfCounts = {};
+                    pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
+                    const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
+                    const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
+                    gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
+                        const cf = p.CF;
+                        if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0 }; } acc[cf].pedidos.push(p); acc[cf].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
+                    }, {});
+                    displayToco(resultadoTocoDiv, gruposToco);
+                    tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
+
+                    const clientesComBloqueio = new Set(); const clientesSemBloqueio = new Set();
+                    pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
+                    const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
+                    const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
+                    
+                    let pedidosParaProcessamento = [];
+                    pedidosComCFNumericoIsolado = [];
+
+                    pedidos.forEach(p => {
+                        if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
+                        if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return;
+                        if (clientesParaRemover.has(String(p.Cliente))) return;
+                        if (['21', '23', '17'].includes(String(p.Coluna4))) return;
+                        const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
+                        if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return;
+                        if (isNumeric(p.CF)) {
+                            pedidosComCFNumericoIsolado.push(p);
+                        } else {
+                            pedidosParaProcessamento.push(p);
                         }
-                        if (newLoad.totalKg >= MIN_KG_3_4) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); }
-                    }
-                });
-                tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
-                displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
+                    });
+                    
+                    displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
 
-                // 5. Definir a lista final de Resultados Gerais
-                pedidosGeraisAtuais = pedidosParaProcessamento.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
-                
-                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
-                    const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
-                }, {});
-                displayGerais(resultadoGeralDiv, gruposGerais);
+                    let tresQuartosLoads = [];
+                    const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value) || defaultConfigs.tresQuartosMinCapacity;
+                    const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value) || defaultConfigs.tresQuartosMaxCapacity;
+                    const LARGE_ORDER_KG = 1700;
+                    const largeOrdersByRoute = pedidosParaProcessamento.reduce((acc, p) => {
+                        const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                        if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } return acc;
+                    }, {});
+                    const pedidosEmCargas3_4 = new Set();
+                    Object.keys(largeOrdersByRoute).forEach(rota => {
+                        const largeOrders = largeOrdersByRoute[rota];
+                        if (largeOrders.length === 1) {
+                            const largeOrder = largeOrders[0]; if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
+                            let newLoad = { pedidos: [largeOrder], totalKg: parseFloat(String(largeOrder.Quilos_Saldo).replace(',', '.')) || 0, rota: rota };
+                            const otherOrdersInRoute = pedidosParaProcessamento.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => (parseFloat(String(b.Quilos_Saldo).replace(',', '.')) || 0) - (parseFloat(String(a.Quilos_Saldo).replace(',', '.')) || 0));
+                            for (const order of otherOrdersInRoute) {
+                                if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue;
+                                const orderKg = parseFloat(String(order.Quilos_Saldo).replace(',', '.')) || 0;
+                                if (newLoad.totalKg + orderKg <= MAX_KG_3_4) { newLoad.pedidos.push(order); newLoad.totalKg += orderKg; }
+                            }
+                            if (newLoad.totalKg >= MIN_KG_3_4) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); }
+                        }
+                    });
+                    tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
+                    displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
 
-            } catch (error) { statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; console.error(error); }
+                    pedidosGeraisAtuais = pedidosParaProcessamento.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
+                    
+                    const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
+                        const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
+                    }, {});
+                    displayGerais(resultadoGeralDiv, gruposGerais);
+
+                    statusDiv.innerHTML = `<p class="text-success">Processamento concluído com sucesso!</p>`;
+                } catch (error) { 
+                    statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; 
+                    console.error(error); 
+                } finally {
+                    processarBtn.disabled = false;
+                }
+            }, 50); // Fim do setTimeout
         }
 
         function isOverdue(predat) {
-            if (!predat || !(predat instanceof Date) || isNaN(predat)) {
-                return false;
-            }
+            if (!predat || !(predat instanceof Date) || isNaN(predat)) { return false; }
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             return predat < today;
         }
 
         function exportarPedidosAtrasados() {
-            if (pedidosGeraisAtuais.length === 0) {
-                alert("Por favor, processe a planilha primeiro para definir as rotas.");
-                return;
-            }
+            if (pedidosGeraisAtuais.length === 0) { alert("Por favor, processe a planilha primeiro para definir as rotas."); return; }
             const pedidosAtrasados = pedidosGeraisAtuais.filter(p => isOverdue(p.Predat));
-
-            if (pedidosAtrasados.length === 0) {
-                alert("Nenhum pedido em atraso encontrado nos resultados processados.");
-                return;
-            }
+            if (pedidosAtrasados.length === 0) { alert("Nenhum pedido em atraso encontrado nos resultados processados."); return; }
             
-            const header = [
-                "Empresa", "Cod_Rota", "Den_Rota", "Cliente", "Nome_Cliente", "AGENDAS/PALLET",
-                "Nome_Repres", "Cod_Supervisor", "Nome_Supervisor", "Cod_Regional", "Nome_Regional",
-                "Num_Pedido", "Quilos_Saldo", "OBS", "Predat", "Cidade", "UF", "Dat_Ped",
-                "BLOQ.", "Coluna4", "Coluna5", "CF", "Descricao_CF", "Cubagem",
-                "PED. ATRASO 3D.", "PED. ATRASO 3D.2", "PED. ATRASO 4D.", "PED. ATRASO 4D.2",
-                "PED. ATRASO 6D.", "PED. ATRASO 6D.2"
-            ];
-
+            const header = [ "Empresa", "Cod_Rota", "Den_Rota", "Cliente", "Nome_Cliente", "AGENDAS/PALLET", "Nome_Repres", "Cod_Supervisor", "Nome_Supervisor", "Cod_Regional", "Nome_Regional", "Num_Pedido", "Quilos_Saldo", "OBS", "Predat", "Cidade", "UF", "Dat_Ped", "BLOQ.", "Coluna4", "Coluna5", "CF", "Descricao_CF", "Cubagem", "PED. ATRASO 3D.", "PED. ATRASO 3D.2", "PED. ATRASO 4D.", "PED. ATRASO 4D.2", "PED. ATRASO 6D.", "PED. ATRASO 6D.2" ];
             const dataToExport = pedidosAtrasados.map(p => {
-                const newP = {...p}; // create a shallow copy
-                if (newP.Predat instanceof Date) {
-                    newP.Predat = newP.Predat.toLocaleDateString('pt-BR');
-                }
+                const newP = {...p};
+                if (newP.Predat instanceof Date) { newP.Predat = newP.Predat.toLocaleDateString('pt-BR'); }
                 return newP;
             });
 
@@ -802,25 +676,24 @@
             colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
             pedidos.forEach(p => {
-                table += `<tr id="pedido-${p.Num_Pedido}">`;
+                const isPriority = pedidosPrioritarios.includes(String(p.Num_Pedido));
+                table += `<tr id="pedido-${p.Num_Pedido}" class="${isPriority ? 'table-primary' : ''}">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Agendamento' && cellContent === 'Sim') {
                         table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
-                    } else if (c === 'Predat') {
+                    } else if (c === 'Predat' || c === 'Dat_Ped') {
                         let formattedDate = '';
                         if (cellContent instanceof Date && !isNaN(cellContent)) {
                             formattedDate = cellContent.toLocaleDateString('pt-BR');
                         } else if (typeof cellContent === 'string' && cellContent) {
                            formattedDate = cellContent; 
                         }
-                        
-                        if (isOverdue(p.Predat)) {
+                        if (c === 'Predat' && isOverdue(p.Predat)) {
                             table += `<td><span class="text-danger fw-bold">${formattedDate}</span></td>`;
                         } else {
                             table += `<td>${formattedDate}</td>`;
                         }
-
                     } else {
                         table += `<td>${cellContent}</td>`;
                     }
@@ -832,13 +705,51 @@
         }
 
         function displayGerais(div, grupos) {
-            if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido para os "Resultados Gerais" (sem CF numérico).</div>'; return; }
+            if (Object.keys(grupos).length === 0) { 
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido disponível para montagem.</div>'; 
+                // MELHORIA: Limpa os botões se não houver dados
+                document.getElementById('botoes-fiorino').innerHTML = '<p class="text-muted">Nenhuma rota de Fiorino encontrada.</p>';
+                document.getElementById('botoes-van').innerHTML = '<p class="text-muted">Nenhuma rota de Van encontrada.</p>';
+                document.getElementById('botoes-34').innerHTML = '<p class="text-muted">Nenhuma rota de 3/4 encontrada.</p>';
+                return; 
+            }
+            
+            // --- MELHORIA: Geração dinâmica de botões ---
+            const rotasDisponiveis = new Set(Object.keys(grupos));
+            const botoes = { fiorino: '', van: '', tresQuartos: '' };
+            const addedButtons = new Set(); // Para controlar botões combinados
+
+            rotasDisponiveis.forEach(rota => {
+                const config = rotaVeiculoMap[rota];
+                if (config && !addedButtons.has(rota)) {
+                    let rotaValue = `'${rota}'`;
+                    if (config.combined) {
+                         const combinedRoutes = [rota, ...config.combined];
+                         rotaValue = `[${combinedRoutes.map(r => `'${r}'`).join(', ')}]`;
+                         combinedRoutes.forEach(r => addedButtons.add(r));
+                    }
+                    
+                    const vehicleType = config.type;
+                    const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
+                    const functionCall = vehicleType === 'fiorino' ? 'separarCargasFiorino' : (vehicleType === 'van' ? 'separarCargasVan' : 'separarCargas34');
+                    const divId = vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : (vehicleType === 'van' ? 'resultado-van-geral' : 'resultado-34-geral');
+
+                    botoes[vehicleType] += `<button class="btn btn-${colorClass} mt-2 me-2" onclick="${functionCall}(${rotaValue}, '${divId}', '${config.title}')">${config.title}</button>`;
+                }
+            });
+
+            document.getElementById('botoes-fiorino').innerHTML = botoes.fiorino || '<p class="text-muted">Nenhuma rota de Fiorino encontrada.</p>';
+            document.getElementById('botoes-van').innerHTML = botoes.van || '<p class="text-muted">Nenhuma rota de Van encontrada.</p>';
+            document.getElementById('botoes-34').innerHTML = botoes.tresQuartos || '<p class="text-muted">Nenhuma rota de 3/4 encontrada.</p>';
+            // --- Fim da Geração de Botões ---
+
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionGeral">';
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const veiculo = rotaVeiculoMap[rota] || 'N/D';
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota} (${veiculo})</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length} pedidos</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
+                const veiculo = rotaVeiculoMap[rota]?.type || 'N/D';
+                const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota} (${veiculoNome})</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length} pedidos</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -860,7 +771,7 @@
 
         function displayTresQuartos(div, loads) {
             if (loads.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga 3/4 formada automaticamente.</div>'; return; }
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${div.id}', 'Cargas 3/4 (Automático)', 'bg-warning', 'text-dark')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
             loads.forEach(load => {
                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 html += `<div class="card mb-3"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
@@ -868,7 +779,7 @@
             div.innerHTML = html;
         }
         
-        function packLoads(pedidos, vehicleType) {
+        function packLoads(pedidos, vehicleType, sortDirection = 'descending') {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
             const MAX_CUBAGEM = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
@@ -876,38 +787,34 @@
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
 
-            let packableItems = [];
-            const otherPedidos = pedidos.filter(p => !isSpecialClient(p));
-            const specialPedidos = pedidos.filter(p => isSpecialClient(p));
-
-            specialPedidos.forEach(pedido => {
-                packableItems.push({
-                    isSpecial: true,
-                    pedidos: [pedido],
-                    totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
-                    totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
-                });
-            });
-
-            const otherClientGroupsMap = otherPedidos.reduce((acc, pedido) => {
+            const clientGroupsMap = pedidos.reduce((acc, pedido) => {
                 const clienteId = pedido.Cliente;
                 if (!acc[clienteId]) {
-                    acc[clienteId] = { isSpecial: false, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                    acc[clienteId] = {
+                        pedidos: [],
+                        isSpecial: isSpecialClient(pedido)
+                    };
                 }
                 acc[clienteId].pedidos.push(pedido);
                 return acc;
             }, {});
-            
-            Object.values(otherClientGroupsMap).forEach(group => {
-                group.totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                group.totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
-                packableItems.push(group);
-            });
 
+            let packableItems = Object.values(clientGroupsMap).map(group => {
+                const totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                const totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+                return { ...group, totalKg, totalCubagem };
+            });
+            
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
-            priorityItems.sort((a, b) => b.totalKg - a.totalKg);
-            regularItems.sort((a, b) => b.totalKg - a.totalKg);
+            
+            if (sortDirection === 'ascending') {
+                priorityItems.sort((a, b) => a.totalKg - b.totalKg);
+                regularItems.sort((a, b) => a.totalKg - b.totalKg);
+            } else {
+                priorityItems.sort((a, b) => b.totalKg - a.totalKg);
+                regularItems.sort((a, b) => b.totalKg - a.totalKg);
+            }
             packableItems = [...priorityItems, ...regularItems];
 
             let loads = [];
@@ -919,9 +826,18 @@
                 }
                 let placed = false;
                 for (const load of loads) {
-                    const specialCountInLoad = load.pedidos.filter(p => isSpecialClient(p)).length;
-                    const specialOrdersInItem = item.isSpecial ? item.pedidos.length : 0;
-                    if ((load.totalKg + item.totalKg <= MAX_KG) && (load.totalCubagem + item.totalCubagem <= MAX_CUBAGEM) && (specialCountInLoad + specialOrdersInItem <= 2)) {
+                    const specialClientCountInLoad = new Set(load.pedidos.filter(p => isSpecialClient(p)).map(p => p.Cliente)).size;
+                    const isItemSpecial = item.isSpecial;
+                    
+                    let canPlace = true;
+                    if (isItemSpecial) {
+                        const clientAlreadyInLoad = load.pedidos.some(p => p.Cliente === item.pedidos[0].Cliente);
+                        if (!clientAlreadyInLoad && specialClientCountInLoad >= 2) {
+                            canPlace = false;
+                        }
+                    }
+
+                    if (canPlace && (load.totalKg + item.totalKg <= MAX_KG) && (load.totalCubagem + item.totalCubagem <= MAX_CUBAGEM)) {
                         load.pedidos.push(...item.pedidos);
                         load.totalKg += item.totalKg;
                         load.totalCubagem += item.totalCubagem;
@@ -942,7 +858,11 @@
             let unplacedFromMinRule = [];
             loads.forEach(load => {
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                if (hasPriority || load.totalKg >= MIN_KG) {
+                
+                // Priority override is NOT allowed for 3/4 trucks as per user request.
+                const allowPriorityOverride = vehicleType !== 'tresQuartos';
+
+                if (load.totalKg >= MIN_KG || (hasPriority && allowPriorityOverride)) {
                     finalLoads.push(load);
                 } else {
                     unplacedFromMinRule.push(...load.pedidos);
@@ -953,78 +873,84 @@
             return { loads: finalLoads, leftovers };
         }
 
-
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType) {
             const resultadoDiv = document.getElementById(divId);
-            resultadoDiv.innerHTML = '';
-            if (planilhaData.length === 0) {
-                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
-                return;
-            }
+            resultadoDiv.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div><span class="ms-2">Montando cargas...</span>';
+            currentLeftoversForPrinting = [];
 
-            const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
-            const pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
+            setTimeout(() => {
+                if (planilhaData.length === 0) {
+                    resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
+                    return;
+                }
 
-            const primaryResult = packLoads(pedidosRota, vehicleType);
-            let primaryLoads = primaryResult.loads;
-            let currentLeftovers = primaryResult.leftovers;
-            let promotedLoads = [];
+                const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
+                let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
 
-            if (vehicleType === 'fiorino' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 600)) {
-                const promotedResult = packLoads(currentLeftovers, 'van');
-                promotedLoads = promotedResult.loads;
-                currentLeftovers = promotedResult.leftovers;
-            }
-            else if (vehicleType === 'van' && currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) >= 1650)) {
-                const promotedResult = packLoads(currentLeftovers, 'tresQuartos');
-                promotedLoads = promotedResult.loads;
-                currentLeftovers = promotedResult.leftovers;
-            }
-            
-            primaryLoads.forEach((load, index) => { load.numero = index + 1; });
-            promotedLoads.forEach((load, index) => { load.numero = index + 1; });
-            
-            if (vehicleType === 'fiorino') {
-                CargasFiorinoFinalizadas.clear();
-                primaryLoads.forEach(load => {
-                    const loadId = `fiorino-${title.replace(/\s+/g, '-')}-${load.numero}`;
-                    load.id = loadId;
-                    CargasFiorinoFinalizadas.set(loadId, load);
-                });
-            }
+                const sortDirection = 'descending';
+                const result = packLoads(pedidosRota, vehicleType, sortDirection);
 
-            const vehicleInfo = {
-                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white' },
-                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white' },
-                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark' }
-            };
-
-            let html = '';
-            
-            const vInfo = vehicleInfo[vehicleType];
-            html += `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${primaryLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${(primaryLoads.length > 0 || promotedLoads.length > 0) ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}</div>`;
-            if (primaryLoads.length === 0) { html += `<p>Nenhuma carga de ${vInfo.name} foi formada.</p>`; }
-
-            primaryLoads.forEach(load => {
-                html += renderLoadCard(load, vehicleType, vInfo);
-            });
-
-            if (promotedLoads.length > 0) {
-                const promotedVehicleType = (vehicleType === 'fiorino') ? 'van' : 'tresQuartos';
-                const pVInfo = vehicleInfo[promotedVehicleType];
-                html += `<hr class="my-4"><div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0 text-info"><i class="bi bi-star-fill me-2"></i>${promotedLoads.length} Carga(s) Promovida(s) para ${pVInfo.name}:</h4></div>`;
+                let primaryLoads = result.loads;
+                let currentLeftovers = result.leftovers;
                 
-                promotedLoads.forEach(load => {
-                    html += renderLoadCard(load, promotedVehicleType, pVInfo, true);
+                primaryLoads.forEach((load, index) => { load.numero = index + 1; });
+
+                const vehicleInfo = {
+                    fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white' },
+                    van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white' },
+                    tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark' }
+                };
+
+                let html = '';
+                const vInfo = vehicleInfo[vehicleType];
+                html += `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">${primaryLoads.length} Carga(s) de ${vInfo.name} para ${title}:</h4>${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}</div>`;
+                if (primaryLoads.length === 0) { html += `<p>Nenhuma carga de ${vInfo.name} foi formada com a regra padrão.</p>`; }
+
+                primaryLoads.forEach(load => {
+                    html += renderLoadCard(load, vehicleType, vInfo);
                 });
-            }
+                
+                if (currentLeftovers.length > 0) {
+                    const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                    
+                    console.log('--- DEBUG SOBRAS ---');
+                    console.log('Tipo de Veículo:', vehicleType);
+                    console.log('Total KG Sobras:', totalKgUnassigned);
 
-            if (currentLeftovers.length > 0) {
-                const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white">Detalhes dos Pedidos Restantes</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div></div>`;
-            }
+                    let printButtonHtml = '';
+                    const vanMin = parseFloat(document.getElementById('vanMinCapacity').value) || defaultConfigs.vanMinCapacity;
+                    const vanMax = parseFloat(document.getElementById('vanMaxCapacity').value) || defaultConfigs.vanMaxCapacity;
+                    const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value) || defaultConfigs.tresQuartosMinCapacity;
+                    const tresQuartosMax = parseFloat(document.getElementById('tresQuartosMaxCapacity').value) || defaultConfigs.tresQuartosMaxCapacity;
 
-            resultadoDiv.innerHTML = html;
+                    console.log('Van (Min/Max):', vanMin, vanMax);
+                    console.log('3/4 (Min/Max):', tresQuartosMin, tresQuartosMax);
+
+                    const fiorinoToVan_Standard = totalKgUnassigned >= vanMin && totalKgUnassigned <= vanMax;
+                    const hasLargeSingleOrder = currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) > 600);
+                    const fiorinoToVan_Special = totalKgUnassigned > 1000 && hasLargeSingleOrder;
+                    const isFiorinoToVan = vehicleType === 'fiorino' && (fiorinoToVan_Standard || fiorinoToVan_Special);
+
+                    const isVanToTresQuartos = vehicleType === 'van' && totalKgUnassigned >= tresQuartosMin && totalKgUnassigned <= tresQuartosMax;
+
+                    console.log('Pode virar Van? (Padrão)', fiorinoToVan_Standard);
+                    console.log('Pode virar Van? (Especial)', fiorinoToVan_Special);
+                    console.log('Pode virar Van? (Final)', isFiorinoToVan);
+                    console.log('Pode virar 3/4?', isVanToTresQuartos);
+
+                    if (isFiorinoToVan) {
+                        currentLeftoversForPrinting = [...currentLeftovers];
+                        printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Possível Carga de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Possibilidade de Van</button>`;
+                    } else if (isVanToTresQuartos) {
+                        currentLeftoversForPrinting = [...currentLeftovers];
+                        printButtonHtml = `<button class="btn btn-warning ms-auto no-print" onclick="imprimirSobras('Possível Carga de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Possibilidade de 3/4</button>`;
+                    }
+                    console.log('--- FIM DEBUG ---');
+
+                    html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes${printButtonHtml}</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div></div>`;
+                }
+                resultadoDiv.innerHTML = html;
+            }, 50);
         }
 
         function renderLoadCard(load, vehicleType, vInfo, isPromoted = false) {
@@ -1033,10 +959,8 @@
                 const clienteB = String(b.Cliente);
                 const pedidoA = String(a.Num_Pedido);
                 const pedidoB = String(b.Num_Pedido);
-
                 if (clienteA < clienteB) return -1;
                 if (clienteA > clienteB) return 1;
-                
                 return pedidoA.localeCompare(pedidoB);
             });
 
@@ -1046,25 +970,9 @@
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
             const promotedBadge = isPromoted ? '<span class="badge bg-info-subtle text-info-emphasis ms-3">PROMOVIDA</span>' : '';
 
-            let fiorinoDistanceHtml = '';
-            if (vehicleType === 'fiorino') {
-                fiorinoDistanceHtml = `
-                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
-                       <span id="dist-${load.id}"></span>
-                       <button class="btn btn-outline-info btn-sm no-print" onclick="calcularDistanciaLocal('${load.id}')"><i class="bi bi-geo-alt-fill me-2"></i>Calcular KM Estimado</button>
-                    </div>`;
-            }
-
-            return `
-                <div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}">
-                    <div class="card-header ${vInfo.colorClass} ${vInfo.textColor}">
-                        <i class="bi bi-box-seam-fill me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${promotedBadge}
-                    </div>
-                    <div class="card-body">
-                        ${createTable(load.pedidos)}
-                        ${fiorinoDistanceHtml}
-                    </div>
-                </div>`;
+            // REMOVIDO: Bloco de código para cálculo de distância foi retirado.
+            
+            return `<div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}"><div class="card-header ${vInfo.colorClass} ${vInfo.textColor}"><i class="bi bi-box-seam-fill me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${promotedBadge}</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
         }
         
         function separarCargasFiorino(routes, divId, title) { separarCargasGeneric(routes, divId, title, 'fiorino'); }
@@ -1077,7 +985,20 @@
             
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionToco">';
             Object.keys(grupos).sort().forEach((cf, index) => {
-                const grupo = grupos[cf]; const pedidos = grupo.pedidos;
+                const grupo = grupos[cf]; 
+                const pedidos = grupo.pedidos;
+
+                // BUGFIX: Adicionada ordenação aqui para consistência
+                pedidos.sort((a, b) => {
+                    const clienteA = String(a.Cliente);
+                    const clienteB = String(b.Cliente);
+                    const pedidoA = String(a.Num_Pedido);
+                    const pedidoB = String(b.Num_Pedido);
+                    if (clienteA < clienteB) return -1;
+                    if (clienteA > clienteB) return 1;
+                    return pedidoA.localeCompare(pedidoB);
+                });
+                
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const overWeight = grupo.totalKg > MAX_KG_TOCO;
                 const weightBadge = overWeight
@@ -1089,38 +1010,39 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
+        // MELHORIA: Função auxiliar para criar a janela de impressão, evitando código repetido
+        function createPrintWindow(title) {
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>' + title + '</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
+            printWindow.document.write(`<style>body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; } .no-print { display: none !important; } .bg-success { background-color: #198754 !important; color: white !important; } .bg-primary { background-color: #0d6efd !important; color: white !important; } .bg-warning { background-color: #ffc107 !important; color: black !important; } .table-responsive { overflow: visible !important; } table, th, td { border: 1px solid #dee2e6 !important; } .table-primary { --bs-table-bg: #cfe2ff !important; color: #000 !important; } h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }</style></head><body>`);
+            return printWindow;
+        }
+        
+        function imprimirSobras(title) {
+            if (currentLeftoversForPrinting.length === 0) {
+                alert("Nenhuma sobra para imprimir.");
+                return;
+            }
+            const totalKgFormatado = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const printWindow = createPrintWindow(title);
+            let contentToPrint = `<h3>${title} (Pedidos da Sobra) - Total: ${totalKgFormatado} kg</h3>` + createTable(currentLeftoversForPrinting);
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+        }
+
         function imprimirCargasGeneric(divId, title) {
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
-
             const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
+            if (completedLoadsCards.length === 0) { alert("Nenhuma carga concluída para imprimir."); return; }
             
-            if (completedLoadsCards.length === 0) {
-                alert("Nenhuma carga concluída para imprimir.");
-                return;
-            }
-
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir: ' + title + '</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write(`<style>
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; }
-                .no-print { display: none !important; }
-                /* Mantém as cores dos cabeçalhos na impressão */
-                .bg-success { background-color: #198754 !important; color: white !important; }
-                .bg-primary { background-color: #0d6efd !important; color: white !important; }
-                .bg-warning { background-color: #ffc107 !important; color: black !important; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
-            </style></head><body>`);
-            
+            const printWindow = createPrintWindow('Imprimir: ' + title);
             let contentToPrint = `<h3>${title}</h3>`;
-            completedLoadsCards.forEach(header => { 
-                contentToPrint += header.closest('.card.mb-3').outerHTML; 
-            });
-
+            completedLoadsCards.forEach(header => { contentToPrint += header.closest('.card.mb-3').outerHTML; });
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus(); 
@@ -1131,19 +1053,9 @@
             if (!gruposToco[cf]) { alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`); return; }
             const grupo = gruposToco[cf]; const pedidos = grupo.pedidos;
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Imprimir Carga Toco CF: ' + cf + '</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write(`<style>
-                body { margin: 20px; }
-                .table-responsive { overflow: visible !important; }
-                table, th, td { border: 1px solid #dee2e6 !important; }
-                h3 { margin-bottom: 1rem; }
-            </style></head><body>`);
             
+            const printWindow = createPrintWindow('Imprimir Carga Toco CF: ' + cf);
             let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos);
-
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus(); 
