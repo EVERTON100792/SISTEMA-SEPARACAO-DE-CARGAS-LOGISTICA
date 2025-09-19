@@ -78,12 +78,9 @@
         #drop-zone.border-primary #drop-zone-text {
             border-color: #0d6efd;
         }
-
-        /* ANIMAÇÃO DE FADE-IN PARA OS RESULTADOS */
         .resultado-container {
             animation: fadeIn 0.6s ease-in-out;
         }
-
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -131,72 +128,102 @@
 
         <div class="card p-3 mb-4 no-print">
             <h2 class="card-title h5"><i class="bi bi-sliders me-2"></i>Configurações de Veículos</h2>
-            <p class="card-subtitle mb-3 text-body-secondary small">Defina as capacidades de peso e cubagem para cada tipo de veículo.</p>
-            <div class="row g-3">
+            <p class="card-subtitle mb-3 text-body-secondary small">Defina as capacidades preferenciais e os limites máximos de peso/cubagem para cada veículo.</p>
+            
+            <div class="row g-3 mb-3 border-bottom pb-3">
+                <div class="col-md-12"><strong class="text-success">Fiorino</strong></div>
                 <div class="col-md-3">
-                    <label for="fiorinoMaxCapacity" class="form-label">Fiorino - Peso Máx (kg)</label>
-                    <input type="number" class="form-control config-input" id="fiorinoMaxCapacity" value="570" step="10">
-                </div>
-                <div class="col-md-3">
-                    <label for="fiorinoMinCapacity" class="form-label">Fiorino - Peso Mín (kg)</label>
+                    <label for="fiorinoMinCapacity" class="form-label">Peso Mín (kg)</label>
                     <input type="number" class="form-control config-input" id="fiorinoMinCapacity" value="330" step="10">
                 </div>
                 <div class="col-md-3">
-                    <label for="fiorinoCubage" class="form-label">Fiorino - Cubagem Máx (m³)</label>
+                    <label for="fiorinoMaxCapacity" class="form-label">Peso Pref. (kg)</label>
+                    <input type="number" class="form-control config-input" id="fiorinoMaxCapacity" value="500" step="10">
+                </div>
+                <div class="col-md-3">
+                    <label for="fiorinoCubage" class="form-label">Cubagem Pref. (m³)</label>
                     <input type="number" class="form-control config-input" id="fiorinoCubage" value="1.5" step="0.1">
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <button class="btn btn-secondary w-100" id="resetFiorino">Reset Fiorino</button>
                 </div>
-
+                <div class="col-md-3"></div>
                 <div class="col-md-3">
-                    <label for="vanMaxCapacity" class="form-label">Van - Peso Máx (kg)</label>
-                    <input type="number" class="form-control config-input" id="vanMaxCapacity" value="1560" step="10">
+                    <label for="fiorinoHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label>
+                    <input type="number" class="form-control config-input" id="fiorinoHardMaxCapacity" value="560" step="10">
                 </div>
+                 <div class="col-md-3">
+                    <label for="fiorinoHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label>
+                    <input type="number" class="form-control config-input" id="fiorinoHardCubage" value="1.7" step="0.1">
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3 border-bottom pb-3">
+                <div class="col-md-12"><strong class="text-primary">Van</strong></div>
                 <div class="col-md-3">
-                    <label for="vanMinCapacity" class="form-label">Van - Peso Mín (kg)</label>
+                    <label for="vanMinCapacity" class="form-label">Peso Mín (kg)</label>
                     <input type="number" class="form-control config-input" id="vanMinCapacity" value="1100" step="10">
                 </div>
                 <div class="col-md-3">
-                    <label for="vanCubage" class="form-label">Van - Cubagem Máx (m³)</label>
+                    <label for="vanMaxCapacity" class="form-label">Peso Pref. (kg)</label>
+                    <input type="number" class="form-control config-input" id="vanMaxCapacity" value="1560" step="10">
+                </div>
+                <div class="col-md-3">
+                    <label for="vanCubage" class="form-label">Cubagem Pref. (m³)</label>
                     <input type="number" class="form-control config-input" id="vanCubage" value="5.0" step="0.1">
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <button class="btn btn-secondary w-100" id="resetVan">Reset Van</button>
                 </div>
-
+                <div class="col-md-3"></div>
                 <div class="col-md-3">
-                    <label for="tresQuartosMaxCapacity" class="form-label">3/4 - Peso Máx (kg)</label>
-                    <input type="number" class="form-control config-input" id="tresQuartosMaxCapacity" value="4100" step="10">
+                    <label for="vanHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label>
+                    <input type="number" class="form-control config-input" id="vanHardMaxCapacity" value="1600" step="10">
                 </div>
+                 <div class="col-md-3">
+                    <label for="vanHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label>
+                    <input type="number" class="form-control config-input" id="vanHardCubage" value="5.6" step="0.1">
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3 border-bottom pb-3">
+                <div class="col-md-12"><strong class="text-warning">3/4</strong></div>
                 <div class="col-md-3">
-                    <label for="tresQuartosMinCapacity" class="form-label">3/4 - Peso Mín (kg)</label>
+                    <label for="tresQuartosMinCapacity" class="form-label">Peso Mín (kg)</label>
                     <input type="number" class="form-control config-input" id="tresQuartosMinCapacity" value="2300" step="10">
                 </div>
                 <div class="col-md-3">
-                    <label for="tresQuartosCubage" class="form-label">3/4 - Cubagem Máx (m³)</label>
+                    <label for="tresQuartosMaxCapacity" class="form-label">Peso Máx (kg)</label>
+                    <input type="number" class="form-control config-input" id="tresQuartosMaxCapacity" value="4100" step="10">
+                </div>
+                <div class="col-md-3">
+                    <label for="tresQuartosCubage" class="form-label">Cubagem Máx (m³)</label>
                     <input type="number" class="form-control config-input" id="tresQuartosCubage" value="15.0" step="0.1">
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
+                 <div class="col-md-3 d-flex align-items-end">
                     <button class="btn btn-secondary w-100" id="resetTresQuartos">Reset 3/4</button>
                 </div>
+            </div>
 
+             <div class="row g-3">
+                 <div class="col-md-12"><strong>Toco</strong></div>
                 <div class="col-md-3">
-                    <label for="tocoMaxCapacity" class="form-label">Toco - Peso Máx (kg)</label>
-                    <input type="number" class="form-control config-input" id="tocoMaxCapacity" value="8500" step="10">
-                </div>
-                <div class="col-md-3">
-                    <label for="tocoMinCapacity" class="form-label">Toco - Peso Mín (kg)</label>
+                    <label for="tocoMinCapacity" class="form-label">Peso Mín (kg)</label>
                     <input type="number" class="form-control config-input" id="tocoMinCapacity" value="5000" step="10">
                 </div>
                 <div class="col-md-3">
-                    <label for="tocoCubage" class="form-label">Toco - Cubagem Máx (m³)</label>
+                    <label for="tocoMaxCapacity" class="form-label">Peso Máx (kg)</label>
+                    <input type="number" class="form-control config-input" id="tocoMaxCapacity" value="8500" step="10">
+                </div>
+                <div class="col-md-3">
+                    <label for="tocoCubage" class="form-label">Cubagem Máx (m³)</label>
                     <input type="number" class="form-control config-input" id="tocoCubage" value="30.0" step="0.1">
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <button class="btn btn-secondary w-100" id="resetToco">Reset Toco</button>
                 </div>
             </div>
+
             <div class="mt-3 d-flex justify-content-end">
                 <button class="btn btn-success me-2" id="saveConfig">Salvar Configurações</button>
                 <button class="btn btn-danger" id="resetAllConfigs">Resetar Todas</button>
@@ -329,7 +356,6 @@
             pedido.Agendamento = agendamentoClientCodes.has(normalizedCode) ? 'Sim' : 'Não';
         }
         
-        // --- Variáveis Globais ---
         let planilhaData = [];
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
@@ -339,17 +365,20 @@
         let currentLeftoversForPrinting = [];
 
         const defaultConfigs = {
-            fiorinoMaxCapacity: 570, fiorinoMinCapacity: 330, fiorinoCubage: 1.5,
-            vanMaxCapacity: 1560, vanMinCapacity: 1100, vanCubage: 5.0,
-            tresQuartosMaxCapacity: 4100, tresQuartosMinCapacity: 2300, tresQuartosCubage: 15.0,
-            tocoMaxCapacity: 8500, tocoMinCapacity: 5000, tocoCubage: 30.0
+            fiorinoMinCapacity: 330, fiorinoMaxCapacity: 500, fiorinoCubage: 1.5, fiorinoHardMaxCapacity: 560, fiorinoHardCubage: 1.7,
+            vanMinCapacity: 1100, vanMaxCapacity: 1560, vanCubage: 5.0, vanHardMaxCapacity: 1600, vanHardCubage: 5.6,
+            tresQuartosMinCapacity: 2300, tresQuartosMaxCapacity: 4100, tresQuartosCubage: 15.0,
+            tocoMinCapacity: 5000, tocoMaxCapacity: 8500, tocoCubage: 30.0
         };
 
         function saveConfigurations() {
             const configStatus = document.getElementById('configStatus');
             try {
                 const configs = {};
-                Object.keys(defaultConfigs).forEach(key => { configs[key] = document.getElementById(key).value; });
+                Object.keys(defaultConfigs).forEach(key => { 
+                    const element = document.getElementById(key);
+                    if (element) configs[key] = element.value; 
+                });
                 localStorage.setItem('vehicleConfigs', JSON.stringify(configs));
                 configStatus.innerHTML = '<p class="text-success">Configurações salvas com sucesso!</p>';
                 setTimeout(() => { configStatus.innerHTML = ''; }, 3000);
@@ -368,31 +397,38 @@
         }
         
         function resetFiorino() {
-            document.getElementById('fiorinoMaxCapacity').value = defaultConfigs.fiorinoMaxCapacity;
             document.getElementById('fiorinoMinCapacity').value = defaultConfigs.fiorinoMinCapacity;
+            document.getElementById('fiorinoMaxCapacity').value = defaultConfigs.fiorinoMaxCapacity;
             document.getElementById('fiorinoCubage').value = defaultConfigs.fiorinoCubage;
+            document.getElementById('fiorinoHardMaxCapacity').value = defaultConfigs.fiorinoHardMaxCapacity;
+            document.getElementById('fiorinoHardCubage').value = defaultConfigs.fiorinoHardCubage;
             saveConfigurations();
         }
         function resetVan() {
-            document.getElementById('vanMaxCapacity').value = defaultConfigs.vanMaxCapacity;
             document.getElementById('vanMinCapacity').value = defaultConfigs.vanMinCapacity;
+            document.getElementById('vanMaxCapacity').value = defaultConfigs.vanMaxCapacity;
             document.getElementById('vanCubage').value = defaultConfigs.vanCubage;
+            document.getElementById('vanHardMaxCapacity').value = defaultConfigs.vanHardMaxCapacity;
+            document.getElementById('vanHardCubage').value = defaultConfigs.vanHardCubage;
             saveConfigurations();
         }
         function resetTresQuartos() {
-            document.getElementById('tresQuartosMaxCapacity').value = defaultConfigs.tresQuartosMaxCapacity;
             document.getElementById('tresQuartosMinCapacity').value = defaultConfigs.tresQuartosMinCapacity;
+            document.getElementById('tresQuartosMaxCapacity').value = defaultConfigs.tresQuartosMaxCapacity;
             document.getElementById('tresQuartosCubage').value = defaultConfigs.tresQuartosCubage;
             saveConfigurations();
         }
         function resetToco() {
-            document.getElementById('tocoMaxCapacity').value = defaultConfigs.tocoMaxCapacity;
             document.getElementById('tocoMinCapacity').value = defaultConfigs.tocoMinCapacity;
+            document.getElementById('tocoMaxCapacity').value = defaultConfigs.tocoMaxCapacity;
             document.getElementById('tocoCubage').value = defaultConfigs.tocoCubage;
             saveConfigurations();
         }
         function resetAll() {
-            Object.keys(defaultConfigs).forEach(key => { document.getElementById(key).value = defaultConfigs[key]; });
+            Object.keys(defaultConfigs).forEach(key => { 
+                const element = document.getElementById(key);
+                if(element) element.value = defaultConfigs[key]; 
+            });
             saveConfigurations();
         }
 
@@ -407,31 +443,9 @@
         });
 
         const rotaVeiculoMap = {
-            // Fiorino
-            '11101': { type: 'fiorino', title: 'Rota 11101' }, 
-            '11301': { type: 'fiorino', title: 'Rota 11301' }, 
-            '11311': { type: 'fiorino', title: 'Rota 11311' }, 
-            '11561': { type: 'fiorino', title: 'Rota 11561' }, 
-            '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, 
-            '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
-            // Van
-            '11102': { type: 'van', title: 'Rota 11102' },
-            '11331': { type: 'van', title: 'Rota 11331' },
-            '11341': { type: 'van', title: 'Rota 11341' },
-            '11342': { type: 'van', title: 'Rota 11342' },
-            '11351': { type: 'van', title: 'Rota 11351' },
-            '11521': { type: 'van', title: 'Rota 11521' },
-            '11531': { type: 'van', title: 'Rota 11531' },
-            '11551': { type: 'van', title: 'Rota 11551' },
-            '11571': { type: 'van', title: 'Rota 11571' },
-            '11701': { type: 'van', title: 'Rota 11701' },
-            '11711': { type: 'van', title: 'Rota 11711' },
-            // 3/4
-            '11361': { type: 'tresQuartos', title: 'Rota 11361' },
-            '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] },
-            '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] },
-            '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] },
-            '11541': { type: 'tresQuartos', title: 'Rota 11541' }
+            '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
+            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
+            '11361': { type: 'tresQuartos', title: 'Rota 11361' }, '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] }, '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] }, '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] }, '11541': { type: 'tresQuartos', title: 'Rota 11541' }
         };
         
         const fileInput = document.getElementById('fileInput');
@@ -478,9 +492,7 @@
                         }); 
                         return pedido; 
                     });
-                    
                     planilhaData.forEach(checkAgendamento);
-
                     statusDiv.innerHTML = `<p class="text-success">Planilha \"${file.name}\" carregada. ${planilhaData.length} linhas prontas para processar.</p>`;
                     processarBtn.disabled = false;
                     dropZoneText.innerHTML = `<p>Arquivo \"${file.name}\" carregado.</p><button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">Selecionar Outro Arquivo</button>`;
@@ -497,26 +509,20 @@
             const searchResultDiv = document.getElementById('search-result');
             searchResultDiv.innerHTML = '';
             if (!searchInput) return;
-
             if (planilhaData.length === 0) { searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>'; return; }
-
             let pedidoEncontrado = null; let local = 'Não encontrado'; let accordionId = '';
-
             pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
             if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = 'accordionGeral'; }
-
             if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosComCFNumericoIsolado.find(p => String(p.Num_Pedido) === searchInput);
                 if (pedidoEncontrado) { local = 'Pedidos Filtrados (CF Numérico)'; accordionId = 'accordionCF'; }
             }
-
             if (!pedidoEncontrado) {
                 for (const cf in gruposToco) {
                     pedidoEncontrado = gruposToco[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
                     if (pedidoEncontrado) { local = `Cargas "Toco" (CF: ${cf})`; accordionId = 'accordionToco'; break; }
                 }
             }
-            
             if (!pedidoEncontrado) {
                 const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                 if (originalPedido) {
@@ -524,7 +530,6 @@
                     local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
                 }
             }
-
             if (pedidoEncontrado) {
                 let buttons = '';
                 if (local === 'Pedidos Disponíveis para Montagem') {
@@ -564,23 +569,17 @@
         function processar() {
             statusDiv.innerHTML = '<div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div><span class="text-primary">Processando, por favor aguarde...</span>';
             processarBtn.disabled = true;
-
             setTimeout(() => {
                 const resultadoGeralDiv = document.getElementById('resultado-geral');
                 const resultadoTocoDiv = document.getElementById('resultado-toco');
                 const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
                 const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
-
                 try {
                     if (planilhaData.length === 0) { statusDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return; }
-                    
                     resetarEstadoGlobal();
-
                     const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
                     resultadoGeralDiv.innerHTML = ''; resultadoTocoDiv.innerHTML = ''; resultadoTresQuartosDiv.innerHTML = ''; resultadoCfNumericoDiv.innerHTML = '';
-
                     const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
-
                     const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                     const cfCounts = {};
                     pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
@@ -592,15 +591,12 @@
                     }, {});
                     displayToco(resultadoTocoDiv, gruposToco);
                     tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
-
                     const clientesComBloqueio = new Set(); const clientesSemBloqueio = new Set();
                     pedidos.forEach(p => { if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') { clientesComBloqueio.add(String(p.Cliente)); } else { clientesSemBloqueio.add(String(p.Cliente)); } });
                     const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
                     const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
-                    
                     let pedidosParaProcessamento = [];
                     pedidosComCFNumericoIsolado = [];
-
                     pedidos.forEach(p => {
                         if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
                         if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') return;
@@ -614,12 +610,10 @@
                             pedidosParaProcessamento.push(p);
                         }
                     });
-                    
                     displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
-
                     let tresQuartosLoads = [];
-                    const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value) || defaultConfigs.tresQuartosMinCapacity;
-                    const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value) || defaultConfigs.tresQuartosMaxCapacity;
+                    const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
+                    const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
                     const LARGE_ORDER_KG = 1700;
                     const largeOrdersByRoute = pedidosParaProcessamento.reduce((acc, p) => {
                         const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
@@ -642,14 +636,11 @@
                     });
                     tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
                     displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
-
                     pedidosGeraisAtuais = pedidosParaProcessamento.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
-                    
                     const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
                         const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
                     }, {});
                     displayGerais(resultadoGeralDiv, gruposGerais);
-
                     statusDiv.innerHTML = `<p class="text-success">Processamento concluído com sucesso!</p>`;
                 } catch (error) { 
                     statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; 
@@ -671,14 +662,12 @@
             if (pedidosGeraisAtuais.length === 0) { alert("Por favor, processe a planilha primeiro para definir as rotas."); return; }
             const pedidosAtrasados = pedidosGeraisAtuais.filter(p => isOverdue(p.Predat));
             if (pedidosAtrasados.length === 0) { alert("Nenhum pedido em atraso encontrado nos resultados processados."); return; }
-            
             const header = [ "Empresa", "Cod_Rota", "Den_Rota", "Cliente", "Nome_Cliente", "AGENDAS/PALLET", "Nome_Repres", "Cod_Supervisor", "Nome_Supervisor", "Cod_Regional", "Nome_Regional", "Num_Pedido", "Quilos_Saldo", "OBS", "Predat", "Cidade", "UF", "Dat_Ped", "BLOQ.", "Coluna4", "Coluna5", "CF", "Descricao_CF", "Cubagem", "PED. ATRASO 3D.", "PED. ATRASO 3D.2", "PED. ATRASO 4D.", "PED. ATRASO 4D.2", "PED. ATRASO 6D.", "PED. ATRASO 6D.2" ];
             const dataToExport = pedidosAtrasados.map(p => {
                 const newP = {...p};
                 if (newP.Predat instanceof Date) { newP.Predat = newP.Predat.toLocaleDateString('pt-BR'); }
                 return newP;
             });
-
             const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: header });
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
@@ -728,11 +717,9 @@
                 document.getElementById('botoes-34').innerHTML = '<p class="text-muted">Nenhuma rota de 3/4 encontrada.</p>';
                 return; 
             }
-            
             const rotasDisponiveis = new Set(Object.keys(grupos));
             const botoes = { fiorino: '', van: '', tresQuartos: '' };
             const addedButtons = new Set();
-
             rotasDisponiveis.forEach(rota => {
                 const config = rotaVeiculoMap[rota];
                 if (config && !addedButtons.has(rota)) {
@@ -742,21 +729,17 @@
                         rotaValue = `[${combinedRoutes.map(r => `'${r}'`).join(', ')}]`;
                         combinedRoutes.forEach(r => addedButtons.add(r));
                     }
-                    
                     const vehicleType = config.type;
                     const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
                     const functionCall = vehicleType === 'fiorino' ? 'separarCargasFiorino' : (vehicleType === 'van' ? 'separarCargasVan' : 'separarCargas34');
                     const divId = vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : (vehicleType === 'van' ? 'resultado-van-geral' : 'resultado-34-geral');
                     const btnId = `btn-${vehicleType}-${rota}`;
-
                     botoes[vehicleType] += `<button id="${btnId}" class="btn btn-outline-${colorClass} mt-2 me-2" onclick="${functionCall}(${rotaValue}, '${divId}', '${config.title}', this)">${config.title}</button>`;
                 }
             });
-
             document.getElementById('botoes-fiorino').innerHTML = botoes.fiorino || '<p class="text-muted">Nenhuma rota de Fiorino encontrada.</p>';
             document.getElementById('botoes-van').innerHTML = botoes.van || '<p class="text-muted">Nenhuma rota de Van encontrada.</p>';
             document.getElementById('botoes-34').innerHTML = botoes.tresQuartos || '<p class="text-muted">Nenhuma rota de 3/4 encontrada.</p>';
-
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionGeral">';
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
@@ -773,7 +756,6 @@
             const grupos = pedidos.reduce((acc, p) => {
                 const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
             }, {});
-
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionCF">';
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
@@ -793,14 +775,18 @@
             div.innerHTML = html;
         }
         
-        function packLoads(pedidos, vehicleType, sortDirection = 'descending') {
+        function packLoads(pedidos, vehicleType) {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
-            const MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
-            const MAX_CUBAGEM = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
-            
+            const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
+            const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
+            const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) 
+                                ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) 
+                                : SOFT_MAX_KG;
+            const HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`)
+                                    ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value)
+                                    : SOFT_MAX_CUBAGE;
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
-
             const clientGroupsMap = pedidos.reduce((acc, pedido) => {
                 const clienteId = pedido.Cliente;
                 if (!acc[clienteId]) {
@@ -809,13 +795,11 @@
                 acc[clienteId].pedidos.push(pedido);
                 return acc;
             }, {});
-
             let packableItems = [];
             Object.values(clientGroupsMap).forEach(group => {
                 const totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 const totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
-
-                if (totalKg > MAX_KG || totalCubagem > MAX_CUBAGEM) {
+                if (totalKg > HARD_MAX_KG || totalCubagem > HARD_MAX_CUBAGE) {
                     group.pedidos.forEach(pedido => {
                         packableItems.push({
                             pedidos: [pedido],
@@ -828,33 +812,26 @@
                     packableItems.push({ ...group, totalKg, totalCubagem });
                 }
             });
-            
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
-            
-            if (sortDirection === 'ascending') {
-                priorityItems.sort((a, b) => a.totalKg - b.totalKg);
-                regularItems.sort((a, b) => a.totalKg - b.totalKg);
-            } else {
-                priorityItems.sort((a, b) => b.totalKg - a.totalKg);
-                regularItems.sort((a, b) => b.totalKg - a.totalKg);
-            }
+            priorityItems.sort((a, b) => b.totalKg - a.totalKg);
+            regularItems.sort((a, b) => b.totalKg - a.totalKg);
             packableItems = [...priorityItems, ...regularItems];
-
             let loads = [];
             let leftoverItems = [];
-            
             packableItems.forEach(item => {
-                if (item.totalKg > MAX_KG || item.totalCubagem > MAX_CUBAGEM) {
+                if (item.totalKg > HARD_MAX_KG || item.totalCubagem > HARD_MAX_CUBAGE) {
                     leftoverItems.push(item);
                     return;
                 }
-
                 let placed = false;
+                let bestSoftFit = null;
+                let bestHardFit = null;
                 for (const load of loads) {
+                    const newKg = load.totalKg + item.totalKg;
+                    const newCubage = load.totalCubagem + item.totalCubagem;
                     const specialClientCountInLoad = new Set(load.pedidos.filter(p => isSpecialClient(p)).map(p => p.Cliente)).size;
                     const isItemSpecial = item.isSpecial;
-                    
                     let canPlace = true;
                     if (isItemSpecial) {
                         const clientAlreadyInLoad = load.pedidos.some(p => p.Cliente === item.pedidos[0].Cliente);
@@ -862,38 +839,53 @@
                             canPlace = false;
                         }
                     }
-
-                    if (canPlace && (load.totalKg + item.totalKg <= MAX_KG) && (load.totalCubagem + item.totalCubagem <= MAX_CUBAGEM)) {
-                        load.pedidos.push(...item.pedidos);
-                        load.totalKg += item.totalKg;
-                        load.totalCubagem += item.totalCubagem;
-                        placed = true;
-                        break;
+                    if (!canPlace) continue;
+                    if (newKg <= SOFT_MAX_KG && newCubage <= SOFT_MAX_CUBAGE) {
+                        const remainingCapacity = SOFT_MAX_KG - newKg;
+                        if (bestSoftFit === null || remainingCapacity < bestSoftFit.remainingCapacity) {
+                            bestSoftFit = { load: load, remainingCapacity: remainingCapacity };
+                        }
+                    } 
+                    else if (newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
+                        const remainingCapacity = HARD_MAX_KG - newKg;
+                        if (bestHardFit === null || remainingCapacity < bestHardFit.remainingCapacity) {
+                            bestHardFit = { load: load, remainingCapacity: remainingCapacity };
+                        }
                     }
                 }
-
+                if (bestSoftFit) {
+                    bestSoftFit.load.pedidos.push(...item.pedidos);
+                    bestSoftFit.load.totalKg += item.totalKg;
+                    bestSoftFit.load.totalCubagem += item.totalCubagem;
+                    placed = true;
+                } 
+                else if (bestHardFit) {
+                    bestHardFit.load.pedidos.push(...item.pedidos);
+                    bestHardFit.load.totalKg += item.totalKg;
+                    bestHardFit.load.totalCubagem += item.totalCubagem;
+                    bestHardFit.load.usedHardLimit = true;
+                    placed = true;
+                }
                 if (!placed) {
                     loads.push({
                         pedidos: [...item.pedidos],
                         totalKg: item.totalKg,
                         totalCubagem: item.totalCubagem,
+                        usedHardLimit: (item.totalKg > SOFT_MAX_KG || item.totalCubagem > SOFT_MAX_CUBAGE)
                     });
                 }
             });
-
             let finalLoads = [];
             let unplacedFromMinRule = [];
             loads.forEach(load => {
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
                 const allowPriorityOverride = vehicleType !== 'tresQuartos';
-
                 if (load.totalKg >= MIN_KG || (hasPriority && allowPriorityOverride)) {
                     finalLoads.push(load);
                 } else {
                     unplacedFromMinRule.push(...load.pedidos);
                 }
             });
-            
             const leftovers = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             return { loads: finalLoads, leftovers };
         }
@@ -902,7 +894,6 @@
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Montando cargas...</span></div>';
             currentLeftoversForPrinting = [];
-
             const parentContainer = buttonElement.parentElement;
             parentContainer.querySelectorAll('button').forEach(btn => {
                 btn.classList.remove('active', 'btn-success', 'btn-primary', 'btn-warning', 'btn-secondary');
@@ -910,35 +901,28 @@
                 btn.classList.add(`btn-outline-${originalColor}`);
                 btn.innerHTML = btn.innerHTML.replace('<i class="bi bi-check-circle-fill me-2"></i>', '');
             });
-
             const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
             buttonElement.classList.remove(`btn-outline-${colorClass}`);
             buttonElement.classList.add(`btn-${colorClass}`, 'active');
             buttonElement.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>${title}`;
-
             setTimeout(() => {
                 if (planilhaData.length === 0) {
                     resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
                     return;
                 }
-
                 const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
                 let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
-
-                const sortDirection = 'descending';
-                const result = packLoads(pedidosRota, vehicleType, sortDirection);
+                
+                const result = packLoads(pedidosRota, vehicleType);
 
                 let primaryLoads = result.loads;
                 let currentLeftovers = result.leftovers;
-                
                 primaryLoads.forEach((load, index) => { load.numero = index + 1; });
-
                 const vehicleInfo = {
                     fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
                     van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
                     tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
                 };
-
                 let html = '';
                 const vInfo = vehicleInfo[vehicleType];
                 let summaryHeader = `<div class="d-flex justify-content-between align-items-center mb-3">
@@ -948,31 +932,23 @@
                                         </h4>
                                         ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}', this)"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
                                      </div>`;
-                
                 html += summaryHeader;
-
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada com a regra padrão.</div>`; }
-
                 primaryLoads.forEach(load => {
                     html += renderLoadCard(load, vehicleType, vInfo);
                 });
-                
                 if (currentLeftovers.length > 0) {
                     const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                    
                     let printButtonHtml = '';
-                    const vanMin = parseFloat(document.getElementById('vanMinCapacity').value) || defaultConfigs.vanMinCapacity;
-                    const vanMax = parseFloat(document.getElementById('vanMaxCapacity').value) || defaultConfigs.vanMaxCapacity;
-                    const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value) || defaultConfigs.tresQuartosMinCapacity;
-                    const tresQuartosMax = parseFloat(document.getElementById('tresQuartosMaxCapacity').value) || defaultConfigs.tresQuartosMaxCapacity;
-
+                    const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
+                    const vanMax = parseFloat(document.getElementById('vanMaxCapacity').value);
+                    const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
+                    const tresQuartosMax = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
                     const fiorinoToVan_Standard = totalKgUnassigned >= vanMin && totalKgUnassigned <= vanMax;
                     const hasLargeSingleOrder = currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) > 600);
                     const fiorinoToVan_Special = totalKgUnassigned > 1000 && hasLargeSingleOrder;
                     const isFiorinoToVan = vehicleType === 'fiorino' && (fiorinoToVan_Standard || fiorinoToVan_Special);
-
                     const isVanToTresQuartos = vehicleType === 'van' && totalKgUnassigned >= tresQuartosMin && totalKgUnassigned <= tresQuartosMax;
-
                     if (isFiorinoToVan) {
                         currentLeftoversForPrinting = [...currentLeftovers];
                         printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Possível Carga de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Possibilidade de Van</button>`;
@@ -980,14 +956,13 @@
                         currentLeftoversForPrinting = [...currentLeftovers];
                         printButtonHtml = `<button class="btn btn-warning ms-auto no-print" onclick="imprimirSobras('Possível Carga de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Possibilidade de 3/4</button>`;
                     }
-
                     html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes${printButtonHtml}</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div></div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
         }
 
-        function renderLoadCard(load, vehicleType, vInfo, isPromoted = false) {
+        function renderLoadCard(load, vehicleType, vInfo) {
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente);
                 const clienteB = String(b.Cliente);
@@ -997,14 +972,12 @@
                 if (clienteA > clienteB) return 1;
                 return pedidoA.localeCompare(pedidoB);
             });
-
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
-            const promotedBadge = isPromoted ? '<span class="badge bg-info-subtle text-info-emphasis ms-3">PROMOVIDA</span>' : '';
-            
-            return `<div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}"><div class="card-header ${vInfo.colorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${promotedBadge}</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
+            const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
+            return `<div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}"><div class="card-header ${vInfo.colorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
         }
         
         function separarCargasFiorino(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'fiorino', buttonElement); }
@@ -1013,29 +986,22 @@
 
         function displayToco(div, grupos) {
             if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga "Toco" encontrada.</div>'; return; }
-            const MAX_KG_TOCO = parseFloat(document.getElementById('tocoMaxCapacity').value) || defaultConfigs.tocoMaxCapacity;
-            
+            const MAX_KG_TOCO = parseFloat(document.getElementById('tocoMaxCapacity').value);
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionToco">';
             Object.keys(grupos).sort().forEach((cf, index) => {
                 const grupo = grupos[cf]; 
                 const pedidos = grupo.pedidos;
-
                 pedidos.sort((a, b) => {
-                    const clienteA = String(a.Cliente);
-                    const clienteB = String(b.Cliente);
-                    const pedidoA = String(a.Num_Pedido);
-                    const pedidoB = String(b.Num_Pedido);
-                    if (clienteA < clienteB) return -1;
-                    if (clienteA > clienteB) return 1;
+                    const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
+                    const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
+                    if (clienteA < clienteB) return -1; if (clienteA > clienteB) return 1;
                     return pedidoA.localeCompare(pedidoB);
                 });
-                
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const overWeight = grupo.totalKg > MAX_KG_TOCO;
                 const weightBadge = overWeight
                     ? `<span class="badge bg-danger ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>${totalKgFormatado} kg (ACIMA DO PESO!)</span>`
                     : `<span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>`;
-                
                 accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} pedidos</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir esta Carga Toco</button>${createTable(pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
@@ -1050,12 +1016,8 @@
         }
         
         function imprimirSobras(title) {
-            if (currentLeftoversForPrinting.length === 0) {
-                alert("Nenhuma sobra para imprimir.");
-                return;
-            }
+            if (currentLeftoversForPrinting.length === 0) { alert("Nenhuma sobra para imprimir."); return; }
             const totalKgFormatado = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
             const printWindow = createPrintWindow(title);
             let contentToPrint = `<h3>${title} (Pedidos da Sobra) - Total: ${totalKgFormatado} kg</h3>` + createTable(currentLeftoversForPrinting);
             printWindow.document.body.innerHTML = contentToPrint;
@@ -1069,7 +1031,6 @@
             if (!divToPrint) return;
             const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
             if (completedLoadsCards.length === 0) { alert("Nenhuma carga concluída para imprimir."); return; }
-            
             const printWindow = createPrintWindow('Imprimir: ' + title);
             let contentToPrint = `<h3>${title}</h3>`;
             completedLoadsCards.forEach(header => { contentToPrint += header.closest('.card.mb-3').outerHTML; });
@@ -1095,7 +1056,6 @@
             if (!gruposToco[cf]) { alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`); return; }
             const grupo = gruposToco[cf]; const pedidos = grupo.pedidos;
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            
             const printWindow = createPrintWindow('Imprimir Carga Toco CF: ' + cf);
             let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos);
             printWindow.document.body.innerHTML = contentToPrint;
