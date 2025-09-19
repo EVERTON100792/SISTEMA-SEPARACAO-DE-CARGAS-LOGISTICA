@@ -485,7 +485,7 @@
                             if (header) { 
                                 if ((header.toLowerCase() === 'predat' || header.toLowerCase() === 'dat_ped') && typeof row[i] === 'number') {
                                     const date = new Date(Math.round((row[i] - 25569) * 86400 * 1000));
-                                    if (!isNaN(date.getTime())) { // Validação de data
+                                    if (!isNaN(date.getTime())) {
                                         pedido[header] = date;
                                     } else {
                                         pedido[header] = '';
@@ -583,26 +583,26 @@
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
                     
                     resetarEstadoGlobal();
-                    // Limpeza da UI para nova análise
                     ['resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 'resultado-toco', 'resultado-tres-quartos', 'resultado-cf-numerico'].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
                     });
 
-
                     const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
                     const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
 
-                    // LÓGICA DE BLOQUEIO "TUDO OU NADA"
-                    // 1. Mapeia todos os clientes que têm pelo menos um pedido bloqueado.
                     const clientesComBloqueio = new Set();
+                    const clientesSemBloqueio = new Set();
                     pedidos.forEach(p => {
                         if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') {
                             clientesComBloqueio.add(String(p.Cliente));
+                        } else {
+                            clientesSemBloqueio.add(String(p.Cliente));
                         }
                     });
+                    const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
 
-                    // FILTRAGEM PRINCIPAL
+
                     const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                     const cfCounts = {};
                     pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
@@ -619,11 +619,13 @@
                     let pedidosParaProcessamento = [];
                     
                     pedidos.forEach(p => {
-                        // Aplica filtros um a um
                         if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
-                        // REGRA DE BLOQUEIO: Se o cliente está na lista de bloqueio, pula todos os pedidos dele.
-                        if (clientesComBloqueio.has(String(p.Cliente))) {
-                            pedidosComCFNumericoIsolado.push(p); // Adiciona aos "filtrados" para referência
+                        if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') {
+                            pedidosComCFNumericoIsolado.push(p);
+                            return;
+                        }
+                        if (clientesParaRemover.has(String(p.Cliente))) {
+                             pedidosComCFNumericoIsolado.push(p);
                             return;
                         }
                         if (['21', '23', '17'].includes(String(p.Coluna4))) return;
@@ -804,7 +806,7 @@
             div.innerHTML = html;
         }
         
-        function packLoads(pedidos, vehicleType) {
+        function packLoads(pedidos, vehicleType, sortStrategy = 'descending') {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
             const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
@@ -843,9 +845,16 @@
             });
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
-            priorityItems.sort((a, b) => b.totalKg - a.totalKg);
-            regularItems.sort((a, b) => b.totalKg - a.totalKg);
+            
+            if (sortStrategy === 'ascending') {
+                priorityItems.sort((a, b) => a.totalKg - b.totalKg);
+                regularItems.sort((a, b) => a.totalKg - b.totalKg);
+            } else { // Default to descending
+                priorityItems.sort((a, b) => b.totalKg - a.totalKg);
+                regularItems.sort((a, b) => b.totalKg - a.totalKg);
+            }
             packableItems = [...priorityItems, ...regularItems];
+
             let loads = [];
             let leftoverItems = [];
             packableItems.forEach(item => {
@@ -859,16 +868,19 @@
                 for (const load of loads) {
                     const newKg = load.totalKg + item.totalKg;
                     const newCubage = load.totalCubagem + item.totalCubagem;
-                    const specialClientCountInLoad = new Set(load.pedidos.filter(p => isSpecialClient(p)).map(p => p.Cliente)).size;
                     const isItemSpecial = item.isSpecial;
+                    const loadHasSpecialClient = load.pedidos.some(p => isSpecialClient(p));
+                    const ruleApplies = isItemSpecial || loadHasSpecialClient;
+                    
+                    const totalDistinctClientsInLoad = new Set(load.pedidos.map(p => p.Cliente)).size;
+                    const isNewClient = !load.pedidos.some(p => p.Cliente === item.pedidos[0].Cliente);
+
                     let canPlace = true;
-                    if (isItemSpecial) {
-                        const clientAlreadyInLoad = load.pedidos.some(p => p.Cliente === item.pedidos[0].Cliente);
-                        if (!clientAlreadyInLoad && specialClientCountInLoad >= 2) {
-                            canPlace = false;
-                        }
+                    if (ruleApplies && isNewClient && totalDistinctClientsInLoad >= 2) {
+                        canPlace = false;
                     }
                     if (!canPlace) continue;
+
                     if (newKg <= SOFT_MAX_KG && newCubage <= SOFT_MAX_CUBAGE) {
                         const remainingCapacity = SOFT_MAX_KG - newKg;
                         if (bestSoftFit === null || remainingCapacity < bestSoftFit.remainingCapacity) {
@@ -921,7 +933,7 @@
 
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
-            resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Montando cargas...</span></div>';
+            resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Otimizando e montando cargas...</span></div>';
             currentLeftoversForPrinting = [];
             const parentContainer = buttonElement.parentElement;
             parentContainer.querySelectorAll('button').forEach(btn => {
@@ -941,9 +953,33 @@
                 }
                 const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
                 let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
-                const result = packLoads(pedidosRota, vehicleType);
-                let primaryLoads = result.loads;
-                let currentLeftovers = result.leftovers;
+                
+                // --- INÍCIO DA OTIMIZAÇÃO MULTI-ESTRATÉGIA ---
+                const resultDescending = packLoads(pedidosRota, vehicleType, 'descending');
+                const resultAscending = packLoads(pedidosRota, vehicleType, 'ascending');
+
+                let allResults = [
+                    { strategy: 'descending', result: resultDescending },
+                    { strategy: 'ascending', result: resultAscending }
+                ];
+
+                const bestResultInfo = allResults.reduce((best, current) => {
+                    const currentLeftoverWeight = current.result.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                    const bestLeftoverWeight = best.result.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+
+                    if (currentLeftoverWeight < bestLeftoverWeight) {
+                        return current;
+                    }
+                    return best;
+                });
+
+                const bestResult = bestResultInfo.result;
+                const strategyName = bestResultInfo.strategy === 'descending' ? 'Maiores Primeiro' : 'Menores Primeiro';
+                // --- FIM DA OTIMIZAÇÃO ---
+
+                let primaryLoads = bestResult.loads;
+                let currentLeftovers = bestResult.leftovers;
+
                 primaryLoads.forEach((load, index) => { load.numero = index + 1; });
                 const vehicleInfo = {
                     fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
@@ -956,6 +992,7 @@
                                         <h4 class="mb-0 h5">Resultados para <strong>${title}</strong>: 
                                             <span class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
                                             <span class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
+                                            <span class="badge bg-info-subtle text-info-emphasis ms-2">${strategyName}</span>
                                         </h4>
                                         ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}', this)"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
                                      </div>`;
