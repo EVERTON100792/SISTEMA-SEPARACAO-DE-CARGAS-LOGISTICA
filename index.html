@@ -363,7 +363,7 @@
         let pedidosPrioritarios = [];
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
-        let currentAllOrdersForReoptimization = []; // Armazena todos os pedidos da rota para reotimização
+        let currentLeftoversForAction = [];
 
         const defaultConfigs = {
             fiorinoMinCapacity: 300, fiorinoMaxCapacity: 500, fiorinoCubage: 1.5, fiorinoHardMaxCapacity: 560, fiorinoHardCubage: 1.7,
@@ -581,7 +581,7 @@
             pedidosPrioritarios = [];
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
-            currentAllOrdersForReoptimization = [];
+            currentLeftoversForAction = [];
         }
 
         function processar() {
@@ -816,10 +816,7 @@
             div.innerHTML = html;
         }
         
-        // ==================================================================
-        // INÍCIO DO CÓDIGO MODIFICADO (BUGFIX REOTIMIZAR)
-        // ==================================================================
-        function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null) {
+        function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending') {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
             const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
@@ -827,11 +824,6 @@
             const HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : SOFT_MAX_CUBAGE;
             
             let loads = [];
-            if (targetVehicleCount) {
-                for (let i = 0; i < targetVehicleCount; i++) {
-                    loads.push({ pedidos: [], totalKg: 0, totalCubagem: 0 });
-                }
-            }
 
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
@@ -896,7 +888,7 @@
                     if (!canPlace) continue;
 
                     if (newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
-                        const remainingCapacity = (targetVehicleCount ? SOFT_MAX_KG : HARD_MAX_KG) - newKg;
+                        const remainingCapacity = HARD_MAX_KG - newKg;
                         if (bestFit === null || remainingCapacity < bestFit.remainingCapacity) {
                             bestFit = { load: load, remainingCapacity: remainingCapacity };
                         }
@@ -911,29 +903,19 @@
                     placed = true;
                 }
 
-                if (!placed && !targetVehicleCount) {
+                if (!placed) {
                     loads.push({
                         pedidos: [...item.pedidos],
                         totalKg: item.totalKg,
                         totalCubagem: item.totalCubagem,
                         usedHardLimit: (item.totalKg > SOFT_MAX_KG || item.totalCubagem > SOFT_MAX_CUBAGE)
                     });
-                } else if (!placed && targetVehicleCount) {
-                    leftoverItems.push(item);
                 }
             });
             
             let finalLoads = [];
             let unplacedFromMinRule = [];
             loads.forEach(load => {
-                // CORREÇÃO: Se um número alvo de veículos é definido, aceitamos todas as cargas resultantes,
-                // pois o clique do usuário autorizou a criação delas.
-                if (targetVehicleCount) {
-                    if (load.pedidos.length > 0) finalLoads.push(load);
-                    return; // Pula para o próximo loop
-                }
-
-                // Lógica original para a primeira otimização
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
                 const allowPriorityOverride = vehicleType !== 'tresQuartos';
                 if (load.pedidos.length > 0 && (load.totalKg >= MIN_KG || (hasPriority && allowPriorityOverride))) {
@@ -945,22 +927,12 @@
             const leftovers = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             return { loads: finalLoads, leftovers };
         }
-        // ==================================================================
-        // FIM DO CÓDIGO MODIFICADO
-        // ==================================================================
-
-        function runAdvancedOptimization(pedidos, vehicleType, targetVehicleCount = null) {
-            if (targetVehicleCount) {
-                 // Quando um número alvo de veículos é fornecido, focamos em uma única estratégia de preenchimento.
-                return createInitialSolution(pedidos, vehicleType, 'descending', targetVehicleCount);
-            }
-            
+        
+        function runAdvancedOptimization(pedidos, vehicleType) {
             const initialResult1 = createInitialSolution(pedidos, vehicleType, 'descending');
             const initialResult2 = createInitialSolution(pedidos, vehicleType, 'ascending');
-
             const pedidosPorCubagemDesc = [...pedidos].sort((a, b) => (parseFloat(String(b.Cubagem).replace(',', '.')) || 0) - (parseFloat(String(a.Cubagem).replace(',', '.')) || 0));
             const initialResult3 = createInitialSolution(pedidosPorCubagemDesc, vehicleType);
-            
             const pedidosPorCubagemAsc = [...pedidos].sort((a, b) => (parseFloat(String(a.Cubagem).replace(',', '.')) || 0) - (parseFloat(String(b.Cubagem).replace(',', '.')) || 0));
             const initialResult4 = createInitialSolution(pedidosPorCubagemAsc, vehicleType);
 
@@ -1019,26 +991,27 @@
             return bestState;
         }
         
-        function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement, reoptimizing = false, targetVehicleCount = null) {
+        // ==================================================================
+        // FUNÇÕES MODIFICADAS PARA A NOVA LÓGICA DE SOBRAS
+        // ==================================================================
+
+        function separarCargasGeneric(routeOrRoutes, divId, title, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Otimizando e montando cargas...</span></div>';
             
-            if (!reoptimizing) { // Só mexe nos botões se não for uma reotimização
-                currentLeftoversForPrinting = [];
-                currentAllOrdersForReoptimization = [];
-                const parentContainer = buttonElement.parentElement;
-                parentContainer.querySelectorAll('button').forEach(btn => {
-                    btn.classList.remove('active', 'btn-success', 'btn-primary', 'btn-warning', 'btn-secondary');
-                    const originalColorClass = btn.id.includes('fiorino') ? 'success' : (btn.id.includes('van') ? 'primary' : 'warning');
-                    btn.classList.add(`btn-outline-${originalColorClass}`);
-                    btn.innerHTML = btn.innerHTML.replace('<i class="bi bi-check-circle-fill me-2"></i>', '');
-                });
-                const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
-                buttonElement.classList.remove(`btn-outline-${colorClass}`);
-                buttonElement.classList.add(`btn-${colorClass}`, 'active');
-                buttonElement.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>${title}`;
-            }
-
+            currentLeftoversForAction = [];
+            const parentContainer = buttonElement.parentElement;
+            parentContainer.querySelectorAll('button').forEach(btn => {
+                btn.classList.remove('active', 'btn-success', 'btn-primary', 'btn-warning', 'btn-secondary');
+                const originalColorClass = btn.id.includes('fiorino') ? 'success' : (btn.id.includes('van') ? 'primary' : 'warning');
+                btn.classList.add(`btn-outline-${originalColorClass}`);
+                btn.innerHTML = btn.innerHTML.replace('<i class="bi bi-check-circle-fill me-2"></i>', '');
+            });
+            const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
+            buttonElement.classList.remove(`btn-outline-${colorClass}`);
+            buttonElement.classList.add(`btn-${colorClass}`, 'active');
+            buttonElement.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>${title}`;
+            
             setTimeout(() => {
                 if (planilhaData.length === 0) {
                     resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
@@ -1046,84 +1019,115 @@
                 }
                 
                 const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
-                let pedidosRota = reoptimizing ? currentAllOrdersForReoptimization : pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
+                let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
                 
-                if (!reoptimizing) {
-                    currentAllOrdersForReoptimization = [...pedidosRota]; // Salva o estado original
-                }
-
-                const bestResult = runAdvancedOptimization(pedidosRota, vehicleType, targetVehicleCount);
+                const bestResult = runAdvancedOptimization(pedidosRota, vehicleType);
                 
                 let primaryLoads = bestResult.loads;
                 let currentLeftovers = bestResult.leftovers;
 
                 primaryLoads.forEach((load, index) => { load.numero = index + 1; });
+                
+                let html = `<div id="primary-loads-container-${divId}">`;
                 const vehicleInfo = {
                     fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
                     van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
                     tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
                 };
-                let html = '';
                 const vInfo = vehicleInfo[vehicleType];
-                let summaryTitle = reoptimizing ? `Resultado Reotimizado para ${targetVehicleCount} Veículos` : `Resultados para <strong>${title}</strong>`;
+
                 let summaryHeader = `<div class="d-flex justify-content-between align-items-center mb-3">
-                                         <h4 class="mb-0 h5">${summaryTitle}: 
-                                             <span class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
-                                             <span class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
+                                         <h4 class="mb-0 h5">Resultados para <strong>${title}</strong>: 
+                                             <span id="load-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
+                                             <span id="leftover-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
                                              <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
                                          </h4>
-                                         ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title} - ${reoptimizing ? 'Reotimizado' : ''}', this)"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                         ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}', this)"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
                                        </div>`;
                 html += summaryHeader;
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada.</div>`; }
                 primaryLoads.forEach(load => {
                     html += renderLoadCard(load, vehicleType, vInfo);
                 });
-                if (currentLeftovers.length > 0) {
-                    const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                    
-                    let reoptimizationButton = '';
-                    let printButtonHtml = '';
+                html += `</div>`; // Fecha o primary-loads-container
 
-                    const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
-                    const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
-                    
-                    const createReoptimizationButton = (vType, vName) => {
-                         const safeRoutes = Array.isArray(routeOrRoutes) ? routeOrRoutes.join(',') : routeOrRoutes;
-                         return `<button class="btn btn-primary btn-sm ms-3 no-print" onclick="reotimizarComVeiculoExtra('${safeRoutes}','${divId}','${title}','${vType}', ${primaryLoads.length + 1})"><i class="bi bi-gear-fill me-1"></i>Reotimizar com +1 ${vName}</button>`;
-                    };
-                    
-                    const vehicleName = vInfo.name;
-                    if (vehicleType === 'fiorino' && totalKgUnassigned >= vanMin) {
-                        currentLeftoversForPrinting = [...currentLeftovers];
-                        printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Possível Carga de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ Van)</button>`;
-                    } else if (vehicleType === 'van') {
-                        if (totalKgUnassigned >= tresQuartosMin) {
-                            currentLeftoversForPrinting = [...currentLeftovers];
-                            printButtonHtml = `<button class="btn btn-warning ms-auto no-print" onclick="imprimirSobras('Possível Carga de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ 3/4)</button>`;
-                        } else if (totalKgUnassigned >= vanMin) {
-                            currentLeftoversForPrinting = [...currentLeftovers];
-                            printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Carga Extra de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Carga Extra</button>`;
-                            reoptimizationButton = createReoptimizationButton('van', 'Van');
-                        }
-                    } else if (vehicleType === 'tresQuartos' && totalKgUnassigned >= tresQuartosMin) {
-                        currentLeftoversForPrinting = [...currentLeftovers];
-                        printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Carga Extra de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Carga Extra</button>`;
-                        reoptimizationButton = createReoptimizationButton('tresQuartos', '3/4');
-                    }
-                    
-                    html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${reoptimizationButton} ${printButtonHtml}</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div></div>`;
+                if (currentLeftovers.length > 0) {
+                    currentLeftoversForAction = [...currentLeftovers];
+                    html += renderLeftoverCard(currentLeftovers, vehicleType, divId);
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
         }
 
-        function reotimizarComVeiculoExtra(routesStr, divId, title, vehicleType, targetVehicleCount) {
-            const routes = routesStr.split(',');
-            separarCargasGeneric(routes, divId, title, vehicleType, null, true, targetVehicleCount);
+        function renderLeftoverCard(leftovers, vehicleType, divId) {
+            currentLeftoversForPrinting = [...leftovers];
+            const totalKgUnassigned = leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+            
+            let actionButton = '';
+            const leftoverVanMinKg = 900; // Sua nova regra de 900kg
+            const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
+
+            if (vehicleType === 'van' && totalKgUnassigned >= leftoverVanMinKg) {
+                actionButton = `<button class="btn btn-primary btn-sm ms-3 no-print" onclick="formarCargaComSobras('${vehicleType}', '${divId}')"><i class="bi bi-plus-circle-fill me-1"></i>Formar 1 Van com Sobras</button>`;
+            } else if (vehicleType === 'tresQuartos' && totalKgUnassigned >= tresQuartosMin) {
+                 actionButton = `<button class="btn btn-warning btn-sm ms-3 no-print" onclick="formarCargaComSobras('${vehicleType}', '${divId}')"><i class="bi bi-plus-circle-fill me-1"></i>Formar 1 Carga 3/4 com Sobras</button>`;
+            }
+
+            const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras()"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobras</button>`;
+
+            return `<div id="leftover-card-container-${divId}">
+                        <h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                        <div class="card mb-3">
+                            <div class="card-header bg-danger text-white d-flex align-items-center">
+                                Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}
+                            </div>
+                            <div class="card-body">
+                                ${createTable(leftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}
+                            </div>
+                        </div>
+                    </div>`;
+        }
+        
+        function formarCargaComSobras(vehicleType, divId) {
+            const resultadoDiv = document.getElementById(divId);
+            if (!resultadoDiv || currentLeftoversForAction.length === 0) return;
+
+            // Roda a otimização apenas nas sobras
+            const result = createInitialSolution(currentLeftoversForAction, vehicleType, 'descending');
+            if (result.loads.length === 0) {
+                alert("Não foi possível formar uma nova carga válida com as sobras (pode ser por peso mínimo não atingido).");
+                return;
+            }
+
+            const newLoad = result.loads[0]; // Pega a primeira (e provavelmente única) carga formada
+            currentLeftoversForAction = result.leftovers; // Atualiza as sobras
+            
+            // Adiciona o novo card na tela
+            const primaryLoadsContainer = document.getElementById(`primary-loads-container-${divId}`);
+            const vehicleInfo = {
+                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
+                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
+                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
+            };
+            const vInfo = vehicleInfo[vehicleType];
+            const existingLoadsCount = primaryLoadsContainer.querySelectorAll('.card').length;
+            newLoad.numero = existingLoadsCount + 1; // Numera a nova carga
+            primaryLoadsContainer.innerHTML += renderLoadCard(newLoad, vehicleType, vInfo, true); // O 'true' indica que é uma carga de sobra
+
+            // Atualiza a seção de sobras
+            const leftoverContainer = document.getElementById(`leftover-card-container-${divId}`);
+            if (currentLeftoversForAction.length > 0) {
+                leftoverContainer.innerHTML = renderLeftoverCard(currentLeftoversForAction, vehicleType, divId);
+            } else {
+                leftoverContainer.remove(); // Remove a seção de sobras se não houver mais nenhuma
+            }
+
+            // Atualiza o cabeçalho de resumo
+            document.getElementById(`load-count-${divId}`).textContent = `${existingLoadsCount + 1} Carga(s)`;
+            document.getElementById(`leftover-count-${divId}`).textContent = `${currentLeftoversForAction.length} Pedido(s) Restante(s)`;
         }
 
-        function renderLoadCard(load, vehicleType, vInfo) {
+        function renderLoadCard(load, vehicleType, vInfo, isSobraLoad = false) {
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
                 const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
@@ -1132,10 +1136,15 @@
             });
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
             const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
-            return `<div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}"><div class="card-header ${vInfo.colorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
+            
+            const titleText = isSobraLoad ? `${vInfo.name} (Sobra) #${load.numero}` : `${vInfo.name} #${load.numero}`;
+            const cardClass = isSobraLoad ? 'border-info' : (isPriorityLoad ? 'border-primary' : '');
+
+            return `<div class="card mb-3 ${cardClass}"><div class="card-header ${vInfo.colorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${titleText} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
         }
         
         function separarCargasFiorino(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'fiorino', buttonElement); }
@@ -1173,11 +1182,14 @@
             return printWindow;
         }
         
-        function imprimirSobras(title) {
-            if (currentLeftoversForPrinting.length === 0) { alert("Nenhuma sobra para imprimir."); return; }
-            const totalKgFormatado = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const printWindow = createPrintWindow(title);
-            let contentToPrint = `<h3>${title} (Pedidos da Sobra) - Total: ${totalKgFormatado} kg</h3>` + createTable(currentLeftoversForPrinting);
+        function imprimirSobras() {
+            if (currentLeftoversForAction.length === 0) { 
+                alert("Nenhuma sobra para imprimir."); 
+                return; 
+            }
+            const totalKgFormatado = currentLeftoversForAction.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const printWindow = createPrintWindow("Pedidos Restantes");
+            let contentToPrint = `<h3>Pedidos Restantes - Total: ${totalKgFormatado} kg</h3>` + createTable(currentLeftoversForAction);
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus(); 
