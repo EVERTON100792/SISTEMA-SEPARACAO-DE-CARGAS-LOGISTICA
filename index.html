@@ -569,9 +569,9 @@
                 if (local === 'Pedidos Disponíveis para Montagem') {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -850,10 +850,6 @@
             div.innerHTML = html;
         }
         
-        // ==================================================================
-        // INÍCIO DO CÓDIGO CORRIGIDO
-        // ==================================================================
-
         function displayRota1(div, pedidos) {
             if (!pedidos || pedidos.length === 0) {
                 div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido da Rota 1 para alteração encontrado.</div>';
@@ -1012,6 +1008,119 @@
             return { loads: finalLoads, leftovers };
         }
         
+        // --- INÍCIO DA NOVA LÓGICA ---
+        // NOVA FUNÇÃO PARA A ESTRATÉGIA "GRANDE COM PEQUENO"
+        function createSolutionLargeSmall(pedidos, vehicleType, minKgOverride = null, ignoreSpecialClients = false) {
+            const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
+            const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
+            const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
+            const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : SOFT_MAX_KG;
+            const HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : SOFT_MAX_CUBAGE;
+            
+            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
+            const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
+            
+            const clientGroupsMap = pedidos.reduce((acc, pedido) => {
+                const clienteId = pedido.Cliente;
+                if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], isSpecial: isSpecialClient(pedido) }; }
+                acc[clienteId].pedidos.push(pedido);
+                return acc;
+            }, {});
+
+            let packableItems = [];
+            Object.values(clientGroupsMap).forEach(group => {
+                const totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                const totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+                if (totalKg > HARD_MAX_KG || totalCubagem > HARD_MAX_CUBAGE) {
+                    group.pedidos.forEach(pedido => {
+                        packableItems.push({
+                            pedidos: [pedido],
+                            totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
+                            totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
+                            isSpecial: group.isSpecial
+                        });
+                    });
+                } else {
+                    packableItems.push({ ...group, totalKg, totalCubagem });
+                }
+            });
+            
+            // Separar e ordenar itens prioritários e regulares
+            const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
+            const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
+            
+            priorityItems.sort((a, b) => b.totalKg - a.totalKg);
+            regularItems.sort((a, b) => b.totalKg - a.totalKg);
+
+            packableItems = [...priorityItems, ...regularItems]; // Itens prioritários maiores primeiro
+            
+            let loads = [];
+            let usedItems = new Array(packableItems.length).fill(false);
+
+            for (let i = 0; i < packableItems.length; i++) {
+                if (usedItems[i]) continue;
+
+                const largeItem = packableItems[i];
+                if (largeItem.totalKg > HARD_MAX_KG || largeItem.totalCubagem > HARD_MAX_CUBAGE) {
+                    continue; // Este item não cabe em nenhum veículo, será sobra
+                }
+
+                // Inicia uma nova carga com o maior item disponível
+                let currentLoad = { 
+                    pedidos: [...largeItem.pedidos], 
+                    totalKg: largeItem.totalKg, 
+                    totalCubagem: largeItem.totalCubagem
+                };
+                usedItems[i] = true;
+
+                // Tenta preencher o resto da carga com os menores itens disponíveis
+                for (let j = packableItems.length - 1; j > i; j--) {
+                    if (usedItems[j]) continue;
+
+                    const smallItem = packableItems[j];
+                    const newKg = currentLoad.totalKg + smallItem.totalKg;
+                    const newCubage = currentLoad.totalCubagem + smallItem.totalCubagem;
+
+                    let canPlace = true;
+                    if (!ignoreSpecialClients) {
+                        const isItemSpecial = smallItem.isSpecial;
+                        const loadHasSpecialClient = currentLoad.pedidos.some(p => isSpecialClient(p));
+                        const ruleApplies = isItemSpecial || loadHasSpecialClient;
+                        const totalDistinctClientsInLoad = new Set(currentLoad.pedidos.map(p => p.Cliente)).size;
+                        const isNewClient = !currentLoad.pedidos.some(p => p.Cliente === smallItem.pedidos[0].Cliente);
+                        if (ruleApplies && isNewClient && totalDistinctClientsInLoad >= 2) {
+                            canPlace = false;
+                        }
+                    }
+
+                    if (canPlace && newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
+                        currentLoad.pedidos.push(...smallItem.pedidos);
+                        currentLoad.totalKg = newKg;
+                        currentLoad.totalCubagem = newCubage;
+                        usedItems[j] = true;
+                    }
+                }
+                currentLoad.usedHardLimit = currentLoad.totalKg > SOFT_MAX_KG || currentLoad.totalCubagem > SOFT_MAX_CUBAGE;
+                loads.push(currentLoad);
+            }
+
+            let finalLoads = [];
+            let unplacedFromMinRule = [];
+            loads.forEach(load => {
+                const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+                const allowPriorityOverride = vehicleType !== 'tresQuartos';
+                if (load.pedidos.length > 0 && (load.totalKg >= MIN_KG || (hasPriority && allowPriorityOverride))) {
+                    finalLoads.push(load);
+                } else {
+                    unplacedFromMinRule.push(...load.pedidos);
+                }
+            });
+            
+            const leftovers = packableItems.filter((item, index) => !usedItems[index]).flatMap(item => item.pedidos).concat(unplacedFromMinRule);
+            return { loads: finalLoads, leftovers };
+        }
+        // --- FIM DA NOVA LÓGICA ---
+
         function runAdvancedOptimization(pedidos, vehicleType, targetVehicleCount = null, minKgOverride = null) {
             if (targetVehicleCount) {
                return createInitialSolution(pedidos, vehicleType, 'descending', targetVehicleCount, minKgOverride);
@@ -1025,8 +1134,16 @@
             
             const pedidosPorCubagemAsc = [...pedidos].sort((a, b) => (parseFloat(String(a.Cubagem).replace(',', '.')) || 0) - (parseFloat(String(b.Cubagem).replace(',', '.')) || 0));
             const initialResult4 = createInitialSolution(pedidosPorCubagemAsc, vehicleType, 'descending', null, minKgOverride);
+            
+            // --- INÍCIO DA NOVA LÓGICA ---
+            // Adiciona a 5ª ESTRATÉGIA "GRANDE COM PEQUENO"
+            const initialResult5 = createSolutionLargeSmall(pedidos, vehicleType, minKgOverride);
+            // --- FIM DA NOVA LÓGICA ---
 
-            const allResults = [initialResult1, initialResult2, initialResult3, initialResult4].map(res => ({
+            // --- INÍCIO DA MODIFICAÇÃO ---
+            // Compara os resultados das 5 estratégias
+            const allResults = [initialResult1, initialResult2, initialResult3, initialResult4, initialResult5].map(res => ({
+            // --- FIM DA MODIFICAÇÃO ---
                 result: res,
                 weight: res.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0)
             })).sort((a, b) => a.weight - b.weight);
@@ -1169,15 +1286,15 @@
                 const vInfo = vehicleInfo[vehicleType];
                 let summaryTitle = reoptimizing ? `Resultado Reotimizado para ${targetVehicleCount} Veículos` : `Resultados para <strong>${title}</strong>`;
                 let summaryHeader = `<div class="d-flex justify-content-between align-items-center mb-3">
-                                         <h4 class="mb-0 h5">${summaryTitle}: 
-                                             <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
-                                             <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
-                                             <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
-                                         </h4>
-                                         <div id="print-button-container-${divId}" class="d-inline-block">
-                                            ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
-                                         </div>
-                                       </div>`;
+                                             <h4 class="mb-0 h5">${summaryTitle}: 
+                                                 <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
+                                                 <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
+                                                 <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
+                                             </h4>
+                                             <div id="print-button-container-${divId}" class="d-inline-block">
+                                                 ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                             </div>
+                                            </div>`;
                 html += summaryHeader;
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada.</div>`; }
                 primaryLoads.forEach(load => {
@@ -1210,12 +1327,12 @@
                     }
                     
                     html += `<div id="leftovers-card-${divId}">
-                                <h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                <div class="card mb-3">
-                                    <div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}</div>
-                                    <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
-                                </div>
-                             </div>`;
+                                 <h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                 <div class="card mb-3">
+                                     <div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}</div>
+                                     <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
+                                 </div>
+                               </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
@@ -1290,15 +1407,15 @@
                 const totalKgUnassigned = finalLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra Final')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
                 finalContentHtml += `<div id="leftovers-card-${divId}">
-                                        <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                        <div class="card mb-3">
-                                            <div class="card-header bg-danger text-white d-flex align-items-center">
-                                                Detalhes da Sobra Final
-                                                ${printButtonHtml}
-                                            </div>
-                                            <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
-                                        </div>
-                                     </div>`;
+                                             <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                             <div class="card mb-3">
+                                                 <div class="card-header bg-danger text-white d-flex align-items-center">
+                                                     Detalhes da Sobra Final
+                                                     ${printButtonHtml}
+                                                 </div>
+                                                 <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
+                                             </div>
+                                           </div>`;
             }
             
             resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${finalContentHtml}</div>`);
