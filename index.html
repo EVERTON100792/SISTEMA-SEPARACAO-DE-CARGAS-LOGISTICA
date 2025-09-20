@@ -483,22 +483,20 @@
                         const pedido = {}; 
                         headers.forEach((header, i) => { 
                             if (header) { 
-                                // CORREÇÃO DE DATA: Adicionada validação robusta para diferentes formatos
                                 if ((header.toLowerCase() === 'predat' || header.toLowerCase() === 'dat_ped')) {
                                     let cellValue = row[i];
-                                    if (typeof cellValue === 'number') { // Formato numérico do Excel
+                                    if (typeof cellValue === 'number') {
                                         const date = new Date(Math.round((cellValue - 25569) * 86400 * 1000));
                                         if (!isNaN(date.getTime())) {
                                             pedido[header] = date;
                                         } else {
                                             pedido[header] = '';
                                         }
-                                    } else if (typeof cellValue === 'string') { // Formato de texto
-                                        const date = new Date(cellValue);
-                                        if (!isNaN(date.getTime())) {
-                                            pedido[header] = date;
+                                    } else if (cellValue instanceof Date) {
+                                         if (!isNaN(cellValue.getTime())) {
+                                            pedido[header] = cellValue;
                                         } else {
-                                            pedido[header] = cellValue; // Mantém como texto se não for data válida
+                                            pedido[header] = '';
                                         }
                                     } else {
                                         pedido[header] = cellValue !== undefined ? cellValue : '';
@@ -700,7 +698,7 @@
             const header = [ "Empresa", "Cod_Rota", "Den_Rota", "Cliente", "Nome_Cliente", "AGENDAS/PALLET", "Nome_Repres", "Cod_Supervisor", "Nome_Supervisor", "Cod_Regional", "Nome_Regional", "Num_Pedido", "Quilos_Saldo", "OBS", "Predat", "Cidade", "UF", "Dat_Ped", "BLOQ.", "Coluna4", "Coluna5", "CF", "Descricao_CF", "Cubagem", "PED. ATRASO 3D.", "PED. ATRASO 3D.2", "PED. ATRASO 4D.", "PED. ATRASO 4D.2", "PED. ATRASO 6D.", "PED. ATRASO 6D.2" ];
             const dataToExport = pedidosAtrasados.map(p => {
                 const newP = {...p};
-                if (newP.Predat instanceof Date) { newP.Predat = newP.Predat.toLocaleDateString('pt-BR'); }
+                if (newP.Predat instanceof Date) { newP.Predat = newP.Predat.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
                 return newP;
             });
             const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: header });
@@ -725,7 +723,8 @@
                     } else if (c === 'Predat' || c === 'Dat_Ped') {
                         let formattedDate = '';
                         if (cellContent instanceof Date && !isNaN(cellContent)) {
-                            formattedDate = cellContent.toLocaleDateString('pt-BR');
+                            // CORREÇÃO DE DATA: Adicionada opção de timezone UTC para evitar problemas de fuso horário
+                            formattedDate = cellContent.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
                         } else if (typeof cellContent === 'string' && cellContent) {
                            formattedDate = cellContent; 
                         }
