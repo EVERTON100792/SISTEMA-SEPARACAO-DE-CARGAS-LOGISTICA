@@ -308,7 +308,7 @@
                 <div class="card shadow-sm h-100 border-warning">
                     <div class="card-body">
                         <h2 class="card-title h5 text-warning"><i class="bi bi-sign-turn-right-fill me-2"></i>Pedidos da Rota 1 para Alteração</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos da Rota 1 sem CF numérico que precisam de alteração de rota.</p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos da Rota 1 sem CF numérico e com Coluna 5 específica, que precisam de alteração de rota.</p>
                         <div id="resultado-rota1"></div>
                     </div>
                 </div>
@@ -623,7 +623,13 @@
 
                     const pedidosCompletos = planilhaData.filter(p => p.Num_Pedido);
 
-                    rota1SemCarga = pedidosCompletos.filter(p => String(p.Cod_Rota).trim() === '1' && !isNumeric(p.CF));
+                    const col5ValuesForRota1 = ['TBL 08', 'TBL TODESCHINI'];
+                    rota1SemCarga = pedidosCompletos.filter(p => {
+                        const codRota = String(p.Cod_Rota || '').trim();
+                        const cfIsNumeric = isNumeric(p.CF);
+                        const col5 = String(p.Coluna5 || '').trim();
+                        return codRota === '1' && !cfIsNumeric && col5ValuesForRota1.includes(col5);
+                    });
                     const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
                     displayRota1(resultadoRota1Div, rota1SemCarga);
 
@@ -843,7 +849,7 @@
             });
             div.innerHTML = html;
         }
-
+        
         // ==================================================================
         // INÍCIO DO CÓDIGO CORRIGIDO
         // ==================================================================
@@ -860,7 +866,7 @@
                         <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
                     </button>
                 </div>
-                ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'CF'])}
+                ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'CF', 'Coluna5'])}
             `;
             div.innerHTML = html;
         }
@@ -870,7 +876,6 @@
             if (!divToPrint) return;
 
             const printWindow = createPrintWindow(title);
-            // Copia o conteúdo, mas remove o botão de imprimir para não aparecer na impressão
             const contentToPrint = divToPrint.cloneNode(true);
             const buttonInContent = contentToPrint.querySelector('button');
             if (buttonInContent) {
@@ -885,10 +890,6 @@
                 printWindow.close(); 
             }, 500);
         }
-
-        // ==================================================================
-        // FIM DO CÓDIGO CORRIGIDO
-        // ==================================================================
 
         function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null, minKgOverride = null, ignoreSpecialClients = false) {
             const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
@@ -1123,7 +1124,7 @@
                     }
                 }
                 
-                const bestResult = runAdvancedOptimization(pedidosRota, vehicleType, effectiveTargetVehicleCount);
+                let bestResult = runAdvancedOptimization(pedidosRota, vehicleType, effectiveTargetVehicleCount);
                 
                 let primaryLoads = bestResult.loads;
                 let currentLeftovers = bestResult.leftovers;
@@ -1206,7 +1207,6 @@
                         }
                     } else if (vehicleType === 'tresQuartos' && totalKgUnassigned >= tresQuartosMin) {
                         currentLeftoversForPrinting = [...currentLeftovers];
-                        // Botão de imprimir carga extra removido para 3/4, conforme solicitado
                     }
                     
                     html += `<div id="leftovers-card-${divId}">
