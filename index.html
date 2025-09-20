@@ -493,7 +493,7 @@
                                             pedido[header] = '';
                                         }
                                     } else if (cellValue instanceof Date) {
-                                         if (!isNaN(cellValue.getTime())) {
+                                       if (!isNaN(cellValue.getTime())) {
                                             pedido[header] = cellValue;
                                         } else {
                                             pedido[header] = '';
@@ -684,27 +684,19 @@
             }, 50);
         }
 
+        // ==================================================================
+        // INÍCIO DO CÓDIGO CORRIGIDO
+        // ==================================================================
+
         function isOverdue(predat) {
-            if (!predat || !(predat instanceof Date) || isNaN(predat)) { return false; }
+            if (!predat) { return false; }
+            // NOVO: Converte a string para um objeto Date se necessário
+            const date = predat instanceof Date ? predat : new Date(predat);
+            if (isNaN(date)) { return false; } // Checa se a data é válida após a conversão
+
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            return predat < today;
-        }
-
-        function exportarPedidosAtrasados() {
-            if (pedidosGeraisAtuais.length === 0) { alert("Por favor, processe a planilha primeiro para definir as rotas."); return; }
-            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => isOverdue(p.Predat));
-            if (pedidosAtrasados.length === 0) { alert("Nenhum pedido em atraso encontrado nos resultados processados."); return; }
-            const header = [ "Empresa", "Cod_Rota", "Den_Rota", "Cliente", "Nome_Cliente", "AGENDAS/PALLET", "Nome_Repres", "Cod_Supervisor", "Nome_Supervisor", "Cod_Regional", "Nome_Regional", "Num_Pedido", "Quilos_Saldo", "OBS", "Predat", "Cidade", "UF", "Dat_Ped", "BLOQ.", "Coluna4", "Coluna5", "CF", "Descricao_CF", "Cubagem", "PED. ATRASO 3D.", "PED. ATRASO 3D.2", "PED. ATRASO 4D.", "PED. ATRASO 4D.2", "PED. ATRASO 6D.", "PED. ATRASO 6D.2" ];
-            const dataToExport = pedidosAtrasados.map(p => {
-                const newP = {...p};
-                if (newP.Predat instanceof Date) { newP.Predat = newP.Predat.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
-                return newP;
-            });
-            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: header });
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
-            XLSX.writeFile(workbook, "pedidos_atrasados.xlsx");
+            return date < today;
         }
         
         function createTable(pedidos, columnsToDisplay) {
@@ -721,13 +713,20 @@
                     if (c === 'Agendamento' && cellContent === 'Sim') {
                         table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
                     } else if (c === 'Predat' || c === 'Dat_Ped') {
+                        // LÓGICA DE DATA CORRIGIDA ABAIXO
                         let formattedDate = '';
-                        if (cellContent instanceof Date && !isNaN(cellContent)) {
-                            // CORREÇÃO DE DATA: Adicionada opção de timezone UTC para evitar problemas de fuso horário
-                            formattedDate = cellContent.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-                        } else if (typeof cellContent === 'string' && cellContent) {
-                           formattedDate = cellContent; 
+                        // Garante que o conteúdo seja um objeto Date para formatação
+                        const dateObj = cellContent instanceof Date ? cellContent : new Date(cellContent);
+
+                        if (dateObj instanceof Date && !isNaN(dateObj)) {
+                            // Formata a data para o padrão brasileiro, corrigindo fuso horário
+                            formattedDate = dateObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+                        } else {
+                            // Se não for uma data válida, exibe o conteúdo original
+                            formattedDate = cellContent || '';
                         }
+                        
+                        // A função isOverdue já foi corrigida para lidar com strings
                         if (c === 'Predat' && isOverdue(p.Predat)) {
                             table += `<td><span class="text-danger fw-bold">${formattedDate}</span></td>`;
                         } else {
@@ -741,6 +740,26 @@
             });
             table += '</tbody></table></div>';
             return table;
+        }
+        
+        // ==================================================================
+        // FIM DO CÓDIGO CORRIGIDO
+        // ==================================================================
+
+        function exportarPedidosAtrasados() {
+            if (pedidosGeraisAtuais.length === 0) { alert("Por favor, processe a planilha primeiro para definir as rotas."); return; }
+            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => isOverdue(p.Predat));
+            if (pedidosAtrasados.length === 0) { alert("Nenhum pedido em atraso encontrado nos resultados processados."); return; }
+            const header = [ "Empresa", "Cod_Rota", "Den_Rota", "Cliente", "Nome_Cliente", "AGENDAS/PALLET", "Nome_Repres", "Cod_Supervisor", "Nome_Supervisor", "Cod_Regional", "Nome_Regional", "Num_Pedido", "Quilos_Saldo", "OBS", "Predat", "Cidade", "UF", "Dat_Ped", "BLOQ.", "Coluna4", "Coluna5", "CF", "Descricao_CF", "Cubagem", "PED. ATRASO 3D.", "PED. ATRASO 3D.2", "PED. ATRASO 4D.", "PED. ATRASO 4D.2", "PED. ATRASO 6D.", "PED. ATRASO 6D.2" ];
+            const dataToExport = pedidosAtrasados.map(p => {
+                const newP = {...p};
+                if (newP.Predat instanceof Date) { newP.Predat = newP.Predat.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
+                return newP;
+            });
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: header });
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
+            XLSX.writeFile(workbook, "pedidos_atrasados.xlsx");
         }
 
         function displayGerais(div, grupos) {
@@ -1040,13 +1059,13 @@
                 let html = '';
                 const vInfo = vehicleInfo[vehicleType];
                 let summaryHeader = `<div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h4 class="mb-0 h5">Resultados para <strong>${title}</strong>: 
-                                            <span class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
-                                            <span class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
-                                            <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
-                                        </h4>
-                                        ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}', this)"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
-                                     </div>`;
+                                         <h4 class="mb-0 h5">Resultados para <strong>${title}</strong>: 
+                                             <span class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
+                                             <span class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
+                                             <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
+                                         </h4>
+                                         ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}', this)"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                       </div>`;
                 html += summaryHeader;
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada com a regra padrão.</div>`; }
                 primaryLoads.forEach(load => {
