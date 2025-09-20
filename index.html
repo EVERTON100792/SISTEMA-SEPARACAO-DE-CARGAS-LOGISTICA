@@ -302,6 +302,18 @@
                 </div>
             </div>
         </div>
+        
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm h-100 border-warning">
+                    <div class="card-body">
+                        <h2 class="card-title h5 text-warning"><i class="bi bi-sign-turn-right-fill me-2"></i>Pedidos da Rota 1 para Alteração</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos da Rota 1 sem CF numérico que precisam de alteração de rota.</p>
+                        <div id="resultado-rota1"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="row">
             <div class="col-lg-12 mb-4">
@@ -362,6 +374,7 @@
         let pedidosComCFNumericoIsolado = [];
         let pedidosPrioritarios = [];
         let tocoPedidoIds = new Set();
+        let rota1SemCarga = [];
         let currentLeftoversForPrinting = [];
         let currentAllOrdersForReoptimization = []; // Armazena todos os pedidos da rota para reotimização
 
@@ -541,6 +554,10 @@
                 }
             }
             if (!pedidoEncontrado) {
+                pedidoEncontrado = rota1SemCarga.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Pedidos da Rota 1 para Alteração'; }
+            }
+            if (!pedidoEncontrado) {
                 const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                 if (originalPedido) {
                     pedidoEncontrado = originalPedido;
@@ -579,6 +596,7 @@
             gruposToco = {};
             pedidosComCFNumericoIsolado = [];
             pedidosPrioritarios = [];
+            rota1SemCarga = [];
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
             currentAllOrdersForReoptimization = [];
@@ -592,17 +610,27 @@
                 const resultadoTocoDiv = document.getElementById('resultado-toco');
                 const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
                 const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
+                const resultadoRota1Div = document.getElementById('resultado-rota1');
+                
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
                     
                     resetarEstadoGlobal();
-                    ['resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 'resultado-toco', 'resultado-tres-quartos', 'resultado-cf-numerico'].forEach(id => {
+                    ['resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 'resultado-toco', 'resultado-tres-quartos', 'resultado-cf-numerico', 'resultado-rota1'].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
                     });
 
+                    const pedidosCompletos = planilhaData.filter(p => p.Num_Pedido);
+
+                    rota1SemCarga = pedidosCompletos.filter(p => String(p.Cod_Rota).trim() === '1' && !isNumeric(p.CF));
+                    const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
+                    displayRota1(resultadoRota1Div, rota1SemCarga);
+
+                    let pedidosParaProcessamentoGeral = pedidosCompletos.filter(p => !rota1PedidoIds.has(p.Num_Pedido));
+
                     const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
-                    const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
+                    const pedidos = pedidosParaProcessamentoGeral.filter(p => String(p.Coluna4) != '500');
 
                     const clientesComBloqueio = new Set();
                     pedidos.forEach(p => {
@@ -808,16 +836,58 @@
 
         function displayTresQuartos(div, loads) {
             if (loads.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga 3/4 formada automaticamente.</div>'; return; }
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
             loads.forEach(load => {
                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 html += `<div class="card mb-3"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
             });
             div.innerHTML = html;
         }
-        
+
         // ==================================================================
-        // INÍCIO DO CÓDIGO CORRIGIDO (LÓGICA DO 3/4 e VAN EXTRA)
+        // INÍCIO DO CÓDIGO CORRIGIDO
+        // ==================================================================
+
+        function displayRota1(div, pedidos) {
+            if (!pedidos || pedidos.length === 0) {
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido da Rota 1 para alteração encontrado.</div>';
+                return;
+            }
+
+            let html = `
+                <div class="d-flex justify-content-end mb-2">
+                    <button class="btn btn-sm btn-outline-warning no-print" onclick="imprimirGeneric('resultado-rota1', 'Pedidos Rota 1 para Alteração')">
+                        <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
+                    </button>
+                </div>
+                ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'CF'])}
+            `;
+            div.innerHTML = html;
+        }
+
+        function imprimirGeneric(divId, title) {
+            const divToPrint = document.getElementById(divId);
+            if (!divToPrint) return;
+
+            const printWindow = createPrintWindow(title);
+            // Copia o conteúdo, mas remove o botão de imprimir para não aparecer na impressão
+            const contentToPrint = divToPrint.cloneNode(true);
+            const buttonInContent = contentToPrint.querySelector('button');
+            if (buttonInContent) {
+                buttonInContent.remove();
+            }
+
+            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + contentToPrint.innerHTML;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { 
+                printWindow.print(); 
+                printWindow.close(); 
+            }, 500);
+        }
+
+        // ==================================================================
+        // FIM DO CÓDIGO CORRIGIDO
         // ==================================================================
 
         function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null, minKgOverride = null, ignoreSpecialClients = false) {
@@ -1053,7 +1123,7 @@
                     }
                 }
                 
-                let bestResult = runAdvancedOptimization(pedidosRota, vehicleType, effectiveTargetVehicleCount);
+                const bestResult = runAdvancedOptimization(pedidosRota, vehicleType, effectiveTargetVehicleCount);
                 
                 let primaryLoads = bestResult.loads;
                 let currentLeftovers = bestResult.leftovers;
@@ -1136,6 +1206,7 @@
                         }
                     } else if (vehicleType === 'tresQuartos' && totalKgUnassigned >= tresQuartosMin) {
                         currentLeftoversForPrinting = [...currentLeftovers];
+                        // Botão de imprimir carga extra removido para 3/4, conforme solicitado
                     }
                     
                     html += `<div id="leftovers-card-${divId}">
