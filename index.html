@@ -684,19 +684,30 @@
             }, 50);
         }
 
-        // ==================================================================
-        // INÍCIO DO CÓDIGO CORRIGIDO
-        // ==================================================================
-
         function isOverdue(predat) {
             if (!predat) { return false; }
-            // NOVO: Converte a string para um objeto Date se necessário
             const date = predat instanceof Date ? predat : new Date(predat);
-            if (isNaN(date)) { return false; } // Checa se a data é válida após a conversão
+            if (isNaN(date)) { return false; } 
 
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             return date < today;
+        }
+
+        function exportarPedidosAtrasados() {
+            if (pedidosGeraisAtuais.length === 0) { alert("Por favor, processe a planilha primeiro para definir as rotas."); return; }
+            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => isOverdue(p.Predat));
+            if (pedidosAtrasados.length === 0) { alert("Nenhum pedido em atraso encontrado nos resultados processados."); return; }
+            const header = [ "Empresa", "Cod_Rota", "Den_Rota", "Cliente", "Nome_Cliente", "AGENDAS/PALLET", "Nome_Repres", "Cod_Supervisor", "Nome_Supervisor", "Cod_Regional", "Nome_Regional", "Num_Pedido", "Quilos_Saldo", "OBS", "Predat", "Cidade", "UF", "Dat_Ped", "BLOQ.", "Coluna4", "Coluna5", "CF", "Descricao_CF", "Cubagem", "PED. ATRASO 3D.", "PED. ATRASO 3D.2", "PED. ATRASO 4D.", "PED. ATRASO 4D.2", "PED. ATRASO 6D.", "PED. ATRASO 6D.2" ];
+            const dataToExport = pedidosAtrasados.map(p => {
+                const newP = {...p};
+                if (newP.Predat instanceof Date) { newP.Predat = newP.Predat.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
+                return newP;
+            });
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: header });
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
+            XLSX.writeFile(workbook, "pedidos_atrasados.xlsx");
         }
         
         function createTable(pedidos, columnsToDisplay) {
@@ -713,20 +724,15 @@
                     if (c === 'Agendamento' && cellContent === 'Sim') {
                         table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
                     } else if (c === 'Predat' || c === 'Dat_Ped') {
-                        // LÓGICA DE DATA CORRIGIDA ABAIXO
                         let formattedDate = '';
-                        // Garante que o conteúdo seja um objeto Date para formatação
                         const dateObj = cellContent instanceof Date ? cellContent : new Date(cellContent);
 
                         if (dateObj instanceof Date && !isNaN(dateObj)) {
-                            // Formata a data para o padrão brasileiro, corrigindo fuso horário
                             formattedDate = dateObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
                         } else {
-                            // Se não for uma data válida, exibe o conteúdo original
                             formattedDate = cellContent || '';
                         }
                         
-                        // A função isOverdue já foi corrigida para lidar com strings
                         if (c === 'Predat' && isOverdue(p.Predat)) {
                             table += `<td><span class="text-danger fw-bold">${formattedDate}</span></td>`;
                         } else {
@@ -740,26 +746,6 @@
             });
             table += '</tbody></table></div>';
             return table;
-        }
-        
-        // ==================================================================
-        // FIM DO CÓDIGO CORRIGIDO
-        // ==================================================================
-
-        function exportarPedidosAtrasados() {
-            if (pedidosGeraisAtuais.length === 0) { alert("Por favor, processe a planilha primeiro para definir as rotas."); return; }
-            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => isOverdue(p.Predat));
-            if (pedidosAtrasados.length === 0) { alert("Nenhum pedido em atraso encontrado nos resultados processados."); return; }
-            const header = [ "Empresa", "Cod_Rota", "Den_Rota", "Cliente", "Nome_Cliente", "AGENDAS/PALLET", "Nome_Repres", "Cod_Supervisor", "Nome_Supervisor", "Cod_Regional", "Nome_Regional", "Num_Pedido", "Quilos_Saldo", "OBS", "Predat", "Cidade", "UF", "Dat_Ped", "BLOQ.", "Coluna4", "Coluna5", "CF", "Descricao_CF", "Cubagem", "PED. ATRASO 3D.", "PED. ATRASO 3D.2", "PED. ATRASO 4D.", "PED. ATRASO 4D.2", "PED. ATRASO 6D.", "PED. ATRASO 6D.2" ];
-            const dataToExport = pedidosAtrasados.map(p => {
-                const newP = {...p};
-                if (newP.Predat instanceof Date) { newP.Predat = newP.Predat.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
-                return newP;
-            });
-            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: header });
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
-            XLSX.writeFile(workbook, "pedidos_atrasados.xlsx");
         }
 
         function displayGerais(div, grupos) {
@@ -953,20 +939,55 @@
             return { loads: finalLoads, leftovers };
         }
 
+        // ==================================================================
+        // INÍCIO DO CÓDIGO MODIFICADO (4 VERIFICAÇÕES)
+        // ==================================================================
         function runAdvancedOptimization(pedidos, vehicleType) {
+            // Estratégia 1: Ordenar por Peso Descendente
             const initialResult1 = createInitialSolution(pedidos, vehicleType, 'descending');
+            
+            // Estratégia 2: Ordenar por Peso Ascendente
             const initialResult2 = createInitialSolution(pedidos, vehicleType, 'ascending');
+
+            // Estratégia 3: Ordenar por Cubagem Descendente
+            const pedidosPorCubagemDesc = [...pedidos].sort((a, b) => {
+                const cubagemA = parseFloat(String(a.Cubagem).replace(',', '.')) || 0;
+                const cubagemB = parseFloat(String(b.Cubagem).replace(',', '.')) || 0;
+                return cubagemB - cubagemA;
+            });
+            const initialResult3 = createInitialSolution(pedidosPorCubagemDesc, vehicleType);
+            
+            // NOVO: Estratégia 4 - Ordenar por Cubagem Ascendente
+            const pedidosPorCubagemAsc = [...pedidos].sort((a, b) => {
+                const cubagemA = parseFloat(String(a.Cubagem).replace(',', '.')) || 0;
+                const cubagemB = parseFloat(String(b.Cubagem).replace(',', '.')) || 0;
+                return cubagemA - cubagemB;
+            });
+            const initialResult4 = createInitialSolution(pedidosPorCubagemAsc, vehicleType);
+
+            // Avalia qual das quatro estratégias iniciais foi a melhor
             const weight1 = initialResult1.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
             const weight2 = initialResult2.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+            const weight3 = initialResult3.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+            const weight4 = initialResult4.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
 
-            let currentState = weight1 <= weight2 ? initialResult1 : initialResult2;
+            let allWeights = [
+                { weight: weight1, result: initialResult1 },
+                { weight: weight2, result: initialResult2 },
+                { weight: weight3, result: initialResult3 },
+                { weight: weight4, result: initialResult4 }
+            ];
+            allWeights.sort((a, b) => a.weight - b.weight);
+
+            let currentState = allWeights[0].result;
+            let bestCost = allWeights[0].weight;
             let bestState = JSON.parse(JSON.stringify(currentState));
-            let bestCost = weight1 <= weight2 ? weight1 : weight2;
 
             if (bestCost === 0) {
                 return bestState;
             }
 
+            // O restante do algoritmo de refinamento continua o mesmo...
             let temperature = 1000.0;
             const coolingRate = 0.99;
             const absoluteTemperature = 1.0;
@@ -1021,6 +1042,9 @@
             }
             return bestState;
         }
+        // ==================================================================
+        // FIM DO CÓDIGO MODIFICADO
+        // ==================================================================
 
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
