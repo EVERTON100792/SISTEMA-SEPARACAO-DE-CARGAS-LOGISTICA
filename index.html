@@ -939,9 +939,6 @@
             return { loads: finalLoads, leftovers };
         }
 
-        // ==================================================================
-        // INÍCIO DO CÓDIGO MODIFICADO (4 VERIFICAÇÕES)
-        // ==================================================================
         function runAdvancedOptimization(pedidos, vehicleType) {
             // Estratégia 1: Ordenar por Peso Descendente
             const initialResult1 = createInitialSolution(pedidos, vehicleType, 'descending');
@@ -957,7 +954,7 @@
             });
             const initialResult3 = createInitialSolution(pedidosPorCubagemDesc, vehicleType);
             
-            // NOVO: Estratégia 4 - Ordenar por Cubagem Ascendente
+            // Estratégia 4: Ordenar por Cubagem Ascendente
             const pedidosPorCubagemAsc = [...pedidos].sort((a, b) => {
                 const cubagemA = parseFloat(String(a.Cubagem).replace(',', '.')) || 0;
                 const cubagemB = parseFloat(String(b.Cubagem).replace(',', '.')) || 0;
@@ -1042,10 +1039,10 @@
             }
             return bestState;
         }
+        
         // ==================================================================
-        // FIM DO CÓDIGO MODIFICADO
+        // INÍCIO DO CÓDIGO MAIS RECENTE (LÓGICA DE SOBRAS)
         // ==================================================================
-
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Otimizando e montando cargas...</span></div>';
@@ -1097,28 +1094,44 @@
                 });
                 if (currentLeftovers.length > 0) {
                     const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                    
+                    // --- INÍCIO DA LÓGICA DE SUGESTÃO DE SOBRAS APRIMORADA ---
                     let printButtonHtml = '';
+                    
+                    // Carrega os limites de todos os veículos para comparação
                     const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
-                    const vanMax = parseFloat(document.getElementById('vanMaxCapacity').value);
                     const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
-                    const tresQuartosMax = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
-                    const fiorinoToVan_Standard = totalKgUnassigned >= vanMin && totalKgUnassigned <= vanMax;
-                    const hasLargeSingleOrder = currentLeftovers.some(p => (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0) > 600);
-                    const fiorinoToVan_Special = totalKgUnassigned > 1000 && hasLargeSingleOrder;
-                    const isFiorinoToVan = vehicleType === 'fiorino' && (fiorinoToVan_Standard || fiorinoToVan_Special);
-                    const isVanToTresQuartos = vehicleType === 'van' && totalKgUnassigned >= tresQuartosMin && totalKgUnassigned <= tresQuartosMax;
-                    if (isFiorinoToVan) {
+
+                    // Lógica para sobras da FIORINO
+                    if (vehicleType === 'fiorino' && totalKgUnassigned >= vanMin) {
                         currentLeftoversForPrinting = [...currentLeftovers];
                         printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Possível Carga de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Possibilidade de Van</button>`;
-                    } else if (isVanToTresQuartos) {
-                        currentLeftoversForPrinting = [...currentLeftovers];
-                        printButtonHtml = `<button class="btn btn-warning ms-auto no-print" onclick="imprimirSobras('Possível Carga de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Possibilidade de 3/4</button>`;
+                    } 
+                    // Lógica para sobras da VAN
+                    else if (vehicleType === 'van') {
+                        if (totalKgUnassigned >= tresQuartosMin) { // Prioridade para upgrade
+                            currentLeftoversForPrinting = [...currentLeftovers];
+                            printButtonHtml = `<button class="btn btn-warning ms-auto no-print" onclick="imprimirSobras('Possível Carga de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Possibilidade de 3/4</button>`;
+                        } else if (totalKgUnassigned >= vanMin) { // Se não dá 3/4, verifica se dá outra Van
+                            currentLeftoversForPrinting = [...currentLeftovers];
+                            printButtonHtml = `<button class="btn btn-primary ms-auto no-print" onclick="imprimirSobras('Possível Carga EXTRA de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Carga Extra de Van</button>`;
+                        }
                     }
+                    // Lógica para sobras do 3/4
+                    else if (vehicleType === 'tresQuartos' && totalKgUnassigned >= tresQuartosMin) {
+                        currentLeftoversForPrinting = [...currentLeftovers];
+                        printButtonHtml = `<button class="btn btn-warning ms-auto no-print" onclick="imprimirSobras('Possível Carga EXTRA de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Carga Extra de 3/4</button>`;
+                    }
+                    // --- FIM DA LÓGICA DE SUGESTÃO DE SOBRAS APRIMORADA ---
+
                     html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes${printButtonHtml}</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div></div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
         }
+        // ==================================================================
+        // FIM DO CÓDIGO MAIS RECENTE
+        // ==================================================================
 
         function renderLoadCard(load, vehicleType, vInfo) {
             load.pedidos.sort((a, b) => {
