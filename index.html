@@ -1053,10 +1053,40 @@
                     }
                 }
                 
-                const bestResult = runAdvancedOptimization(pedidosRota, vehicleType, effectiveTargetVehicleCount);
+                let bestResult = runAdvancedOptimization(pedidosRota, vehicleType, effectiveTargetVehicleCount);
                 
                 let primaryLoads = bestResult.loads;
                 let currentLeftovers = bestResult.leftovers;
+
+                if (vehicleType === 'tresQuartos' && primaryLoads.length === 0 && currentLeftovers.length > 0) {
+                    const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
+                    const specialOrders = currentLeftovers.filter(p => specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim()));
+                    
+                    if (specialOrders.length > 0) {
+                        const otherOrders = currentLeftovers.filter(p => !specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim()));
+                        const otherUniqueClients = [...new Set(otherOrders.map(p => p.Cliente))];
+
+                        if (otherUniqueClients.length > 1) { 
+                            for (const client of otherUniqueClients) {
+                                const ordersFromThisClient = otherOrders.filter(p => p.Cliente === client);
+                                const testSet = [...specialOrders, ...ordersFromThisClient];
+                                
+                                const totalTestWeight = testSet.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                                const minKg = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
+
+                                if (totalTestWeight >= minKg) {
+                                    const recoveryAttemptResult = runAdvancedOptimization(testSet, 'tresQuartos', 1);
+                                    if (recoveryAttemptResult.loads.length > 0) {
+                                        primaryLoads = recoveryAttemptResult.loads;
+                                        const usedOrderIds = new Set(primaryLoads.flatMap(load => load.pedidos.map(p => p.Num_Pedido)));
+                                        currentLeftovers = currentLeftovers.filter(p => !usedOrderIds.has(p.Num_Pedido));
+                                        break; 
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 primaryLoads.forEach((load, index) => { load.numero = index + 1; });
                 const vehicleInfo = {
@@ -1106,7 +1136,6 @@
                         }
                     } else if (vehicleType === 'tresQuartos' && totalKgUnassigned >= tresQuartosMin) {
                         currentLeftoversForPrinting = [...currentLeftovers];
-                        printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Carga Extra de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Carga Extra</button>`;
                     }
                     
                     html += `<div id="leftovers-card-${divId}">
@@ -1134,7 +1163,6 @@
                     return;
                 }
                 
-                // Ignora as regras de clientes especiais para forçar a montagem
                 const result = createInitialSolution(leftoversToProcess, 'van', 'descending', null, 900, true);
                 
                 const extraVanLoads = result.loads;
