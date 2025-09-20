@@ -591,17 +591,13 @@
                     const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
                     const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
 
+                    // LÓGICA DE BLOQUEIO "TUDO OU NADA"
                     const clientesComBloqueio = new Set();
-                    const clientesSemBloqueio = new Set();
                     pedidos.forEach(p => {
                         if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') {
                             clientesComBloqueio.add(String(p.Cliente));
-                        } else {
-                            clientesSemBloqueio.add(String(p.Cliente));
                         }
                     });
-                    const clientesParaRemover = new Set([...clientesComBloqueio].filter(c => clientesSemBloqueio.has(c)));
-
 
                     const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                     const cfCounts = {};
@@ -620,12 +616,8 @@
                     
                     pedidos.forEach(p => {
                         if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
-                        if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') {
+                        if (clientesComBloqueio.has(String(p.Cliente))) {
                             pedidosComCFNumericoIsolado.push(p);
-                            return;
-                        }
-                        if (clientesParaRemover.has(String(p.Cliente))) {
-                             pedidosComCFNumericoIsolado.push(p);
                             return;
                         }
                         if (['21', '23', '17'].includes(String(p.Coluna4))) return;
@@ -806,7 +798,8 @@
             div.innerHTML = html;
         }
         
-        function packLoads(pedidos, vehicleType, sortStrategy = 'descending') {
+        // FUNÇÃO DE MONTAGEM INICIAL (HEURÍSTICA RÁPIDA)
+        function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending') {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
             const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
@@ -818,6 +811,7 @@
                                     : SOFT_MAX_CUBAGE;
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
+            
             const clientGroupsMap = pedidos.reduce((acc, pedido) => {
                 const clienteId = pedido.Cliente;
                 if (!acc[clienteId]) {
@@ -826,6 +820,7 @@
                 acc[clienteId].pedidos.push(pedido);
                 return acc;
             }, {});
+
             let packableItems = [];
             Object.values(clientGroupsMap).forEach(group => {
                 const totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
@@ -843,13 +838,14 @@
                     packableItems.push({ ...group, totalKg, totalCubagem });
                 }
             });
+            
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             
             if (sortStrategy === 'ascending') {
                 priorityItems.sort((a, b) => a.totalKg - b.totalKg);
                 regularItems.sort((a, b) => a.totalKg - b.totalKg);
-            } else { // Default to descending
+            } else {
                 priorityItems.sort((a, b) => b.totalKg - a.totalKg);
                 regularItems.sort((a, b) => b.totalKg - a.totalKg);
             }
@@ -871,16 +867,13 @@
                     const isItemSpecial = item.isSpecial;
                     const loadHasSpecialClient = load.pedidos.some(p => isSpecialClient(p));
                     const ruleApplies = isItemSpecial || loadHasSpecialClient;
-                    
                     const totalDistinctClientsInLoad = new Set(load.pedidos.map(p => p.Cliente)).size;
                     const isNewClient = !load.pedidos.some(p => p.Cliente === item.pedidos[0].Cliente);
-
                     let canPlace = true;
                     if (ruleApplies && isNewClient && totalDistinctClientsInLoad >= 2) {
                         canPlace = false;
                     }
                     if (!canPlace) continue;
-
                     if (newKg <= SOFT_MAX_KG && newCubage <= SOFT_MAX_CUBAGE) {
                         const remainingCapacity = SOFT_MAX_KG - newKg;
                         if (bestSoftFit === null || remainingCapacity < bestSoftFit.remainingCapacity) {
@@ -916,6 +909,7 @@
                     });
                 }
             });
+
             let finalLoads = [];
             let unplacedFromMinRule = [];
             loads.forEach(load => {
@@ -930,6 +924,99 @@
             const leftovers = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             return { loads: finalLoads, leftovers };
         }
+
+        // NOVO ALGORITMO DE REFINAMENTO ITERATIVO
+        function runAdvancedOptimization(pedidos, vehicleType) {
+            // Fase 1: Gera a melhor solução inicial possível testando duas estratégias.
+            const initialResult1 = createInitialSolution(pedidos, vehicleType, 'descending');
+            const initialResult2 = createInitialSolution(pedidos, vehicleType, 'ascending');
+            
+            const weight1 = initialResult1.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+            const weight2 = initialResult2.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+
+            let currentState = weight1 <= weight2 ? initialResult1 : initialResult2;
+            let bestState = JSON.parse(JSON.stringify(currentState)); // Cópia profunda
+            let bestCost = weight1 <= weight2 ? weight1 : weight2;
+
+            // Se a solução inicial já for perfeita, não precisa refinar.
+            if (bestCost === 0) {
+                return bestState;
+            }
+
+            // Fase 2: Refinamento (Simulated Annealing)
+            let temperature = 1000.0;
+            const coolingRate = 0.99;
+            const absoluteTemperature = 1.0;
+
+            const MAX_ITERATIONS = 5000; // Limite para evitar loops infinitos
+            for(let i = 0; i < MAX_ITERATIONS && temperature > absoluteTemperature; i++) {
+                // Cria um clone do estado atual para modificação
+                let neighborState = JSON.parse(JSON.stringify(currentState));
+
+                // Realiza um movimento aleatório para gerar um "vizinho"
+                // Tenta mover uma sobra para uma carga com maior probabilidade
+                if (Math.random() < 0.7 && neighborState.leftovers.length > 0) {
+                    // Tenta mover uma sobra para uma carga
+                    const leftoverIndex = Math.floor(Math.random() * neighborState.leftovers.length);
+                    const orderToMove = neighborState.leftovers[leftoverIndex];
+                    
+                    if (neighborState.loads.length > 0) {
+                        const loadIndex = Math.floor(Math.random() * neighborState.loads.length);
+                        // A função `createInitialSolution` é reutilizada aqui de forma inteligente para verificar a validade da nova carga
+                        const tempLoadPedidos = [...neighborState.loads[loadIndex].pedidos, orderToMove];
+                        const tempSolution = createInitialSolution(tempLoadPedidos, vehicleType);
+                        
+                        // Se a solução temporária não tiver sobras e tiver 1 carga, o movimento é válido
+                        if (tempSolution.leftovers.length === 0 && tempSolution.loads.length === 1) {
+                            neighborState.loads[loadIndex] = tempSolution.loads[0];
+                            neighborState.leftovers.splice(leftoverIndex, 1);
+                        }
+                    }
+                } else if (neighborState.loads.length > 1) {
+                    // Tenta trocar pedidos entre duas cargas
+                    const idx1 = Math.floor(Math.random() * neighborState.loads.length);
+                    let idx2 = Math.floor(Math.random() * neighborState.loads.length);
+                    if (idx1 === idx2) continue; // Pula se forem os mesmos
+                    
+                    const load1 = neighborState.loads[idx1];
+                    const load2 = neighborState.loads[idx2];
+                    if (load1.pedidos.length === 0 || load2.pedidos.length === 0) continue;
+
+                    const order1Index = Math.floor(Math.random() * load1.pedidos.length);
+                    const order2Index = Math.floor(Math.random() * load2.pedidos.length);
+
+                    // Simula a troca
+                    const newLoad1Pedidos = [...load1.pedidos];
+                    const newLoad2Pedidos = [...load2.pedidos];
+                    [newLoad1Pedidos[order1Index], newLoad2Pedidos[order2Index]] = [newLoad2Pedidos[order2Index], newLoad1Pedidos[order1Index]];
+
+                    // Valida as duas novas cargas
+                    const tempSolution1 = createInitialSolution(newLoad1Pedidos, vehicleType);
+                    const tempSolution2 = createInitialSolution(newLoad2Pedidos, vehicleType);
+
+                    if (tempSolution1.leftovers.length === 0 && tempSolution2.leftovers.length === 0) {
+                        neighborState.loads[idx1] = tempSolution1.loads[0];
+                        neighborState.loads[idx2] = tempSolution2.loads[0];
+                    }
+                }
+
+                const currentCost = currentState.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                const neighborCost = neighborState.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                
+                const deltaCost = neighborCost - currentCost;
+
+                if (deltaCost < 0 || Math.exp(-deltaCost / temperature) > Math.random()) {
+                    currentState = neighborState;
+                    if (neighborCost < bestCost) {
+                        bestState = neighborState;
+                        bestCost = neighborCost;
+                    }
+                }
+                temperature *= coolingRate;
+            }
+            return bestState;
+        }
+
 
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
@@ -954,29 +1041,9 @@
                 const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
                 let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
                 
-                // --- INÍCIO DA OTIMIZAÇÃO MULTI-ESTRATÉGIA ---
-                const resultDescending = packLoads(pedidosRota, vehicleType, 'descending');
-                const resultAscending = packLoads(pedidosRota, vehicleType, 'ascending');
-
-                let allResults = [
-                    { strategy: 'descending', result: resultDescending },
-                    { strategy: 'ascending', result: resultAscending }
-                ];
-
-                const bestResultInfo = allResults.reduce((best, current) => {
-                    const currentLeftoverWeight = current.result.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                    const bestLeftoverWeight = best.result.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-
-                    if (currentLeftoverWeight < bestLeftoverWeight) {
-                        return current;
-                    }
-                    return best;
-                });
-
-                const bestResult = bestResultInfo.result;
-                const strategyName = bestResultInfo.strategy === 'descending' ? 'Maiores Primeiro' : 'Menores Primeiro';
-                // --- FIM DA OTIMIZAÇÃO ---
-
+                // --- CHAMADA PARA O NOVO ALGORITMO DE OTIMIZAÇÃO ---
+                const bestResult = runAdvancedOptimization(pedidosRota, vehicleType);
+                
                 let primaryLoads = bestResult.loads;
                 let currentLeftovers = bestResult.leftovers;
 
@@ -992,7 +1059,7 @@
                                         <h4 class="mb-0 h5">Resultados para <strong>${title}</strong>: 
                                             <span class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
                                             <span class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
-                                            <span class="badge bg-info-subtle text-info-emphasis ms-2">${strategyName}</span>
+                                            <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
                                         </h4>
                                         ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', 'Cargas de ${vInfo.name} - ${title}', this)"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
                                      </div>`;
