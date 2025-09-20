@@ -816,6 +816,9 @@
             div.innerHTML = html;
         }
         
+        // ==================================================================
+        // INÍCIO DO CÓDIGO MODIFICADO (BUGFIX REOTIMIZAR)
+        // ==================================================================
         function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null) {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
@@ -923,6 +926,14 @@
             let finalLoads = [];
             let unplacedFromMinRule = [];
             loads.forEach(load => {
+                // CORREÇÃO: Se um número alvo de veículos é definido, aceitamos todas as cargas resultantes,
+                // pois o clique do usuário autorizou a criação delas.
+                if (targetVehicleCount) {
+                    if (load.pedidos.length > 0) finalLoads.push(load);
+                    return; // Pula para o próximo loop
+                }
+
+                // Lógica original para a primeira otimização
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
                 const allowPriorityOverride = vehicleType !== 'tresQuartos';
                 if (load.pedidos.length > 0 && (load.totalKg >= MIN_KG || (hasPriority && allowPriorityOverride))) {
@@ -934,6 +945,9 @@
             const leftovers = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             return { loads: finalLoads, leftovers };
         }
+        // ==================================================================
+        // FIM DO CÓDIGO MODIFICADO
+        // ==================================================================
 
         function runAdvancedOptimization(pedidos, vehicleType, targetVehicleCount = null) {
             if (targetVehicleCount) {
@@ -1005,9 +1019,6 @@
             return bestState;
         }
         
-        // ==================================================================
-        // FUNÇÃO MODIFICADA PARA LIDAR COM A REOTIMIZAÇÃO
-        // ==================================================================
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement, reoptimizing = false, targetVehicleCount = null) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Otimizando e montando cargas...</span></div>';
@@ -1034,7 +1045,7 @@
                     return;
                 }
                 
-                const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
+                const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
                 let pedidosRota = reoptimizing ? currentAllOrdersForReoptimization : pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
                 
                 if (!reoptimizing) {
@@ -1077,10 +1088,12 @@
                     const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
                     const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
                     
-                    const createReoptimizationButton = (nextVehicleType, nextVehicleName) => {
-                         return `<button class="btn btn-primary btn-sm ms-3 no-print" onclick="reotimizarComVeiculoExtra('${routes.join(',')}','${divId}','${title}','${vehicleType}', ${primaryLoads.length + 1})"><i class="bi bi-gear-fill me-1"></i>Reotimizar com +1 ${vInfo.name}</button>`;
+                    const createReoptimizationButton = (vType, vName) => {
+                         const safeRoutes = Array.isArray(routeOrRoutes) ? routeOrRoutes.join(',') : routeOrRoutes;
+                         return `<button class="btn btn-primary btn-sm ms-3 no-print" onclick="reotimizarComVeiculoExtra('${safeRoutes}','${divId}','${title}','${vType}', ${primaryLoads.length + 1})"><i class="bi bi-gear-fill me-1"></i>Reotimizar com +1 ${vName}</button>`;
                     };
-
+                    
+                    const vehicleName = vInfo.name;
                     if (vehicleType === 'fiorino' && totalKgUnassigned >= vanMin) {
                         currentLeftoversForPrinting = [...currentLeftovers];
                         printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Possível Carga de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ Van)</button>`;
@@ -1107,10 +1120,8 @@
 
         function reotimizarComVeiculoExtra(routesStr, divId, title, vehicleType, targetVehicleCount) {
             const routes = routesStr.split(',');
-            // Chama a função principal de separação, mas com os parâmetros de reotimização
             separarCargasGeneric(routes, divId, title, vehicleType, null, true, targetVehicleCount);
         }
-
 
         function renderLoadCard(load, vehicleType, vInfo) {
             load.pedidos.sort((a, b) => {
