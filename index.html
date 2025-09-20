@@ -1010,6 +1010,10 @@
             return bestState;
         }
         
+        // ==================================================================
+        // INÍCIO DO CÓDIGO CORRIGIDO (LÓGICA DO 3/4 e VAN EXTRA)
+        // ==================================================================
+
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement, reoptimizing = false, targetVehicleCount = null) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Otimizando e montando cargas...</span></div>';
@@ -1043,7 +1047,25 @@
                     currentAllOrdersForReoptimization = [...pedidosRota];
                 }
 
-                const bestResult = runAdvancedOptimization(pedidosRota, vehicleType, targetVehicleCount);
+                let bestResult;
+                const totalRotaKg = pedidosRota.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+
+                if (vehicleType === 'tresQuartos' && !reoptimizing) {
+                    const minKg = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
+                    const maxKg = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
+                    if (totalRotaKg >= minKg && totalRotaKg <= maxKg) {
+                        const singleLoad = {
+                            pedidos: pedidosRota,
+                            totalKg: totalRotaKg,
+                            totalCubagem: pedidosRota.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0)
+                        };
+                        bestResult = { loads: [singleLoad], leftovers: [] };
+                    }
+                }
+
+                if (!bestResult) {
+                     bestResult = runAdvancedOptimization(pedidosRota, vehicleType, targetVehicleCount);
+                }
                 
                 let primaryLoads = bestResult.loads;
                 let currentLeftovers = bestResult.leftovers;
@@ -1113,10 +1135,6 @@
             }, 50);
         }
 
-        // ==================================================================
-        // INÍCIO DO CÓDIGO CORRIGIDO (LÓGICA DA VAN EXTRA)
-        // ==================================================================
-
         function tentarFormarVanExtra(divId, buttonElement, initialLoadCount, title) {
             buttonElement.disabled = true;
             buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...';
@@ -1130,8 +1148,8 @@
                     return;
                 }
 
-                // A função createInitialSolution será usada, mas forçaremos a ignorar a regra de clientes especiais
-                // para garantir que a carga seja formada se houver peso.
+                // A função createInitialSolution é chamada forçando a ignorar as regras de clientes especiais
+                // para garantir que a carga seja formada se houver peso suficiente.
                 const result = createInitialSolution(leftoversToProcess, 'van', 'descending', null, 900, true);
                 
                 const extraVanLoads = result.loads;
