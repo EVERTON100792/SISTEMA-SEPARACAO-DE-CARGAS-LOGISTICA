@@ -1047,25 +1047,17 @@
                     currentAllOrdersForReoptimization = [...pedidosRota];
                 }
 
-                let bestResult;
-                const totalRotaKg = pedidosRota.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-
+                let effectiveTargetVehicleCount = targetVehicleCount;
                 if (vehicleType === 'tresQuartos' && !reoptimizing) {
                     const minKg = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
                     const maxKg = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
+                    const totalRotaKg = pedidosRota.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                     if (totalRotaKg >= minKg && totalRotaKg <= maxKg) {
-                        const singleLoad = {
-                            pedidos: pedidosRota,
-                            totalKg: totalRotaKg,
-                            totalCubagem: pedidosRota.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0)
-                        };
-                        bestResult = { loads: [singleLoad], leftovers: [] };
+                        effectiveTargetVehicleCount = 1;
                     }
                 }
-
-                if (!bestResult) {
-                     bestResult = runAdvancedOptimization(pedidosRota, vehicleType, targetVehicleCount);
-                }
+                
+                const bestResult = runAdvancedOptimization(pedidosRota, vehicleType, effectiveTargetVehicleCount);
                 
                 let primaryLoads = bestResult.loads;
                 let currentLeftovers = bestResult.leftovers;
@@ -1147,9 +1139,7 @@
                     buttonElement.innerHTML = '<i class="bi bi-plus-circle-fill me-1"></i>Formar +1 Van da Sobra';
                     return;
                 }
-
-                // A função createInitialSolution é chamada forçando a ignorar as regras de clientes especiais
-                // para garantir que a carga seja formada se houver peso suficiente.
+                
                 const result = createInitialSolution(leftoversToProcess, 'van', 'descending', null, 900, true);
                 
                 const extraVanLoads = result.loads;
@@ -1220,14 +1210,14 @@
             resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${finalContentHtml}</div>`);
         }
         
-        // ==================================================================
-        // FIM DO CÓDIGO CORRIGIDO
-        // ==================================================================
-        
         function reotimizarComVeiculoExtra(routesStr, divId, title, vehicleType, targetVehicleCount) {
             const routes = routesStr.split(',');
             separarCargasGeneric(routes, divId, title, vehicleType, null, true, targetVehicleCount);
         }
+        
+        // ==================================================================
+        // FIM DO CÓDIGO CORRIGIDO
+        // ==================================================================
 
         function renderLoadCard(load, vehicleType, vInfo) {
             load.pedidos.sort((a, b) => {
