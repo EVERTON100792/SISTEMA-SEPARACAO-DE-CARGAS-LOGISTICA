@@ -816,7 +816,7 @@
             div.innerHTML = html;
         }
         
-        function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null, minKgOverride = null) {
+        function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null, minKgOverride = null, ignoreSpecialClients = false) {
             const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
             const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
@@ -881,18 +881,19 @@
                     const newKg = load.totalKg + item.totalKg;
                     const newCubage = load.totalCubagem + item.totalCubagem;
                     
-                    const isItemSpecial = item.isSpecial;
-                    const loadHasSpecialClient = load.pedidos.some(p => isSpecialClient(p));
-                    const ruleApplies = isItemSpecial || loadHasSpecialClient;
-                    const totalDistinctClientsInLoad = new Set(load.pedidos.map(p => p.Cliente)).size;
-                    const isNewClient = !load.pedidos.some(p => p.Cliente === item.pedidos[0].Cliente);
                     let canPlace = true;
-                    if (ruleApplies && isNewClient && totalDistinctClientsInLoad >= 2) {
-                        canPlace = false;
+                    if (!ignoreSpecialClients) {
+                        const isItemSpecial = item.isSpecial;
+                        const loadHasSpecialClient = load.pedidos.some(p => isSpecialClient(p));
+                        const ruleApplies = isItemSpecial || loadHasSpecialClient;
+                        const totalDistinctClientsInLoad = new Set(load.pedidos.map(p => p.Cliente)).size;
+                        const isNewClient = !load.pedidos.some(p => p.Cliente === item.pedidos[0].Cliente);
+                        if (ruleApplies && isNewClient && totalDistinctClientsInLoad >= 2) {
+                            canPlace = false;
+                        }
                     }
-                    if (!canPlace) continue;
 
-                    if (newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
+                    if (canPlace && newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
                         const remainingCapacity = (targetVehicleCount ? SOFT_MAX_KG : HARD_MAX_KG) - newKg;
                         if (bestFit === null || remainingCapacity < bestFit.remainingCapacity) {
                             bestFit = { load: load, remainingCapacity: remainingCapacity };
@@ -1110,23 +1111,26 @@
             }, 50);
         }
 
+        // ==================================================================
+        // INÍCIO DO CÓDIGO CORRIGIDO (LÓGICA DA VAN EXTRA)
+        // ==================================================================
+
         function tentarFormarVanExtra(divId, buttonElement) {
             buttonElement.disabled = true;
             buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...';
 
-            const vehicleType = 'van';
-            const minKgForExtraVan = 900;
-
             setTimeout(() => {
-                const leftoversToProcess = [...currentLeftoversForPrinting];
+                let leftoversToProcess = [...currentLeftoversForPrinting];
                 if (leftoversToProcess.length === 0) {
                     alert("Não há sobras para processar.");
                     buttonElement.disabled = false;
                     buttonElement.innerHTML = '<i class="bi bi-plus-circle-fill me-1"></i>Formar +1 Van da Sobra';
                     return;
                 }
+
+                // Usamos a função de otimização, mas forçando-a a ignorar as regras de clientes especiais
+                const result = createInitialSolution(leftoversToProcess, 'van', 'descending', null, 900, true);
                 
-                const result = createInitialSolution(leftoversToProcess, vehicleType, 'descending', null, minKgForExtraVan);
                 const extraVanLoads = result.loads;
                 const finalLeftovers = result.leftovers;
 
@@ -1137,44 +1141,52 @@
                     return;
                 }
 
-                const resultadoDiv = document.getElementById(divId);
-                const leftoversCard = document.getElementById(`leftovers-card-${divId}`);
-
-                const existingVanCount = resultadoDiv.querySelectorAll('.card .card-header.bg-primary').length;
-                const vInfo = { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' };
-
-                let newLoadsHtml = '';
-                extraVanLoads.forEach((load, index) => {
-                    load.numero = existingVanCount + index + 1;
-                    newLoadsHtml += renderLoadCard(load, vehicleType, vInfo);
-                });
-
-                if (leftoversCard) {
-                    leftoversCard.remove();
-                }
-
-                let finalContentHtml = newLoadsHtml;
-                currentLeftoversForPrinting = [...finalLeftovers];
-
-                if (finalLeftovers.length > 0) {
-                    const totalKgUnassigned = finalLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                    const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra Final')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
-                    finalContentHtml += `<div id="leftovers-card-${divId}">
-                                            <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                            <div class="card mb-3">
-                                                <div class="card-header bg-danger text-white d-flex align-items-center">
-                                                    Detalhes da Sobra Final
-                                                    ${printButtonHtml}
-                                                </div>
-                                                <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
-                                            </div>
-                                         </div>`;
-                }
-                
-                resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${finalContentHtml}</div>`);
+                updateUIAfterExtraVan(divId, extraVanLoads, finalLeftovers);
 
             }, 50);
         }
+
+        function updateUIAfterExtraVan(divId, newLoads, finalLeftovers) {
+            const resultadoDiv = document.getElementById(divId);
+            const leftoversCard = document.getElementById(`leftovers-card-${divId}`);
+
+            const existingVanCount = resultadoDiv.querySelectorAll('.card .card-header.bg-primary').length;
+            const vInfo = { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' };
+
+            let newLoadsHtml = '';
+            newLoads.forEach((load, index) => {
+                load.numero = existingVanCount + index + 1;
+                newLoadsHtml += renderLoadCard(load, 'van', vInfo);
+            });
+
+            if (leftoversCard) {
+                leftoversCard.remove();
+            }
+
+            let finalContentHtml = newLoadsHtml;
+            currentLeftoversForPrinting = [...finalLeftovers];
+
+            if (finalLeftovers.length > 0) {
+                const totalKgUnassigned = finalLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra Final')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
+                finalContentHtml += `<div id="leftovers-card-${divId}">
+                                        <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                        <div class="card mb-3">
+                                            <div class="card-header bg-danger text-white d-flex align-items-center">
+                                                Detalhes da Sobra Final
+                                                ${printButtonHtml}
+                                            </div>
+                                            <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
+                                        </div>
+                                     </div>`;
+            }
+            
+            resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${finalContentHtml}</div>`);
+        }
+        
+        // ==================================================================
+        // FIM DO CÓDIGO CORRIGIDO
+        // ==================================================================
         
         function reotimizarComVeiculoExtra(routesStr, divId, title, vehicleType, targetVehicleCount) {
             const routes = routesStr.split(',');
