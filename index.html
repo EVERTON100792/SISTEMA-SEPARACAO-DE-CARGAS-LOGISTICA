@@ -1059,11 +1059,13 @@
                 let summaryTitle = reoptimizing ? `Resultado Reotimizado para ${targetVehicleCount} Veículos` : `Resultados para <strong>${title}</strong>`;
                 let summaryHeader = `<div class="d-flex justify-content-between align-items-center mb-3">
                                          <h4 class="mb-0 h5">${summaryTitle}: 
-                                             <span class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
-                                             <span class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
+                                             <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
+                                             <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
                                              <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
                                          </h4>
-                                         ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title} - ${reoptimizing ? 'Reotimizado' : ''}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                         <div id="print-button-container-${divId}" class="d-inline-block">
+                                            ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                         </div>
                                        </div>`;
                 html += summaryHeader;
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada.</div>`; }
@@ -1090,7 +1092,7 @@
                         } else if (totalKgUnassigned >= 900) {
                             currentLeftoversForPrinting = [...currentLeftovers];
                             printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra para Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra</button>`;
-                            actionButton = `<button class="btn btn-primary btn-sm ms-3 no-print" onclick="tentarFormarVanExtra('${divId}', this)"><i class="bi bi-plus-circle-fill me-1"></i>Formar +1 Van da Sobra</button>`;
+                            actionButton = `<button class="btn btn-primary btn-sm ms-3 no-print" onclick="tentarFormarVanExtra('${divId}', this, ${primaryLoads.length}, '${title}')"><i class="bi bi-plus-circle-fill me-1"></i>Formar +1 Van da Sobra</button>`;
                         }
                     } else if (vehicleType === 'tresQuartos' && totalKgUnassigned >= tresQuartosMin) {
                         currentLeftoversForPrinting = [...currentLeftovers];
@@ -1115,7 +1117,7 @@
         // INÍCIO DO CÓDIGO CORRIGIDO (LÓGICA DA VAN EXTRA)
         // ==================================================================
 
-        function tentarFormarVanExtra(divId, buttonElement) {
+        function tentarFormarVanExtra(divId, buttonElement, initialLoadCount, title) {
             buttonElement.disabled = true;
             buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...';
 
@@ -1128,7 +1130,8 @@
                     return;
                 }
 
-                // Usamos a função de otimização, mas forçando-a a ignorar as regras de clientes especiais
+                // A função createInitialSolution será usada, mas forçaremos a ignorar a regra de clientes especiais
+                // para garantir que a carga seja formada se houver peso.
                 const result = createInitialSolution(leftoversToProcess, 'van', 'descending', null, 900, true);
                 
                 const extraVanLoads = result.loads;
@@ -1141,21 +1144,36 @@
                     return;
                 }
 
-                updateUIAfterExtraVan(divId, extraVanLoads, finalLeftovers);
+                updateUIAfterExtraVan(divId, extraVanLoads, finalLeftovers, initialLoadCount, title);
 
             }, 50);
         }
 
-        function updateUIAfterExtraVan(divId, newLoads, finalLeftovers) {
+        function updateUIAfterExtraVan(divId, newLoads, finalLeftovers, initialLoadCount, title) {
             const resultadoDiv = document.getElementById(divId);
             const leftoversCard = document.getElementById(`leftovers-card-${divId}`);
 
-            const existingVanCount = resultadoDiv.querySelectorAll('.card .card-header.bg-primary').length;
-            const vInfo = { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' };
+            const newTotalLoads = initialLoadCount + newLoads.length;
 
+            const loadsCountEl = document.getElementById(`loads-count-${divId}`);
+            if (loadsCountEl) {
+                loadsCountEl.innerHTML = `${newTotalLoads} Carga(s)`;
+            }
+
+            const leftoversCountEl = document.getElementById(`leftovers-count-${divId}`);
+            if (leftoversCountEl) {
+                leftoversCountEl.innerHTML = `${finalLeftovers.length} Pedido(s) Restante(s)`;
+            }
+
+            const printContainerEl = document.getElementById(`print-button-container-${divId}`);
+            if (printContainerEl && initialLoadCount === 0 && newTotalLoads > 0) {
+                printContainerEl.innerHTML = `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>`;
+            }
+
+            const vInfo = { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' };
             let newLoadsHtml = '';
             newLoads.forEach((load, index) => {
-                load.numero = existingVanCount + index + 1;
+                load.numero = initialLoadCount + index + 1;
                 newLoadsHtml += renderLoadCard(load, 'van', vInfo);
             });
 
