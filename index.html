@@ -816,6 +816,10 @@
             div.innerHTML = html;
         }
         
+        // ==================================================================
+        // INÍCIO DO CÓDIGO CORRIGIDO (LÓGICA DO 3/4 e VAN EXTRA)
+        // ==================================================================
+
         function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null, minKgOverride = null, ignoreSpecialClients = false) {
             const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
@@ -924,13 +928,9 @@
             let finalLoads = [];
             let unplacedFromMinRule = [];
             loads.forEach(load => {
-                if (targetVehicleCount) {
-                    if (load.pedidos.length > 0) finalLoads.push(load);
-                    return; 
-                }
-
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
                 const allowPriorityOverride = vehicleType !== 'tresQuartos';
+                
                 if (load.pedidos.length > 0 && (load.totalKg >= MIN_KG || (hasPriority && allowPriorityOverride))) {
                     finalLoads.push(load);
                 } else {
@@ -1010,10 +1010,6 @@
             return bestState;
         }
         
-        // ==================================================================
-        // INÍCIO DO CÓDIGO CORRIGIDO (LÓGICA DO 3/4 e VAN EXTRA)
-        // ==================================================================
-
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement, reoptimizing = false, targetVehicleCount = null) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Otimizando e montando cargas...</span></div>';
@@ -1215,10 +1211,6 @@
             separarCargasGeneric(routes, divId, title, vehicleType, null, true, targetVehicleCount);
         }
         
-        // ==================================================================
-        // FIM DO CÓDIGO CORRIGIDO
-        // ==================================================================
-
         function renderLoadCard(load, vehicleType, vInfo) {
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
