@@ -356,7 +356,7 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
         const agendamentoClientCodes = new Set([
-            '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '144192', '144457', '145014', '145237', '145322', '146644', '146988', '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196084', '196118', '196405', '196446', '196784', '197168', '197249', '197983', '198187', '198438', '198747', '198774', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218578', '218580', '218640', '218820', '218845', '219539', '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
+            '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '44192', '144457', '145014', '145237', '145322', '146644', '146988', '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196084', '196118', '196405', '196446', '196784', '197168', '197249', '197983', '198187', '198438', '198747', '198774', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218578', '218580', '218640', '218820', '218845', '219539', '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
         ]);
 
         function checkAgendamento(pedido) {
@@ -887,6 +887,7 @@
             }, 500);
         }
 
+        // --- INÍCIO DA LÓGICA DE OTIMIZAÇÃO COM A NOVA REGRA ---
         function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null, minKgOverride = null, ignoreSpecialClients = false) {
             const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
@@ -953,16 +954,20 @@
                     const newCubage = load.totalCubagem + item.totalCubagem;
                     
                     let canPlace = true;
-                    if (!ignoreSpecialClients) {
-                        const isItemSpecial = item.isSpecial;
-                        const loadHasSpecialClient = load.pedidos.some(p => isSpecialClient(p));
-                        const ruleApplies = isItemSpecial || loadHasSpecialClient;
-                        const totalDistinctClientsInLoad = new Set(load.pedidos.map(p => p.Cliente)).size;
-                        const isNewClient = !load.pedidos.some(p => p.Cliente === item.pedidos[0].Cliente);
-                        if (ruleApplies && isNewClient && totalDistinctClientsInLoad >= 2) {
+                    // --- NOVA REGRA PARA CLIENTES ESPECIAIS ---
+                    if (!ignoreSpecialClients && item.isSpecial) {
+                        const specialClientName = item.pedidos[0].Nome_Cliente.toUpperCase().trim();
+                        const specialClientCodesInLoad = new Set(
+                            load.pedidos
+                                .filter(p => p.Nome_Cliente && p.Nome_Cliente.toUpperCase().trim() === specialClientName)
+                                .map(p => p.Cliente)
+                        );
+                        item.pedidos.forEach(p => specialClientCodesInLoad.add(p.Cliente));
+                        if (specialClientCodesInLoad.size > 2) {
                             canPlace = false;
                         }
                     }
+                    // --- FIM DA NOVA REGRA ---
 
                     if (canPlace && newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
                         const remainingCapacity = (targetVehicleCount ? SOFT_MAX_KG : HARD_MAX_KG) - newKg;
@@ -1008,8 +1013,6 @@
             return { loads: finalLoads, leftovers };
         }
         
-        // --- INÍCIO DA NOVA LÓGICA ---
-        // NOVA FUNÇÃO PARA A ESTRATÉGIA "GRANDE COM PEQUENO"
         function createSolutionLargeSmall(pedidos, vehicleType, minKgOverride = null, ignoreSpecialClients = false) {
             const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
@@ -1045,14 +1048,13 @@
                 }
             });
             
-            // Separar e ordenar itens prioritários e regulares
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             
             priorityItems.sort((a, b) => b.totalKg - a.totalKg);
             regularItems.sort((a, b) => b.totalKg - a.totalKg);
 
-            packableItems = [...priorityItems, ...regularItems]; // Itens prioritários maiores primeiro
+            packableItems = [...priorityItems, ...regularItems];
             
             let loads = [];
             let usedItems = new Array(packableItems.length).fill(false);
@@ -1062,10 +1064,9 @@
 
                 const largeItem = packableItems[i];
                 if (largeItem.totalKg > HARD_MAX_KG || largeItem.totalCubagem > HARD_MAX_CUBAGE) {
-                    continue; // Este item não cabe em nenhum veículo, será sobra
+                    continue;
                 }
 
-                // Inicia uma nova carga com o maior item disponível
                 let currentLoad = { 
                     pedidos: [...largeItem.pedidos], 
                     totalKg: largeItem.totalKg, 
@@ -1073,7 +1074,6 @@
                 };
                 usedItems[i] = true;
 
-                // Tenta preencher o resto da carga com os menores itens disponíveis
                 for (let j = packableItems.length - 1; j > i; j--) {
                     if (usedItems[j]) continue;
 
@@ -1082,16 +1082,20 @@
                     const newCubage = currentLoad.totalCubagem + smallItem.totalCubagem;
 
                     let canPlace = true;
-                    if (!ignoreSpecialClients) {
-                        const isItemSpecial = smallItem.isSpecial;
-                        const loadHasSpecialClient = currentLoad.pedidos.some(p => isSpecialClient(p));
-                        const ruleApplies = isItemSpecial || loadHasSpecialClient;
-                        const totalDistinctClientsInLoad = new Set(currentLoad.pedidos.map(p => p.Cliente)).size;
-                        const isNewClient = !currentLoad.pedidos.some(p => p.Cliente === smallItem.pedidos[0].Cliente);
-                        if (ruleApplies && isNewClient && totalDistinctClientsInLoad >= 2) {
+                     // --- NOVA REGRA PARA CLIENTES ESPECIAIS ---
+                     if (!ignoreSpecialClients && smallItem.isSpecial) {
+                        const specialClientName = smallItem.pedidos[0].Nome_Cliente.toUpperCase().trim();
+                        const specialClientCodesInLoad = new Set(
+                            currentLoad.pedidos
+                                .filter(p => p.Nome_Cliente && p.Nome_Cliente.toUpperCase().trim() === specialClientName)
+                                .map(p => p.Cliente)
+                        );
+                        smallItem.pedidos.forEach(p => specialClientCodesInLoad.add(p.Cliente));
+                        if (specialClientCodesInLoad.size > 2) {
                             canPlace = false;
                         }
                     }
+                    // --- FIM DA NOVA REGRA ---
 
                     if (canPlace && newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
                         currentLoad.pedidos.push(...smallItem.pedidos);
@@ -1119,8 +1123,7 @@
             const leftovers = packableItems.filter((item, index) => !usedItems[index]).flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             return { loads: finalLoads, leftovers };
         }
-        // --- FIM DA NOVA LÓGICA ---
-
+        
         function runAdvancedOptimization(pedidos, vehicleType, targetVehicleCount = null, minKgOverride = null) {
             if (targetVehicleCount) {
                return createInitialSolution(pedidos, vehicleType, 'descending', targetVehicleCount, minKgOverride);
@@ -1135,15 +1138,9 @@
             const pedidosPorCubagemAsc = [...pedidos].sort((a, b) => (parseFloat(String(a.Cubagem).replace(',', '.')) || 0) - (parseFloat(String(b.Cubagem).replace(',', '.')) || 0));
             const initialResult4 = createInitialSolution(pedidosPorCubagemAsc, vehicleType, 'descending', null, minKgOverride);
             
-            // --- INÍCIO DA NOVA LÓGICA ---
-            // Adiciona a 5ª ESTRATÉGIA "GRANDE COM PEQUENO"
             const initialResult5 = createSolutionLargeSmall(pedidos, vehicleType, minKgOverride);
-            // --- FIM DA NOVA LÓGICA ---
 
-            // --- INÍCIO DA MODIFICAÇÃO ---
-            // Compara os resultados das 5 estratégias
             const allResults = [initialResult1, initialResult2, initialResult3, initialResult4, initialResult5].map(res => ({
-            // --- FIM DA MODIFICAÇÃO ---
                 result: res,
                 weight: res.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0)
             })).sort((a, b) => a.weight - b.weight);
@@ -1197,6 +1194,7 @@
             }
             return bestState;
         }
+        // --- FIM DA LÓGICA DE OTIMIZAÇÃO ---
         
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement, reoptimizing = false, targetVehicleCount = null) {
             const resultadoDiv = document.getElementById(divId);
@@ -1245,36 +1243,6 @@
                 
                 let primaryLoads = bestResult.loads;
                 let currentLeftovers = bestResult.leftovers;
-
-                if (vehicleType === 'tresQuartos' && primaryLoads.length === 0 && currentLeftovers.length > 0) {
-                    const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
-                    const specialOrders = currentLeftovers.filter(p => specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim()));
-                    
-                    if (specialOrders.length > 0) {
-                        const otherOrders = currentLeftovers.filter(p => !specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim()));
-                        const otherUniqueClients = [...new Set(otherOrders.map(p => p.Cliente))];
-
-                        if (otherUniqueClients.length > 1) { 
-                            for (const client of otherUniqueClients) {
-                                const ordersFromThisClient = otherOrders.filter(p => p.Cliente === client);
-                                const testSet = [...specialOrders, ...ordersFromThisClient];
-                                
-                                const totalTestWeight = testSet.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                                const minKg = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
-
-                                if (totalTestWeight >= minKg) {
-                                    const recoveryAttemptResult = runAdvancedOptimization(testSet, 'tresQuartos', 1);
-                                    if (recoveryAttemptResult.loads.length > 0) {
-                                        primaryLoads = recoveryAttemptResult.loads;
-                                        const usedOrderIds = new Set(primaryLoads.flatMap(load => load.pedidos.map(p => p.Num_Pedido)));
-                                        currentLeftovers = currentLeftovers.filter(p => !usedOrderIds.has(p.Num_Pedido));
-                                        break; 
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
 
                 primaryLoads.forEach((load, index) => { load.numero = index + 1; });
                 const vehicleInfo = {
