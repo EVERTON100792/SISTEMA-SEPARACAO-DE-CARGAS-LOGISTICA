@@ -483,12 +483,25 @@
                         const pedido = {}; 
                         headers.forEach((header, i) => { 
                             if (header) { 
-                                if ((header.toLowerCase() === 'predat' || header.toLowerCase() === 'dat_ped') && typeof row[i] === 'number') {
-                                    const date = new Date(Math.round((row[i] - 25569) * 86400 * 1000));
-                                    if (!isNaN(date.getTime())) {
-                                        pedido[header] = date;
+                                // CORREÇÃO DE DATA: Adicionada validação robusta para diferentes formatos
+                                if ((header.toLowerCase() === 'predat' || header.toLowerCase() === 'dat_ped')) {
+                                    let cellValue = row[i];
+                                    if (typeof cellValue === 'number') { // Formato numérico do Excel
+                                        const date = new Date(Math.round((cellValue - 25569) * 86400 * 1000));
+                                        if (!isNaN(date.getTime())) {
+                                            pedido[header] = date;
+                                        } else {
+                                            pedido[header] = '';
+                                        }
+                                    } else if (typeof cellValue === 'string') { // Formato de texto
+                                        const date = new Date(cellValue);
+                                        if (!isNaN(date.getTime())) {
+                                            pedido[header] = date;
+                                        } else {
+                                            pedido[header] = cellValue; // Mantém como texto se não for data válida
+                                        }
                                     } else {
-                                        pedido[header] = '';
+                                        pedido[header] = cellValue !== undefined ? cellValue : '';
                                     }
                                 } else {
                                     pedido[header] = row[i] !== undefined ? row[i] : ''; 
@@ -591,7 +604,6 @@
                     const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
                     const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
 
-                    // LÓGICA DE BLOQUEIO "TUDO OU NADA"
                     const clientesComBloqueio = new Set();
                     pedidos.forEach(p => {
                         if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') {
@@ -798,7 +810,6 @@
             div.innerHTML = html;
         }
         
-        // FUNÇÃO DE MONTAGEM INICIAL (HEURÍSTICA RÁPIDA)
         function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending') {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
@@ -909,7 +920,6 @@
                     });
                 }
             });
-
             let finalLoads = [];
             let unplacedFromMinRule = [];
             loads.forEach(load => {
@@ -925,75 +935,53 @@
             return { loads: finalLoads, leftovers };
         }
 
-        // NOVO ALGORITMO DE REFINAMENTO ITERATIVO
         function runAdvancedOptimization(pedidos, vehicleType) {
-            // Fase 1: Gera a melhor solução inicial possível testando duas estratégias.
             const initialResult1 = createInitialSolution(pedidos, vehicleType, 'descending');
             const initialResult2 = createInitialSolution(pedidos, vehicleType, 'ascending');
-            
             const weight1 = initialResult1.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
             const weight2 = initialResult2.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
 
             let currentState = weight1 <= weight2 ? initialResult1 : initialResult2;
-            let bestState = JSON.parse(JSON.stringify(currentState)); // Cópia profunda
+            let bestState = JSON.parse(JSON.stringify(currentState));
             let bestCost = weight1 <= weight2 ? weight1 : weight2;
 
-            // Se a solução inicial já for perfeita, não precisa refinar.
             if (bestCost === 0) {
                 return bestState;
             }
 
-            // Fase 2: Refinamento (Simulated Annealing)
             let temperature = 1000.0;
             const coolingRate = 0.99;
             const absoluteTemperature = 1.0;
-
-            const MAX_ITERATIONS = 5000; // Limite para evitar loops infinitos
+            const MAX_ITERATIONS = 5000;
             for(let i = 0; i < MAX_ITERATIONS && temperature > absoluteTemperature; i++) {
-                // Cria um clone do estado atual para modificação
                 let neighborState = JSON.parse(JSON.stringify(currentState));
 
-                // Realiza um movimento aleatório para gerar um "vizinho"
-                // Tenta mover uma sobra para uma carga com maior probabilidade
                 if (Math.random() < 0.7 && neighborState.leftovers.length > 0) {
-                    // Tenta mover uma sobra para uma carga
                     const leftoverIndex = Math.floor(Math.random() * neighborState.leftovers.length);
                     const orderToMove = neighborState.leftovers[leftoverIndex];
-                    
                     if (neighborState.loads.length > 0) {
                         const loadIndex = Math.floor(Math.random() * neighborState.loads.length);
-                        // A função `createInitialSolution` é reutilizada aqui de forma inteligente para verificar a validade da nova carga
                         const tempLoadPedidos = [...neighborState.loads[loadIndex].pedidos, orderToMove];
                         const tempSolution = createInitialSolution(tempLoadPedidos, vehicleType);
-                        
-                        // Se a solução temporária não tiver sobras e tiver 1 carga, o movimento é válido
                         if (tempSolution.leftovers.length === 0 && tempSolution.loads.length === 1) {
                             neighborState.loads[loadIndex] = tempSolution.loads[0];
                             neighborState.leftovers.splice(leftoverIndex, 1);
                         }
                     }
                 } else if (neighborState.loads.length > 1) {
-                    // Tenta trocar pedidos entre duas cargas
                     const idx1 = Math.floor(Math.random() * neighborState.loads.length);
                     let idx2 = Math.floor(Math.random() * neighborState.loads.length);
-                    if (idx1 === idx2) continue; // Pula se forem os mesmos
-                    
+                    if (idx1 === idx2) continue;
                     const load1 = neighborState.loads[idx1];
                     const load2 = neighborState.loads[idx2];
                     if (load1.pedidos.length === 0 || load2.pedidos.length === 0) continue;
-
                     const order1Index = Math.floor(Math.random() * load1.pedidos.length);
                     const order2Index = Math.floor(Math.random() * load2.pedidos.length);
-
-                    // Simula a troca
                     const newLoad1Pedidos = [...load1.pedidos];
                     const newLoad2Pedidos = [...load2.pedidos];
                     [newLoad1Pedidos[order1Index], newLoad2Pedidos[order2Index]] = [newLoad2Pedidos[order2Index], newLoad1Pedidos[order1Index]];
-
-                    // Valida as duas novas cargas
                     const tempSolution1 = createInitialSolution(newLoad1Pedidos, vehicleType);
                     const tempSolution2 = createInitialSolution(newLoad2Pedidos, vehicleType);
-
                     if (tempSolution1.leftovers.length === 0 && tempSolution2.leftovers.length === 0) {
                         neighborState.loads[idx1] = tempSolution1.loads[0];
                         neighborState.loads[idx2] = tempSolution2.loads[0];
@@ -1002,7 +990,6 @@
 
                 const currentCost = currentState.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 const neighborCost = neighborState.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                
                 const deltaCost = neighborCost - currentCost;
 
                 if (deltaCost < 0 || Math.exp(-deltaCost / temperature) > Math.random()) {
@@ -1016,7 +1003,6 @@
             }
             return bestState;
         }
-
 
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
@@ -1041,7 +1027,6 @@
                 const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [routeOrRoutes];
                 let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
                 
-                // --- CHAMADA PARA O NOVO ALGORITMO DE OTIMIZAÇÃO ---
                 const bestResult = runAdvancedOptimization(pedidosRota, vehicleType);
                 
                 let primaryLoads = bestResult.loads;
