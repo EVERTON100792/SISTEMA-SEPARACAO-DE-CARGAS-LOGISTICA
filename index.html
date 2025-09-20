@@ -552,9 +552,9 @@
                 if (local === 'Pedidos Disponíveis para Montagem') {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                         <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                                         buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -817,10 +817,10 @@
         }
         
         // ==================================================================
-        // INÍCIO DO CÓDIGO MODIFICADO (BUGFIX REOTIMIZAR)
+        // INÍCIO DO CÓDIGO MODIFICADO
         // ==================================================================
-        function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null) {
-            const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
+        function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null, minKgOverride = null) {
+            const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
             const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
             const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : SOFT_MAX_KG;
@@ -945,24 +945,21 @@
             const leftovers = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             return { loads: finalLoads, leftovers };
         }
-        // ==================================================================
-        // FIM DO CÓDIGO MODIFICADO
-        // ==================================================================
-
-        function runAdvancedOptimization(pedidos, vehicleType, targetVehicleCount = null) {
+        
+        function runAdvancedOptimization(pedidos, vehicleType, targetVehicleCount = null, minKgOverride = null) {
             if (targetVehicleCount) {
-                 // Quando um número alvo de veículos é fornecido, focamos em uma única estratégia de preenchimento.
-                return createInitialSolution(pedidos, vehicleType, 'descending', targetVehicleCount);
+               // Quando um número alvo de veículos é fornecido, focamos em uma única estratégia de preenchimento.
+               return createInitialSolution(pedidos, vehicleType, 'descending', targetVehicleCount, minKgOverride);
             }
             
-            const initialResult1 = createInitialSolution(pedidos, vehicleType, 'descending');
-            const initialResult2 = createInitialSolution(pedidos, vehicleType, 'ascending');
+            const initialResult1 = createInitialSolution(pedidos, vehicleType, 'descending', null, minKgOverride);
+            const initialResult2 = createInitialSolution(pedidos, vehicleType, 'ascending', null, minKgOverride);
 
             const pedidosPorCubagemDesc = [...pedidos].sort((a, b) => (parseFloat(String(b.Cubagem).replace(',', '.')) || 0) - (parseFloat(String(a.Cubagem).replace(',', '.')) || 0));
-            const initialResult3 = createInitialSolution(pedidosPorCubagemDesc, vehicleType);
+            const initialResult3 = createInitialSolution(pedidosPorCubagemDesc, vehicleType, 'descending', null, minKgOverride);
             
             const pedidosPorCubagemAsc = [...pedidos].sort((a, b) => (parseFloat(String(a.Cubagem).replace(',', '.')) || 0) - (parseFloat(String(b.Cubagem).replace(',', '.')) || 0));
-            const initialResult4 = createInitialSolution(pedidosPorCubagemAsc, vehicleType);
+            const initialResult4 = createInitialSolution(pedidosPorCubagemAsc, vehicleType, 'descending', null, minKgOverride);
 
             const allResults = [initialResult1, initialResult2, initialResult3, initialResult4].map(res => ({
                 result: res,
@@ -1023,7 +1020,7 @@
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Otimizando e montando cargas...</span></div>';
             
-            if (!reoptimizing) { // Só mexe nos botões se não for uma reotimização
+            if (!reoptimizing && buttonElement) { 
                 currentLeftoversForPrinting = [];
                 currentAllOrdersForReoptimization = [];
                 const parentContainer = buttonElement.parentElement;
@@ -1072,28 +1069,23 @@
                                              <span class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
                                              <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
                                          </h4>
-                                         ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title} - ${reoptimizing ? 'Reotimizado' : ''}', this)"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                         ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title} - ${reoptimizing ? 'Reotimizado' : ''}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
                                        </div>`;
                 html += summaryHeader;
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada.</div>`; }
                 primaryLoads.forEach(load => {
                     html += renderLoadCard(load, vehicleType, vInfo);
                 });
+                
                 if (currentLeftovers.length > 0) {
                     const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                     
-                    let reoptimizationButton = '';
+                    let actionButton = '';
                     let printButtonHtml = '';
-
+                    
                     const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
                     const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
                     
-                    const createReoptimizationButton = (vType, vName) => {
-                         const safeRoutes = Array.isArray(routeOrRoutes) ? routeOrRoutes.join(',') : routeOrRoutes;
-                         return `<button class="btn btn-primary btn-sm ms-3 no-print" onclick="reotimizarComVeiculoExtra('${safeRoutes}','${divId}','${title}','${vType}', ${primaryLoads.length + 1})"><i class="bi bi-gear-fill me-1"></i>Reotimizar com +1 ${vName}</button>`;
-                    };
-                    
-                    const vehicleName = vInfo.name;
                     if (vehicleType === 'fiorino' && totalKgUnassigned >= vanMin) {
                         currentLeftoversForPrinting = [...currentLeftovers];
                         printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Possível Carga de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ Van)</button>`;
@@ -1101,23 +1093,96 @@
                         if (totalKgUnassigned >= tresQuartosMin) {
                             currentLeftoversForPrinting = [...currentLeftovers];
                             printButtonHtml = `<button class="btn btn-warning ms-auto no-print" onclick="imprimirSobras('Possível Carga de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ 3/4)</button>`;
-                        } else if (totalKgUnassigned >= vanMin) {
+                        } else if (totalKgUnassigned >= 900) {
                             currentLeftoversForPrinting = [...currentLeftovers];
-                            printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Carga Extra de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Carga Extra</button>`;
-                            reoptimizationButton = createReoptimizationButton('van', 'Van');
+                            printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra para Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra</button>`;
+                            actionButton = `<button class="btn btn-primary btn-sm ms-3 no-print" onclick="tentarFormarVanExtra('${divId}', this)"><i class="bi bi-plus-circle-fill me-1"></i>Formar +1 Van da Sobra</button>`;
                         }
                     } else if (vehicleType === 'tresQuartos' && totalKgUnassigned >= tresQuartosMin) {
                         currentLeftoversForPrinting = [...currentLeftovers];
                         printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Carga Extra de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Carga Extra</button>`;
-                        reoptimizationButton = createReoptimizationButton('tresQuartos', '3/4');
+                        const safeRoutes = Array.isArray(routeOrRoutes) ? routeOrRoutes.join(',') : routeOrRoutes;
+                        actionButton = `<button class="btn btn-primary btn-sm ms-3 no-print" onclick="reotimizarComVeiculoExtra('${safeRoutes}','${divId}','${title}','tresQuartos', ${primaryLoads.length + 1})"><i class="bi bi-gear-fill me-1"></i>Reotimizar com +1 3/4</button>`;
                     }
                     
-                    html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${reoptimizationButton} ${printButtonHtml}</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div></div>`;
+                    html += `<div id="leftovers-card-${divId}">
+                                <h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                <div class="card mb-3">
+                                    <div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}</div>
+                                    <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
+                                </div>
+                             </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
         }
 
+        function tentarFormarVanExtra(divId, buttonElement) {
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...';
+
+            const vehicleType = 'van';
+            const minKgForExtraVan = 900;
+
+            setTimeout(() => {
+                const leftoversToProcess = [...currentLeftoversForPrinting];
+                if (leftoversToProcess.length === 0) {
+                    alert("Não há sobras para processar.");
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = '<i class="bi bi-plus-circle-fill me-1"></i>Formar +1 Van da Sobra';
+                    return;
+                }
+                
+                const result = createInitialSolution(leftoversToProcess, vehicleType, 'descending', null, minKgForExtraVan);
+                const extraVanLoads = result.loads;
+                const finalLeftovers = result.leftovers;
+
+                if (extraVanLoads.length === 0) {
+                    alert("Não foi possível formar uma nova carga de Van com pelo menos 900 kg a partir das sobras.");
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = '<i class="bi bi-plus-circle-fill me-1"></i>Formar +1 Van da Sobra';
+                    return;
+                }
+
+                const resultadoDiv = document.getElementById(divId);
+                const leftoversCard = document.getElementById(`leftovers-card-${divId}`);
+
+                const existingVanCount = resultadoDiv.querySelectorAll('.card .card-header.bg-primary').length;
+                const vInfo = { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' };
+
+                let newLoadsHtml = '';
+                extraVanLoads.forEach((load, index) => {
+                    load.numero = existingVanCount + index + 1;
+                    newLoadsHtml += renderLoadCard(load, vehicleType, vInfo);
+                });
+
+                if (leftoversCard) {
+                    leftoversCard.remove();
+                }
+
+                let finalContentHtml = newLoadsHtml;
+                currentLeftoversForPrinting = [...finalLeftovers];
+
+                if (finalLeftovers.length > 0) {
+                    const totalKgUnassigned = finalLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                    const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra Final')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
+                    finalContentHtml += `<div id="leftovers-card-${divId}">
+                                            <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                            <div class="card mb-3">
+                                                <div class="card-header bg-danger text-white d-flex align-items-center">
+                                                    Detalhes da Sobra Final
+                                                    ${printButtonHtml}
+                                                </div>
+                                                <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
+                                            </div>
+                                         </div>`;
+                }
+                
+                resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${finalContentHtml}</div>`);
+
+            }, 50);
+        }
+        
         function reotimizarComVeiculoExtra(routesStr, divId, title, vehicleType, targetVehicleCount) {
             const routes = routesStr.split(',');
             separarCargasGeneric(routes, divId, title, vehicleType, null, true, targetVehicleCount);
@@ -1131,7 +1196,7 @@
                 return pedidoA.localeCompare(pedidoB);
             });
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const totalCubagemFormatado = (load.totalCubagem || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
             const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
@@ -1184,11 +1249,15 @@
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
 
-        function imprimirCargasGeneric(divId, title, buttonElement) {
+        function imprimirCargasGeneric(divId, title) {
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
+            
+            // Seleciona todos os cards de carga, exceto o card de sobras (que não terá os headers de veículo)
             const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
+            
             if (completedLoadsCards.length === 0) { alert("Nenhuma carga concluída para imprimir."); return; }
+            
             const printWindow = createPrintWindow('Imprimir: ' + title);
             let contentToPrint = `<h3>${title}</h3>`;
             completedLoadsCards.forEach(header => { contentToPrint += header.closest('.card.mb-3').outerHTML; });
@@ -1198,17 +1267,9 @@
             setTimeout(() => { 
                 printWindow.print(); 
                 printWindow.close(); 
-                if (buttonElement) {
-                    const originalText = buttonElement.innerHTML;
-                    buttonElement.innerHTML = `<i class="bi bi-check-lg me-1"></i> Impresso!`;
-                    buttonElement.disabled = true;
-                    setTimeout(() => {
-                        buttonElement.innerHTML = originalText;
-                        buttonElement.disabled = false;
-                    }, 3000);
-                }
             }, 500);
         }
+
 
         function imprimirTocoIndividual(cf) {
             if (!gruposToco[cf]) { alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`); return; }
