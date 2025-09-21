@@ -125,6 +125,26 @@
             </div>
             <div id="status" class="mt-2 status-message"></div>
         </div>
+        
+        <div class="card p-3 mb-4 no-print">
+            <h2 class="card-title h5"><i class="bi bi-slash-circle-fill me-2"></i>Bloqueio Manual de Pedidos</h2>
+            <p class="card-subtitle mb-3 text-body-secondary small">Adicione o número de um pedido para impedi-lo de ser incluído em qualquer carga.</p>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="bloquearPedidoInput" class="form-label">Número do Pedido a Bloquear:</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="bloquearPedidoInput" placeholder="Digite o número do pedido...">
+                        <button class="btn btn-danger" type="button" onclick="bloquearPedido()">Bloquear Pedido</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Pedidos Atualmente Bloqueados:</label>
+                    <div id="lista-pedidos-bloqueados" class="p-2 border rounded" style="min-height: 40px; background-color: #212529;">
+                        <span class="text-muted">Nenhum pedido bloqueado.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="card p-3 mb-4 no-print">
             <h2 class="card-title h5"><i class="bi bi-sliders me-2"></i>Configurações de Veículos</h2>
@@ -338,13 +358,25 @@
                 </div>
             </div>
         </div>
+        
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm h-100 border-danger">
+                    <div class="card-body">
+                        <h2 class="card-title h5 text-danger"><i class="bi bi-slash-circle-fill me-2"></i>Pedidos Bloqueados Manualmente</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos removidos da lista geral por terem sido bloqueados manualmente por você.</p>
+                        <div id="resultado-bloqueados"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="row">
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100 border-secondary">
                     <div class="card-body">
-                        <h2 class="card-title h5 text-secondary"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (CF Numérico ou Bloqueados)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos removidos da lista geral por possuírem CF numérico, ou por pertencerem a clientes com pedidos bloqueados.</p>
+                        <h2 class="card-title h5 text-secondary"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (CF Numérico ou Bloqueados por Regra)</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos removidos da lista geral por possuírem CF numérico, ou por pertencerem a clientes com pedidos bloqueados por regra do sistema.</p>
                         <div id="resultado-cf-numerico"></div>
                     </div>
                 </div>
@@ -373,8 +405,9 @@
         let gruposToco = {};
         let pedidosComCFNumericoIsolado = [];
         let pedidosPrioritarios = [];
-        let tocoPedidoIds = new Set();
+        let pedidosBloqueados = new Set(); // NOVO: Armazena pedidos bloqueados manualmente
         let rota1SemCarga = [];
+        let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
         let currentAllOrdersForReoptimization = []; // Armazena todos os pedidos da rota para reotimização
 
@@ -558,12 +591,16 @@
                 if (pedidoEncontrado) { local = 'Pedidos da Rota 1 para Alteração'; }
             }
             if (!pedidoEncontrado) {
-                const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
-                if (originalPedido) {
+                 const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
+                 if (originalPedido) {
                     pedidoEncontrado = originalPedido;
-                    local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
-                }
-            }
+                     if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                        local = 'Bloqueado Manualmente por você.';
+                     } else {
+                        local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
+                     }
+                 }
+             }
             if (pedidoEncontrado) {
                 let buttons = '';
                 if (local === 'Pedidos Disponíveis para Montagem') {
@@ -571,7 +608,7 @@
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
                                        <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                                       buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                        buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -590,6 +627,43 @@
                 }
             }
         }
+        
+        // --- INÍCIO: Funções de Bloqueio Manual ---
+        function atualizarListaBloqueados() {
+            const divLista = document.getElementById('lista-pedidos-bloqueados');
+            divLista.innerHTML = '';
+            if (pedidosBloqueados.size === 0) {
+                divLista.innerHTML = '<span class="text-muted">Nenhum pedido bloqueado.</span>';
+                return;
+            }
+            
+            const list = document.createElement('ul');
+            list.className = 'list-group';
+            pedidosBloqueados.forEach(numPedido => {
+                const item = document.createElement('li');
+                item.className = 'list-group-item d-flex justify-content-between align-items-center py-1';
+                item.style.backgroundColor = '#343a40';
+                item.innerHTML = `<span>${numPedido}</span> <button class="btn btn-sm btn-outline-secondary" onclick="desbloquearPedido('${numPedido}')">Desbloquear</button>`;
+                list.appendChild(item);
+            });
+            divLista.appendChild(list);
+        }
+
+        function bloquearPedido() {
+            const input = document.getElementById('bloquearPedidoInput');
+            const numPedido = input.value.trim();
+            if (numPedido) {
+                pedidosBloqueados.add(numPedido);
+                input.value = '';
+                atualizarListaBloqueados();
+            }
+        }
+
+        function desbloquearPedido(numPedido) {
+            pedidosBloqueados.delete(numPedido);
+            atualizarListaBloqueados();
+        }
+        // --- FIM: Funções de Bloqueio Manual ---
 
         function resetarEstadoGlobal() {
             pedidosGeraisAtuais = [];
@@ -611,20 +685,32 @@
                 const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
                 const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
                 const resultadoRota1Div = document.getElementById('resultado-rota1');
+                const resultadoBloqueadosDiv = document.getElementById('resultado-bloqueados'); // NOVO
                 
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
                     
                     resetarEstadoGlobal();
-                    ['resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 'resultado-toco', 'resultado-tres-quartos', 'resultado-cf-numerico', 'resultado-rota1'].forEach(id => {
+                    ['resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 'resultado-toco', 'resultado-tres-quartos', 'resultado-cf-numerico', 'resultado-rota1', 'resultado-bloqueados'].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
                     });
 
-                    const pedidosCompletos = planilhaData.filter(p => p.Num_Pedido);
+                    // NOVO: Filtragem de pedidos bloqueados manualmente PRIMEIRO
+                    let pedidosManualmenteBloqueados = [];
+                    let pedidosDisponiveis = [];
+                    planilhaData.filter(p => p.Num_Pedido).forEach(p => {
+                        if (pedidosBloqueados.has(String(p.Num_Pedido))) {
+                            pedidosManualmenteBloqueados.push(p);
+                        } else {
+                            pedidosDisponiveis.push(p);
+                        }
+                    });
+                    displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueados);
+
 
                     const col5ValuesForRota1 = ['TBL 08', 'TBL TODESCHINI'];
-                    rota1SemCarga = pedidosCompletos.filter(p => {
+                    rota1SemCarga = pedidosDisponiveis.filter(p => {
                         const codRota = String(p.Cod_Rota || '').trim();
                         const cfIsNumeric = isNumeric(p.CF);
                         const col5 = String(p.Coluna5 || '').trim();
@@ -633,7 +719,7 @@
                     const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
                     displayRota1(resultadoRota1Div, rota1SemCarga);
 
-                    let pedidosParaProcessamentoGeral = pedidosCompletos.filter(p => !rota1PedidoIds.has(p.Num_Pedido));
+                    let pedidosParaProcessamentoGeral = pedidosDisponiveis.filter(p => !rota1PedidoIds.has(p.Num_Pedido));
 
                     const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
                     const pedidos = pedidosParaProcessamentoGeral.filter(p => String(p.Coluna4) != '500');
@@ -753,11 +839,15 @@
             colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
             pedidos.forEach(p => {
-                const isPriority = pedidosPrioritarios.includes(String(p.Num_Pedido));
-                table += `<tr id="pedido-${p.Num_Pedido}" class="${isPriority ? 'table-primary' : ''}">`;
+                const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido)); // Usado para a cor da linha
+                table += `<tr id="pedido-${p.Num_Pedido}" class="${isPriorityRow ? 'table-primary' : ''}">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
-                    if (c === 'Agendamento' && cellContent === 'Sim') {
+                    if (c === 'Num_Pedido') { // MUDANÇA: Adiciona o selo de prioridade aqui
+                        const isPriority = pedidosPrioritarios.includes(String(p.Num_Pedido));
+                        const priorityBadge = isPriority ? ' <span class="badge bg-primary">Prioridade</span>' : '';
+                        table += `<td>${cellContent}${priorityBadge}</td>`;
+                    } else if (c === 'Agendamento' && cellContent === 'Sim') {
                         table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
                     } else if (c === 'Predat' || c === 'Dat_Ped') {
                         let formattedDate = '';
@@ -826,6 +916,19 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
         
+        // NOVO: Função para exibir pedidos bloqueados
+        function displayPedidosBloqueados(div, pedidos) {
+            if (pedidos.length === 0) {
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido bloqueado manualmente.</div>';
+                return;
+            }
+            const totalKg = pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            let html = `<div class="alert alert-danger"><strong>Total:</strong> ${pedidos.length} pedidos / ${totalKgFormatado} kg</div>`;
+            html += createTable(pedidos);
+            div.innerHTML = html;
+        }
+
         function displayPedidosCFNumerico(div, pedidos) {
             if (pedidos.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido filtrado por CF numérico ou por Regra de Bloqueio.</div>'; return; }
             const grupos = pedidos.reduce((acc, p) => {
@@ -1254,15 +1357,15 @@
                 const vInfo = vehicleInfo[vehicleType];
                 let summaryTitle = reoptimizing ? `Resultado Reotimizado para ${targetVehicleCount} Veículos` : `Resultados para <strong>${title}</strong>`;
                 let summaryHeader = `<div class="d-flex justify-content-between align-items-center mb-3">
-                                             <h4 class="mb-0 h5">${summaryTitle}: 
-                                                 <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
-                                                 <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
-                                                 <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
-                                             </h4>
-                                             <div id="print-button-container-${divId}" class="d-inline-block">
-                                                 ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
-                                             </div>
-                                            </div>`;
+                                                 <h4 class="mb-0 h5">${summaryTitle}: 
+                                                     <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
+                                                     <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
+                                                     <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
+                                                 </h4>
+                                                 <div id="print-button-container-${divId}" class="d-inline-block">
+                                                     ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                                 </div>
+                                               </div>`;
                 html += summaryHeader;
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada.</div>`; }
                 primaryLoads.forEach(load => {
@@ -1375,15 +1478,15 @@
                 const totalKgUnassigned = finalLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra Final')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
                 finalContentHtml += `<div id="leftovers-card-${divId}">
-                                             <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                             <div class="card mb-3">
-                                                 <div class="card-header bg-danger text-white d-flex align-items-center">
-                                                     Detalhes da Sobra Final
-                                                     ${printButtonHtml}
+                                                 <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                                 <div class="card mb-3">
+                                                     <div class="card-header bg-danger text-white d-flex align-items-center">
+                                                         Detalhes da Sobra Final
+                                                         ${printButtonHtml}
+                                                     </div>
+                                                     <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
                                                  </div>
-                                                 <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
-                                             </div>
-                                           </div>`;
+                                               </div>`;
             }
             
             resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${finalContentHtml}</div>`);
@@ -1404,7 +1507,7 @@
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = (load.totalCubagem || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-            const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
+            const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">CARGA COM PRIORIDADE</span>' : '';
             const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
             return `<div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}"><div class="card-header ${vInfo.colorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
         }
@@ -1440,7 +1543,7 @@
             const printWindow = window.open('', '', 'height=800,width=1200');
             printWindow.document.write('<html><head><title>' + title + '</title>');
             printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write(`<style>body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; } .no-print { display: none !important; } .bg-success { background-color: #198754 !important; color: white !important; } .bg-primary { background-color: #0d6efd !important; color: white !important; } .bg-warning { background-color: #ffc107 !important; color: black !important; } .table-responsive { overflow: visible !important; } table, th, td { border: 1px solid #dee2e6 !important; } .table-primary { --bs-table-bg: #cfe2ff !important; color: #000 !important; } h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }</style></head><body>`);
+            printWindow.document.write(`<style>body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; } .no-print { display: none !important; } .bg-success { background-color: #198754 !important; color: white !important; } .bg-primary { background-color: #0d6efd !important; color: white !important; } .bg-warning { background-color: #ffc107 !important; color: black !important; } .table-responsive { overflow: visible !important; } table, th, td { border: 1px solid #dee2e6 !important; } .table-primary, .table-primary > th, .table-primary > td { --bs-table-bg: #cfe2ff !important; color: #000 !important; } h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }</style></head><body>`);
             return printWindow;
         }
         
