@@ -302,6 +302,18 @@
                 </div>
             </div>
         </div>
+        
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm h-100 border-warning">
+                    <div class="card-body">
+                        <h2 class="card-title h5 text-warning"><i class="bi bi-sign-turn-right-fill me-2"></i>Pedidos da Rota 1 para Alteração</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos da Rota 1 sem CF numérico e com Coluna 5 específica, que precisam de alteração de rota.</p>
+                        <div id="resultado-rota1"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="row">
             <div class="col-lg-12 mb-4">
@@ -344,7 +356,7 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
         const agendamentoClientCodes = new Set([
-            '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '144192', '144457', '145014', '145237', '145322', '146644', '146988', '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196084', '196118', '196405', '196446', '196784', '197168', '197249', '197983', '198187', '198438', '198747', '198774', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218578', '218580', '218640', '218820', '218845', '219539', '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
+            '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '44192', '144457', '145014', '145237', '145322', '146644', '146988', '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196084', '196118', '196405', '196446', '196784', '197168', '197249', '197983', '198187', '198438', '198747', '198774', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218578', '218580', '218640', '218820', '218845', '219539', '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
         ]);
 
         function checkAgendamento(pedido) {
@@ -362,6 +374,7 @@
         let pedidosComCFNumericoIsolado = [];
         let pedidosPrioritarios = [];
         let tocoPedidoIds = new Set();
+        let rota1SemCarga = [];
         let currentLeftoversForPrinting = [];
         let currentAllOrdersForReoptimization = []; // Armazena todos os pedidos da rota para reotimização
 
@@ -541,6 +554,10 @@
                 }
             }
             if (!pedidoEncontrado) {
+                pedidoEncontrado = rota1SemCarga.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Pedidos da Rota 1 para Alteração'; }
+            }
+            if (!pedidoEncontrado) {
                 const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                 if (originalPedido) {
                     pedidoEncontrado = originalPedido;
@@ -552,9 +569,9 @@
                 if (local === 'Pedidos Disponíveis para Montagem') {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                         <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                                         buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -579,6 +596,7 @@
             gruposToco = {};
             pedidosComCFNumericoIsolado = [];
             pedidosPrioritarios = [];
+            rota1SemCarga = [];
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
             currentAllOrdersForReoptimization = [];
@@ -592,17 +610,33 @@
                 const resultadoTocoDiv = document.getElementById('resultado-toco');
                 const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
                 const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
+                const resultadoRota1Div = document.getElementById('resultado-rota1');
+                
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
                     
                     resetarEstadoGlobal();
-                    ['resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 'resultado-toco', 'resultado-tres-quartos', 'resultado-cf-numerico'].forEach(id => {
+                    ['resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 'resultado-toco', 'resultado-tres-quartos', 'resultado-cf-numerico', 'resultado-rota1'].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
                     });
 
+                    const pedidosCompletos = planilhaData.filter(p => p.Num_Pedido);
+
+                    const col5ValuesForRota1 = ['TBL 08', 'TBL TODESCHINI'];
+                    rota1SemCarga = pedidosCompletos.filter(p => {
+                        const codRota = String(p.Cod_Rota || '').trim();
+                        const cfIsNumeric = isNumeric(p.CF);
+                        const col5 = String(p.Coluna5 || '').trim();
+                        return codRota === '1' && !cfIsNumeric && col5ValuesForRota1.includes(col5);
+                    });
+                    const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
+                    displayRota1(resultadoRota1Div, rota1SemCarga);
+
+                    let pedidosParaProcessamentoGeral = pedidosCompletos.filter(p => !rota1PedidoIds.has(p.Num_Pedido));
+
                     const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
-                    const pedidos = planilhaData.filter(p => p.Num_Pedido && String(p.Coluna4) != '500');
+                    const pedidos = pedidosParaProcessamentoGeral.filter(p => String(p.Coluna4) != '500');
 
                     const clientesComBloqueio = new Set();
                     pedidos.forEach(p => {
@@ -808,7 +842,7 @@
 
         function displayTresQuartos(div, loads) {
             if (loads.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga 3/4 formada automaticamente.</div>'; return; }
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
             loads.forEach(load => {
                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 html += `<div class="card mb-3"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
@@ -816,11 +850,46 @@
             div.innerHTML = html;
         }
         
-        // ==================================================================
-        // INÍCIO DO CÓDIGO MODIFICADO (BUGFIX REOTIMIZAR)
-        // ==================================================================
-        function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null) {
-            const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
+        function displayRota1(div, pedidos) {
+            if (!pedidos || pedidos.length === 0) {
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido da Rota 1 para alteração encontrado.</div>';
+                return;
+            }
+
+            let html = `
+                <div class="d-flex justify-content-end mb-2">
+                    <button class="btn btn-sm btn-outline-warning no-print" onclick="imprimirGeneric('resultado-rota1', 'Pedidos Rota 1 para Alteração')">
+                        <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
+                    </button>
+                </div>
+                ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'CF', 'Coluna5'])}
+            `;
+            div.innerHTML = html;
+        }
+
+        function imprimirGeneric(divId, title) {
+            const divToPrint = document.getElementById(divId);
+            if (!divToPrint) return;
+
+            const printWindow = createPrintWindow(title);
+            const contentToPrint = divToPrint.cloneNode(true);
+            const buttonInContent = contentToPrint.querySelector('button');
+            if (buttonInContent) {
+                buttonInContent.remove();
+            }
+
+            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + contentToPrint.innerHTML;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { 
+                printWindow.print(); 
+                printWindow.close(); 
+            }, 500);
+        }
+
+        // --- INÍCIO DA LÓGICA DE OTIMIZAÇÃO COM A NOVA REGRA ---
+        function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null, minKgOverride = null, ignoreSpecialClients = false) {
+            const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
             const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
             const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : SOFT_MAX_KG;
@@ -884,18 +953,23 @@
                     const newKg = load.totalKg + item.totalKg;
                     const newCubage = load.totalCubagem + item.totalCubagem;
                     
-                    const isItemSpecial = item.isSpecial;
-                    const loadHasSpecialClient = load.pedidos.some(p => isSpecialClient(p));
-                    const ruleApplies = isItemSpecial || loadHasSpecialClient;
-                    const totalDistinctClientsInLoad = new Set(load.pedidos.map(p => p.Cliente)).size;
-                    const isNewClient = !load.pedidos.some(p => p.Cliente === item.pedidos[0].Cliente);
                     let canPlace = true;
-                    if (ruleApplies && isNewClient && totalDistinctClientsInLoad >= 2) {
-                        canPlace = false;
+                    // --- NOVA REGRA PARA CLIENTES ESPECIAIS ---
+                    if (!ignoreSpecialClients && item.isSpecial) {
+                        const specialClientName = item.pedidos[0].Nome_Cliente.toUpperCase().trim();
+                        const specialClientCodesInLoad = new Set(
+                            load.pedidos
+                                .filter(p => p.Nome_Cliente && p.Nome_Cliente.toUpperCase().trim() === specialClientName)
+                                .map(p => p.Cliente)
+                        );
+                        item.pedidos.forEach(p => specialClientCodesInLoad.add(p.Cliente));
+                        if (specialClientCodesInLoad.size > 2) {
+                            canPlace = false;
+                        }
                     }
-                    if (!canPlace) continue;
+                    // --- FIM DA NOVA REGRA ---
 
-                    if (newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
+                    if (canPlace && newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
                         const remainingCapacity = (targetVehicleCount ? SOFT_MAX_KG : HARD_MAX_KG) - newKg;
                         if (bestFit === null || remainingCapacity < bestFit.remainingCapacity) {
                             bestFit = { load: load, remainingCapacity: remainingCapacity };
@@ -926,16 +1000,9 @@
             let finalLoads = [];
             let unplacedFromMinRule = [];
             loads.forEach(load => {
-                // CORREÇÃO: Se um número alvo de veículos é definido, aceitamos todas as cargas resultantes,
-                // pois o clique do usuário autorizou a criação delas.
-                if (targetVehicleCount) {
-                    if (load.pedidos.length > 0) finalLoads.push(load);
-                    return; // Pula para o próximo loop
-                }
-
-                // Lógica original para a primeira otimização
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
                 const allowPriorityOverride = vehicleType !== 'tresQuartos';
+                
                 if (load.pedidos.length > 0 && (load.totalKg >= MIN_KG || (hasPriority && allowPriorityOverride))) {
                     finalLoads.push(load);
                 } else {
@@ -945,26 +1012,135 @@
             const leftovers = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             return { loads: finalLoads, leftovers };
         }
-        // ==================================================================
-        // FIM DO CÓDIGO MODIFICADO
-        // ==================================================================
+        
+        function createSolutionLargeSmall(pedidos, vehicleType, minKgOverride = null, ignoreSpecialClients = false) {
+            const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
+            const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
+            const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
+            const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : SOFT_MAX_KG;
+            const HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : SOFT_MAX_CUBAGE;
+            
+            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
+            const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
+            
+            const clientGroupsMap = pedidos.reduce((acc, pedido) => {
+                const clienteId = pedido.Cliente;
+                if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], isSpecial: isSpecialClient(pedido) }; }
+                acc[clienteId].pedidos.push(pedido);
+                return acc;
+            }, {});
 
-        function runAdvancedOptimization(pedidos, vehicleType, targetVehicleCount = null) {
+            let packableItems = [];
+            Object.values(clientGroupsMap).forEach(group => {
+                const totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                const totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+                if (totalKg > HARD_MAX_KG || totalCubagem > HARD_MAX_CUBAGE) {
+                    group.pedidos.forEach(pedido => {
+                        packableItems.push({
+                            pedidos: [pedido],
+                            totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
+                            totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
+                            isSpecial: group.isSpecial
+                        });
+                    });
+                } else {
+                    packableItems.push({ ...group, totalKg, totalCubagem });
+                }
+            });
+            
+            const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
+            const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
+            
+            priorityItems.sort((a, b) => b.totalKg - a.totalKg);
+            regularItems.sort((a, b) => b.totalKg - a.totalKg);
+
+            packableItems = [...priorityItems, ...regularItems];
+            
+            let loads = [];
+            let usedItems = new Array(packableItems.length).fill(false);
+
+            for (let i = 0; i < packableItems.length; i++) {
+                if (usedItems[i]) continue;
+
+                const largeItem = packableItems[i];
+                if (largeItem.totalKg > HARD_MAX_KG || largeItem.totalCubagem > HARD_MAX_CUBAGE) {
+                    continue;
+                }
+
+                let currentLoad = { 
+                    pedidos: [...largeItem.pedidos], 
+                    totalKg: largeItem.totalKg, 
+                    totalCubagem: largeItem.totalCubagem
+                };
+                usedItems[i] = true;
+
+                for (let j = packableItems.length - 1; j > i; j--) {
+                    if (usedItems[j]) continue;
+
+                    const smallItem = packableItems[j];
+                    const newKg = currentLoad.totalKg + smallItem.totalKg;
+                    const newCubage = currentLoad.totalCubagem + smallItem.totalCubagem;
+
+                    let canPlace = true;
+                     // --- NOVA REGRA PARA CLIENTES ESPECIAIS ---
+                     if (!ignoreSpecialClients && smallItem.isSpecial) {
+                        const specialClientName = smallItem.pedidos[0].Nome_Cliente.toUpperCase().trim();
+                        const specialClientCodesInLoad = new Set(
+                            currentLoad.pedidos
+                                .filter(p => p.Nome_Cliente && p.Nome_Cliente.toUpperCase().trim() === specialClientName)
+                                .map(p => p.Cliente)
+                        );
+                        smallItem.pedidos.forEach(p => specialClientCodesInLoad.add(p.Cliente));
+                        if (specialClientCodesInLoad.size > 2) {
+                            canPlace = false;
+                        }
+                    }
+                    // --- FIM DA NOVA REGRA ---
+
+                    if (canPlace && newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
+                        currentLoad.pedidos.push(...smallItem.pedidos);
+                        currentLoad.totalKg = newKg;
+                        currentLoad.totalCubagem = newCubage;
+                        usedItems[j] = true;
+                    }
+                }
+                currentLoad.usedHardLimit = currentLoad.totalKg > SOFT_MAX_KG || currentLoad.totalCubagem > SOFT_MAX_CUBAGE;
+                loads.push(currentLoad);
+            }
+
+            let finalLoads = [];
+            let unplacedFromMinRule = [];
+            loads.forEach(load => {
+                const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+                const allowPriorityOverride = vehicleType !== 'tresQuartos';
+                if (load.pedidos.length > 0 && (load.totalKg >= MIN_KG || (hasPriority && allowPriorityOverride))) {
+                    finalLoads.push(load);
+                } else {
+                    unplacedFromMinRule.push(...load.pedidos);
+                }
+            });
+            
+            const leftovers = packableItems.filter((item, index) => !usedItems[index]).flatMap(item => item.pedidos).concat(unplacedFromMinRule);
+            return { loads: finalLoads, leftovers };
+        }
+        
+        function runAdvancedOptimization(pedidos, vehicleType, targetVehicleCount = null, minKgOverride = null) {
             if (targetVehicleCount) {
-                 // Quando um número alvo de veículos é fornecido, focamos em uma única estratégia de preenchimento.
-                return createInitialSolution(pedidos, vehicleType, 'descending', targetVehicleCount);
+               return createInitialSolution(pedidos, vehicleType, 'descending', targetVehicleCount, minKgOverride);
             }
             
-            const initialResult1 = createInitialSolution(pedidos, vehicleType, 'descending');
-            const initialResult2 = createInitialSolution(pedidos, vehicleType, 'ascending');
+            const initialResult1 = createInitialSolution(pedidos, vehicleType, 'descending', null, minKgOverride);
+            const initialResult2 = createInitialSolution(pedidos, vehicleType, 'ascending', null, minKgOverride);
 
             const pedidosPorCubagemDesc = [...pedidos].sort((a, b) => (parseFloat(String(b.Cubagem).replace(',', '.')) || 0) - (parseFloat(String(a.Cubagem).replace(',', '.')) || 0));
-            const initialResult3 = createInitialSolution(pedidosPorCubagemDesc, vehicleType);
+            const initialResult3 = createInitialSolution(pedidosPorCubagemDesc, vehicleType, 'descending', null, minKgOverride);
             
             const pedidosPorCubagemAsc = [...pedidos].sort((a, b) => (parseFloat(String(a.Cubagem).replace(',', '.')) || 0) - (parseFloat(String(b.Cubagem).replace(',', '.')) || 0));
-            const initialResult4 = createInitialSolution(pedidosPorCubagemAsc, vehicleType);
+            const initialResult4 = createInitialSolution(pedidosPorCubagemAsc, vehicleType, 'descending', null, minKgOverride);
+            
+            const initialResult5 = createSolutionLargeSmall(pedidos, vehicleType, minKgOverride);
 
-            const allResults = [initialResult1, initialResult2, initialResult3, initialResult4].map(res => ({
+            const allResults = [initialResult1, initialResult2, initialResult3, initialResult4, initialResult5].map(res => ({
                 result: res,
                 weight: res.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0)
             })).sort((a, b) => a.weight - b.weight);
@@ -1018,12 +1194,13 @@
             }
             return bestState;
         }
+        // --- FIM DA LÓGICA DE OTIMIZAÇÃO ---
         
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement, reoptimizing = false, targetVehicleCount = null) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Otimizando e montando cargas...</span></div>';
             
-            if (!reoptimizing) { // Só mexe nos botões se não for uma reotimização
+            if (!reoptimizing && buttonElement) { 
                 currentLeftoversForPrinting = [];
                 currentAllOrdersForReoptimization = [];
                 const parentContainer = buttonElement.parentElement;
@@ -1049,10 +1226,20 @@
                 let pedidosRota = reoptimizing ? currentAllOrdersForReoptimization : pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
                 
                 if (!reoptimizing) {
-                    currentAllOrdersForReoptimization = [...pedidosRota]; // Salva o estado original
+                    currentAllOrdersForReoptimization = [...pedidosRota];
                 }
 
-                const bestResult = runAdvancedOptimization(pedidosRota, vehicleType, targetVehicleCount);
+                let effectiveTargetVehicleCount = targetVehicleCount;
+                if (vehicleType === 'tresQuartos' && !reoptimizing) {
+                    const minKg = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
+                    const maxKg = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
+                    const totalRotaKg = pedidosRota.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                    if (totalRotaKg >= minKg && totalRotaKg <= maxKg) {
+                        effectiveTargetVehicleCount = 1;
+                    }
+                }
+                
+                let bestResult = runAdvancedOptimization(pedidosRota, vehicleType, effectiveTargetVehicleCount);
                 
                 let primaryLoads = bestResult.loads;
                 let currentLeftovers = bestResult.leftovers;
@@ -1067,33 +1254,30 @@
                 const vInfo = vehicleInfo[vehicleType];
                 let summaryTitle = reoptimizing ? `Resultado Reotimizado para ${targetVehicleCount} Veículos` : `Resultados para <strong>${title}</strong>`;
                 let summaryHeader = `<div class="d-flex justify-content-between align-items-center mb-3">
-                                         <h4 class="mb-0 h5">${summaryTitle}: 
-                                             <span class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
-                                             <span class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
-                                             <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
-                                         </h4>
-                                         ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title} - ${reoptimizing ? 'Reotimizado' : ''}', this)"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
-                                       </div>`;
+                                             <h4 class="mb-0 h5">${summaryTitle}: 
+                                                 <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
+                                                 <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
+                                                 <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
+                                             </h4>
+                                             <div id="print-button-container-${divId}" class="d-inline-block">
+                                                 ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                             </div>
+                                            </div>`;
                 html += summaryHeader;
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada.</div>`; }
                 primaryLoads.forEach(load => {
                     html += renderLoadCard(load, vehicleType, vInfo);
                 });
+                
                 if (currentLeftovers.length > 0) {
                     const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                     
-                    let reoptimizationButton = '';
+                    let actionButton = '';
                     let printButtonHtml = '';
-
+                    
                     const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
                     const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
                     
-                    const createReoptimizationButton = (vType, vName) => {
-                         const safeRoutes = Array.isArray(routeOrRoutes) ? routeOrRoutes.join(',') : routeOrRoutes;
-                         return `<button class="btn btn-primary btn-sm ms-3 no-print" onclick="reotimizarComVeiculoExtra('${safeRoutes}','${divId}','${title}','${vType}', ${primaryLoads.length + 1})"><i class="bi bi-gear-fill me-1"></i>Reotimizar com +1 ${vName}</button>`;
-                    };
-                    
-                    const vehicleName = vInfo.name;
                     if (vehicleType === 'fiorino' && totalKgUnassigned >= vanMin) {
                         currentLeftoversForPrinting = [...currentLeftovers];
                         printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Possível Carga de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ Van)</button>`;
@@ -1101,28 +1285,115 @@
                         if (totalKgUnassigned >= tresQuartosMin) {
                             currentLeftoversForPrinting = [...currentLeftovers];
                             printButtonHtml = `<button class="btn btn-warning ms-auto no-print" onclick="imprimirSobras('Possível Carga de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ 3/4)</button>`;
-                        } else if (totalKgUnassigned >= vanMin) {
+                        } else if (totalKgUnassigned >= 900) {
                             currentLeftoversForPrinting = [...currentLeftovers];
-                            printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Carga Extra de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Carga Extra</button>`;
-                            reoptimizationButton = createReoptimizationButton('van', 'Van');
+                            printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra para Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra</button>`;
+                            actionButton = `<button class="btn btn-primary btn-sm ms-3 no-print" onclick="tentarFormarVanExtra('${divId}', this, ${primaryLoads.length}, '${title}')"><i class="bi bi-plus-circle-fill me-1"></i>Formar +1 Van da Sobra</button>`;
                         }
                     } else if (vehicleType === 'tresQuartos' && totalKgUnassigned >= tresQuartosMin) {
                         currentLeftoversForPrinting = [...currentLeftovers];
-                        printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Carga Extra de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Carga Extra</button>`;
-                        reoptimizationButton = createReoptimizationButton('tresQuartos', '3/4');
                     }
                     
-                    html += `<h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5><div class="card mb-3"><div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${reoptimizationButton} ${printButtonHtml}</div><div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div></div>`;
+                    html += `<div id="leftovers-card-${divId}">
+                                 <h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                 <div class="card mb-3">
+                                     <div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}</div>
+                                     <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
+                                 </div>
+                               </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
         }
 
+        function tentarFormarVanExtra(divId, buttonElement, initialLoadCount, title) {
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...';
+
+            setTimeout(() => {
+                let leftoversToProcess = [...currentLeftoversForPrinting];
+                if (leftoversToProcess.length === 0) {
+                    alert("Não há sobras para processar.");
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = '<i class="bi bi-plus-circle-fill me-1"></i>Formar +1 Van da Sobra';
+                    return;
+                }
+                
+                const result = createInitialSolution(leftoversToProcess, 'van', 'descending', null, 900, true);
+                
+                const extraVanLoads = result.loads;
+                const finalLeftovers = result.leftovers;
+
+                if (extraVanLoads.length === 0) {
+                    alert("Não foi possível formar uma nova carga de Van com pelo menos 900 kg a partir das sobras.");
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = '<i class="bi bi-plus-circle-fill me-1"></i>Formar +1 Van da Sobra';
+                    return;
+                }
+
+                updateUIAfterExtraVan(divId, extraVanLoads, finalLeftovers, initialLoadCount, title);
+
+            }, 50);
+        }
+
+        function updateUIAfterExtraVan(divId, newLoads, finalLeftovers, initialLoadCount, title) {
+            const resultadoDiv = document.getElementById(divId);
+            const leftoversCard = document.getElementById(`leftovers-card-${divId}`);
+
+            const newTotalLoads = initialLoadCount + newLoads.length;
+
+            const loadsCountEl = document.getElementById(`loads-count-${divId}`);
+            if (loadsCountEl) {
+                loadsCountEl.innerHTML = `${newTotalLoads} Carga(s)`;
+            }
+
+            const leftoversCountEl = document.getElementById(`leftovers-count-${divId}`);
+            if (leftoversCountEl) {
+                leftoversCountEl.innerHTML = `${finalLeftovers.length} Pedido(s) Restante(s)`;
+            }
+
+            const printContainerEl = document.getElementById(`print-button-container-${divId}`);
+            if (printContainerEl && initialLoadCount === 0 && newTotalLoads > 0) {
+                printContainerEl.innerHTML = `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>`;
+            }
+
+            const vInfo = { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' };
+            let newLoadsHtml = '';
+            newLoads.forEach((load, index) => {
+                load.numero = initialLoadCount + index + 1;
+                newLoadsHtml += renderLoadCard(load, 'van', vInfo);
+            });
+
+            if (leftoversCard) {
+                leftoversCard.remove();
+            }
+
+            let finalContentHtml = newLoadsHtml;
+            currentLeftoversForPrinting = [...finalLeftovers];
+
+            if (finalLeftovers.length > 0) {
+                const totalKgUnassigned = finalLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra Final')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
+                finalContentHtml += `<div id="leftovers-card-${divId}">
+                                             <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                             <div class="card mb-3">
+                                                 <div class="card-header bg-danger text-white d-flex align-items-center">
+                                                     Detalhes da Sobra Final
+                                                     ${printButtonHtml}
+                                                 </div>
+                                                 <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
+                                             </div>
+                                           </div>`;
+            }
+            
+            resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${finalContentHtml}</div>`);
+        }
+        
         function reotimizarComVeiculoExtra(routesStr, divId, title, vehicleType, targetVehicleCount) {
             const routes = routesStr.split(',');
             separarCargasGeneric(routes, divId, title, vehicleType, null, true, targetVehicleCount);
         }
-
+        
         function renderLoadCard(load, vehicleType, vInfo) {
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
@@ -1131,7 +1402,7 @@
                 return pedidoA.localeCompare(pedidoB);
             });
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const totalCubagemFormatado = load.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const totalCubagemFormatado = (load.totalCubagem || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">PRIORIDADE</span>' : '';
             const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
@@ -1184,11 +1455,14 @@
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
 
-        function imprimirCargasGeneric(divId, title, buttonElement) {
+        function imprimirCargasGeneric(divId, title) {
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
+            
             const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
+            
             if (completedLoadsCards.length === 0) { alert("Nenhuma carga concluída para imprimir."); return; }
+            
             const printWindow = createPrintWindow('Imprimir: ' + title);
             let contentToPrint = `<h3>${title}</h3>`;
             completedLoadsCards.forEach(header => { contentToPrint += header.closest('.card.mb-3').outerHTML; });
@@ -1198,15 +1472,6 @@
             setTimeout(() => { 
                 printWindow.print(); 
                 printWindow.close(); 
-                if (buttonElement) {
-                    const originalText = buttonElement.innerHTML;
-                    buttonElement.innerHTML = `<i class="bi bi-check-lg me-1"></i> Impresso!`;
-                    buttonElement.disabled = true;
-                    setTimeout(() => {
-                        buttonElement.innerHTML = originalText;
-                        buttonElement.disabled = false;
-                    }, 3000);
-                }
             }, 500);
         }
 
