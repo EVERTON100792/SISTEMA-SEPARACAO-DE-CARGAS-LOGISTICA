@@ -233,7 +233,7 @@
 
         <div class="card p-3 mb-4 no-print">
             <h2 class="card-title h5"><i class="bi bi-slash-circle-fill me-2"></i>Bloqueio Manual de Pedidos</h2>
-            <p class="card-subtitle mb-3 text-body-secondary small">Adicione o número de um pedido para impedi-lo de ser incluído em qualquer carga.</p>
+            <p class="card-subtitle mb-3 text-body-secondary small">Adicione o número de um pedido para impedi-lo de ser incluído em qualquer carga. Lembre-se de clicar em "Processar Cargas" após bloquear para que a alteração tenha efeito.</p>
             <div class="row g-3">
                 <div class="col-md-6">
                     <label for="bloquearPedidoInput" class="form-label">Número do Pedido a Bloquear:</label>
@@ -246,6 +246,18 @@
                     <label class="form-label">Pedidos Atualmente Bloqueados:</label>
                     <div id="lista-pedidos-bloqueados" class="p-2 border rounded" style="min-height: 40px; background-color: #212529;">
                         <span class="text-muted">Nenhum pedido bloqueado.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm h-100 border-danger">
+                    <div class="card-body">
+                        <h2 class="card-title h5 text-danger"><i class="bi bi-slash-circle-fill me-2"></i>Resultado do Bloqueio Manual (após processar)</h2>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos removidos da lista geral por terem sido bloqueados manualmente por você.</p>
+                        <div id="resultado-bloqueados"></div>
                     </div>
                 </div>
             </div>
@@ -359,18 +371,6 @@
             </div>
         </div>
         
-        <div class="row">
-            <div class="col-lg-12 mb-4">
-                <div class="card shadow-sm h-100 border-danger">
-                    <div class="card-body">
-                        <h2 class="card-title h5 text-danger"><i class="bi bi-slash-circle-fill me-2"></i>Pedidos Bloqueados Manualmente</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos removidos da lista geral por terem sido bloqueados manualmente por você.</p>
-                        <div id="resultado-bloqueados"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="row">
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100 border-secondary">
@@ -685,7 +685,7 @@
                 const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
                 const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
                 const resultadoRota1Div = document.getElementById('resultado-rota1');
-                const resultadoBloqueadosDiv = document.getElementById('resultado-bloqueados'); // NOVO
+                const resultadoBloqueadosDiv = document.getElementById('resultado-bloqueados');
                 
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
@@ -696,7 +696,7 @@
                         if(el) el.innerHTML = '';
                     });
 
-                    // NOVO: Filtragem de pedidos bloqueados manualmente PRIMEIRO
+                    // Filtragem de pedidos bloqueados manualmente PRIMEIRO
                     let pedidosManualmenteBloqueados = [];
                     let pedidosDisponiveis = [];
                     planilhaData.filter(p => p.Num_Pedido).forEach(p => {
@@ -918,12 +918,12 @@
         
         function displayPedidosBloqueados(div, pedidos) {
             if (pedidos.length === 0) {
-                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido bloqueado manualmente.</div>';
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido bloqueado manualmente no último processamento.</div>';
                 return;
             }
             const totalKg = pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
             const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            let html = `<div class="alert alert-danger"><strong>Total:</strong> ${pedidos.length} pedidos / ${totalKgFormatado} kg</div>`;
+            let html = `<div class="alert alert-danger"><strong>Total Bloqueado:</strong> ${pedidos.length} pedidos / ${totalKgFormatado} kg</div>`;
             html += createTable(pedidos);
             div.innerHTML = html;
         }
