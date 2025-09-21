@@ -11,8 +11,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
         body {
@@ -531,12 +529,20 @@
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
                     const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
                     let headerRowIndex = -1, headers = [];
+                    // *** CORREÇÃO: Lógica de detecção de cabeçalho mais robusta ***
                     for (let i = 0; i < rawData.length; i++) {
                         const row = rawData[i];
-                        if (row && row.includes('Cod_Rota')) { headerRowIndex = i; headers = row.map(h => String(h).trim()); break; }
+                        if (row && row.some(cell => String(cell).trim() === 'Cod_Rota')) {
+                             headerRowIndex = i; 
+                             headers = row.map(h => h ? String(h).trim() : ''); 
+                             break; 
+                        }
                     }
-                    if (headerRowIndex === -1) throw new Error("Não foi possível encontrar a linha de cabeçalho com 'Cod_Rota'.");
+
+                    if (headerRowIndex === -1) throw new Error("Não foi possível encontrar a linha de cabeçalho com 'Cod_Rota'. Verifique a planilha.");
+                    
                     const dataRows = rawData.slice(headerRowIndex + 1);
                     planilhaData = dataRows.map(row => { 
                         const pedido = {}; 
@@ -567,6 +573,7 @@
                         }); 
                         return pedido; 
                     });
+
                     planilhaData.forEach(checkAgendamento);
                     statusDiv.innerHTML = `<p class="text-success">Planilha \"${file.name}\" carregada. ${planilhaData.length} linhas prontas para processar.</p>`;
                     processarBtn.disabled = false;
@@ -664,7 +671,7 @@
                 const autoLoads = displayedLoads.tresQuartosAuto || [];
                 displayTresQuartos(document.getElementById('resultado-tres-quartos'), autoLoads);
             } else {
-                 container.innerHTML = `<span class="text-muted small">Monte a rota para validar.</span>`;
+                container.innerHTML = `<span class="text-muted small">Monte a rota para validar.</span>`;
             }
         }
         // --- FIM DA LÓGICA DE VALIDAÇÃO ---
@@ -1395,7 +1402,7 @@
                                              ${validationButtonsHtml}
                                              <button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>
                                          </div>
-                                        </div>`;
+                                     </div>`;
                 html += summaryHeader;
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada.</div>`; }
                 primaryLoads.forEach(load => {
