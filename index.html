@@ -131,7 +131,7 @@
         </div>
         
         <div id="summary-panel" class="card p-3 mb-4" style="display: none;">
-            <h2 class="card-title h5 mb-3"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo Geral das Cargas</h2>
+            <h2 class="card-title h5 mb-3"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo Geral das Cargas Validadas</h2>
             <div class="row text-center">
                 <div class="col-6 col-md-4 col-lg-2 mb-3">
                     <div class="text-success-emphasis"><i class="bi bi-box-seam-fill me-2"></i>Fiorinos</div>
@@ -150,7 +150,7 @@
                     <div id="summary-toco-count" class="summary-value">0</div>
                 </div>
                 <div class="col-12 col-md-8 col-lg-4 mb-3">
-                    <div class="text-info-emphasis"><i class="bi bi-database-fill-check me-2"></i>Peso Total Carregado</div>
+                    <div class="text-info-emphasis"><i class="bi bi-database-fill-check me-2"></i>Peso Total Validado</div>
                     <div id="summary-total-weight" class="summary-value text-info">0,00 kg</div>
                 </div>
             </div>
@@ -349,7 +349,10 @@
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h2 class="card-title h5"><i class="bi bi-lightning-charge-fill me-2"></i>Cargas 3/4 (Formadas Automaticamente)</h2>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                           <h2 class="card-title h5 mb-0"><i class="bi bi-lightning-charge-fill me-2"></i>Cargas 3/4 (Formadas Automaticamente)</h2>
+                           <div id="validation-buttons-34-auto"></div>
+                        </div>
                         <p class="card-subtitle mb-2 text-body-secondary small">Cargas formadas a partir de um pedido muito grande na mesma rota.</p>
                         <div id="resultado-tres-quartos"></div>
                     </div>
@@ -361,7 +364,10 @@
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h2 class="card-title h5"><i class="bi bi-inboxes-fill me-2"></i>Cargas "Toco"</h2>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h2 class="card-title h5 mb-0"><i class="bi bi-inboxes-fill me-2"></i>Cargas "Toco"</h2>
+                            <div id="validation-buttons-toco"></div>
+                        </div>
                         <p class="card-subtitle mb-2 text-body-secondary small">Grupos de cargas onde a Coluna4/5 contém "TOCO" e o CF se repete.</p>
                         <div id="resultado-toco"></div>
                     </div>
@@ -407,8 +413,9 @@
         let rota1SemCarga = [];
         let currentLeftoversForPrinting = [];
         let currentAllOrdersForReoptimization = [];
-        
-        // Objeto para armazenar o resumo das cargas
+        let displayedLoads = {}; // Armazena cargas mostradas na tela antes de validar
+
+        // Objeto para armazenar o resumo das cargas validadas
         let createdLoadsSummary = {
             fiorino: [],
             van: [],
@@ -629,7 +636,41 @@
             }
         }
 
+        // --- LÓGICA DE VALIDAÇÃO ---
+        function validarCargas(type, containerId) {
+            const loadsToValidate = displayedLoads[type];
+            if (!loadsToValidate) return;
+
+            createdLoadsSummary[type] = loadsToValidate;
+            updateSummaryPanel();
+
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <button class="btn btn-sm btn-secondary no-print me-2" disabled><i class="bi bi-patch-check-fill"></i> Cargas Validadas</button>
+                <button class="btn btn-sm btn-outline-danger no-print" onclick="desvalidarCargas('${type}', '${containerId}')"><i class="bi bi-pencil-square"></i> Alterar</button>
+            `;
+        }
+
+        function desvalidarCargas(type, containerId) {
+            createdLoadsSummary[type] = [];
+            updateSummaryPanel();
+
+            const container = document.getElementById(containerId);
+            // Recria o botão original de validação. A função de exibição precisa ser chamada novamente para passar os dados corretos.
+            // Por simplicidade aqui, vamos apenas reativar a possibilidade de validar.
+            if (type === 'toco') {
+                displayToco(document.getElementById('resultado-toco'), gruposToco);
+            } else if (type === 'tresQuartosAuto') {
+                const autoLoads = displayedLoads.tresQuartosAuto || [];
+                displayTresQuartos(document.getElementById('resultado-tres-quartos'), autoLoads);
+            } else {
+                 container.innerHTML = `<span class="text-muted small">Monte a rota para validar.</span>`;
+            }
+        }
+        // --- FIM DA LÓGICA DE VALIDAÇÃO ---
+
         function resetarEstadoGlobal() {
+            planilhaData = [];
             pedidosGeraisAtuais = [];
             gruposToco = {};
             pedidosComCFNumericoIsolado = [];
@@ -638,6 +679,8 @@
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
             currentAllOrdersForReoptimization = [];
+            displayedLoads = {};
+            
             // Limpa o resumo
             createdLoadsSummary = { fiorino: [], van: [], tresQuartos: [], toco: [] };
             document.getElementById('summary-panel').style.display = 'none';
@@ -684,6 +727,8 @@
                         if(el) el.innerHTML = '';
                     });
 
+                    updateSummaryPanel(); // Mostra o painel zerado
+
                     const pedidosCompletos = planilhaData.filter(p => p.Num_Pedido);
 
                     const col5ValuesForRota1 = ['TBL 08', 'TBL TODESCHINI'];
@@ -719,7 +764,6 @@
                     }, {});
                     displayToco(resultadoTocoDiv, gruposToco);
                     tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
-                    createdLoadsSummary.toco = Object.values(gruposToco); // Adiciona Toco ao resumo
 
                     const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
                     let pedidosParaProcessamento = [];
@@ -765,9 +809,8 @@
                             if (newLoad.totalKg >= MIN_KG_3_4) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); }
                         }
                     });
-                    tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; load.type = 'auto'; });
+                    tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
                     displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
-                    createdLoadsSummary.tresQuartos.push(...tresQuartosLoads); // Adiciona 3/4 automático ao resumo
 
                     pedidosGeraisAtuais = pedidosParaProcessamento.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
                     const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
@@ -775,7 +818,6 @@
                     }, {});
                     displayGerais(resultadoGeralDiv, gruposGerais);
 
-                    updateSummaryPanel(); // Atualiza o painel de resumo
                     statusDiv.innerHTML = `<p class="text-success">Processamento concluído com sucesso!</p>`;
                 } catch (error) { 
                     statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; 
@@ -907,8 +949,22 @@
         }
 
         function displayTresQuartos(div, loads) {
-            if (loads.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga 3/4 formada automaticamente.</div>'; return; }
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
+            displayedLoads.tresQuartosAuto = loads; // Armazena para validação
+            const validationContainerId = 'validation-buttons-34-auto';
+            const validationContainer = document.getElementById(validationContainerId);
+
+            if (loads.length === 0) { 
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga 3/4 formada automaticamente.</div>'; 
+                validationContainer.innerHTML = '';
+                return; 
+            }
+
+            validationContainer.innerHTML = `
+                <button class="btn btn-sm btn-success no-print me-2" onclick="validarCargas('tresQuartos', '${validationContainerId}')"><i class="bi bi-check-circle-fill"></i> Validar Cargas</button>
+                <button class="btn btn-sm btn-outline-light no-print" onclick="imprimirGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>
+            `;
+            
+            let html = '';
             loads.forEach(load => {
                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 html += `<div class="card mb-3"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
@@ -939,10 +995,9 @@
 
             const printWindow = createPrintWindow(title);
             const contentToPrint = divToPrint.cloneNode(true);
-            const buttonInContent = contentToPrint.querySelector('button');
-            if (buttonInContent) {
-                buttonInContent.remove();
-            }
+            
+            // Remove todos os botões da área de impressão
+            contentToPrint.querySelectorAll('button').forEach(btn => btn.remove());
 
             printWindow.document.body.innerHTML = `<h3>${title}</h3>` + contentToPrint.innerHTML;
             printWindow.document.close();
@@ -1279,15 +1334,6 @@
                 buttonElement.classList.remove(`btn-outline-${colorClass}`);
                 buttonElement.classList.add(`btn-${colorClass}`, 'active');
                 buttonElement.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>${title}`;
-
-                // Limpa as cargas manuais anteriores do mesmo tipo
-                if (vehicleType === 'fiorino') {
-                    createdLoadsSummary.fiorino = [];
-                } else if (vehicleType === 'van') {
-                    createdLoadsSummary.van = [];
-                } else if (vehicleType === 'tresQuartos') {
-                    createdLoadsSummary.tresQuartos = createdLoadsSummary.tresQuartos.filter(load => load.type === 'auto');
-                }
             }
 
             setTimeout(() => {
@@ -1318,19 +1364,9 @@
                 let primaryLoads = bestResult.loads;
                 let currentLeftovers = bestResult.leftovers;
 
-                primaryLoads.forEach((load, index) => { load.numero = index + 1; load.type = 'manual';});
+                primaryLoads.forEach((load, index) => { load.numero = index + 1; });
                 
-                // Adiciona as novas cargas ao resumo
-                if (!reoptimizing) {
-                    if (vehicleType === 'fiorino') {
-                        createdLoadsSummary.fiorino.push(...primaryLoads);
-                    } else if (vehicleType === 'van') {
-                        createdLoadsSummary.van.push(...primaryLoads);
-                    } else if (vehicleType === 'tresQuartos') {
-                        createdLoadsSummary.tresQuartos.push(...primaryLoads);
-                    }
-                }
-                updateSummaryPanel();
+                displayedLoads[vehicleType] = primaryLoads;
 
                 const vehicleInfo = {
                     fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
@@ -1340,16 +1376,26 @@
                 let html = '';
                 const vInfo = vehicleInfo[vehicleType];
                 let summaryTitle = reoptimizing ? `Resultado Reotimizado para ${targetVehicleCount} Veículos` : `Resultados para <strong>${title}</strong>`;
+                
+                const validationContainerId = `validation-buttons-${divId}`;
+                let validationButtonsHtml = '';
+                if (primaryLoads.length > 0) {
+                    validationButtonsHtml = `
+                        <button class="btn btn-sm btn-success no-print me-2" onclick="validarCargas('${vehicleType}', '${validationContainerId}')"><i class="bi bi-check-circle-fill"></i> Validar Cargas</button>
+                    `;
+                }
+
                 let summaryHeader = `<div class="d-flex justify-content-between align-items-center mb-3">
-                                             <h4 class="mb-0 h5">${summaryTitle}: 
-                                                 <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
-                                                 <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
-                                                 <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
-                                             </h4>
-                                             <div id="print-button-container-${divId}" class="d-inline-block">
-                                                 ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
-                                             </div>
-                                            </div>`;
+                                         <h4 class="mb-0 h5">${summaryTitle}: 
+                                             <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
+                                             <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
+                                             <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
+                                         </h4>
+                                         <div id="${validationContainerId}" class="d-inline-block">
+                                             ${validationButtonsHtml}
+                                             <button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>
+                                         </div>
+                                        </div>`;
                 html += summaryHeader;
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada.</div>`; }
                 primaryLoads.forEach(load => {
@@ -1418,9 +1464,7 @@
                     return;
                 }
 
-                extraVanLoads.forEach(load => load.type = 'manual');
-                createdLoadsSummary.van.push(...extraVanLoads);
-                updateSummaryPanel();
+                displayedLoads.van = [...(displayedLoads.van || []), ...extraVanLoads];
                 updateUIAfterExtraVan(divId, extraVanLoads, finalLeftovers, initialLoadCount, title);
 
             }, 50);
@@ -1429,8 +1473,17 @@
         function updateUIAfterExtraVan(divId, newLoads, finalLeftovers, initialLoadCount, title) {
             const resultadoDiv = document.getElementById(divId);
             const leftoversCard = document.getElementById(`leftovers-card-${divId}`);
+            const validationContainerId = `validation-buttons-${divId}`;
+            const validationContainer = document.getElementById(validationContainerId);
 
-            const newTotalLoads = initialLoadCount + newLoads.length;
+            const newTotalLoads = (displayedLoads.van || []).length;
+
+            if (validationContainer) {
+                 validationContainer.innerHTML = `
+                    <button class="btn btn-sm btn-success no-print me-2" onclick="validarCargas('van', '${validationContainerId}')"><i class="bi bi-check-circle-fill"></i> Validar Cargas</button>
+                    <button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>
+                `;
+            }
 
             const loadsCountEl = document.getElementById(`loads-count-${divId}`);
             if (loadsCountEl) {
@@ -1440,11 +1493,6 @@
             const leftoversCountEl = document.getElementById(`leftovers-count-${divId}`);
             if (leftoversCountEl) {
                 leftoversCountEl.innerHTML = `${finalLeftovers.length} Pedido(s) Restante(s)`;
-            }
-
-            const printContainerEl = document.getElementById(`print-button-container-${divId}`);
-            if (printContainerEl && initialLoadCount === 0 && newTotalLoads > 0) {
-                printContainerEl.innerHTML = `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>`;
             }
 
             const vInfo = { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' };
@@ -1503,7 +1551,20 @@
         function separarCargas34(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'tresQuartos', buttonElement); }
 
         function displayToco(div, grupos) {
-            if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga "Toco" encontrada.</div>'; return; }
+            displayedLoads.toco = Object.values(grupos); // Armazena para validação
+            const validationContainerId = 'validation-buttons-toco';
+            const validationContainer = document.getElementById(validationContainerId);
+
+            if (Object.keys(grupos).length === 0) { 
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga "Toco" encontrada.</div>'; 
+                validationContainer.innerHTML = '';
+                return; 
+            }
+
+             validationContainer.innerHTML = `
+                <button class="btn btn-sm btn-success no-print" onclick="validarCargas('toco', '${validationContainerId}')"><i class="bi bi-check-circle-fill"></i> Validar Cargas</button>
+            `;
+            
             const MAX_KG_TOCO = parseFloat(document.getElementById('tocoMaxCapacity').value);
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionToco">';
             Object.keys(grupos).sort().forEach((cf, index) => {
