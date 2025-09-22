@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Dashboard de Cargas</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Animação de fundo e Estilo Geral */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-color: #1a1a1a;
+        }
+
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* Efeito de gradiente animado e rotativo */
+        .background-animation::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 150vmax;
+            height: 150vmax;
+            background-image: conic-gradient(
+                #0d6efd, #0d6efd33, transparent, transparent,
+                #20c997, #20c99733, transparent, transparent,
+                #ffc107, #ffc10733, transparent, transparent,
+                #fd7e14, #fd7e1433, transparent, transparent, #0d6efd
+            );
+            animation: rotateBackground 20s linear infinite;
+            transform-origin: center center;
+        }
+
+        @keyframes rotateBackground {
+            from {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        /* Cartão de Login com Efeito de Vidro (Glassmorphism) */
+        .login-card {
+            background: rgba(33, 37, 41, 0.75);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Animação de "shake" para erro */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shake-error {
+            animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-header .bi-truck {
+            font-size: 3.5rem;
+            color: #0d6efd;
+        }
+
+        /* Estilo customizado para os inputs com label flutuante */
+        .form-floating-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control-custom {
+            width: 100%;
+            padding: 10px 0;
+            font-size: 1rem;
+            color: #fff;
+            border: none;
+            border-bottom: 2px solid #495057;
+            outline: none;
+            background: transparent;
+            transition: border-color 0.2s;
+        }
+
+        .form-control-custom::placeholder {
+            color: transparent;
+        }
+
+        .form-label-custom {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            font-size: 1rem;
+            color: #adb5bd;
+            pointer-events: none;
+            transition: 0.2s ease all;
+        }
+
+        .form-control-custom:focus ~ .form-label-custom,
+        .form-control-custom:not(:placeholder-shown) ~ .form-label-custom {
+            top: -15px;
+            font-size: 0.8rem;
+            color: #0d6efd;
+        }
+
+        .form-control-custom:focus {
+            border-bottom-color: #0d6efd;
+        }
+
+        /* Botão de Login com Animação */
+        .btn-login {
+            background: linear-gradient(45deg, #0d6efd, #0dcaf0);
+            border: none;
+            font-weight: bold;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.4);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(13, 110, 253, 0.6);
+        }
+        
+        .error-message {
+            min-height: 24px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="background-animation"></div>
+
+    <div class="login-card">
+        <div class="login-header">
+            <i class="bi bi-truck"></i>
+            <h1 class="h3 mt-2 mb-1">Bem-vindo!</h1>
+            <p class="text-body-secondary">Acesse o Dashboard de Cargas</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-floating-group">
+                <input type="text" id="username" class="form-control-custom" placeholder="Usuário" required>
+                <label for="username" class="form-label-custom">Usuário</label>
+            </div>
+            
+            <div class="form-floating-group">
+                <input type="password" id="password" class="form-control-custom" placeholder="Senha" required>
+                <label for="password" class="form-label-custom">Senha</label>
+            </div>
+            
+            <div id="errorMessage" class="text-danger text-center mb-3 error-message"></div>
+
+            <button type="submit" class="btn btn-primary w-100 btn-login">Entrar</button>
+        </form>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const loginCard = document.querySelector('.login-card');
+
+        loginForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Remove a animação de erro, caso exista
+            loginCard.classList.remove('shake-error');
+            errorMessage.textContent = '';
+            
+            // --- Lógica de Autenticação (Simples) ---
+            // Substitua isso pela sua lógica de validação real no futuro
+            if (username === 'admin' && password === '1234') {
+                // Sucesso!
+                errorMessage.textContent = '';
+                
+                // 1. Marcar que o usuário está logado no armazenamento do navegador
+                localStorage.setItem('isLoggedIn', 'true');
+                
+                // 2. Redirecionar para o dashboard principal
+                //    Certifique-se de que o seu arquivo principal se chama 'dashboard.html'
+                window.location.href = 'dashboard.html';
+                
+            } else {
+                // Falha
+                errorMessage.textContent = 'Usuário ou senha inválidos.';
+                loginCard.classList.add('shake-error');
+            }
+        });
+    </script>
+</body>
+</html>
