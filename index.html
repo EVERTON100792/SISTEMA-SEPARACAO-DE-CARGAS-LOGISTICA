@@ -256,7 +256,7 @@
                 <div class="card shadow-sm h-100 border-danger">
                     <div class="card-body">
                         <h2 class="card-title h5 text-danger"><i class="bi bi-slash-circle-fill me-2"></i>Resultado do Bloqueio Manual (após processar)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos removidos da lista geral por terem sido bloqueados manualmente por você.</p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos removidos da lista geral por terem sido bloqueados manually por você.</p>
                         <div id="resultado-bloqueados"></div>
                     </div>
                 </div>
@@ -594,21 +594,21 @@
                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                  if (originalPedido) {
                     pedidoEncontrado = originalPedido;
-                     if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                        local = 'Bloqueado Manualmente por você.';
-                     } else {
-                        local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
-                     }
+                      if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                         local = 'Bloqueado Manualmente por você.';
+                      } else {
+                         local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
+                      }
                  }
-             }
+               }
             if (pedidoEncontrado) {
                 let buttons = '';
                 if (local === 'Pedidos Disponíveis para Montagem') {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                         <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                                        buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                         buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -1184,8 +1184,8 @@
                     const newCubage = currentLoad.totalCubagem + smallItem.totalCubagem;
 
                     let canPlace = true;
-                     // --- NOVA REGRA PARA CLIENTES ESPECIAIS ---
-                     if (!ignoreSpecialClients && smallItem.isSpecial) {
+                      // --- NOVA REGRA PARA CLIENTES ESPECIAIS ---
+                      if (!ignoreSpecialClients && smallItem.isSpecial) {
                         const specialClientName = smallItem.pedidos[0].Nome_Cliente.toUpperCase().trim();
                         const specialClientCodesInLoad = new Set(
                             currentLoad.pedidos
@@ -1196,8 +1196,8 @@
                         if (specialClientCodesInLoad.size > 2) {
                             canPlace = false;
                         }
-                    }
-                    // --- FIM DA NOVA REGRA ---
+                      }
+                      // --- FIM DA NOVA REGRA ---
 
                     if (canPlace && newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
                         currentLoad.pedidos.push(...smallItem.pedidos);
@@ -1356,15 +1356,15 @@
                 const vInfo = vehicleInfo[vehicleType];
                 let summaryTitle = reoptimizing ? `Resultado Reotimizado para ${targetVehicleCount} Veículos` : `Resultados para <strong>${title}</strong>`;
                 let summaryHeader = `<div class="d-flex justify-content-between align-items-center mb-3">
-                                                 <h4 class="mb-0 h5">${summaryTitle}: 
-                                                     <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
-                                                     <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
-                                                     <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
-                                                 </h4>
-                                                 <div id="print-button-container-${divId}" class="d-inline-block">
-                                                     ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
-                                                 </div>
-                                               </div>`;
+                                            <h4 class="mb-0 h5">${summaryTitle}: 
+                                                <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
+                                                <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
+                                                <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
+                                            </h4>
+                                            <div id="print-button-container-${divId}" class="d-inline-block">
+                                                ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                            </div>
+                                        </div>`;
                 html += summaryHeader;
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada.</div>`; }
                 primaryLoads.forEach(load => {
@@ -1380,10 +1380,16 @@
                     const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
                     const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
                     
-                    if (vehicleType === 'fiorino' && totalKgUnassigned >= vanMin) {
+                    if (vehicleType === 'fiorino') {
                         currentLeftoversForPrinting = [...currentLeftovers];
-                        printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Possível Carga de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ Van)</button>`;
-                    } else if (vehicleType === 'van') {
+                        if (totalKgUnassigned >= vanMin) {
+                            printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Possível Carga de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ Van)</button>`;
+                        }
+                        if (totalKgUnassigned >= tresQuartosMin) {
+                             printButtonHtml = `<button class="btn btn-warning ms-auto no-print" onclick="imprimirSobras('Possível Carga de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ 3/4)</button>`;
+                        }
+                    } 
+                    else if (vehicleType === 'van') {
                         if (totalKgUnassigned >= tresQuartosMin) {
                             currentLeftoversForPrinting = [...currentLeftovers];
                             printButtonHtml = `<button class="btn btn-warning ms-auto no-print" onclick="imprimirSobras('Possível Carga de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ 3/4)</button>`;
@@ -1397,12 +1403,12 @@
                     }
                     
                     html += `<div id="leftovers-card-${divId}">
-                                 <h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                 <div class="card mb-3">
-                                     <div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}</div>
-                                     <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
-                                 </div>
-                               </div>`;
+                                <h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                <div class="card mb-3">
+                                    <div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}</div>
+                                    <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
+                                </div>
+                            </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
@@ -1477,15 +1483,15 @@
                 const totalKgUnassigned = finalLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra Final')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
                 finalContentHtml += `<div id="leftovers-card-${divId}">
-                                                 <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                                 <div class="card mb-3">
-                                                     <div class="card-header bg-danger text-white d-flex align-items-center">
-                                                         Detalhes da Sobra Final
-                                                         ${printButtonHtml}
-                                                     </div>
-                                                     <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
-                                                 </div>
-                                               </div>`;
+                                                <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                                <div class="card mb-3">
+                                                    <div class="card-header bg-danger text-white d-flex align-items-center">
+                                                        Detalhes da Sobra Final
+                                                        ${printButtonHtml}
+                                                    </div>
+                                                    <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
+                                                </div>
+                                            </div>`;
             }
             
             resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${finalContentHtml}</div>`);
