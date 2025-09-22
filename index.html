@@ -256,7 +256,7 @@
                 <div class="card shadow-sm h-100 border-danger">
                     <div class="card-body">
                         <h2 class="card-title h5 text-danger"><i class="bi bi-slash-circle-fill me-2"></i>Resultado do Bloqueio Manual (após processar)</h2>
-                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos removidos da lista geral por terem sido bloqueados manually por você.</p>
+                        <p class="card-subtitle mb-2 text-body-secondary small">Pedidos removidos da lista geral por terem sido bloqueados manualmente por você.</p>
                         <div id="resultado-bloqueados"></div>
                     </div>
                 </div>
@@ -405,11 +405,11 @@
         let gruposToco = {};
         let pedidosComCFNumericoIsolado = [];
         let pedidosPrioritarios = [];
-        let pedidosBloqueados = new Set(); // NOVO: Armazena pedidos bloqueados manualmente
+        let pedidosBloqueados = new Set();
         let rota1SemCarga = [];
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
-        let currentAllOrdersForReoptimization = []; // Armazena todos os pedidos da rota para reotimização
+        let currentAllOrdersForReoptimization = [];
 
         const defaultConfigs = {
             fiorinoMinCapacity: 300, fiorinoMaxCapacity: 500, fiorinoCubage: 1.5, fiorinoHardMaxCapacity: 560, fiorinoHardCubage: 1.7,
@@ -1015,22 +1015,22 @@
             }, {});
 
             let packableItems = [];
+            // ================= INÍCIO DA LÓGICA CORRIGIDA =================
+            // Esta seção foi modificada para NUNCA separar os pedidos de um mesmo cliente.
             Object.values(clientGroupsMap).forEach(group => {
                 const totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 const totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
-                if (totalKg > HARD_MAX_KG || totalCubagem > HARD_MAX_CUBAGE) {
-                    group.pedidos.forEach(pedido => {
-                        packableItems.push({
-                            pedidos: [pedido],
-                            totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
-                            totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
-                            isSpecial: group.isSpecial
-                        });
-                    });
-                } else {
-                    packableItems.push({ ...group, totalKg, totalCubagem });
-                }
+                
+                // A lógica que quebrava o grupo foi removida.
+                // Agora, o grupo de pedidos do cliente é sempre um item único e indivisível.
+                packableItems.push({ 
+                    pedidos: group.pedidos,
+                    totalKg: totalKg,
+                    totalCubagem: totalCubagem, 
+                    isSpecial: group.isSpecial 
+                });
             });
+            // ================= FIM DA LÓGICA CORRIGIDA =================
             
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
@@ -1056,7 +1056,6 @@
                     const newCubage = load.totalCubagem + item.totalCubagem;
                     
                     let canPlace = true;
-                    // --- NOVA REGRA PARA CLIENTES ESPECIAIS ---
                     if (!ignoreSpecialClients && item.isSpecial) {
                         const specialClientName = item.pedidos[0].Nome_Cliente.toUpperCase().trim();
                         const specialClientCodesInLoad = new Set(
@@ -1069,7 +1068,6 @@
                             canPlace = false;
                         }
                     }
-                    // --- FIM DA NOVA REGRA ---
 
                     if (canPlace && newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
                         const remainingCapacity = (targetVehicleCount ? SOFT_MAX_KG : HARD_MAX_KG) - newKg;
@@ -1136,18 +1134,7 @@
             Object.values(clientGroupsMap).forEach(group => {
                 const totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 const totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
-                if (totalKg > HARD_MAX_KG || totalCubagem > HARD_MAX_CUBAGE) {
-                    group.pedidos.forEach(pedido => {
-                        packableItems.push({
-                            pedidos: [pedido],
-                            totalKg: parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0,
-                            totalCubagem: parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0,
-                            isSpecial: group.isSpecial
-                        });
-                    });
-                } else {
-                    packableItems.push({ ...group, totalKg, totalCubagem });
-                }
+                packableItems.push({ ...group, totalKg, totalCubagem });
             });
             
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
@@ -1184,7 +1171,6 @@
                     const newCubage = currentLoad.totalCubagem + smallItem.totalCubagem;
 
                     let canPlace = true;
-                      // --- NOVA REGRA PARA CLIENTES ESPECIAIS ---
                       if (!ignoreSpecialClients && smallItem.isSpecial) {
                         const specialClientName = smallItem.pedidos[0].Nome_Cliente.toUpperCase().trim();
                         const specialClientCodesInLoad = new Set(
@@ -1197,7 +1183,6 @@
                             canPlace = false;
                         }
                       }
-                      // --- FIM DA NOVA REGRA ---
 
                     if (canPlace && newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
                         currentLoad.pedidos.push(...smallItem.pedidos);
@@ -1296,7 +1281,6 @@
             }
             return bestState;
         }
-        // --- FIM DA LÓGICA DE OTIMIZAÇÃO ---
         
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement, reoptimizing = false, targetVehicleCount = null) {
             const resultadoDiv = document.getElementById(divId);
