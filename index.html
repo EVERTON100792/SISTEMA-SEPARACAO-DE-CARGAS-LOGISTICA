@@ -593,12 +593,12 @@
             if (!pedidoEncontrado) {
                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                  if (originalPedido) {
-                    pedidoEncontrado = originalPedido;
-                      if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                         local = 'Bloqueado Manualmente por você.';
-                      } else {
-                         local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
-                      }
+                     pedidoEncontrado = originalPedido;
+                       if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                           local = 'Bloqueado Manualmente por você.';
+                       } else {
+                           local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
+                       }
                  }
                }
             if (pedidoEncontrado) {
@@ -606,9 +606,9 @@
                 if (local === 'Pedidos Disponíveis para Montagem') {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                         <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                                         buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                        buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -1007,6 +1007,7 @@
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
             
+            // AGRUPA PEDIDOS POR CLIENTE - Ponto crucial da regra de negócio
             const clientGroupsMap = pedidos.reduce((acc, pedido) => {
                 const clienteId = pedido.Cliente;
                 if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], isSpecial: isSpecialClient(pedido) }; }
@@ -1015,14 +1016,12 @@
             }, {});
 
             let packableItems = [];
-            // ================= INÍCIO DA LÓGICA CORRIGIDA =================
-            // Esta seção foi modificada para NUNCA separar os pedidos de um mesmo cliente.
+            // Transforma cada grupo de pedidos de um cliente em um item "indivisível" para o algoritmo
             Object.values(clientGroupsMap).forEach(group => {
                 const totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 const totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
                 
-                // A lógica que quebrava o grupo foi removida.
-                // Agora, o grupo de pedidos do cliente é sempre um item único e indivisível.
+                // O grupo de pedidos do cliente agora é um item único
                 packableItems.push({ 
                     pedidos: group.pedidos,
                     totalKg: totalKg,
@@ -1030,20 +1029,20 @@
                     isSpecial: group.isSpecial 
                 });
             });
-            // ================= FIM DA LÓGICA CORRIGIDA =================
             
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             
             if (sortStrategy === 'ascending') {
                 priorityItems.sort((a, b) => a.totalKg - b.totalKg); regularItems.sort((a, b) => a.totalKg - b.totalKg);
-            } else {
+            } else { // 'descending' é o padrão
                 priorityItems.sort((a, b) => b.totalKg - a.totalKg); regularItems.sort((a, b) => b.totalKg - a.totalKg);
             }
             packableItems = [...priorityItems, ...regularItems];
 
             let leftoverItems = [];
             packableItems.forEach(item => {
+                // Checa se o grupo inteiro do cliente excede o limite máximo
                 if (item.totalKg > HARD_MAX_KG || item.totalCubagem > HARD_MAX_CUBAGE) {
                     leftoverItems.push(item); return;
                 }
@@ -1112,7 +1111,7 @@
             const leftovers = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             return { loads: finalLoads, leftovers };
         }
-        
+
         function createSolutionLargeSmall(pedidos, vehicleType, minKgOverride = null, ignoreSpecialClients = false) {
             const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
@@ -1212,10 +1211,12 @@
         }
         
         function runAdvancedOptimization(pedidos, vehicleType, targetVehicleCount = null, minKgOverride = null) {
+            // Se o alvo é um número fixo de veículos, usa a estratégia mais simples e direta.
             if (targetVehicleCount) {
                return createInitialSolution(pedidos, vehicleType, 'descending', targetVehicleCount, minKgOverride);
             }
             
+            // --- Fase 1: Gerar várias soluções iniciais com diferentes estratégias ---
             const initialResult1 = createInitialSolution(pedidos, vehicleType, 'descending', null, minKgOverride);
             const initialResult2 = createInitialSolution(pedidos, vehicleType, 'ascending', null, minKgOverride);
 
@@ -1225,8 +1226,10 @@
             const pedidosPorCubagemAsc = [...pedidos].sort((a, b) => (parseFloat(String(a.Cubagem).replace(',', '.')) || 0) - (parseFloat(String(b.Cubagem).replace(',', '.')) || 0));
             const initialResult4 = createInitialSolution(pedidosPorCubagemAsc, vehicleType, 'descending', null, minKgOverride);
             
+            // Nova estratégia: combinar grandes e pequenos
             const initialResult5 = createSolutionLargeSmall(pedidos, vehicleType, minKgOverride);
 
+            // Avalia todas as soluções e pega a melhor como ponto de partida
             const allResults = [initialResult1, initialResult2, initialResult3, initialResult4, initialResult5].map(res => ({
                 result: res,
                 weight: res.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0)
@@ -1236,11 +1239,14 @@
             let bestCost = allResults[0].weight;
             let bestState = JSON.parse(JSON.stringify(currentState));
 
+            // Se a melhor solução inicial já é perfeita, não precisa refinar.
             if (bestCost === 0) return bestState;
 
+            // --- Fase 2: Refinamento com Simulated Annealing ---
             let temperature = 1000.0; const coolingRate = 0.99; const absoluteTemperature = 1.0; const MAX_ITERATIONS = 5000;
             for(let i = 0; i < MAX_ITERATIONS && temperature > absoluteTemperature; i++) {
                 let neighborState = JSON.parse(JSON.stringify(currentState));
+                // Tenta mover um pedido da sobra para uma carga existente
                 if (Math.random() < 0.7 && neighborState.leftovers.length > 0) {
                     const leftoverIndex = Math.floor(Math.random() * neighborState.leftovers.length);
                     const orderToMove = neighborState.leftovers[leftoverIndex];
@@ -1253,7 +1259,7 @@
                             neighborState.leftovers.splice(leftoverIndex, 1);
                         }
                     }
-                } else if (neighborState.loads.length > 1) {
+                } else if (neighborState.loads.length > 1) { // Ou tenta trocar pedidos entre duas cargas
                     const idx1 = Math.floor(Math.random() * neighborState.loads.length); let idx2 = Math.floor(Math.random() * neighborState.loads.length);
                     if (idx1 === idx2) continue;
                     const load1 = neighborState.loads[idx1]; const load2 = neighborState.loads[idx2];
@@ -1340,15 +1346,15 @@
                 const vInfo = vehicleInfo[vehicleType];
                 let summaryTitle = reoptimizing ? `Resultado Reotimizado para ${targetVehicleCount} Veículos` : `Resultados para <strong>${title}</strong>`;
                 let summaryHeader = `<div class="d-flex justify-content-between align-items-center mb-3">
-                                            <h4 class="mb-0 h5">${summaryTitle}: 
-                                                <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
-                                                <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
-                                                <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
-                                            </h4>
-                                            <div id="print-button-container-${divId}" class="d-inline-block">
-                                                ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
-                                            </div>
-                                        </div>`;
+                                                <h4 class="mb-0 h5">${summaryTitle}: 
+                                                    <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
+                                                    <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
+                                                    <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
+                                                </h4>
+                                                <div id="print-button-container-${divId}" class="d-inline-block">
+                                                    ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                                </div>
+                                            </div>`;
                 html += summaryHeader;
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada.</div>`; }
                 primaryLoads.forEach(load => {
