@@ -425,7 +425,7 @@
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
         let currentAllOrdersForReoptimization = [];
-        let pedidosEspeciaisProcessados = new Set(); // <-- VARIÁVEL ADICIONADA
+        let pedidosEspeciaisProcessados = new Set();
 
         const defaultConfigs = {
             fiorinoMinCapacity: 300, fiorinoMaxCapacity: 500, fiorinoCubage: 1.5, fiorinoHardMaxCapacity: 560, fiorinoHardCubage: 1.7,
@@ -693,7 +693,8 @@
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
             currentAllOrdersForReoptimization = [];
-            pedidosEspeciaisProcessados.clear(); // <-- MODIFICAÇÃO ADICIONADA
+            // A linha abaixo NÃO é removida, pois a carga especial deve persistir até um novo arquivo ser carregado
+            // pedidosEspeciaisProcessados.clear();
         }
 
         function processar() {
@@ -728,7 +729,7 @@
                     });
                     displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueados);
                     
-                    // Remove os pedidos já alocados na carga especial <-- MODIFICAÇÃO ADICIONADA
+                    // Remove os pedidos já alocados na carga especial
                     pedidosDisponiveis = pedidosDisponiveis.filter(p => !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)));
 
                     const col5ValuesForRota1 = ['TBL 08', 'TBL TODESCHINI'];
@@ -861,11 +862,11 @@
             colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
             pedidos.forEach(p => {
-                const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido)); // Usado para a cor da linha
+                const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 table += `<tr id="pedido-${p.Num_Pedido}" class="${isPriorityRow ? 'table-primary' : ''}">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
-                    if (c === 'Num_Pedido') { // MUDANÇA: Adiciona o selo de prioridade aqui
+                    if (c === 'Num_Pedido') {
                         const isPriority = pedidosPrioritarios.includes(String(p.Num_Pedido));
                         const priorityBadge = isPriority ? ' <span class="badge bg-primary">Prioridade</span>' : '';
                         table += `<td>${cellContent}${priorityBadge}</td>`;
@@ -1011,7 +1012,6 @@
             }, 500);
         }
 
-        // --- INÍCIO DA LÓGICA DE OTIMIZAÇÃO COM A NOVA REGRA ---
         function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null, minKgOverride = null, ignoreSpecialClients = false) {
             const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
@@ -1029,7 +1029,6 @@
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
             
-            // AGRUPA PEDIDOS POR CLIENTE - Ponto crucial da regra de negócio
             const clientGroupsMap = pedidos.reduce((acc, pedido) => {
                 const clienteId = pedido.Cliente;
                 if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], isSpecial: isSpecialClient(pedido) }; }
@@ -1038,12 +1037,10 @@
             }, {});
 
             let packableItems = [];
-            // Transforma cada grupo de pedidos de um cliente em um item "indivisível" para o algoritmo
             Object.values(clientGroupsMap).forEach(group => {
                 const totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 const totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
                 
-                // O grupo de pedidos do cliente agora é um item único
                 packableItems.push({ 
                     pedidos: group.pedidos,
                     totalKg: totalKg,
@@ -1057,14 +1054,13 @@
             
             if (sortStrategy === 'ascending') {
                 priorityItems.sort((a, b) => a.totalKg - b.totalKg); regularItems.sort((a, b) => a.totalKg - b.totalKg);
-            } else { // 'descending' é o padrão
+            } else {
                 priorityItems.sort((a, b) => b.totalKg - a.totalKg); regularItems.sort((a, b) => b.totalKg - a.totalKg);
             }
             packableItems = [...priorityItems, ...regularItems];
 
             let leftoverItems = [];
             packableItems.forEach(item => {
-                // Checa se o grupo inteiro do cliente excede o limite máximo
                 if (item.totalKg > HARD_MAX_KG || item.totalCubagem > HARD_MAX_CUBAGE) {
                     leftoverItems.push(item); return;
                 }
@@ -1076,20 +1072,16 @@
                     const newKg = load.totalKg + item.totalKg;
                     const newCubage = load.totalCubagem + item.totalCubagem;
                     
-                    // ### NOVA REGRA DE AGENDAMENTO ###
                     const loadHasScheduledOrder = load.pedidos.some(p => p.Agendamento === 'Sim');
                     const itemHasScheduledOrder = item.pedidos.some(p => p.Agendamento === 'Sim');
                     if (loadHasScheduledOrder && itemHasScheduledOrder) {
                         continue; 
                     }
-                    // ### FIM DA NOVA REGRA ###
 
-                    // ### NOVA REGRA DE CLIENTE ESPECIAL (MAIS RESTRITIVA) ###
-                    // Uma carga só pode ter UM grupo de cliente especial (uma única loja).
                     const itemIsSpecial = item.isSpecial;
                     const loadAlreadyHasSpecial = load.pedidos.some(p => isSpecialClient(p));
                     if (itemIsSpecial && loadAlreadyHasSpecial) {
-                        continue; // Carga já tem um cliente especial, não pode adicionar outro.
+                        continue;
                     }
 
                     if (newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
@@ -1193,17 +1185,13 @@
                     const newKg = currentLoad.totalKg + smallItem.totalKg;
                     const newCubage = currentLoad.totalCubagem + smallItem.totalCubagem;
 
-                    // ### NOVA REGRA DE AGENDAMENTO ###
                     const loadHasScheduledOrder = currentLoad.pedidos.some(p => p.Agendamento === 'Sim');
                     const itemHasScheduledOrder = smallItem.pedidos.some(p => p.Agendamento === 'Sim');
                     if (loadHasScheduledOrder && itemHasScheduledOrder) {
                         continue; 
                     }
-                    // ### FIM DA NOVA REGRA ###
 
                     let canPlace = true;
-                    // ### NOVA REGRA DE CLIENTE ESPECIAL (MAIS RESTRITIVA) ###
-                    // Uma carga só pode ter UM grupo de cliente especial (uma única loja).
                     const smallItemIsSpecial = smallItem.isSpecial;
                     const loadAlreadyHasSpecial = currentLoad.pedidos.some(p => isSpecialClient(p));
                     if (smallItemIsSpecial && loadAlreadyHasSpecial) {
@@ -1238,25 +1226,18 @@
         }
         
         function runAdvancedOptimization(pedidos, vehicleType, targetVehicleCount = null, minKgOverride = null) {
-            // Se o alvo é um número fixo de veículos, usa a estratégia mais simples e direta.
             if (targetVehicleCount) {
                return createInitialSolution(pedidos, vehicleType, 'descending', targetVehicleCount, minKgOverride);
             }
             
-            // --- Fase 1: Gerar várias soluções iniciais com diferentes estratégias ---
             const initialResult1 = createInitialSolution(pedidos, vehicleType, 'descending', null, minKgOverride);
             const initialResult2 = createInitialSolution(pedidos, vehicleType, 'ascending', null, minKgOverride);
-
             const pedidosPorCubagemDesc = [...pedidos].sort((a, b) => (parseFloat(String(b.Cubagem).replace(',', '.')) || 0) - (parseFloat(String(a.Cubagem).replace(',', '.')) || 0));
             const initialResult3 = createInitialSolution(pedidosPorCubagemDesc, vehicleType, 'descending', null, minKgOverride);
-            
             const pedidosPorCubagemAsc = [...pedidos].sort((a, b) => (parseFloat(String(a.Cubagem).replace(',', '.')) || 0) - (parseFloat(String(b.Cubagem).replace(',', '.')) || 0));
             const initialResult4 = createInitialSolution(pedidosPorCubagemAsc, vehicleType, 'descending', null, minKgOverride);
-            
-            // Nova estratégia: combinar grandes e pequenos
             const initialResult5 = createSolutionLargeSmall(pedidos, vehicleType, minKgOverride);
 
-            // Avalia todas as soluções e pega a melhor como ponto de partida
             const allResults = [initialResult1, initialResult2, initialResult3, initialResult4, initialResult5].map(res => ({
                 result: res,
                 weight: res.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0)
@@ -1266,14 +1247,11 @@
             let bestCost = allResults[0].weight;
             let bestState = JSON.parse(JSON.stringify(currentState));
 
-            // Se a melhor solução inicial já é perfeita, não precisa refinar.
             if (bestCost === 0) return bestState;
 
-            // --- Fase 2: Refinamento com Simulated Annealing ---
             let temperature = 1000.0; const coolingRate = 0.99; const absoluteTemperature = 1.0; const MAX_ITERATIONS = 5000;
             for(let i = 0; i < MAX_ITERATIONS && temperature > absoluteTemperature; i++) {
                 let neighborState = JSON.parse(JSON.stringify(currentState));
-                // Tenta mover um pedido da sobra para uma carga existente
                 if (Math.random() < 0.7 && neighborState.leftovers.length > 0) {
                     const leftoverIndex = Math.floor(Math.random() * neighborState.leftovers.length);
                     const orderToMove = neighborState.leftovers[leftoverIndex];
@@ -1286,7 +1264,7 @@
                             neighborState.leftovers.splice(leftoverIndex, 1);
                         }
                     }
-                } else if (neighborState.loads.length > 1) { // Ou tenta trocar pedidos entre duas cargas
+                } else if (neighborState.loads.length > 1) {
                     const idx1 = Math.floor(Math.random() * neighborState.loads.length); let idx2 = Math.floor(Math.random() * neighborState.loads.length);
                     if (idx1 === idx2) continue;
                     const load1 = neighborState.loads[idx1]; const load2 = neighborState.loads[idx2];
@@ -1612,7 +1590,7 @@
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
 
-        // <-- INÍCIO DA NOVA FUNÇÃO ADICIONADA -->
+        // --- INÍCIO DAS FUNÇÕES DE CARGA ESPECIAL ---
         function montarCargaEspecial() {
             const resultadoDiv = document.getElementById('resultado-carga-especial');
             const input = document.getElementById('pedidosEspeciaisInput');
@@ -1668,8 +1646,7 @@
             }
             
             if (veiculoEscolhido) {
-                // Sucesso! Montar o card de resultado
-                pedidosEspeciaisProcessados.clear(); // Limpa antes de adicionar os novos
+                pedidosEspeciaisProcessados.clear();
                 pedidosSelecionados.forEach(p => pedidosEspeciaisProcessados.add(String(p.Num_Pedido)));
 
                 const load = {
@@ -1686,13 +1663,16 @@
                 };
 
                 resultadoDiv.innerHTML = `
-                    <div class="alert alert-success">
-                        <strong>Carga Especial montada com sucesso!</strong> Estes ${pedidosSelecionados.length} pedidos foram agrupados e cabem em um(a) <strong>${veiculoEscolhido.nome}</strong>. Eles serão removidos da análise geral quando você clicar em "Processar Cargas".
+                    <div class="alert alert-success d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Carga Especial montada com sucesso!</strong> Estes ${pedidosSelecionados.length} pedidos foram agrupados em um(a) <strong>${veiculoEscolhido.nome}</strong>.
+                            <br>Eles serão removidos da análise geral quando você clicar em "Processar Cargas".
+                        </div>
+                        <button class="btn btn-light btn-sm no-print" onclick="imprimirCargaEspecial()"><i class="bi bi-printer-fill me-1"></i> Imprimir Carga</button>
                     </div>
                     ${renderLoadCard(load, veiculoEscolhido.tipo, vehicleInfo[veiculoEscolhido.tipo])}
                 `;
             } else {
-                // Falha
                 pedidosEspeciaisProcessados.clear();
                 resultadoDiv.innerHTML = `
                     <div class="alert alert-danger">
@@ -1705,6 +1685,7 @@
                 `;
             }
         }
+
         function imprimirCargaEspecial() {
             const resultadoDiv = document.getElementById('resultado-carga-especial');
             const cardToPrint = resultadoDiv.querySelector('.card');
@@ -1727,7 +1708,7 @@
                 printWindow.close(); 
             }, 500);
         }
-        // <-- FIM DA NOVA FUNÇÃO ADICIONADA -->
+        // --- FIM DAS FUNÇÕES DE CARGA ESPECIAL ---
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
