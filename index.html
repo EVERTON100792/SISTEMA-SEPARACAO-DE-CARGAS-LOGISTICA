@@ -54,6 +54,12 @@
             filter: brightness(1.1);
             transform: translateY(-2px);
         }
+        tr.client-highlight > td {
+            background-color: #49491c !important;
+        }
+        tbody tr {
+            cursor: pointer;
+        }
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .container, .card, .accordion-item, .accordion-body { background-color: #fff !important; color: #000 !important; border: none !important; box-shadow: none !important; }
@@ -95,9 +101,12 @@
 </head>
 <body>
     <div class="container mt-4 mb-4">
-        <div class="d-flex align-items-center mb-3">
-            <i class="bi bi-truck display-4 me-3"></i>
-            <h1 class="mb-0">Dashboard de Separação de Cargas</h1>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+             <div class="d-flex align-items-center">
+                 <i class="bi bi-truck display-4 me-3"></i>
+                 <h1 class="mb-0">Dashboard de Separação de Cargas</h1>
+             </div>
+             <button class="btn btn-outline-secondary no-print" id="limparResultadosBtn"><i class="bi bi-eraser-fill me-2"></i>Limpar Resultados</button>
         </div>
 
         <div class="card p-3 mb-4 no-print" id="drop-zone">
@@ -117,6 +126,10 @@
                         <span class="input-group-text"><i class="bi bi-signpost-split-fill"></i></span>
                         <input type="text" class="form-control" id="rotaInicialInput" placeholder="Rota Inicial">
                         <input type="text" class="form-control" id="rotaFinalInput" placeholder="Rota Final">
+                    </div>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
+                        <label class="form-check-label" for="autoProcessCheckbox">Processar automaticamente ao carregar arquivo</label>
                     </div>
                 </div>
                 <div class="col-md-3 align-self-end">
@@ -264,8 +277,11 @@
                 </div>
             </div>
             <div id="resultado-carga-especial" class="mt-3">
-                </div>
+            </div>
         </div>
+        
+        <div id="card-resumo-geral-container" class="mb-4" style="display: none;"></div>
+
         <div class="row">
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100 border-danger">
@@ -503,6 +519,17 @@
             document.getElementById('resetTresQuartos').addEventListener('click', resetTresQuartos);
             document.getElementById('resetToco').addEventListener('click', resetToco);
             document.getElementById('resetAllConfigs').addEventListener('click', resetAll);
+            document.getElementById('limparResultadosBtn').addEventListener('click', limparTudo);
+
+            // Carregar filtros de rota salvos
+            const savedRotaInicial = localStorage.getItem('rotaInicial');
+            const savedRotaFinal = localStorage.getItem('rotaFinal');
+            if (savedRotaInicial) {
+                document.getElementById('rotaInicialInput').value = savedRotaInicial;
+            }
+            if (savedRotaFinal) {
+                document.getElementById('rotaFinalInput').value = savedRotaFinal;
+            }
         });
 
         const rotaVeiculoMap = {
@@ -525,6 +552,7 @@
 
         function handleFile(file) {
             if (!file) return;
+            limparTudo(); // Limpa resultados anteriores ao carregar novo arquivo
             statusDiv.innerHTML = '<p class="text-info">Carregando planilha...</p>';
             processarBtn.disabled = true;
             const reader = new FileReader();
@@ -575,6 +603,11 @@
                     statusDiv.innerHTML = `<p class="text-success">Planilha \"${file.name}\" carregada. ${planilhaData.length} linhas prontas para processar.</p>`;
                     processarBtn.disabled = false;
                     dropZoneText.innerHTML = `<p>Arquivo \"${file.name}\" carregado.</p><button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">Selecionar Outro Arquivo</button>`;
+
+                    if (document.getElementById('autoProcessCheckbox').checked) {
+                        processar();
+                    }
+
                 } catch (error) {
                     statusDiv.innerHTML = `<p class="text-danger"><strong>Erro ao ler o arquivo:</strong> ${error.message}</p>`;
                     console.error(error);
@@ -693,13 +726,55 @@
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
             currentAllOrdersForReoptimization = [];
-            // A linha abaixo NÃO é removida, pois a carga especial deve persistir até um novo arquivo ser carregado
-            // pedidosEspeciaisProcessados.clear();
+        }
+
+        function limparTudo(){
+            resetarEstadoGlobal();
+
+            // Limpa dados de apoio
+            pedidosEspeciaisProcessados.clear();
+            pedidosBloqueados.clear();
+            
+            // Limpa interface
+            const idsParaLimpar = [
+                'resultado-carga-especial', 'resultado-bloqueados', 'resultado-geral', 
+                'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral',
+                'resultado-rota1', 'resultado-tres-quartos', 'resultado-toco', 
+                'resultado-cf-numerico', 'search-result'
+            ];
+            idsParaLimpar.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.innerHTML = '';
+            });
+
+            document.getElementById('card-resumo-geral-container').innerHTML = '';
+            document.getElementById('card-resumo-geral-container').style.display = 'none';
+
+            // Reseta inputs
+            document.getElementById('pedidosEspeciaisInput').value = '';
+            document.getElementById('bloquearPedidoInput').value = '';
+            document.getElementById('pedidoSearchInput').value = '';
+            atualizarListaBloqueados();
+
+            // Reseta drop zone
+            dropZoneText.innerHTML = `<p><i class="bi bi-file-earmark-spreadsheet-fill fs-2"></i></p>
+                                      <p>Arraste o arquivo aqui ou</p>
+                                      <button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+            
+            // Limpa dados da planilha e desabilita o botão
+            planilhaData = [];
+            processarBtn.disabled = true;
+            statusDiv.innerHTML = '';
         }
 
         function processar() {
-            statusDiv.innerHTML = '<div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div><span class="text-primary">Processando, por favor aguarde...</span>';
+            // Salvar filtros de rota antes de processar
+            localStorage.setItem('rotaInicial', document.getElementById('rotaInicialInput').value);
+            localStorage.setItem('rotaFinal', document.getElementById('rotaFinalInput').value);
+
+            statusDiv.innerHTML = '<div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div><span class="text-primary">Processando, por favor aguarde...</span></div>';
             processarBtn.disabled = true;
+            
             setTimeout(() => {
                 const resultadoGeralDiv = document.getElementById('resultado-geral');
                 const resultadoTocoDiv = document.getElementById('resultado-toco');
@@ -712,6 +787,8 @@
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
                     
                     resetarEstadoGlobal();
+                    
+                    // Limpeza visual antes de renderizar novos resultados
                     ['resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 'resultado-toco', 'resultado-tres-quartos', 'resultado-cf-numerico', 'resultado-rota1', 'resultado-bloqueados'].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
@@ -819,6 +896,20 @@
                     }, {});
                     displayGerais(resultadoGeralDiv, gruposGerais);
 
+                    // Coleta de estatísticas e exibição do resumo
+                    const stats = {
+                        totalPlanilha: planilhaData.length,
+                        pesoTotal: planilhaData.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0),
+                        pedidosEspeciais: pedidosEspeciaisProcessados.size,
+                        pedidosBloqueados: pedidosManualmenteBloqueados.length,
+                        pedidosToco: tocoPedidoIds.size,
+                        pedidos34Auto: tresQuartosLoads.reduce((sum, load) => sum + load.pedidos.length, 0),
+                        pedidosFiltrados: pedidosComCFNumericoIsolado.length + rota1SemCarga.length,
+                        pedidosDisponiveis: pedidosGeraisAtuais.length,
+                        pesoDisponivel: pedidosGeraisAtuais.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0),
+                    };
+                    displayResumoGeral(stats);
+                    
                     statusDiv.innerHTML = `<p class="text-success">Processamento concluído com sucesso!</p>`;
                 } catch (error) { 
                     statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; 
@@ -863,7 +954,7 @@
             table += '</tr></thead><tbody>';
             pedidos.forEach(p => {
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
-                table += `<tr id="pedido-${p.Num_Pedido}" class="${isPriorityRow ? 'table-primary' : ''}">`;
+                table += `<tr id="pedido-${p.Num_Pedido}" class="${isPriorityRow ? 'table-primary' : ''}" data-cliente-id="${p.Cliente}" onclick="highlightClientRows(event)">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') {
@@ -968,9 +1059,22 @@
         function displayTresQuartos(div, loads) {
             if (loads.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga 3/4 formada automaticamente.</div>'; return; }
             let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
+            
+            const maxKg = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
+
             loads.forEach(load => {
                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                html += `<div class="card mb-3"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
+                const pesoPercentual = (load.totalKg / maxKg) * 100;
+                let progressColor = 'bg-success';
+                if (pesoPercentual > 95) progressColor = 'bg-danger';
+                else if (pesoPercentual > 75) progressColor = 'bg-warning';
+
+                const progressBar = `
+                    <div class="progress mt-2" role="progressbar" style="height: 10px;">
+                      <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
+                    </div>`;
+
+                html += `<div class="card mb-3"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${progressBar}${createTable(load.pedidos)}</div></div>`;
             });
             div.innerHTML = html;
         }
@@ -1460,7 +1564,7 @@
                 printContainerEl.innerHTML = `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>`;
             }
 
-            const vInfo = { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' };
+            const vInfo = { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi bi-truck-front-fill' };
             let newLoadsHtml = '';
             newLoads.forEach((load, index) => {
                 load.numero = initialLoadCount + index + 1;
@@ -1504,12 +1608,30 @@
                 if (clienteA < clienteB) return -1; if (clienteA > clienteB) return 1;
                 return pedidoA.localeCompare(pedidoB);
             });
+
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = (load.totalCubagem || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">CARGA COM PRIORIDADE</span>' : '';
             const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
-            return `<div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}"><div class="card-header ${vInfo.colorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${createTable(load.pedidos)}</div></div>`;
+
+            // Lógica da Barra de Progresso
+            let maxKg = 0;
+            if(vehicleType === 'fiorino') maxKg = parseFloat(document.getElementById('fiorinoHardMaxCapacity').value);
+            else if(vehicleType === 'van') maxKg = parseFloat(document.getElementById('vanHardMaxCapacity').value);
+            else if(vehicleType === 'tresQuartos') maxKg = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
+
+            const pesoPercentual = maxKg > 0 ? (load.totalKg / maxKg) * 100 : 0;
+            let progressColor = 'bg-success';
+            if (pesoPercentual > 95) progressColor = 'bg-danger';
+            else if (pesoPercentual > 75) progressColor = 'bg-warning';
+
+            const progressBar = `
+                <div class="progress mt-2" role="progressbar" aria-label="Ocupação do veículo" aria-valuenow="${pesoPercentual}" aria-valuemin="0" aria-valuemax="100" style="height: 10px;">
+                  <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
+                </div>`;
+
+            return `<div class="card mb-3 ${isPriorityLoad ? 'border-primary' : ''}"><div class="card-header ${vInfo.colorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${progressBar}${createTable(load.pedidos)}</div></div>`;
         }
         
         function separarCargasFiorino(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'fiorino', buttonElement); }
@@ -1518,8 +1640,10 @@
 
         function displayToco(div, grupos) {
             if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga "Toco" encontrada.</div>'; return; }
-            const MAX_KG_TOCO = parseFloat(document.getElementById('tocoMaxCapacity').value);
+            
+            const maxKg = parseFloat(document.getElementById('tocoMaxCapacity').value);
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionToco">';
+            
             Object.keys(grupos).sort().forEach((cf, index) => {
                 const grupo = grupos[cf]; 
                 const pedidos = grupo.pedidos;
@@ -1530,11 +1654,18 @@
                     return pedidoA.localeCompare(pedidoB);
                 });
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const overWeight = grupo.totalKg > MAX_KG_TOCO;
+                const overWeight = grupo.totalKg > maxKg;
                 const weightBadge = overWeight
                     ? `<span class="badge bg-danger ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>${totalKgFormatado} kg (ACIMA DO PESO!)</span>`
                     : `<span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>`;
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} pedidos</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir esta Carga Toco</button>${createTable(pedidos)}</div></div></div>`;
+                
+                const pesoPercentual = (grupo.totalKg / maxKg) * 100;
+                let progressColor = 'bg-success';
+                if (pesoPercentual > 95) progressColor = 'bg-danger';
+                else if (pesoPercentual > 75) progressColor = 'bg-warning';
+                const progressBar = `<div class="progress mb-3" role="progressbar" style="height: 10px;"><div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div></div>`;
+
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} pedidos</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir esta Carga Toco</button>${progressBar}${createTable(pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -1708,7 +1839,68 @@
                 printWindow.close(); 
             }, 500);
         }
-        // --- FIM DAS FUNÇÕES DE CARGA ESPECIAL ---
+        
+        function highlightClientRows(event) {
+            const clickedRow = event.target.closest('tr');
+            if (!clickedRow || !clickedRow.dataset.clienteId) return;
+
+            const clienteId = clickedRow.dataset.clienteId;
+            const isAlreadyHighlighted = clickedRow.classList.contains('client-highlight');
+
+            // Limpa todos os destaques existentes
+            document.querySelectorAll('tr.client-highlight').forEach(row => {
+                row.classList.remove('client-highlight');
+            });
+
+            // Se a linha clicada não estava destacada, destaca todas do mesmo cliente
+            if (!isAlreadyHighlighted) {
+                document.querySelectorAll(`tr[data-cliente-id='${clienteId}']`).forEach(row => {
+                    row.classList.add('client-highlight');
+                });
+            }
+        }
+
+        function displayResumoGeral(stats) {
+            const container = document.getElementById('card-resumo-geral-container');
+            const nf = (num) => num.toLocaleString('pt-BR');
+            const kf = (num) => num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const html = `
+            <div class="card">
+                <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo do Processamento</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="text-white-50">TOTAIS DA PLANILHA</h6>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Pedidos no Arquivo <span class="badge bg-primary rounded-pill">${nf(stats.totalPlanilha)}</span></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Peso Total no Arquivo <span class="badge bg-primary rounded-pill">${kf(stats.pesoTotal)} kg</span></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-white-50">PEDIDOS PRÉ-PROCESSADOS</h6>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Carga Especial<span class="badge bg-info rounded-pill">${nf(stats.pedidosEspeciais)}</span></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Cargas Toco (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosToco)}</span></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Cargas 3/4 Auto (pedidos)<span class="badge bg-warning rounded-pill">${nf(stats.pedidos34Auto)}</span></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-white-50">DISPONÍVEL PARA MONTAGEM</h6>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Pedidos Filtrados (CF Num./Rota 1)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosFiltrados)}</span></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-success"><strong>Pedidos Disponíveis</strong><span class="badge bg-success rounded-pill"><strong>${nf(stats.pedidosDisponiveis)}</strong></span></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-success"><strong>Peso Disponível</strong><span class="badge bg-success rounded-pill"><strong>${kf(stats.pesoDisponivel)} kg</strong></span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }
+
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
