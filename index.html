@@ -1705,6 +1705,28 @@
                 `;
             }
         }
+        function imprimirCargaEspecial() {
+            const resultadoDiv = document.getElementById('resultado-carga-especial');
+            const cardToPrint = resultadoDiv.querySelector('.card');
+
+            if (!cardToPrint) {
+                alert("Nenhuma Carga Especial para imprimir.");
+                return;
+            }
+
+            const title = 'Carga Especial - Batista & Izepe';
+            const printWindow = createPrintWindow(title);
+            
+            let contentToPrint = `<h3>${title}</h3>` + cardToPrint.outerHTML;
+            
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { 
+                printWindow.print(); 
+                printWindow.close(); 
+            }, 500);
+        }
         // <-- FIM DA NOVA FUNÇÃO ADICIONADA -->
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
