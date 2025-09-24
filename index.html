@@ -608,7 +608,7 @@
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
                                        <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                                         buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -1004,7 +1004,7 @@
                 }
             }
 
-            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
+            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
             
             // AGRUPA PEDIDOS POR CLIENTE - Ponto crucial da regra de negócio
@@ -1055,33 +1055,22 @@
                     const newCubage = load.totalCubagem + item.totalCubagem;
                     
                     // ### NOVA REGRA DE AGENDAMENTO ###
-                    // Verifica se a carga atual já tem um pedido agendado
                     const loadHasScheduledOrder = load.pedidos.some(p => p.Agendamento === 'Sim');
-                    // Verifica se o item (grupo de pedidos do cliente) que estamos tentando adicionar tem um pedido agendado
                     const itemHasScheduledOrder = item.pedidos.some(p => p.Agendamento === 'Sim');
-
-                    // Se AMBOS tiverem agendamento, não podemos misturá-los.
-                    // (Lembre-se: `item` contém todos os pedidos de um ÚNICO cliente, então esta regra permite múltiplos pedidos agendados do MESMO cliente na mesma carga, mas não de clientes DIFERENTES).
                     if (loadHasScheduledOrder && itemHasScheduledOrder) {
-                        continue; // Pula para a próxima carga, esta combinação é inválida.
+                        continue; 
                     }
                     // ### FIM DA NOVA REGRA ###
 
-                    let canPlace = true;
-                    if (!ignoreSpecialClients && item.isSpecial) {
-                        const specialClientName = item.pedidos[0].Nome_Cliente.toUpperCase().trim();
-                        const specialClientCodesInLoad = new Set(
-                            load.pedidos
-                                .filter(p => p.Nome_Cliente && p.Nome_Cliente.toUpperCase().trim() === specialClientName)
-                                .map(p => p.Cliente)
-                        );
-                        item.pedidos.forEach(p => specialClientCodesInLoad.add(p.Cliente));
-                        if (specialClientCodesInLoad.size > 2) {
-                            canPlace = false;
-                        }
+                    // ### NOVA REGRA DE CLIENTE ESPECIAL (MAIS RESTRITIVA) ###
+                    // Uma carga só pode ter UM grupo de cliente especial (uma única loja).
+                    const itemIsSpecial = item.isSpecial;
+                    const loadAlreadyHasSpecial = load.pedidos.some(p => isSpecialClient(p));
+                    if (itemIsSpecial && loadAlreadyHasSpecial) {
+                        continue; // Carga já tem um cliente especial, não pode adicionar outro.
                     }
 
-                    if (canPlace && newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
+                    if (newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
                         const remainingCapacity = (targetVehicleCount ? SOFT_MAX_KG : HARD_MAX_KG) - newKg;
                         if (bestFit === null || remainingCapacity < bestFit.remainingCapacity) {
                             bestFit = { load: load, remainingCapacity: remainingCapacity };
@@ -1132,7 +1121,7 @@
             const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : SOFT_MAX_KG;
             const HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : SOFT_MAX_CUBAGE;
             
-            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO'];
+            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
             
             const clientGroupsMap = pedidos.reduce((acc, pedido) => {
@@ -1191,18 +1180,13 @@
                     // ### FIM DA NOVA REGRA ###
 
                     let canPlace = true;
-                      if (!ignoreSpecialClients && smallItem.isSpecial) {
-                        const specialClientName = smallItem.pedidos[0].Nome_Cliente.toUpperCase().trim();
-                        const specialClientCodesInLoad = new Set(
-                            currentLoad.pedidos
-                                .filter(p => p.Nome_Cliente && p.Nome_Cliente.toUpperCase().trim() === specialClientName)
-                                .map(p => p.Cliente)
-                        );
-                        smallItem.pedidos.forEach(p => specialClientCodesInLoad.add(p.Cliente));
-                        if (specialClientCodesInLoad.size > 2) {
-                            canPlace = false;
-                        }
-                      }
+                    // ### NOVA REGRA DE CLIENTE ESPECIAL (MAIS RESTRITIVA) ###
+                    // Uma carga só pode ter UM grupo de cliente especial (uma única loja).
+                    const smallItemIsSpecial = smallItem.isSpecial;
+                    const loadAlreadyHasSpecial = currentLoad.pedidos.some(p => isSpecialClient(p));
+                    if (smallItemIsSpecial && loadAlreadyHasSpecial) {
+                       canPlace = false;
+                    }
 
                     if (canPlace && newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
                         currentLoad.pedidos.push(...smallItem.pedidos);
@@ -1367,15 +1351,15 @@
                 const vInfo = vehicleInfo[vehicleType];
                 let summaryTitle = reoptimizing ? `Resultado Reotimizado para ${targetVehicleCount} Veículos` : `Resultados para <strong>${title}</strong>`;
                 let summaryHeader = `<div class="d-flex justify-content-between align-items-center mb-3">
-                                                 <h4 class="mb-0 h5">${summaryTitle}: 
-                                                     <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
-                                                     <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
-                                                     <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
-                                                 </h4>
-                                                 <div id="print-button-container-${divId}" class="d-inline-block">
-                                                     ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
-                                                 </div>
-                                             </div>`;
+                                               <h4 class="mb-0 h5">${summaryTitle}: 
+                                                   <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
+                                                   <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
+                                                   <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
+                                               </h4>
+                                               <div id="print-button-container-${divId}" class="d-inline-block">
+                                                   ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                               </div>
+                                           </div>`;
                 html += summaryHeader;
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada.</div>`; }
                 primaryLoads.forEach(load => {
@@ -1414,12 +1398,12 @@
                     }
                     
                     html += `<div id="leftovers-card-${divId}">
-                                 <h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                 <div class="card mb-3">
-                                     <div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}</div>
-                                     <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
-                                 </div>
-                             </div>`;
+                                         <h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                         <div class="card mb-3">
+                                             <div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}</div>
+                                             <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
+                                         </div>
+                                     </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
