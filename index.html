@@ -251,6 +251,21 @@
             </div>
         </div>
 
+        <div class="card p-3 mb-4 no-print">
+            <h2 class="card-title h5"><i class="bi bi-star-fill me-2"></i>Montagem de Carga Especial (Batista & Izepe)</h2>
+            <p class="card-subtitle mb-3 text-body-secondary small">Cole os números dos pedidos que devem ser agrupados em uma única carga. A ferramenta tentará alocá-los no menor veículo possível.</p>
+            <div class="row g-3">
+                <div class="col-md-9">
+                    <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
+                    <textarea class="form-control" id="pedidosEspeciaisInput" rows="4" placeholder="Cole os números dos pedidos aqui..."></textarea>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-info w-100" type="button" onclick="montarCargaEspecial()"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
+                </div>
+            </div>
+            <div id="resultado-carga-especial" class="mt-3">
+                </div>
+        </div>
         <div class="row">
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100 border-danger">
@@ -410,6 +425,7 @@
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
         let currentAllOrdersForReoptimization = [];
+        let pedidosEspeciaisProcessados = new Set(); // <-- VARIÁVEL ADICIONADA
 
         const defaultConfigs = {
             fiorinoMinCapacity: 300, fiorinoMaxCapacity: 500, fiorinoCubage: 1.5, fiorinoHardMaxCapacity: 560, fiorinoHardCubage: 1.7,
@@ -593,12 +609,15 @@
             if (!pedidoEncontrado) {
                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                  if (originalPedido) {
-                      pedidoEncontrado = originalPedido;
-                       if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                           local = 'Bloqueado Manualmente por você.';
-                       } else {
-                           local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
-                       }
+                        pedidoEncontrado = originalPedido;
+                        if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                            local = 'Bloqueado Manualmente por você.';
+                        } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                            local = 'Alocado na Carga Especial (Batista & Izepe).';
+                        }
+                        else {
+                            local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
+                        }
                  }
                }
             if (pedidoEncontrado) {
@@ -674,6 +693,7 @@
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
             currentAllOrdersForReoptimization = [];
+            pedidosEspeciaisProcessados.clear(); // <-- MODIFICAÇÃO ADICIONADA
         }
 
         function processar() {
@@ -707,7 +727,9 @@
                         }
                     });
                     displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueados);
-
+                    
+                    // Remove os pedidos já alocados na carga especial <-- MODIFICAÇÃO ADICIONADA
+                    pedidosDisponiveis = pedidosDisponiveis.filter(p => !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)));
 
                     const col5ValuesForRota1 = ['TBL 08', 'TBL TODESCHINI'];
                     rota1SemCarga = pedidosDisponiveis.filter(p => {
@@ -1398,12 +1420,12 @@
                     }
                     
                     html += `<div id="leftovers-card-${divId}">
-                                         <h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                         <div class="card mb-3">
-                                             <div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}</div>
-                                             <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
-                                         </div>
-                                     </div>`;
+                                                 <h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                                 <div class="card mb-3">
+                                                      <div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}</div>
+                                                      <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
+                                                 </div>
+                                           </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
@@ -1478,15 +1500,15 @@
                 const totalKgUnassigned = finalLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra Final')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
                 finalContentHtml += `<div id="leftovers-card-${divId}">
-                                                 <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                                 <div class="card mb-3">
-                                                     <div class="card-header bg-danger text-white d-flex align-items-center">
-                                                         Detalhes da Sobra Final
-                                                         ${printButtonHtml}
-                                                     </div>
-                                                     <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
-                                                 </div>
-                                             </div>`;
+                                                   <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                                   <div class="card mb-3">
+                                                       <div class="card-header bg-danger text-white d-flex align-items-center">
+                                                           Detalhes da Sobra Final
+                                                           ${printButtonHtml}
+                                                       </div>
+                                                       <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'])}</div>
+                                                   </div>
+                                               </div>`;
             }
             
             resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${finalContentHtml}</div>`);
@@ -1589,6 +1611,101 @@
             printWindow.focus(); 
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
+
+        // <-- INÍCIO DA NOVA FUNÇÃO ADICIONADA -->
+        function montarCargaEspecial() {
+            const resultadoDiv = document.getElementById('resultado-carga-especial');
+            const input = document.getElementById('pedidosEspeciaisInput');
+            resultadoDiv.innerHTML = '';
+
+            if (planilhaData.length === 0) {
+                resultadoDiv.innerHTML = '<div class="alert alert-warning">Por favor, carregue a planilha primeiro.</div>';
+                return;
+            }
+
+            const numerosPedidos = input.value.split('\n')
+                .map(n => n.trim())
+                .filter(n => n !== '');
+
+            if (numerosPedidos.length === 0) {
+                resultadoDiv.innerHTML = '<div class="alert alert-warning">Nenhum número de pedido foi inserido.</div>';
+                return;
+            }
+
+            const pedidosSelecionados = [];
+            const pedidosNaoEncontrados = [];
+
+            numerosPedidos.forEach(num => {
+                const pedidoEncontrado = planilhaData.find(p => String(p.Num_Pedido) === num);
+                if (pedidoEncontrado) {
+                    pedidosSelecionados.push(pedidoEncontrado);
+                } else {
+                    pedidosNaoEncontrados.push(num);
+                }
+            });
+
+            if (pedidosNaoEncontrados.length > 0) {
+                resultadoDiv.innerHTML = `<div class="alert alert-danger">Os seguintes pedidos não foram encontrados na planilha: ${pedidosNaoEncontrados.join(', ')}.</div>`;
+                return;
+            }
+
+            const totalKg = pedidosSelecionados.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+            const totalCubagem = pedidosSelecionados.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+
+            const veiculos = [
+                { tipo: 'fiorino', nome: 'Fiorino', maxKg: parseFloat(document.getElementById('fiorinoHardMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('fiorinoHardCubage').value) },
+                { tipo: 'van', nome: 'Van', maxKg: parseFloat(document.getElementById('vanHardMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('vanHardCubage').value) },
+                { tipo: 'tresQuartos', nome: '3/4', maxKg: parseFloat(document.getElementById('tresQuartosMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('tresQuartosCubage').value) },
+            ];
+
+            let veiculoEscolhido = null;
+
+            for (const veiculo of veiculos) {
+                if (totalKg <= veiculo.maxKg && totalCubagem <= veiculo.maxCubagem) {
+                    veiculoEscolhido = veiculo;
+                    break;
+                }
+            }
+            
+            if (veiculoEscolhido) {
+                // Sucesso! Montar o card de resultado
+                pedidosEspeciaisProcessados.clear(); // Limpa antes de adicionar os novos
+                pedidosSelecionados.forEach(p => pedidosEspeciaisProcessados.add(String(p.Num_Pedido)));
+
+                const load = {
+                    pedidos: pedidosSelecionados,
+                    totalKg: totalKg,
+                    totalCubagem: totalCubagem,
+                    numero: 'Especial'
+                };
+                
+                const vehicleInfo = {
+                    fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
+                    van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
+                    tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
+                };
+
+                resultadoDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>Carga Especial montada com sucesso!</strong> Estes ${pedidosSelecionados.length} pedidos foram agrupados e cabem em um(a) <strong>${veiculoEscolhido.nome}</strong>. Eles serão removidos da análise geral quando você clicar em "Processar Cargas".
+                    </div>
+                    ${renderLoadCard(load, veiculoEscolhido.tipo, vehicleInfo[veiculoEscolhido.tipo])}
+                `;
+            } else {
+                // Falha
+                pedidosEspeciaisProcessados.clear();
+                resultadoDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Não foi possível montar a carga.</strong> O total dos pedidos selecionados excede a capacidade de todos os veículos disponíveis.
+                        <ul>
+                            <li><strong>Peso Total:</strong> ${totalKg.toFixed(2)} kg</li>
+                            <li><strong>Cubagem Total:</strong> ${totalCubagem.toFixed(2)} m³</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+        // <-- FIM DA NOVA FUNÇÃO ADICIONADA -->
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
