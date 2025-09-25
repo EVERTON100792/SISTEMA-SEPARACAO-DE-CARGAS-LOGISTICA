@@ -453,7 +453,7 @@
         let pedidosComCFNumericoIsolado = [];
         let pedidosPrioritarios = [];
         let pedidosBloqueados = new Set();
-        let pedidosEspeciaisProcessados = new Set(); // <<< CORREÇÃO: Variável adicionada
+        let pedidosEspeciaisProcessados = new Set();
         let rota1SemCarga = [];
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
@@ -631,7 +631,6 @@
                     const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                     
                     let headerRowIndex = -1, headers = [];
-                    // <<< CORREÇÃO: Lógica de detecção de cabeçalho aprimorada
                     for (let i = 0; i < rawData.length; i++) {
                         const row = rawData[i];
                         if (row && row.some(cell => String(cell).trim().toLowerCase() === 'cod_rota')) {
@@ -1204,7 +1203,10 @@
             }, 500);
         }
 
-        function createInitialSolution(pedidos, vehicleType, sortStrategy = 'descending', targetVehicleCount = null, minKgOverride = null, ignoreSpecialClients = false) {
+        // *** CORREÇÃO INICIA AQUI ***
+        // A função createInitialSolution foi modificada para não desagrupar mais os clientes
+        // que sobram, garantindo que eles permaneçam como um bloco.
+        function createInitialSolution(itemsParaEmpacotar, vehicleType, sortStrategy = 'descending', minKgOverride = null) {
             const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
             const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
@@ -1218,32 +1220,11 @@
             }
             
             let loads = [];
-            if (targetVehicleCount) {
-                for (let i = 0; i < targetVehicleCount; i++) {
-                    loads.push({ pedidos: [], totalKg: 0, totalCubagem: 0 });
-                }
-            }
-
+            
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
             
-            const clientGroupsMap = pedidos.reduce((acc, pedido) => {
-                const clienteId = normalizeClientId(pedido.Cliente);
-                if (!acc[clienteId]) {
-                    acc[clienteId] = { 
-                        pedidos: [], 
-                        totalKg: 0, 
-                        totalCubagem: 0, 
-                        isSpecial: isSpecialClient(pedido) 
-                    };
-                }
-                acc[clienteId].pedidos.push(pedido);
-                acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
-                return acc;
-            }, {});
-
-            let packableItems = Object.values(clientGroupsMap);
+            let packableItems = [...itemsParaEmpacotar];
             
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
@@ -1261,7 +1242,6 @@
                     leftoverItems.push(item); return;
                 }
                 
-                let placed = false;
                 let bestFit = null;
 
                 for (const load of loads) {
@@ -1270,18 +1250,14 @@
                     
                     const loadHasScheduledOrder = load.pedidos.some(p => p.Agendamento === 'Sim');
                     const itemHasScheduledOrder = item.pedidos.some(p => p.Agendamento === 'Sim');
-                    if (loadHasScheduledOrder && itemHasScheduledOrder) {
-                        continue; 
-                    }
+                    if (loadHasScheduledOrder && itemHasScheduledOrder) continue;
 
                     const itemIsSpecial = item.isSpecial;
                     const loadAlreadyHasSpecial = load.pedidos.some(p => isSpecialClient(p));
-                    if (itemIsSpecial && loadAlreadyHasSpecial) {
-                        continue;
-                    }
+                    if (itemIsSpecial && loadAlreadyHasSpecial) continue;
 
                     if (newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
-                        const remainingCapacity = (targetVehicleCount ? SOFT_MAX_KG : HARD_MAX_KG) - newKg;
+                        const remainingCapacity = HARD_MAX_KG - newKg;
                         if (bestFit === null || remainingCapacity < bestFit.remainingCapacity) {
                             bestFit = { load: load, remainingCapacity: remainingCapacity };
                         }
@@ -1293,23 +1269,18 @@
                     bestFit.load.totalKg += item.totalKg;
                     bestFit.load.totalCubagem += item.totalCubagem;
                     bestFit.load.usedHardLimit = bestFit.load.totalKg > SOFT_MAX_KG || bestFit.load.totalCubagem > SOFT_MAX_CUBAGE;
-                    placed = true;
-                }
-
-                if (!placed && !targetVehicleCount) {
-                    loads.push({
+                } else {
+                     loads.push({
                         pedidos: [...item.pedidos],
                         totalKg: item.totalKg,
                         totalCubagem: item.totalCubagem,
                         usedHardLimit: (item.totalKg > SOFT_MAX_KG || item.totalCubagem > SOFT_MAX_CUBAGE)
                     });
-                } else if (!placed && targetVehicleCount) {
-                    leftoverItems.push(item);
                 }
             });
             
             let finalLoads = [];
-            let unplacedFromMinRule = [];
+            let unplacedGroups = [];
             loads.forEach(load => {
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
                 const allowPriorityOverride = vehicleType !== 'tresQuartos';
@@ -1317,188 +1288,32 @@
                 if (load.pedidos.length > 0 && (load.totalKg >= MIN_KG || (hasPriority && allowPriorityOverride))) {
                     finalLoads.push(load);
                 } else {
-                    unplacedFromMinRule.push(...load.pedidos);
-                }
-            });
-            const leftovers = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
-            return { loads: finalLoads, leftovers };
-        }
-        
-        function createSolutionLargeSmall(pedidos, vehicleType, minKgOverride = null, ignoreSpecialClients = false) {
-            const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
-            const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
-            const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
-            let HARD_MAX_KG, HARD_MAX_CUBAGE;
-            if (vehicleType === 'tresQuartos') {
-                HARD_MAX_KG = SOFT_MAX_KG;
-                HARD_MAX_CUBAGE = SOFT_MAX_CUBAGE;
-            } else {
-                HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : SOFT_MAX_KG;
-                HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : SOFT_MAX_CUBAGE;
-            }
-            
-            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
-            const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
-            
-            const clientGroupsMap = pedidos.reduce((acc, pedido) => {
-                const clienteId = normalizeClientId(pedido.Cliente);
-                if (!acc[clienteId]) {
-                    acc[clienteId] = { 
-                        pedidos: [], 
-                        totalKg: 0, 
-                        totalCubagem: 0, 
-                        isSpecial: isSpecialClient(pedido) 
-                    };
-                }
-                acc[clienteId].pedidos.push(pedido);
-                acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
-                return acc;
-            }, {});
-
-            let packableItems = Object.values(clientGroupsMap);
-            
-            const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
-            const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
-            
-            priorityItems.sort((a, b) => b.totalKg - a.totalKg);
-            regularItems.sort((a, b) => b.totalKg - a.totalKg);
-
-            packableItems = [...priorityItems, ...regularItems];
-            
-            let loads = [];
-            let usedItems = new Array(packableItems.length).fill(false);
-
-            for (let i = 0; i < packableItems.length; i++) {
-                if (usedItems[i]) continue;
-
-                const largeItem = packableItems[i];
-                if (largeItem.totalKg > HARD_MAX_KG || largeItem.totalCubagem > HARD_MAX_CUBAGE) {
-                    continue;
-                }
-
-                let currentLoad = { 
-                    pedidos: [...largeItem.pedidos], 
-                    totalKg: largeItem.totalKg, 
-                    totalCubagem: largeItem.totalCubagem
-                };
-                usedItems[i] = true;
-
-                for (let j = packableItems.length - 1; j > i; j--) {
-                    if (usedItems[j]) continue;
-
-                    const smallItem = packableItems[j];
-                    const newKg = currentLoad.totalKg + smallItem.totalKg;
-                    const newCubage = currentLoad.totalCubagem + smallItem.totalCubagem;
-
-                    const loadHasScheduledOrder = currentLoad.pedidos.some(p => p.Agendamento === 'Sim');
-                    const itemHasScheduledOrder = smallItem.pedidos.some(p => p.Agendamento === 'Sim');
-                    if (loadHasScheduledOrder && itemHasScheduledOrder) {
-                        continue; 
-                    }
-
-                    let canPlace = true;
-                    const smallItemIsSpecial = smallItem.isSpecial;
-                    const loadAlreadyHasSpecial = currentLoad.pedidos.some(p => isSpecialClient(p));
-                    if (smallItemIsSpecial && loadAlreadyHasSpecial) {
-                       canPlace = false;
-                    }
-
-                    if (canPlace && newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
-                        currentLoad.pedidos.push(...smallItem.pedidos);
-                        currentLoad.totalKg = newKg;
-                        currentLoad.totalCubagem = newCubage;
-                        usedItems[j] = true;
-                    }
-                }
-                currentLoad.usedHardLimit = currentLoad.totalKg > SOFT_MAX_KG || currentLoad.totalCubagem > SOFT_MAX_CUBAGE;
-                loads.push(currentLoad);
-            }
-
-            let finalLoads = [];
-            let unplacedFromMinRule = [];
-            loads.forEach(load => {
-                const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                const allowPriorityOverride = vehicleType !== 'tresQuartos';
-                if (load.pedidos.length > 0 && (load.totalKg >= MIN_KG || (hasPriority && allowPriorityOverride))) {
-                    finalLoads.push(load);
-                } else {
-                    unplacedFromMinRule.push(...load.pedidos);
-                }
-            });
-            
-            const leftovers = packableItems.filter((item, index) => !usedItems[index]).flatMap(item => item.pedidos).concat(unplacedFromMinRule);
-            return { loads: finalLoads, leftovers };
-        }
-        
-        function runAdvancedOptimization(pedidos, vehicleType, targetVehicleCount = null, minKgOverride = null) {
-            if (targetVehicleCount) {
-               return createInitialSolution(pedidos, vehicleType, 'descending', targetVehicleCount, minKgOverride);
-            }
-            
-            const initialResult1 = createInitialSolution(pedidos, vehicleType, 'descending', null, minKgOverride);
-            const initialResult2 = createInitialSolution(pedidos, vehicleType, 'ascending', null, minKgOverride);
-            const pedidosPorCubagemDesc = [...pedidos].sort((a, b) => (parseFloat(String(b.Cubagem).replace(',', '.')) || 0) - (parseFloat(String(a.Cubagem).replace(',', '.')) || 0));
-            const initialResult3 = createInitialSolution(pedidosPorCubagemDesc, vehicleType, 'descending', null, minKgOverride);
-            const pedidosPorCubagemAsc = [...pedidos].sort((a, b) => (parseFloat(String(a.Cubagem).replace(',', '.')) || 0) - (parseFloat(String(b.Cubagem).replace(',', '.')) || 0));
-            const initialResult4 = createInitialSolution(pedidosPorCubagemAsc, vehicleType, 'descending', null, minKgOverride);
-            const initialResult5 = createSolutionLargeSmall(pedidos, vehicleType, minKgOverride);
-
-            const allResults = [initialResult1, initialResult2, initialResult3, initialResult4, initialResult5].map(res => ({
-                result: res,
-                weight: res.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0)
-            })).sort((a, b) => a.weight - b.weight);
-
-            let currentState = allResults[0].result;
-            let bestCost = allResults[0].weight;
-            let bestState = JSON.parse(JSON.stringify(currentState));
-
-            if (bestCost === 0) return bestState;
-
-            let temperature = 1000.0; const coolingRate = 0.99; const absoluteTemperature = 1.0; const MAX_ITERATIONS = 5000;
-            for(let i = 0; i < MAX_ITERATIONS && temperature > absoluteTemperature; i++) {
-                let neighborState = JSON.parse(JSON.stringify(currentState));
-                if (Math.random() < 0.7 && neighborState.leftovers.length > 0) {
-                    const leftoverIndex = Math.floor(Math.random() * neighborState.leftovers.length);
-                    const orderToMove = neighborState.leftovers[leftoverIndex];
-                    if (neighborState.loads.length > 0) {
-                        const loadIndex = Math.floor(Math.random() * neighborState.loads.length);
-                        const tempLoadPedidos = [...neighborState.loads[loadIndex].pedidos, orderToMove];
-                        const tempSolution = createInitialSolution(tempLoadPedidos, vehicleType);
-                        if (tempSolution.leftovers.length === 0 && tempSolution.loads.length === 1) {
-                            neighborState.loads[loadIndex] = tempSolution.loads[0];
-                            neighborState.leftovers.splice(leftoverIndex, 1);
+                    // Se a carga não atingiu o mínimo, seus pedidos (agrupados) voltam para a sobra
+                    const clientGroupsInFailedLoad = load.pedidos.reduce((acc, pedido) => {
+                        const clienteId = normalizeClientId(pedido.Cliente);
+                        if (!acc[clienteId]) {
+                            acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
                         }
-                    }
-                } else if (neighborState.loads.length > 1) {
-                    const idx1 = Math.floor(Math.random() * neighborState.loads.length); let idx2 = Math.floor(Math.random() * neighborState.loads.length);
-                    if (idx1 === idx2) continue;
-                    const load1 = neighborState.loads[idx1]; const load2 = neighborState.loads[idx2];
-                    if (load1.pedidos.length === 0 || load2.pedidos.length === 0) continue;
-                    const order1Index = Math.floor(Math.random() * load1.pedidos.length); const order2Index = Math.floor(Math.random() * load2.pedidos.length);
-                    const newLoad1Pedidos = [...load1.pedidos]; const newLoad2Pedidos = [...load2.pedidos];
-                    [newLoad1Pedidos[order1Index], newLoad2Pedidos[order2Index]] = [newLoad2Pedidos[order2Index], newLoad1Pedidos[order1Index]];
-                    const tempSolution1 = createInitialSolution(newLoad1Pedidos, vehicleType);
-                    const tempSolution2 = createInitialSolution(newLoad2Pedidos, vehicleType);
-                    if (tempSolution1.leftovers.length === 0 && tempSolution2.leftovers.length === 0) {
-                        neighborState.loads[idx1] = tempSolution1.loads[0];
-                        neighborState.loads[idx2] = tempSolution2.loads[0];
-                    }
+                        acc[clienteId].pedidos.push(pedido);
+                        acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                        acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+                        return acc;
+                    }, {});
+                    unplacedGroups.push(...Object.values(clientGroupsInFailedLoad));
                 }
-                const currentCost = currentState.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                const neighborCost = neighborState.leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                const deltaCost = neighborCost - currentCost;
-                if (deltaCost < 0 || Math.exp(-deltaCost / temperature) > Math.random()) {
-                    currentState = neighborState;
-                    if (neighborCost < bestCost) {
-                        bestState = neighborState; bestCost = neighborCost;
-                    }
-                }
-                temperature *= coolingRate;
-            }
-            return bestState;
+            });
+            
+            // Retorna os grupos que sobraram sem desmontá-los
+            const leftovers = [...leftoverItems, ...unplacedGroups];
+            return { loads: finalLoads, leftovers };
+        }
+
+        function runAdvancedOptimization(packableGroups, vehicleType, minKgOverride = null) {
+            const result = createInitialSolution(packableGroups, vehicleType, 'descending', minKgOverride);
+            return result;
         }
         
+        // A função principal foi ajustada para agrupar os pedidos ANTES e manter os grupos intactos
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Otimizando e montando cargas...</span></div>';
@@ -1528,33 +1343,52 @@
                 const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
                 let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
 
-                let primaryResult = runAdvancedOptimization(pedidosRota, vehicleType);
+                // *** INÍCIO DA LÓGICA CORRIGIDA ***
+                const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
+                const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
+
+                // 1. Agrupar todos os pedidos por cliente ANTES de qualquer otimização
+                const clientGroupsMap = pedidosRota.reduce((acc, pedido) => {
+                    const clienteId = normalizeClientId(pedido.Cliente);
+                    if (!acc[clienteId]) {
+                        acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
+                    }
+                    acc[clienteId].pedidos.push(pedido);
+                    acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                    acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+                    return acc;
+                }, {});
+                const packableGroups = Object.values(clientGroupsMap);
+
+                // 2. Executar otimização primária com os GRUPOS
+                let primaryResult = runAdvancedOptimization(packableGroups, vehicleType);
                 let primaryLoads = primaryResult.loads;
-                let currentLeftovers = primaryResult.leftovers;
+                let leftoverGroups = primaryResult.leftovers; // Sobras são GRUPOS, não pedidos individuais
+                
                 let secondaryLoads = [];
                 let secondaryVehicleType = '';
 
-                const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                const totalKgUnassigned = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
                 const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
                 const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
 
-                if (vehicleType === 'fiorino' && currentLeftovers.length > 0) {
-                    if (totalKgUnassigned >= tresQuartosMin) {
-                        secondaryVehicleType = 'tresQuartos';
-                    } else if (totalKgUnassigned >= vanMin) {
-                        secondaryVehicleType = 'van';
-                    }
-                } else if (vehicleType === 'van' && currentLeftovers.length > 0) {
-                    if (totalKgUnassigned >= tresQuartosMin) {
-                        secondaryVehicleType = 'tresQuartos';
-                    }
+                if (vehicleType === 'fiorino' && leftoverGroups.length > 0) {
+                    if (totalKgUnassigned >= tresQuartosMin) secondaryVehicleType = 'tresQuartos';
+                    else if (totalKgUnassigned >= vanMin) secondaryVehicleType = 'van';
+                } else if (vehicleType === 'van' && leftoverGroups.length > 0) {
+                    if (totalKgUnassigned >= tresQuartosMin) secondaryVehicleType = 'tresQuartos';
                 }
 
+                // 3. Se houver sobras e um veículo secundário, otimizar os GRUPOS restantes
                 if (secondaryVehicleType) {
-                    let secondaryResult = runAdvancedOptimization(currentLeftovers, secondaryVehicleType);
+                    let secondaryResult = runAdvancedOptimization(leftoverGroups, secondaryVehicleType);
                     secondaryLoads = secondaryResult.loads;
-                    currentLeftovers = secondaryResult.leftovers;
+                    leftoverGroups = secondaryResult.leftovers; // As sobras continuam sendo GRUPOS
                 }
+
+                // 4. Desagrupar as sobras APENAS para exibição final
+                currentLeftoversForPrinting = leftoverGroups.flatMap(group => group.pedidos);
+                // *** FIM DA LÓGICA CORRIGIDA ***
 
                 primaryLoads.forEach((load, index) => {
                     load.numero = index + 1;
@@ -1571,8 +1405,6 @@
                     load.vehicleType = secondaryVehicleType;
                     activeLoads[loadId] = load;
                 });
-
-                currentLeftoversForPrinting = [...currentLeftovers];
 
                 const vehicleInfo = {
                     fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
@@ -1602,8 +1434,8 @@
                     });
                 }
 
-                if (currentLeftovers.length > 0) {
-                    const finalLeftoverKg = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                if (currentLeftoversForPrinting.length > 0) {
+                    const finalLeftoverKg = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                     const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
                     html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
                                  <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
@@ -1612,7 +1444,7 @@
                                          Pedidos Restantes
                                          ${printButtonHtml}
                                      </div>
-                                     <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                     <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                                  </div>
                                </div>`;
                 }
