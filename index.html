@@ -429,16 +429,15 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
-        // --- INÍCIO: ALTERAÇÃO SUPABASE ---
+        // --- INÍCIO: ALTERAÇÃO SUPABASE (VERSÃO CORRIGIDA) ---
         // 1. Configure suas credenciais do Supabase aqui.
-        const SUPABASE_URL = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13ZnNpdHZvc2h3aXBtdmdjZG1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTY3OTIsImV4cCI6MjA3NDMzMjc5Mn0.DvXQ_HMMnJZyQh17C6N426r1X9AeYjIMpXVbTRspFq0';
-        const SUPABASE_ANON_KEY = 'https://mwfsitvoshwipmvgcdmc.supabase.co';
+        const SUPABASE_URL = 'https://mwfsitvoshwipmvgcdmc.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13ZnNpdHZvc2h3aXBtdmdjZG1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTY3OTIsImV4cCI6MjA3NDMzMjc5Mn0.DvXQ_HMMnJZyQh17C6N426r1X9AeYjIMpXVbTRspFq0';
 
         // 2. Inicialize o cliente Supabase.
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // 3. Defina um ID único para a linha de configuração (pode ser um user_id no futuro).
-        const CONFIG_ID = 'default_config';
+        // CORREÇÃO: Renomeado o cliente para 'supabaseClient' para evitar conflito.
+        // O objeto global é 'supabase', a nossa instância será 'supabaseClient'.
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         // --- FIM: ALTERAÇÃO SUPABASE ---
 
         const agendamentoClientCodes = new Set([
@@ -465,7 +464,6 @@
         let currentLeftoversForPrinting = [];
         let currentAllOrdersForReoptimization = [];
         let pedidosEspeciaisProcessados = new Set();
-        // Novo estado para armazenar as cargas ativas para Drag-and-Drop
         let activeLoads = {};
 
 
@@ -475,8 +473,9 @@
             tresQuartosMinCapacity: 2300, tresQuartosMaxCapacity: 4100, tresQuartosCubage: 15.0,
             tocoMinCapacity: 5000, tocoMaxCapacity: 8500, tocoCubage: 30.0
         };
+        
+        const CONFIG_ID = 'default_config';
 
-        // --- INÍCIO: ALTERAÇÃO SUPABASE ---
         // Função para salvar as configurações no Supabase (agora é async)
         async function saveConfigurations() {
             const configStatus = document.getElementById('configStatus');
@@ -487,16 +486,15 @@
                 Object.keys(defaultConfigs).forEach(key => {
                     const element = document.getElementById(key);
                     if (element) {
-                        // Garante que os valores numéricos sejam salvos como números
                         configs[key] = parseFloat(element.value);
                     }
                 });
                 
-                // Adiciona o ID para a cláusula 'upsert'
                 configs.id = CONFIG_ID; 
 
-                const { error } = await supabase
-                    .from('configuracoes_veiculos') // Nome da sua tabela
+                // CORREÇÃO: Usando 'supabaseClient'
+                const { error } = await supabaseClient
+                    .from('configuracoes_veiculos')
                     .upsert(configs, { onConflict: 'id' });
 
                 if (error) {
@@ -517,13 +515,14 @@
             configStatus.innerHTML = '<p class="text-info">Carregando configurações do banco de dados...</p>';
 
             try {
-                const { data, error } = await supabase
-                    .from('configuracoes_veiculos') // Nome da sua tabela
+                // CORREÇÃO: Usando 'supabaseClient'
+                const { data, error } = await supabaseClient
+                    .from('configuracoes_veiculos')
                     .select('*')
                     .eq('id', CONFIG_ID)
                     .single();
 
-                if (error && error.code !== 'PGRST116') { // PGRST116 = "A consulta não retornou nenhuma linha"
+                if (error && error.code !== 'PGRST116') {
                      throw error;
                 }
 
@@ -540,23 +539,21 @@
 
             } catch (error) {
                  console.error("Erro ao carregar do Supabase:", error);
-                 configStatus.innerHTML = `<p class="text-warning">Não foi possível carregar as configurações salvas. Usando valores padrão.</p>`;
-                 // Carrega os padrões se falhar
+                 configStatus.innerHTML = `<p class="text-warning">Não foi possível carregar configurações. Usando valores padrão.</p>`;
                  Object.keys(defaultConfigs).forEach(key => {
                     const element = document.getElementById(key);
                     if (element) { element.value = defaultConfigs[key]; }
                 });
             }
         }
-        // --- FIM: ALTERAÇÃO SUPABASE ---
-
+        
         function resetFiorino() {
             document.getElementById('fiorinoMinCapacity').value = defaultConfigs.fiorinoMinCapacity;
             document.getElementById('fiorinoMaxCapacity').value = defaultConfigs.fiorinoMaxCapacity;
             document.getElementById('fiorinoCubage').value = defaultConfigs.fiorinoCubage;
             document.getElementById('fiorinoHardMaxCapacity').value = defaultConfigs.fiorinoHardMaxCapacity;
             document.getElementById('fiorinoHardCubage').value = defaultConfigs.fiorinoHardCubage;
-            saveConfigurations(); // Agora chama a função async
+            saveConfigurations();
         }
         function resetVan() {
             document.getElementById('vanMinCapacity').value = defaultConfigs.vanMinCapacity;
@@ -564,33 +561,38 @@
             document.getElementById('vanCubage').value = defaultConfigs.vanCubage;
             document.getElementById('vanHardMaxCapacity').value = defaultConfigs.vanHardMaxCapacity;
             document.getElementById('vanHardCubage').value = defaultConfigs.vanHardCubage;
-            saveConfigurations(); // Agora chama a função async
+            saveConfigurations();
         }
         function resetTresQuartos() {
             document.getElementById('tresQuartosMinCapacity').value = defaultConfigs.tresQuartosMinCapacity;
             document.getElementById('tresQuartosMaxCapacity').value = defaultConfigs.tresQuartosMaxCapacity;
             document.getElementById('tresQuartosCubage').value = defaultConfigs.tresQuartosCubage;
-            saveConfigurations(); // Agora chama a função async
+            saveConfigurations();
         }
         function resetToco() {
             document.getElementById('tocoMinCapacity').value = defaultConfigs.tocoMinCapacity;
             document.getElementById('tocoMaxCapacity').value = defaultConfigs.tocoMaxCapacity;
             document.getElementById('tocoCubage').value = defaultConfigs.tocoCubage;
-            saveConfigurations(); // Agora chama a função async
+            saveConfigurations();
         }
         function resetAll() {
             Object.keys(defaultConfigs).forEach(key => { 
                 const element = document.getElementById(key);
                 if(element) element.value = defaultConfigs[key]; 
             });
-            saveConfigurations(); // Agora chama a função async
+            saveConfigurations();
         }
-
-        // --- INÍCIO: ALTERAÇÃO SUPABASE ---
-        // O listener agora é async para poder usar 'await' na função loadConfigurations
+        
+        // CORREÇÃO: Adicionado try...catch e movido os event listeners para fora do 'try'
+        // para garantir que a página funcione mesmo se o Supabase falhar.
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadConfigurations(); // Espera as configurações carregarem do Supabase
+            try {
+                await loadConfigurations(); // Tenta carregar do Supabase
+            } catch (e) {
+                console.error("Falha crítica ao carregar configurações, listeners ainda serão ativados.", e);
+            }
 
+            // Ativa todos os botões e funcionalidades da página
             document.getElementById('saveConfig').addEventListener('click', saveConfigurations);
             document.getElementById('resetFiorino').addEventListener('click', resetFiorino);
             document.getElementById('resetVan').addEventListener('click', resetVan);
@@ -599,7 +601,6 @@
             document.getElementById('resetAllConfigs').addEventListener('click', resetAll);
             document.getElementById('limparResultadosBtn').addEventListener('click', limparTudo);
 
-            // Mantém o carregamento das rotas do localStorage, pois são filtros de sessão
             const savedRotaInicial = localStorage.getItem('rotaInicial');
             const savedRotaFinal = localStorage.getItem('rotaFinal');
             if (savedRotaInicial) {
@@ -609,7 +610,6 @@
                 document.getElementById('rotaFinalInput').value = savedRotaFinal;
             }
         });
-        // --- FIM: ALTERAÇÃO SUPABASE ---
 
         const rotaVeiculoMap = {
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
@@ -759,7 +759,6 @@
             }
         }
         
-        // --- INÍCIO: Funções de Bloqueio Manual ---
         function atualizarListaBloqueados() {
             const divLista = document.getElementById('lista-pedidos-bloqueados');
             divLista.innerHTML = '';
@@ -794,7 +793,6 @@
             pedidosBloqueados.delete(numPedido);
             atualizarListaBloqueados();
         }
-        // --- FIM: Funções de Bloqueio Manual ---
 
         function resetarEstadoGlobal() {
             pedidosGeraisAtuais = [];
@@ -1557,7 +1555,7 @@
                     load.vehicleType = vehicleType;
                     activeLoads[loadId] = load;
                 });
-                currentLeftoversForPrinting = [...currentLeftovers]; // Atualiza a lista de sobras global
+                currentLeftoversForPrinting = [...currentLeftovers];
 
                 const vehicleInfo = {
                     fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
@@ -1842,7 +1840,6 @@
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
 
-        // --- INÍCIO DAS FUNÇÕES DE CARGA ESPECIAL ---
         function montarCargaEspecial() {
             const resultadoDiv = document.getElementById('resultado-carga-especial');
             const input = document.getElementById('pedidosEspeciaisInput');
