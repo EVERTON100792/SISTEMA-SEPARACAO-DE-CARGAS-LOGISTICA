@@ -13,7 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
             background-color: #212529;
@@ -428,6 +429,18 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
+        // --- INÍCIO: ALTERAÇÃO SUPABASE ---
+        // 1. Configure suas credenciais do Supabase aqui.
+        const SUPABASE_URL = 'SUA_URL_SUPABASE_AQUI';
+        const SUPABASE_ANON_KEY = 'SUA_CHAVE_ANON_AQUI';
+
+        // 2. Inicialize o cliente Supabase.
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // 3. Defina um ID único para a linha de configuração (pode ser um user_id no futuro).
+        const CONFIG_ID = 'default_config';
+        // --- FIM: ALTERAÇÃO SUPABASE ---
+
         const agendamentoClientCodes = new Set([
             '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '44192', '144457', '145014', '145237', '145322', '146644', '146988', '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196084', '196118', '196405', '196446', '196784', '197168', '197249', '197983', '198187', '198438', '198747', '198774', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218578', '218580', '218640', '218820', '218845', '219539', '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
         ]);
@@ -463,38 +476,87 @@
             tocoMinCapacity: 5000, tocoMaxCapacity: 8500, tocoCubage: 30.0
         };
 
-        function saveConfigurations() {
+        // --- INÍCIO: ALTERAÇÃO SUPABASE ---
+        // Função para salvar as configurações no Supabase (agora é async)
+        async function saveConfigurations() {
             const configStatus = document.getElementById('configStatus');
+            configStatus.innerHTML = '<p class="text-info">Salvando configurações no banco de dados...</p>';
+
             try {
                 const configs = {};
-                Object.keys(defaultConfigs).forEach(key => { 
+                Object.keys(defaultConfigs).forEach(key => {
                     const element = document.getElementById(key);
-                    if (element) configs[key] = element.value; 
+                    if (element) {
+                        // Garante que os valores numéricos sejam salvos como números
+                        configs[key] = parseFloat(element.value);
+                    }
                 });
-                localStorage.setItem('vehicleConfigs', JSON.stringify(configs));
-                configStatus.innerHTML = '<p class="text-success">Configurações salvas com sucesso!</p>';
+                
+                // Adiciona o ID para a cláusula 'upsert'
+                configs.id = CONFIG_ID; 
+
+                const { error } = await supabase
+                    .from('configuracoes_veiculos') // Nome da sua tabela
+                    .upsert(configs, { onConflict: 'id' });
+
+                if (error) {
+                    throw error;
+                }
+
+                configStatus.innerHTML = '<p class="text-success">Configurações salvas no banco de dados com sucesso!</p>';
                 setTimeout(() => { configStatus.innerHTML = ''; }, 3000);
             } catch (error) {
-                configStatus.innerHTML = '<p class="text-danger">Erro ao salvar as configurações.</p>';
+                console.error("Erro ao salvar no Supabase:", error);
+                configStatus.innerHTML = `<p class="text-danger">Erro ao salvar as configurações: ${error.message}</p>`;
             }
         }
 
-        function loadConfigurations() {
-            const savedConfigs = localStorage.getItem('vehicleConfigs');
-            const configs = savedConfigs ? JSON.parse(savedConfigs) : defaultConfigs;
-            Object.keys(configs).forEach(key => {
-                const element = document.getElementById(key);
-                if (element) { element.value = configs[key]; }
-            });
+        // Função para carregar as configurações do Supabase (agora é async)
+        async function loadConfigurations() {
+            const configStatus = document.getElementById('configStatus');
+            configStatus.innerHTML = '<p class="text-info">Carregando configurações do banco de dados...</p>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('configuracoes_veiculos') // Nome da sua tabela
+                    .select('*')
+                    .eq('id', CONFIG_ID)
+                    .single();
+
+                if (error && error.code !== 'PGRST116') { // PGRST116 = "A consulta não retornou nenhuma linha"
+                     throw error;
+                }
+
+                const configs = data ? data : defaultConfigs;
+                
+                Object.keys(configs).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.value = configs[key];
+                    }
+                });
+                configStatus.innerHTML = '<p class="text-success">Configurações carregadas!</p>';
+                setTimeout(() => { configStatus.innerHTML = ''; }, 2000);
+
+            } catch (error) {
+                 console.error("Erro ao carregar do Supabase:", error);
+                 configStatus.innerHTML = `<p class="text-warning">Não foi possível carregar as configurações salvas. Usando valores padrão.</p>`;
+                 // Carrega os padrões se falhar
+                 Object.keys(defaultConfigs).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) { element.value = defaultConfigs[key]; }
+                });
+            }
         }
-        
+        // --- FIM: ALTERAÇÃO SUPABASE ---
+
         function resetFiorino() {
             document.getElementById('fiorinoMinCapacity').value = defaultConfigs.fiorinoMinCapacity;
             document.getElementById('fiorinoMaxCapacity').value = defaultConfigs.fiorinoMaxCapacity;
             document.getElementById('fiorinoCubage').value = defaultConfigs.fiorinoCubage;
             document.getElementById('fiorinoHardMaxCapacity').value = defaultConfigs.fiorinoHardMaxCapacity;
             document.getElementById('fiorinoHardCubage').value = defaultConfigs.fiorinoHardCubage;
-            saveConfigurations();
+            saveConfigurations(); // Agora chama a função async
         }
         function resetVan() {
             document.getElementById('vanMinCapacity').value = defaultConfigs.vanMinCapacity;
@@ -502,30 +564,33 @@
             document.getElementById('vanCubage').value = defaultConfigs.vanCubage;
             document.getElementById('vanHardMaxCapacity').value = defaultConfigs.vanHardMaxCapacity;
             document.getElementById('vanHardCubage').value = defaultConfigs.vanHardCubage;
-            saveConfigurations();
+            saveConfigurations(); // Agora chama a função async
         }
         function resetTresQuartos() {
             document.getElementById('tresQuartosMinCapacity').value = defaultConfigs.tresQuartosMinCapacity;
             document.getElementById('tresQuartosMaxCapacity').value = defaultConfigs.tresQuartosMaxCapacity;
             document.getElementById('tresQuartosCubage').value = defaultConfigs.tresQuartosCubage;
-            saveConfigurations();
+            saveConfigurations(); // Agora chama a função async
         }
         function resetToco() {
             document.getElementById('tocoMinCapacity').value = defaultConfigs.tocoMinCapacity;
             document.getElementById('tocoMaxCapacity').value = defaultConfigs.tocoMaxCapacity;
             document.getElementById('tocoCubage').value = defaultConfigs.tocoCubage;
-            saveConfigurations();
+            saveConfigurations(); // Agora chama a função async
         }
         function resetAll() {
             Object.keys(defaultConfigs).forEach(key => { 
                 const element = document.getElementById(key);
                 if(element) element.value = defaultConfigs[key]; 
             });
-            saveConfigurations();
+            saveConfigurations(); // Agora chama a função async
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadConfigurations();
+        // --- INÍCIO: ALTERAÇÃO SUPABASE ---
+        // O listener agora é async para poder usar 'await' na função loadConfigurations
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadConfigurations(); // Espera as configurações carregarem do Supabase
+
             document.getElementById('saveConfig').addEventListener('click', saveConfigurations);
             document.getElementById('resetFiorino').addEventListener('click', resetFiorino);
             document.getElementById('resetVan').addEventListener('click', resetVan);
@@ -534,6 +599,7 @@
             document.getElementById('resetAllConfigs').addEventListener('click', resetAll);
             document.getElementById('limparResultadosBtn').addEventListener('click', limparTudo);
 
+            // Mantém o carregamento das rotas do localStorage, pois são filtros de sessão
             const savedRotaInicial = localStorage.getItem('rotaInicial');
             const savedRotaFinal = localStorage.getItem('rotaFinal');
             if (savedRotaInicial) {
@@ -543,6 +609,7 @@
                 document.getElementById('rotaFinalInput').value = savedRotaFinal;
             }
         });
+        // --- FIM: ALTERAÇÃO SUPABASE ---
 
         const rotaVeiculoMap = {
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
@@ -654,15 +721,15 @@
             if (!pedidoEncontrado) {
                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                  if (originalPedido) {
-                        pedidoEncontrado = originalPedido;
-                        if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                            local = 'Bloqueado Manualmente por você.';
-                        } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                            local = 'Alocado na Carga Especial (Batista & Izepe).';
-                        }
-                        else {
-                            local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
-                        }
+                         pedidoEncontrado = originalPedido;
+                         if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                             local = 'Bloqueado Manualmente por você.';
+                         } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                             local = 'Alocado na Carga Especial (Batista & Izepe).';
+                         }
+                         else {
+                             local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
+                         }
                  }
                }
             if (pedidoEncontrado) {
@@ -672,7 +739,7 @@
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
                                        <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                                       buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -767,8 +834,8 @@
             atualizarListaBloqueados();
 
             dropZoneText.innerHTML = `<p><i class="bi bi-file-earmark-spreadsheet-fill fs-2"></i></p>
-                                      <p>Arraste o arquivo aqui ou</p>
-                                      <button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+                                          <p>Arraste o arquivo aqui ou</p>
+                                          <button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
             
             planilhaData = [];
             processarBtn.disabled = true;
@@ -971,11 +1038,11 @@
             pedidos.forEach(p => {
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 table += `<tr id="pedido-${p.Num_Pedido}" 
-                              class="${isPriorityRow ? 'table-primary' : ''}" 
-                              data-cliente-id="${p.Cliente}" 
-                              onclick="highlightClientRows(event)"
-                              draggable="true"
-                              ondragstart="dragStart(event, '${p.Num_Pedido}', '${sourceId}')">`;
+                                   class="${isPriorityRow ? 'table-primary' : ''}" 
+                                   data-cliente-id="${p.Cliente}" 
+                                   onclick="highlightClientRows(event)"
+                                   draggable="true"
+                                   ondragstart="dragStart(event, '${p.Num_Pedido}', '${sourceId}')">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') {
@@ -1501,15 +1568,15 @@
                 const vInfo = vehicleInfo[vehicleType];
                 let summaryTitle = reoptimizing ? `Resultado Reotimizado para ${targetVehicleCount} Veículos` : `Resultados para <strong>${title}</strong>`;
                 let summaryHeader = `<div class="d-flex justify-content-between align-items-center mb-3">
-                                               <h4 class="mb-0 h5">${summaryTitle}: 
-                                                   <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
-                                                   <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
-                                                   <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
-                                               </h4>
-                                               <div id="print-button-container-${divId}" class="d-inline-block">
-                                                   ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
-                                               </div>
-                                           </div>`;
+                                                 <h4 class="mb-0 h5">${summaryTitle}: 
+                                                     <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
+                                                     <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
+                                                     <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
+                                                 </h4>
+                                                 <div id="print-button-container-${divId}" class="d-inline-block">
+                                                     ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                                 </div>
+                                             </div>`;
                 html += summaryHeader;
                 if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada.</div>`; }
                 primaryLoads.forEach(load => {
@@ -1547,10 +1614,10 @@
                     html += `<div id="leftovers-card-${divId}">
                                                  <h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
                                                  <div class="card mb-3">
-                                                      <div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}</div>
-                                                      <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                                     <div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}</div>
+                                                     <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                                                  </div>
-                                           </div>`;
+                                             </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
@@ -1626,15 +1693,15 @@
                 const totalKgUnassigned = finalLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                 const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra Final')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
                 finalContentHtml += `<div id="leftovers-card-${divId}">
-                                                   <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                                   <div class="card mb-3">
-                                                       <div class="card-header bg-danger text-white d-flex align-items-center">
-                                                           Detalhes da Sobra Final
-                                                           ${printButtonHtml}
-                                                       </div>
-                                                       <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                                   </div>
-                                               </div>`;
+                                                 <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                                 <div class="card mb-3">
+                                                     <div class="card-header bg-danger text-white d-flex align-items-center">
+                                                         Detalhes da Sobra Final
+                                                         ${printButtonHtml}
+                                                     </div>
+                                                     <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                                 </div>
+                                             </div>`;
             }
             
             resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${finalContentHtml}</div>`);
