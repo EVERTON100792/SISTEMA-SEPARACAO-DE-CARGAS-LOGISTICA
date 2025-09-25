@@ -377,6 +377,8 @@
             </div>
         </div>
         
+        <div id="manual-load-builder-container" class="mb-4"></div>
+
         <div class="row">
             <div class="col-lg-12 mb-4">
                 <div class="card shadow-sm h-100 border-warning">
@@ -459,6 +461,7 @@
         let currentLeftoversForPrinting = [];
         let currentAllOrdersForReoptimization = [];
         let activeLoads = {};
+        let manualLoadInProgress = null;
 
 
         const defaultConfigs = {
@@ -533,7 +536,7 @@
                  Object.keys(defaultConfigs).forEach(key => {
                      const element = document.getElementById(key);
                      if (element) { element.value = defaultConfigs[key]; }
-                });
+                 });
             }
         }
         
@@ -731,9 +734,9 @@
                 if (local === 'Pedidos Disponíveis para Montagem') {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                                      buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                  buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -1031,12 +1034,12 @@
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
                 table += `<tr id="pedido-${p.Num_Pedido}" 
-                                   class="${isPriorityRow ? 'table-primary' : ''}" 
-                                   data-cliente-id="${clienteIdNormalizado}" 
-                                   data-pedido-id="${p.Num_Pedido}"
-                                   onclick="highlightClientRows(event)"
-                                   draggable="true"
-                                   ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
+                                      class="${isPriorityRow ? 'table-primary' : ''}" 
+                                      data-cliente-id="${clienteIdNormalizado}" 
+                                      data-pedido-id="${p.Num_Pedido}"
+                                      onclick="highlightClientRows(event)"
+                                      draggable="true"
+                                      ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') {
@@ -1203,9 +1206,6 @@
             }, 500);
         }
 
-        // *** CORREÇÃO INICIA AQUI ***
-        // A função createInitialSolution foi modificada para não desagrupar mais os clientes
-        // que sobram, garantindo que eles permaneçam como um bloco.
         function createInitialSolution(itemsParaEmpacotar, vehicleType, sortStrategy = 'descending', minKgOverride = null) {
             const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
@@ -1288,7 +1288,6 @@
                 if (load.pedidos.length > 0 && (load.totalKg >= MIN_KG || (hasPriority && allowPriorityOverride))) {
                     finalLoads.push(load);
                 } else {
-                    // Se a carga não atingiu o mínimo, seus pedidos (agrupados) voltam para a sobra
                     const clientGroupsInFailedLoad = load.pedidos.reduce((acc, pedido) => {
                         const clienteId = normalizeClientId(pedido.Cliente);
                         if (!acc[clienteId]) {
@@ -1303,7 +1302,6 @@
                 }
             });
             
-            // Retorna os grupos que sobraram sem desmontá-los
             const leftovers = [...leftoverItems, ...unplacedGroups];
             return { loads: finalLoads, leftovers };
         }
@@ -1313,7 +1311,6 @@
             return result;
         }
         
-        // A função principal foi ajustada para agrupar os pedidos ANTES e manter os grupos intactos
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Otimizando e montando cargas...</span></div>';
@@ -1343,11 +1340,9 @@
                 const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
                 let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
 
-                // *** INÍCIO DA LÓGICA CORRIGIDA ***
                 const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
                 const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
 
-                // 1. Agrupar todos os pedidos por cliente ANTES de qualquer otimização
                 const clientGroupsMap = pedidosRota.reduce((acc, pedido) => {
                     const clienteId = normalizeClientId(pedido.Cliente);
                     if (!acc[clienteId]) {
@@ -1360,10 +1355,9 @@
                 }, {});
                 const packableGroups = Object.values(clientGroupsMap);
 
-                // 2. Executar otimização primária com os GRUPOS
                 let primaryResult = runAdvancedOptimization(packableGroups, vehicleType);
                 let primaryLoads = primaryResult.loads;
-                let leftoverGroups = primaryResult.leftovers; // Sobras são GRUPOS, não pedidos individuais
+                let leftoverGroups = primaryResult.leftovers;
                 
                 let secondaryLoads = [];
                 let secondaryVehicleType = '';
@@ -1379,16 +1373,13 @@
                     if (totalKgUnassigned >= tresQuartosMin) secondaryVehicleType = 'tresQuartos';
                 }
 
-                // 3. Se houver sobras e um veículo secundário, otimizar os GRUPOS restantes
                 if (secondaryVehicleType) {
                     let secondaryResult = runAdvancedOptimization(leftoverGroups, secondaryVehicleType);
                     secondaryLoads = secondaryResult.loads;
-                    leftoverGroups = secondaryResult.leftovers; // As sobras continuam sendo GRUPOS
+                    leftoverGroups = secondaryResult.leftovers;
                 }
 
-                // 4. Desagrupar as sobras APENAS para exibição final
                 currentLeftoversForPrinting = leftoverGroups.flatMap(group => group.pedidos);
-                // *** FIM DA LÓGICA CORRIGIDA ***
 
                 primaryLoads.forEach((load, index) => {
                     load.numero = index + 1;
@@ -1413,11 +1404,11 @@
                 };
 
                 let html = `<div class="d-flex justify-content-between align-items-center mb-3">
-                                     <h4 class="mb-0 h5">Resultados para <strong>${title}</strong></h4>
-                                     <div id="print-button-container-${divId}" class="d-inline-block">
-                                         ${primaryLoads.length > 0 || secondaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
-                                     </div>
-                                   </div>`;
+                                         <h4 class="mb-0 h5">Resultados para <strong>${title}</strong></h4>
+                                         <div id="print-button-container-${divId}" class="d-inline-block">
+                                             ${primaryLoads.length > 0 || secondaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                         </div>
+                                       </div>`;
 
                 if (primaryLoads.length === 0) {
                     html += `<div class="alert alert-secondary">Nenhuma carga de ${vehicleInfo[vehicleType].name} foi formada.</div>`;
@@ -1436,17 +1427,20 @@
 
                 if (currentLeftoversForPrinting.length > 0) {
                     const finalLeftoverKg = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                    const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
+                    
+                    const manualLoadButton = `<button id="start-manual-load-btn" class="btn btn-success ms-auto no-print" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual com Sobras</button>`;
+                    const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra</button>`;
+
                     html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
-                                 <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                 <div class="card mb-3">
-                                     <div class="card-header bg-danger text-white d-flex align-items-center">
-                                         Pedidos Restantes
-                                         ${printButtonHtml}
-                                     </div>
-                                     <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                 </div>
-                               </div>`;
+                                <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                <div class="card mb-3">
+                                    <div class="card-header bg-danger text-white d-flex align-items-center">
+                                        Pedidos Restantes
+                                        <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                    </div>
+                                    <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                </div>
+                              </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
@@ -1796,6 +1790,33 @@
 
             if (sourceId === targetId) return;
 
+            // Lógica para o construtor manual
+            if (targetId === 'manual-builder' && manualLoadInProgress) {
+                if (sourceId !== 'leftovers') {
+                    alert('Apenas pedidos da lista de "Sobras" podem ser adicionados à carga manual.');
+                    return;
+                }
+
+                const clientOrdersToMove = currentLeftoversForPrinting.filter(p => normalizeClientId(p.Cliente) === clienteId);
+                if (clientOrdersToMove.length === 0) return;
+
+                const clientBlockKg = clientOrdersToMove.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                const clientBlockCubagem = clientOrdersToMove.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+
+                // Remove das sobras
+                currentLeftoversForPrinting = currentLeftoversForPrinting.filter(p => normalizeClientId(p.Cliente) !== clienteId);
+                
+                // Adiciona à carga manual
+                manualLoadInProgress.pedidos.push(...clientOrdersToMove);
+                manualLoadInProgress.totalKg += clientBlockKg;
+                manualLoadInProgress.totalCubagem += clientBlockCubagem;
+
+                updateLoadUI('leftovers');
+                updateManualBuilderUI();
+                return; // Finaliza aqui
+            }
+
+            // Lógica original para mover entre cargas existentes
             let sourceLoad = activeLoads[sourceId];
             let targetLoad = activeLoads[targetId];
 
@@ -1848,7 +1869,7 @@
                 currentLeftoversForPrinting = currentLeftoversForPrinting.filter(p => normalizeClientId(p.Cliente) !== clienteId);
             }
             
-             if (targetId !== 'leftovers') {
+                if (targetId !== 'leftovers') {
                 targetLoad.pedidos.push(...clientOrdersToMove);
                 targetLoad.totalKg += clientBlockKg;
                 targetLoad.totalCubagem += clientBlockCubagem;
@@ -1878,13 +1899,14 @@
                         </div>`;
                 } else {
                     const totalKgUnassigned = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                    const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobras Finais')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
+                    const manualLoadButton = `<button id="start-manual-load-btn" class="btn btn-success ms-auto no-print" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual com Sobras</button>`;
+                    const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra</button>`;
                     leftoversCard.innerHTML = `
                         <h5 class="mt-4">Sobras Finais: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
                         <div class="card mb-3">
                             <div class="card-header bg-danger text-white d-flex align-items-center">
                                 Pedidos Restantes
-                                ${printButtonHtml}
+                                <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
                             </div>
                             <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                         </div>`;
@@ -1925,11 +1947,155 @@
                  tableContainer.outerHTML = createTable(load.pedidos, null, loadId);
 
                  headerButton.querySelector('.badge.bg-info, .badge.bg-danger').outerHTML = isOverloaded
-                   ? `<span class="badge bg-danger ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>${totalKgFormatado} kg (ACIMA DO PESO!)</span>`
-                   : `<span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>`;
+                  ? `<span class="badge bg-danger ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>${totalKgFormatado} kg (ACIMA DO PESO!)</span>`
+                  : `<span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>`;
                  headerButton.classList.toggle('bg-danger', isOverloaded);
             }
         }
+        
+        // ===================================================
+        // NOVAS FUNÇÕES PARA MONTAGEM DE CARGA MANUAL
+        // ===================================================
+
+        function startManualLoadBuilder() {
+            if (manualLoadInProgress) return; // Já está ativo
+
+            manualLoadInProgress = {
+                pedidos: [],
+                totalKg: 0,
+                totalCubagem: 0,
+                vehicleType: 'fiorino' // Padrão inicial
+            };
+
+            const builderContainer = document.getElementById('manual-load-builder-container');
+            builderContainer.innerHTML = `
+                <div class="card border-info shadow-lg" id="manual-load-card">
+                    <div class="card-header bg-info text-dark">
+                        <h5 class="mb-0"><i class="bi bi-tools me-2"></i>Painel de Montagem de Carga Manual</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center mb-3">
+                            <div class="col-md-4">
+                                <label for="manualVehicleType" class="form-label">Montar para o veículo:</label>
+                                <select id="manualVehicleType" class="form-select" onchange="updateManualBuilderUI()">
+                                    <option value="fiorino">Fiorino</option>
+                                    <option value="van">Van</option>
+                                    <option value="tresQuartos">3/4</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <p class="mb-1"><strong>Peso Total:</strong> <span id="manualLoadKg">0,00</span> kg</p>
+                                <p class="mb-0"><strong>Cubagem Total:</strong> <span id="manualLoadCubage">0,00</span> m³</p>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                 <button class="btn btn-danger me-2" onclick="cancelManualLoad()"><i class="bi bi-x-circle me-1"></i>Cancelar</button>
+                                 <button id="finalizeManualLoadBtn" class="btn btn-success" onclick="finalizeManualLoad()" disabled><i class="bi bi-check-circle me-1"></i>Criar Carga</button>
+                            </div>
+                        </div>
+                        <div id="manual-progress-bar-container"></div>
+                        <div id="manual-drop-zone" class="p-3 border rounded drop-zone-card bg-dark-subtle" style="min-height: 150px;" 
+                             ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="manual-builder">
+                             <p class="text-muted text-center" id="manual-drop-text">Arraste os pedidos da lista de "Sobras" para cá.</p>
+                             <div id="manual-load-table-container"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('start-manual-load-btn').style.display = 'none';
+            updateManualBuilderUI(); // Para renderizar o estado inicial
+        }
+
+        function updateManualBuilderUI() {
+            if (!manualLoadInProgress) return;
+
+            const vehicleType = document.getElementById('manualVehicleType').value;
+            manualLoadInProgress.vehicleType = vehicleType;
+
+            document.getElementById('manualLoadKg').textContent = manualLoadInProgress.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('manualLoadCubage').textContent = manualLoadInProgress.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const tableContainer = document.getElementById('manual-load-table-container');
+            const dropText = document.getElementById('manual-drop-text');
+            if (manualLoadInProgress.pedidos.length > 0) {
+                tableContainer.innerHTML = createTable(manualLoadInProgress.pedidos, null, 'manual-builder');
+                dropText.style.display = 'none';
+            } else {
+                tableContainer.innerHTML = '';
+                dropText.style.display = 'block';
+            }
+
+            // Atualizar Barra de Progresso e Botão Finalizar
+            const minKg = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
+            const maxKg = parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`)?.value || document.getElementById(`${vehicleType}MaxCapacity`).value);
+            
+            const finalizeBtn = document.getElementById('finalizeManualLoadBtn');
+            finalizeBtn.disabled = manualLoadInProgress.totalKg < minKg;
+            
+            const pesoPercentual = maxKg > 0 ? (manualLoadInProgress.totalKg / maxKg) * 100 : 0;
+            let progressColor = 'bg-secondary';
+            if(manualLoadInProgress.totalKg >= minKg) progressColor = 'bg-success';
+            if (pesoPercentual > 75) progressColor = 'bg-warning';
+            if (pesoPercentual > 95) progressColor = 'bg-danger';
+
+            document.getElementById('manual-progress-bar-container').innerHTML = `
+                <div class="progress mb-3" role="progressbar" style="height: 10px;">
+                    <div class="progress-bar ${progressColor}" style="width: ${Math.min(pesoPercentual, 100)}%"></div>
+                </div>
+            `;
+        }
+
+        function finalizeManualLoad() {
+            if (!manualLoadInProgress || manualLoadInProgress.pedidos.length === 0) return;
+
+            const vehicleType = manualLoadInProgress.vehicleType;
+            const newLoad = {
+                ...manualLoadInProgress,
+                id: `manual-${vehicleType}-${Date.now()}`,
+                numero: `M-${Object.keys(activeLoads).filter(k => k.startsWith('manual')).length + 1}`
+            };
+
+            activeLoads[newLoad.id] = newLoad;
+            
+            const vehicleInfo = {
+                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
+                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
+                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
+            };
+
+            const newCardHTML = renderLoadCard(newLoad, vehicleType, vehicleInfo[vehicleType]);
+            
+            // Adiciona o card na área de resultado correta
+            const resultDivId = `resultado-${vehicleType === 'tresQuartos' ? '34' : vehicleType}-geral`;
+            const resultContainer = document.getElementById(resultDivId);
+            if(resultContainer) {
+               resultContainer.insertAdjacentHTML('beforeend', newCardHTML);
+            }
+
+            // Limpa o builder
+            document.getElementById('manual-load-builder-container').innerHTML = '';
+            manualLoadInProgress = null;
+            
+            const startBtn = document.getElementById('start-manual-load-btn');
+            if(startBtn) startBtn.style.display = 'inline-block';
+        }
+
+        function cancelManualLoad() {
+             if (!manualLoadInProgress) return;
+             
+             // Devolve os pedidos para a lista de sobras
+             currentLeftoversForPrinting.push(...manualLoadInProgress.pedidos);
+             
+             // Limpa o builder
+             document.getElementById('manual-load-builder-container').innerHTML = '';
+             manualLoadInProgress = null;
+
+             updateLoadUI('leftovers'); // Atualiza a UI das sobras
+             
+             const startBtn = document.getElementById('start-manual-load-btn');
+             if(startBtn) startBtn.style.display = 'inline-block';
+        }
+
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
