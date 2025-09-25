@@ -429,27 +429,21 @@
 
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
-        // --- INÍCIO: ALTERAÇÃO SUPABASE (VERSÃO CORRIGIDA) ---
-        // 1. Configure suas credenciais do Supabase aqui.
         const SUPABASE_URL = 'https://mwfsitvoshwipmvgcdmc.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13ZnNpdHZvc2h3aXBtdmdjZG1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTY3OTIsImV4cCI6MjA3NDMzMjc5Mn0.DvXQ_HMMnJZyQh17C6N426r1X9AeYjIMpXVbTRspFq0';
-
-        // 2. Inicialize o cliente Supabase.
-        // CORREÇÃO: Renomeado o cliente para 'supabaseClient' para evitar conflito.
-        // O objeto global é 'supabase', a nossa instância será 'supabaseClient'.
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        // --- FIM: ALTERAÇÃO SUPABASE ---
 
         const agendamentoClientCodes = new Set([
-            '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '44192', '144457', '145014', '145237', '145322', '146644', '146988', '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196084', '196118', '196405', '196446', '196784', '197168', '197249', '197983', '198187', '198438', '198747', '198774', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218578', '218580', '218640', '218820', '218845', '219539', '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
+            '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '44192', '144457', '145014', '145237', '145322', '146644', '146988', '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196084', '196118', '196405', '196446', '196784', '197168', '197249', '197983', '198187', '198438', '198747', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218578', '218580', '218640', '218820', '218845', '219539', '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
         ]);
 
+        function normalizeClientId(id) {
+            if (id === null || typeof id === 'undefined') return '';
+            return String(id).trim().replace(/^0+/, '');
+        }
+
         function checkAgendamento(pedido) {
-            if (!pedido || typeof pedido.Cliente === 'undefined' || pedido.Cliente === null) {
-                pedido.Agendamento = 'Não';
-                return;
-            }
-            const normalizedCode = String(pedido.Cliente).replace(/^0+/, '');
+            const normalizedCode = normalizeClientId(pedido.Cliente);
             pedido.Agendamento = agendamentoClientCodes.has(normalizedCode) ? 'Sim' : 'Não';
         }
         
@@ -463,7 +457,6 @@
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
         let currentAllOrdersForReoptimization = [];
-        let pedidosEspeciaisProcessados = new Set();
         let activeLoads = {};
 
 
@@ -476,7 +469,6 @@
         
         const CONFIG_ID = 'default_config';
 
-        // Função para salvar as configurações no Supabase (agora é async)
         async function saveConfigurations() {
             const configStatus = document.getElementById('configStatus');
             configStatus.innerHTML = '<p class="text-info">Salvando configurações no banco de dados...</p>';
@@ -492,7 +484,6 @@
                 
                 configs.id = CONFIG_ID; 
 
-                // CORREÇÃO: Usando 'supabaseClient'
                 const { error } = await supabaseClient
                     .from('configuracoes_veiculos')
                     .upsert(configs, { onConflict: 'id' });
@@ -509,13 +500,11 @@
             }
         }
 
-        // Função para carregar as configurações do Supabase (agora é async)
         async function loadConfigurations() {
             const configStatus = document.getElementById('configStatus');
             configStatus.innerHTML = '<p class="text-info">Carregando configurações do banco de dados...</p>';
 
             try {
-                // CORREÇÃO: Usando 'supabaseClient'
                 const { data, error } = await supabaseClient
                     .from('configuracoes_veiculos')
                     .select('*')
@@ -583,16 +572,13 @@
             saveConfigurations();
         }
         
-        // CORREÇÃO: Adicionado try...catch e movido os event listeners para fora do 'try'
-        // para garantir que a página funcione mesmo se o Supabase falhar.
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                await loadConfigurations(); // Tenta carregar do Supabase
+                await loadConfigurations(); 
             } catch (e) {
                 console.error("Falha crítica ao carregar configurações, listeners ainda serão ativados.", e);
             }
 
-            // Ativa todos os botões e funcionalidades da página
             document.getElementById('saveConfig').addEventListener('click', saveConfigurations);
             document.getElementById('resetFiorino').addEventListener('click', resetFiorino);
             document.getElementById('resetVan').addEventListener('click', resetVan);
@@ -721,15 +707,15 @@
             if (!pedidoEncontrado) {
                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                  if (originalPedido) {
-                         pedidoEncontrado = originalPedido;
-                         if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                             local = 'Bloqueado Manualmente por você.';
-                         } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                             local = 'Alocado na Carga Especial (Batista & Izepe).';
-                         }
-                         else {
-                             local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
-                         }
+                          pedidoEncontrado = originalPedido;
+                          if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                               local = 'Bloqueado Manualmente por você.';
+                          } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                               local = 'Alocado na Carga Especial (Batista & Izepe).';
+                          }
+                          else {
+                               local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
+                          }
                  }
                }
             if (pedidoEncontrado) {
@@ -739,7 +725,7 @@
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
                                        <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId) {
-                                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                      buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -896,7 +882,7 @@
                     const clientesComBloqueio = new Set();
                     pedidos.forEach(p => {
                         if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') {
-                            clientesComBloqueio.add(String(p.Cliente));
+                            clientesComBloqueio.add(normalizeClientId(p.Cliente));
                         }
                     });
 
@@ -921,7 +907,7 @@
                     
                     pedidos.forEach(p => {
                         if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
-                        if (clientesComBloqueio.has(String(p.Cliente))) {
+                        if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
                             pedidosComCFNumericoIsolado.push(p);
                             return;
                         }
@@ -1035,12 +1021,14 @@
             table += '</tr></thead><tbody>';
             pedidos.forEach(p => {
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
+                const clienteIdNormalizado = normalizeClientId(p.Cliente);
                 table += `<tr id="pedido-${p.Num_Pedido}" 
                                    class="${isPriorityRow ? 'table-primary' : ''}" 
-                                   data-cliente-id="${p.Cliente}" 
+                                   data-cliente-id="${clienteIdNormalizado}" 
+                                   data-pedido-id="${p.Num_Pedido}"
                                    onclick="highlightClientRows(event)"
                                    draggable="true"
-                                   ondragstart="dragStart(event, '${p.Num_Pedido}', '${sourceId}')">`;
+                                   ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') {
@@ -1231,24 +1219,22 @@
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
             
             const clientGroupsMap = pedidos.reduce((acc, pedido) => {
-                const clienteId = pedido.Cliente;
-                if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], isSpecial: isSpecialClient(pedido) }; }
+                const clienteId = normalizeClientId(pedido.Cliente);
+                if (!acc[clienteId]) {
+                    acc[clienteId] = { 
+                        pedidos: [], 
+                        totalKg: 0, 
+                        totalCubagem: 0, 
+                        isSpecial: isSpecialClient(pedido) 
+                    };
+                }
                 acc[clienteId].pedidos.push(pedido);
+                acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
                 return acc;
             }, {});
 
-            let packableItems = [];
-            Object.values(clientGroupsMap).forEach(group => {
-                const totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                const totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
-                
-                packableItems.push({ 
-                    pedidos: group.pedidos,
-                    totalKg: totalKg,
-                    totalCubagem: totalCubagem, 
-                    isSpecial: group.isSpecial 
-                });
-            });
+            let packableItems = Object.values(clientGroupsMap);
             
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
@@ -1328,7 +1314,7 @@
             const leftovers = leftoverItems.flatMap(item => item.pedidos).concat(unplacedFromMinRule);
             return { loads: finalLoads, leftovers };
         }
-
+        
         function createSolutionLargeSmall(pedidos, vehicleType, minKgOverride = null, ignoreSpecialClients = false) {
             const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
@@ -1346,18 +1332,22 @@
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
             
             const clientGroupsMap = pedidos.reduce((acc, pedido) => {
-                const clienteId = pedido.Cliente;
-                if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], isSpecial: isSpecialClient(pedido) }; }
+                const clienteId = normalizeClientId(pedido.Cliente);
+                if (!acc[clienteId]) {
+                    acc[clienteId] = { 
+                        pedidos: [], 
+                        totalKg: 0, 
+                        totalCubagem: 0, 
+                        isSpecial: isSpecialClient(pedido) 
+                    };
+                }
                 acc[clienteId].pedidos.push(pedido);
+                acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
                 return acc;
             }, {});
 
-            let packableItems = [];
-            Object.values(clientGroupsMap).forEach(group => {
-                const totalKg = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                const totalCubagem = group.pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
-                packableItems.push({ ...group, totalKg, totalCubagem });
-            });
+            let packableItems = Object.values(clientGroupsMap);
             
             const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
             const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
@@ -1500,11 +1490,11 @@
             return bestState;
         }
         
-        function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement, reoptimizing = false, targetVehicleCount = null) {
+        function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
             resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Otimizando e montando cargas...</span></div>';
-            
-            if (!reoptimizing && buttonElement) { 
+
+            if (buttonElement) {
                 currentLeftoversForPrinting = [];
                 currentAllOrdersForReoptimization = [];
                 const parentContainer = buttonElement.parentElement;
@@ -1525,36 +1515,54 @@
                     resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
                     return;
                 }
-                
-                const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
-                let pedidosRota = reoptimizing ? currentAllOrdersForReoptimization : pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
-                
-                if (!reoptimizing) {
-                    currentAllOrdersForReoptimization = [...pedidosRota];
-                }
 
-                let effectiveTargetVehicleCount = targetVehicleCount;
-                if (vehicleType === 'tresQuartos' && !reoptimizing) {
-                    const minKg = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
-                    const maxKg = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
-                    const totalRotaKg = pedidosRota.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                    if (totalRotaKg >= minKg && totalRotaKg <= maxKg) {
-                        effectiveTargetVehicleCount = 1;
+                const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
+                let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
+
+                let primaryResult = runAdvancedOptimization(pedidosRota, vehicleType);
+                let primaryLoads = primaryResult.loads;
+                let currentLeftovers = primaryResult.leftovers;
+                let secondaryLoads = [];
+                let secondaryVehicleType = '';
+
+                const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
+                const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
+
+                if (vehicleType === 'fiorino' && currentLeftovers.length > 0) {
+                    if (totalKgUnassigned >= tresQuartosMin) {
+                        secondaryVehicleType = 'tresQuartos';
+                    } else if (totalKgUnassigned >= vanMin) {
+                        secondaryVehicleType = 'van';
+                    }
+                } else if (vehicleType === 'van' && currentLeftovers.length > 0) {
+                    if (totalKgUnassigned >= tresQuartosMin) {
+                        secondaryVehicleType = 'tresQuartos';
                     }
                 }
-                
-                let bestResult = runAdvancedOptimization(pedidosRota, vehicleType, effectiveTargetVehicleCount);
-                
-                let primaryLoads = bestResult.loads;
-                let currentLeftovers = bestResult.leftovers;
 
-                primaryLoads.forEach((load, index) => { 
+                if (secondaryVehicleType) {
+                    let secondaryResult = runAdvancedOptimization(currentLeftovers, secondaryVehicleType);
+                    secondaryLoads = secondaryResult.loads;
+                    currentLeftovers = secondaryResult.leftovers;
+                }
+
+                primaryLoads.forEach((load, index) => {
                     load.numero = index + 1;
                     const loadId = `${vehicleType}-${load.numero}`;
                     load.id = loadId;
                     load.vehicleType = vehicleType;
                     activeLoads[loadId] = load;
                 });
+                
+                secondaryLoads.forEach((load, index) => {
+                    load.numero = `S-${index + 1}`;
+                    const loadId = `${secondaryVehicleType}-${load.numero}`;
+                    load.id = loadId;
+                    load.vehicleType = secondaryVehicleType;
+                    activeLoads[loadId] = load;
+                });
+
                 currentLeftoversForPrinting = [...currentLeftovers];
 
                 const vehicleInfo = {
@@ -1562,152 +1570,45 @@
                     van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
                     tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
                 };
-                let html = '';
-                const vInfo = vehicleInfo[vehicleType];
-                let summaryTitle = reoptimizing ? `Resultado Reotimizado para ${targetVehicleCount} Veículos` : `Resultados para <strong>${title}</strong>`;
-                let summaryHeader = `<div class="d-flex justify-content-between align-items-center mb-3">
-                                                 <h4 class="mb-0 h5">${summaryTitle}: 
-                                                     <span id="loads-count-${divId}" class="badge bg-light text-dark">${primaryLoads.length} Carga(s)</span> | 
-                                                     <span id="leftovers-count-${divId}" class="badge bg-light text-dark">${currentLeftovers.length} Pedido(s) Restante(s)</span>
-                                                     <span class="badge bg-info-subtle text-info-emphasis ms-2">Refinamento Iterativo</span>
-                                                 </h4>
-                                                 <div id="print-button-container-${divId}" class="d-inline-block">
-                                                     ${primaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
-                                                 </div>
-                                             </div>`;
-                html += summaryHeader;
-                if (primaryLoads.length === 0) { html += `<div class="alert alert-secondary">Nenhuma carga de ${vInfo.name} foi formada.</div>`; }
+
+                let html = `<div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4 class="mb-0 h5">Resultados para <strong>${title}</strong></h4>
+                                <div id="print-button-container-${divId}" class="d-inline-block">
+                                    ${primaryLoads.length > 0 || secondaryLoads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>` : ''}
+                                </div>
+                             </div>`;
+
+                if (primaryLoads.length === 0) {
+                    html += `<div class="alert alert-secondary">Nenhuma carga de ${vehicleInfo[vehicleType].name} foi formada.</div>`;
+                }
                 primaryLoads.forEach(load => {
-                    html += renderLoadCard(load, vehicleType, vInfo);
+                    html += renderLoadCard(load, vehicleType, vehicleInfo[vehicleType]);
                 });
-                
+
+                if(secondaryLoads.length > 0) {
+                    const vInfo = vehicleInfo[secondaryVehicleType];
+                    html += `<h5 class="mt-4 border-top pt-3">Cargas Formadas com as Sobras:</h5>`;
+                     secondaryLoads.forEach(load => {
+                        html += renderLoadCard(load, secondaryVehicleType, vInfo);
+                    });
+                }
+
                 if (currentLeftovers.length > 0) {
-                    const totalKgUnassigned = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                    
-                    let actionButton = '';
-                    let printButtonHtml = '';
-                    
-                    const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
-                    const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
-                    
-                    if (vehicleType === 'fiorino') {
-                        if (totalKgUnassigned >= vanMin) {
-                            printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Possível Carga de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ Van)</button>`;
-                        }
-                        if (totalKgUnassigned >= tresQuartosMin) {
-                             printButtonHtml = `<button class="btn btn-warning ms-auto no-print" onclick="imprimirSobras('Possível Carga de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ 3/4)</button>`;
-                        }
-                    } 
-                    else if (vehicleType === 'van') {
-                        if (totalKgUnassigned >= tresQuartosMin) {
-                            printButtonHtml = `<button class="btn btn-warning ms-auto no-print" onclick="imprimirSobras('Possível Carga de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra (p/ 3/4)</button>`;
-                        } else if (totalKgUnassigned >= 900) {
-                            printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra para Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra</button>`;
-                            actionButton = `<button class="btn btn-primary btn-sm ms-3 no-print" onclick="tentarFormarVanExtra('${divId}', this, ${primaryLoads.length}, '${title}')"><i class="bi bi-plus-circle-fill me-1"></i>Formar +1 Van da Sobra</button>`;
-                        }
-                    } else if (vehicleType === 'tresQuartos' && totalKgUnassigned >= tresQuartosMin) {
-                        // Action for 3/4 leftovers if needed
-                    }
-                    
-                    html += `<div id="leftovers-card-${divId}">
-                                                 <h5 class="mt-4">Pedidos restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                                 <div class="card mb-3">
-                                                     <div class="card-header bg-danger text-white d-flex align-items-center">Detalhes dos Pedidos Restantes ${actionButton} ${printButtonHtml}</div>
-                                                     <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                                 </div>
-                                             </div>`;
+                    const finalLeftoverKg = currentLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                    const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
+                    html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
+                                <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                <div class="card mb-3">
+                                    <div class="card-header bg-danger text-white d-flex align-items-center">
+                                        Pedidos Restantes
+                                        ${printButtonHtml}
+                                    </div>
+                                    <div class="card-body">${createTable(currentLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                </div>
+                             </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
-        }
-
-        function tentarFormarVanExtra(divId, buttonElement, initialLoadCount, title) {
-            buttonElement.disabled = true;
-            buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...';
-
-            setTimeout(() => {
-                let leftoversToProcess = [...currentLeftoversForPrinting];
-                if (leftoversToProcess.length === 0) {
-                    alert("Não há sobras para processar.");
-                    buttonElement.disabled = false;
-                    buttonElement.innerHTML = '<i class="bi bi-plus-circle-fill me-1"></i>Formar +1 Van da Sobra';
-                    return;
-                }
-                
-                const result = createInitialSolution(leftoversToProcess, 'van', 'descending', null, 900, true);
-                
-                const extraVanLoads = result.loads;
-                const finalLeftovers = result.leftovers;
-
-                if (extraVanLoads.length === 0) {
-                    alert("Não foi possível formar uma nova carga de Van com pelo menos 900 kg a partir das sobras.");
-                    buttonElement.disabled = false;
-                    buttonElement.innerHTML = '<i class="bi bi-plus-circle-fill me-1"></i>Formar +1 Van da Sobra';
-                    return;
-                }
-                
-                extraVanLoads.forEach((load, index) => { 
-                    load.numero = initialLoadCount + index + 1;
-                    const loadId = `van-${load.numero}`;
-                    load.id = loadId;
-                    load.vehicleType = 'van';
-                    activeLoads[loadId] = load;
-                });
-                
-                updateUIAfterExtraVan(divId, extraVanLoads, finalLeftovers, title);
-
-            }, 50);
-        }
-
-        function updateUIAfterExtraVan(divId, newLoads, finalLeftovers, title) {
-            const resultadoDiv = document.getElementById(divId);
-            const leftoversCard = document.getElementById(`leftovers-card-${divId}`);
-            
-            const existingLoadCount = Object.values(activeLoads).filter(l => l.vehicleType === 'van').length - newLoads.length;
-            const newTotalLoads = existingLoadCount + newLoads.length;
-
-            document.getElementById(`loads-count-${divId}`).innerHTML = `${newTotalLoads} Carga(s)`;
-            document.getElementById(`leftovers-count-${divId}`).innerHTML = `${finalLeftovers.length} Pedido(s) Restante(s)`;
-
-            const printContainerEl = document.getElementById(`print-button-container-${divId}`);
-            if (printContainerEl && existingLoadCount === 0 && newTotalLoads > 0) {
-                printContainerEl.innerHTML = `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirCargasGeneric('${divId}', '${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>`;
-            }
-
-            const vInfo = { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi bi-truck-front-fill' };
-            let newLoadsHtml = '';
-            newLoads.forEach(load => {
-                newLoadsHtml += renderLoadCard(load, 'van', vInfo);
-            });
-
-            if (leftoversCard) {
-                leftoversCard.remove();
-            }
-
-            let finalContentHtml = newLoadsHtml;
-            currentLeftoversForPrinting = [...finalLeftovers];
-
-            if (finalLeftovers.length > 0) {
-                const totalKgUnassigned = finalLeftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobra Final')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
-                finalContentHtml += `<div id="leftovers-card-${divId}">
-                                                 <h5 class="mt-4">Novos Pedidos Restantes: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                                 <div class="card mb-3">
-                                                     <div class="card-header bg-danger text-white d-flex align-items-center">
-                                                         Detalhes da Sobra Final
-                                                         ${printButtonHtml}
-                                                     </div>
-                                                     <div class="card-body">${createTable(finalLeftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                                 </div>
-                                             </div>`;
-            }
-            
-            resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${finalContentHtml}</div>`);
-        }
-        
-        function reotimizarComVeiculoExtra(routesStr, divId, title, vehicleType, targetVehicleCount) {
-            const routes = routesStr.split(',');
-            separarCargasGeneric(routes, divId, title, vehicleType, null, true, targetVehicleCount);
         }
         
         function renderLoadCard(load, vehicleType, vInfo) {
@@ -1728,6 +1629,7 @@
             if (vehicleType === 'fiorino') maxKg = parseFloat(document.getElementById('fiorinoHardMaxCapacity').value);
             else if (vehicleType === 'van') maxKg = parseFloat(document.getElementById('vanHardMaxCapacity').value);
             else if (vehicleType === 'tresQuartos') maxKg = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
+            else if (vehicleType === 'toco') maxKg = parseFloat(document.getElementById('tocoMaxCapacity').value);
 
             const isOverloaded = maxKg > 0 && load.totalKg > maxKg;
             const pesoPercentual = maxKg > 0 ? (load.totalKg / maxKg) * 100 : 0;
@@ -1801,7 +1703,7 @@
             if (currentLeftoversForPrinting.length === 0) { alert("Nenhuma sobra para imprimir."); return; }
             const totalKgFormatado = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const printWindow = createPrintWindow(title);
-            let contentToPrint = `<h3>${title} (Pedidos da Sobra) - Total: ${totalKgFormatado} kg</h3>` + createTable(currentLeftoversForPrinting);
+            let contentToPrint = `<h3>${title} - Total: ${totalKgFormatado} kg</h3>` + createTable(currentLeftoversForPrinting);
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus(); 
@@ -2021,6 +1923,174 @@
             container.style.display = 'block';
         }
         
+        function dragStart(event, pedidoId, clienteId, sourceId) {
+            event.dataTransfer.setData("text/plain", JSON.stringify({ pedidoId, clienteId, sourceId }));
+            event.dataTransfer.effectAllowed = "move";
+        }
+
+        function dragOver(event) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "move";
+            const dropZoneCard = event.target.closest('.drop-zone-card');
+            if (dropZoneCard) {
+                dropZoneCard.classList.add('drag-over');
+            }
+        }
+
+        function dragLeave(event) {
+            const dropZoneCard = event.target.closest('.drop-zone-card');
+            if (dropZoneCard) {
+                dropZoneCard.classList.remove('drag-over');
+            }
+        }
+
+        // ALTERADO: Adicionada a nova lógica de confirmação para exceder o peso.
+        function drop(event) {
+            event.preventDefault();
+            const dropZoneCard = event.target.closest('.drop-zone-card');
+            if (!dropZoneCard) return;
+            dropZoneCard.classList.remove('drag-over');
+
+            const { clienteId, sourceId } = JSON.parse(event.dataTransfer.getData("text/plain"));
+            const targetId = dropZoneCard.dataset.loadId;
+
+            if (sourceId === targetId) return;
+
+            let sourceLoad = activeLoads[sourceId];
+            let targetLoad = activeLoads[targetId];
+
+            if (sourceId === 'leftovers') {
+                sourceLoad = { pedidos: currentLeftoversForPrinting };
+            }
+            if(targetId === 'leftovers') {
+                targetLoad = { pedidos: currentLeftoversForPrinting, totalKg: 0, totalCubagem: 0 };
+            }
+
+            if (!sourceLoad || !targetLoad) {
+                console.error("Carga de origem ou destino não encontrada.", { sourceId, targetId, activeLoads });
+                return;
+            }
+
+            const clientOrdersToMove = sourceLoad.pedidos.filter(p => normalizeClientId(p.Cliente) === clienteId);
+            if (clientOrdersToMove.length === 0) { return; }
+
+            const clientBlockKg = clientOrdersToMove.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+            const clientBlockCubagem = clientOrdersToMove.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
+
+            if (targetId !== 'leftovers') {
+                const targetVehicleType = targetLoad.vehicleType;
+                let maxKg = Infinity, maxCubagem = Infinity;
+
+                if (targetVehicleType) {
+                    if (targetVehicleType === 'toco') {
+                        maxKg = parseFloat(document.getElementById('tocoMaxCapacity').value);
+                        maxCubagem = parseFloat(document.getElementById('tocoCubage').value);
+                    } else {
+                        maxKg = parseFloat(document.getElementById(`${targetVehicleType}HardMaxCapacity`)?.value || document.getElementById(`${targetVehicleType}MaxCapacity`).value);
+                        maxCubagem = parseFloat(document.getElementById(`${targetVehicleType}HardCubage`)?.value || document.getElementById(`${targetVehicleType}Cubage`).value);
+                    }
+                }
+            
+                if ((targetLoad.totalKg + clientBlockKg > maxKg) || (targetLoad.totalCubagem + clientBlockCubagem > maxCubagem)) {
+                    const overWeight = (targetLoad.totalKg + clientBlockKg) - maxKg;
+                    const confirmation = confirm(`AVISO: Mover este grupo excede a capacidade do veículo em ${overWeight.toFixed(2)} kg.\n\nDeseja continuar mesmo assim?`);
+                    if (!confirmation) {
+                        return; // Aborta a operação se o usuário clicar em "Cancelar"
+                    }
+                }
+            }
+            
+            if (sourceId !== 'leftovers') {
+                sourceLoad.pedidos = sourceLoad.pedidos.filter(p => normalizeClientId(p.Cliente) !== clienteId);
+                sourceLoad.totalKg -= clientBlockKg;
+                sourceLoad.totalCubagem -= clientBlockCubagem;
+            } else {
+                currentLeftoversForPrinting = currentLeftoversForPrinting.filter(p => normalizeClientId(p.Cliente) !== clienteId);
+            }
+            
+             if (targetId !== 'leftovers') {
+                targetLoad.pedidos.push(...clientOrdersToMove);
+                targetLoad.totalKg += clientBlockKg;
+                targetLoad.totalCubagem += clientBlockCubagem;
+            } else {
+                currentLeftoversForPrinting.push(...clientOrdersToMove);
+            }
+
+            updateLoadUI(sourceId);
+            updateLoadUI(targetId);
+        }
+
+        // ALTERADO: Lógica de atualização das sobras refeita para ser mais clara e robusta.
+        function updateLoadUI(loadId) {
+            if (loadId === 'leftovers') {
+                const leftoversCard = document.querySelector('[data-load-id="leftovers"]');
+                if (!leftoversCard) return;
+
+                if (currentLeftoversForPrinting.length === 0) {
+                    leftoversCard.innerHTML = `
+                        <h5 class="mt-4">Sobras Finais: 0,00 kg</h5>
+                        <div class="card mb-3">
+                            <div class="card-header bg-danger text-white d-flex align-items-center">
+                                Pedidos Restantes
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted text-center py-3">Todos os pedidos foram alocados.</p>
+                            </div>
+                        </div>`;
+                } else {
+                    const totalKgUnassigned = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+                    const printButtonHtml = `<button class="btn btn-info ms-auto no-print" onclick="imprimirSobras('Sobras Finais')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra Final</button>`;
+                    leftoversCard.innerHTML = `
+                        <h5 class="mt-4">Sobras Finais: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                        <div class="card mb-3">
+                            <div class="card-header bg-danger text-white d-flex align-items-center">
+                                Pedidos Restantes
+                                ${printButtonHtml}
+                            </div>
+                            <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                        </div>`;
+                }
+                return;
+            }
+
+            const load = activeLoads[loadId];
+            if (!load) return;
+
+            const cardElement = document.getElementById(loadId);
+            if (!cardElement) return;
+
+            const vInfoMap = {
+                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
+                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
+                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' },
+                toco: { name: 'Toco', colorClass: 'bg-dark', textColor: 'text-white', icon: 'bi-inboxes-fill'}
+            };
+            const vInfo = vInfoMap[load.vehicleType];
+            
+            if(load.vehicleType !== 'toco') {
+                cardElement.outerHTML = renderLoadCard(load, load.vehicleType, vInfo);
+            } else {
+                 const accordionBody = cardElement;
+                 const progressBarContainer = accordionBody.querySelector('.progress');
+                 const tableContainer = accordionBody.querySelector('.table-responsive');
+                 const headerButton = accordionBody.closest('.accordion-item').querySelector('.accordion-button');
+                 
+                 const maxKg = parseFloat(document.getElementById('tocoMaxCapacity').value);
+                 const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                 const isOverloaded = load.totalKg > maxKg;
+                 const pesoPercentual = (load.totalKg / maxKg) * 100;
+                 let progressColor = isOverloaded || pesoPercentual > 100 ? 'bg-danger' : (pesoPercentual > 75 ? 'bg-warning' : 'bg-success');
+                 
+                 progressBarContainer.querySelector('.progress-bar').style.width = `${Math.min(pesoPercentual, 100)}%`;
+                 progressBarContainer.querySelector('.progress-bar').className = `progress-bar ${progressColor}`;
+                 tableContainer.outerHTML = createTable(load.pedidos, null, loadId);
+
+                 headerButton.querySelector('.badge.bg-info, .badge.bg-danger').outerHTML = isOverloaded
+                    ? `<span class="badge bg-danger ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>${totalKgFormatado} kg (ACIMA DO PESO!)</span>`
+                    : `<span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>`;
+                 headerButton.classList.toggle('bg-danger', isOverloaded);
+            }
+        }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
