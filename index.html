@@ -73,8 +73,9 @@
 
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            #login-container, #dashboard-content .no-print { display: none !important; }
             .container, .card, .accordion-item, .accordion-body { background-color: #fff !important; color: #000 !important; border: none !important; box-shadow: none !important; }
-            .no-print, .d-flex.align-items-center.mb-3, .card.p-3.mb-4.shadow-sm, button, .status-message, .card-subtitle, .accordion-button.collapsed, .accordion-collapse.collapse { display: none !important; }
+            .d-flex.align-items-center.mb-3, .card.p-3.mb-4.shadow-sm, button, .status-message, .card-subtitle, .accordion-button.collapsed, .accordion-collapse.collapse { display: none !important; }
             .table-responsive { overflow: visible !important; }
             table, th, td { border: 1px solid #dee2e6 !important; color: #000 !important; }
             h1, h2, h3, h4, h5 { color: #000 !important; margin-top: 1rem; margin-bottom: 0.5rem; }
@@ -109,7 +110,7 @@
             }
         }
         
-        /* --- ESTILOS DA TELA DE LOGIN --- */
+        /* --- MELHORIAS E ANIMAÇÕES NO LOGIN --- */
         #login-container {
             position: fixed;
             top: 0;
@@ -119,17 +120,89 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
             z-index: 9999;
             transition: opacity 0.5s ease;
+            overflow: hidden; /* Para o gradiente não vazar */
         }
+        #login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #2f3338, #212529, #3a3f44, #2b3035);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            z-index: -1;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         .login-card {
             width: 100%;
-            max-width: 400px;
-            animation: fadeIn 0.5s ease-in-out;
+            max-width: 420px;
+            background-color: rgba(43, 48, 53, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        #auth-error-message {
+
+        .form-container {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .form-container.hidden {
+            display: none;
+        }
+
+        .form-exit {
+            animation: slideOut 0.3s forwards ease-in-out;
+        }
+        .form-enter {
+             animation: slideIn 0.3s forwards ease-in-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(-30px); }
+        }
+        
+        #auth-message {
             min-height: 24px;
+        }
+        .auth-toggle-link {
+            cursor: pointer;
+            color: var(--bs-primary);
+            text-decoration: none;
+        }
+        .auth-toggle-link:hover {
+            text-decoration: underline;
+        }
+        .login-card .form-control {
+            background-color: #212529;
+            border-color: #495057;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .login-card .form-control:focus {
+            background-color: #212529;
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        .icon-container {
+             animation: pulse 2.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
     </style>
@@ -137,34 +210,65 @@
 <body>
     <div id="login-container">
         <div class="card p-4 shadow-lg login-card">
-            <div class="text-center mb-4">
-                 <i class="bi bi-truck display-4 me-3"></i>
-                <h3 class="mb-0">Acesso ao Dashboard</h3>
-                <p class="text-body-secondary">Entre com suas credenciais</p>
+            <div class="text-center mb-4 icon-container">
+                 <i class="bi bi-truck display-3 text-primary"></i>
             </div>
-            <form id="login-form">
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" required autocomplete="email">
+
+            <div id="auth-message" class="text-center mb-3"></div>
+            
+            <div id="login-form-container" class="form-container">
+                <div class="text-center mb-4">
+                    <h4 class="mb-1">Bem-vindo de volta!</h4>
+                    <p class="text-body-secondary small">Acesse o dashboard para continuar</p>
                 </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Senha</label>
-                    <input type="password" class="form-control" id="password" required autocomplete="current-password">
-                </div>
-                <div id="auth-error-message" class="text-danger mb-3"></div>
-                <button type="submit" class="btn btn-primary w-100 py-2">
-                    <span id="login-button-text">Entrar</span>
-                    <div id="login-spinner" class="spinner-border spinner-border-sm" role="status" style="display: none;">
-                        <span class="visually-hidden">Loading...</span>
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required autocomplete="email">
                     </div>
-                </button>
-            </form>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Senha</label>
+                        <input type="password" class="form-control" id="password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 mt-2">
+                        <span class="button-text">Entrar</span>
+                        <div class="spinner-border spinner-border-sm" role="status" style="display: none;"></div>
+                    </button>
+                </form>
+                <p class="text-center small mt-3 mb-0">
+                    Não tem uma conta? <a class="auth-toggle-link" id="toggle-to-signup">Cadastre-se</a>
+                </p>
+            </div>
+
+            <div id="signup-form-container" class="form-container hidden">
+                 <div class="text-center mb-4">
+                    <h4 class="mb-1">Crie sua Conta</h4>
+                    <p class="text-body-secondary small">Rápido e fácil</p>
+                </div>
+                <form id="signup-form">
+                    <div class="mb-3">
+                        <label for="signup-email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="signup-email" required autocomplete="email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="signup-password" class="form-label">Senha (mínimo 6 caracteres)</label>
+                        <input type="password" class="form-control" id="signup-password" required autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-2 mt-2">
+                        <span class="button-text">Criar Conta</span>
+                        <div class="spinner-border spinner-border-sm" role="status" style="display: none;"></div>
+                    </button>
+                </form>
+                 <p class="text-center small mt-3 mb-0">
+                    Já tem uma conta? <a class="auth-toggle-link" id="toggle-to-login">Faça login</a>
+                </p>
+            </div>
         </div>
     </div>
     
     <div id="dashboard-content" style="display: none;">
         <div class="container mt-4 mb-4">
-             <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                  <div class="d-flex align-items-center">
                      <i class="bi bi-truck display-4 me-3"></i>
                      <h1 class="mb-0">Dashboard de Separação de Cargas</h1>
@@ -174,7 +278,7 @@
                     <button class="btn btn-outline-danger" id="logout-button"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
                     <button class="btn btn-outline-secondary ms-2" id="limparResultadosBtn"><i class="bi bi-eraser-fill me-2"></i>Limpar Resultados</button>
                  </div>
-             </div>
+            </div>
 
             <div class="card p-3 mb-4 no-print" id="drop-zone">
                 <div class="row g-3 align-items-center">
@@ -1850,9 +1954,6 @@
             }
         }
         
-        // ===================================================
-        // FUNÇÃO DROP CORRIGIDA
-        // ===================================================
         function drop(event) {
             event.preventDefault();
             const dropZoneCard = event.target.closest('.drop-zone-card');
@@ -1862,9 +1963,8 @@
             const { clienteId, sourceId } = JSON.parse(event.dataTransfer.getData("text/plain"));
             const targetId = dropZoneCard.dataset.loadId;
 
-            if (sourceId === targetId) return; // Não faz nada se arrastar para o mesmo lugar
+            if (sourceId === targetId) return; 
 
-            // 1. Identificar a origem (source) e o destino (target) dos pedidos
             let sourceLoad, targetLoad;
             let sourceIsLeftovers = sourceId === 'leftovers';
             let targetIsLeftovers = targetId === 'leftovers';
@@ -1889,17 +1989,15 @@
                 return;
             }
 
-            // 2. Encontrar todos os pedidos do cliente que estão sendo movidos
             const clientOrdersToMove = sourceLoad.pedidos.filter(p => normalizeClientId(p.Cliente) === clienteId);
             if (clientOrdersToMove.length === 0) return;
 
             const clientBlockKg = clientOrdersToMove.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
             const clientBlockCubagem = clientOrdersToMove.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
             
-            // 3. Validar a capacidade do destino (se não for a lista de sobras)
             if (!targetIsLeftovers) {
                 const targetVehicleType = targetLoad.vehicleType;
-                if (targetVehicleType) { // Apenas cargas com tipo definido (não o builder inicial) têm limites
+                if (targetVehicleType) { 
                     let maxKg = Infinity, maxCubagem = Infinity;
                     if (targetVehicleType === 'toco') {
                         maxKg = parseFloat(document.getElementById('tocoMaxCapacity').value);
@@ -1917,8 +2015,6 @@
                 }
             }
             
-            // 4. Mover os pedidos
-            // Remover da origem
             if (sourceIsLeftovers) {
                 currentLeftoversForPrinting = sourceLoad.pedidos.filter(p => normalizeClientId(p.Cliente) !== clienteId);
             } else {
@@ -1927,7 +2023,6 @@
                 sourceLoad.totalCubagem -= clientBlockCubagem;
             }
 
-            // Adicionar ao destino
             if (targetIsLeftovers) {
                 currentLeftoversForPrinting.push(...clientOrdersToMove);
             } else {
@@ -1936,13 +2031,12 @@
                 targetLoad.totalCubagem += clientBlockCubagem;
             }
 
-            // 5. Atualizar a interface gráfica
-            updateLoadUI(sourceId); // Atualiza a UI da origem
+            updateLoadUI(sourceId); 
             
             if (targetIsManualBuilder) {
-                updateManualBuilderUI(); // Se o destino for o builder, chama a função dele
+                updateManualBuilderUI(); 
             } else {
-                updateLoadUI(targetId); // Senão, chama a função padrão
+                updateLoadUI(targetId); 
             }
         }
 
@@ -2019,18 +2113,14 @@
             }
         }
         
-        // ===================================================
-        // FUNÇÕES PARA MONTAGEM DE CARGA MANUAL
-        // ===================================================
-
         function startManualLoadBuilder() {
-            if (manualLoadInProgress) return; // Já está ativo
+            if (manualLoadInProgress) return; 
 
             manualLoadInProgress = {
                 pedidos: [],
                 totalKg: 0,
                 totalCubagem: 0,
-                vehicleType: 'fiorino' // Padrão inicial
+                vehicleType: 'fiorino' 
             };
 
             const builderContainer = document.getElementById('manual-load-builder-container');
@@ -2070,7 +2160,7 @@
             
             const startBtn = document.getElementById('start-manual-load-btn');
             if (startBtn) startBtn.style.display = 'none';
-            updateManualBuilderUI(); // Para renderizar o estado inicial
+            updateManualBuilderUI(); 
         }
 
         function updateManualBuilderUI() {
@@ -2092,7 +2182,6 @@
                 dropText.style.display = 'block';
             }
 
-            // Atualizar Barra de Progresso e Botão Finalizar
             const minKg = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const maxKg = parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`)?.value || document.getElementById(`${vehicleType}MaxCapacity`).value);
             
@@ -2132,14 +2221,12 @@
 
             const newCardHTML = renderLoadCard(newLoad, vehicleType, vehicleInfo[vehicleType]);
             
-            // Adiciona o card na área de resultado correta
             const resultDivId = `resultado-${vehicleType === 'tresQuartos' ? '34' : vehicleType}-geral`;
             const resultContainer = document.getElementById(resultDivId);
             if(resultContainer) {
                resultContainer.insertAdjacentHTML('beforeend', newCardHTML);
             }
 
-            // Limpa o builder
             document.getElementById('manual-load-builder-container').innerHTML = '';
             manualLoadInProgress = null;
             
@@ -2150,14 +2237,12 @@
         function cancelManualLoad() {
              if (!manualLoadInProgress) return;
              
-             // Devolve os pedidos para a lista de sobras
              currentLeftoversForPrinting.push(...manualLoadInProgress.pedidos);
              
-             // Limpa o builder
              document.getElementById('manual-load-builder-container').innerHTML = '';
              manualLoadInProgress = null;
 
-             updateLoadUI('leftovers'); // Atualiza a UI das sobras
+             updateLoadUI('leftovers'); 
              
              const startBtn = document.getElementById('start-manual-load-btn');
              if(startBtn) startBtn.style.display = 'inline-block';
@@ -2165,67 +2250,129 @@
 
         // --- CÓDIGO DE AUTENTICAÇÃO COM SUPABASE ---
 
-        const loginForm = document.getElementById('login-form');
         const loginContainer = document.getElementById('login-container');
         const dashboardContent = document.getElementById('dashboard-content');
-        const logoutButton = document.getElementById('logout-button');
         const userInfoDiv = document.getElementById('user-info');
-        const authErrorMessage = document.getElementById('auth-error-message');
-        const loginButtonText = document.getElementById('login-button-text');
-        const loginSpinner = document.getElementById('login-spinner');
+        const logoutButton = document.getElementById('logout-button');
+        
+        const loginFormContainer = document.getElementById('login-form-container');
+        const signupFormContainer = document.getElementById('signup-form-container');
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        
+        const toggleToSignup = document.getElementById('toggle-to-signup');
+        const toggleToLogin = document.getElementById('toggle-to-login');
+        const authMessage = document.getElementById('auth-message');
 
-        async function handleLogin(event) {
+        const setFormProcessing = (form, isProcessing) => {
+            const button = form.querySelector('button[type="submit"]');
+            const buttonText = button.querySelector('.button-text');
+            const spinner = button.querySelector('.spinner-border');
+
+            if (isProcessing) {
+                button.disabled = true;
+                buttonText.style.display = 'none';
+                spinner.style.display = 'inline-block';
+            } else {
+                button.disabled = false;
+                buttonText.style.display = 'inline-block';
+                spinner.style.display = 'none';
+            }
+        };
+
+        const switchForms = (showSignup) => {
+            const formToHide = showSignup ? loginFormContainer : signupFormContainer;
+            const formToShow = showSignup ? signupFormContainer : loginFormContainer;
+
+            formToHide.classList.add('form-exit');
+            
+            formToHide.addEventListener('animationend', () => {
+                formToHide.classList.remove('form-exit');
+                formToHide.classList.add('hidden');
+                
+                formToShow.classList.remove('hidden');
+                formToShow.classList.add('form-enter');
+            }, { once: true });
+        };
+        
+        toggleToSignup.addEventListener('click', (e) => {
+            e.preventDefault();
+            authMessage.textContent = '';
+            switchForms(true);
+        });
+
+        toggleToLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            authMessage.textContent = '';
+            switchForms(false);
+        });
+
+        loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            authErrorMessage.textContent = '';
-            loginButtonText.style.display = 'none';
-            loginSpinner.style.display = 'inline-block';
+            setFormProcessing(loginForm, true);
+            authMessage.textContent = '';
 
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            const { data, error } = await supabaseClient.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
             if (error) {
-                if (error.message === 'Invalid login credentials') {
-                    authErrorMessage.textContent = 'Email ou senha inválidos.';
-                } else {
-                    authErrorMessage.textContent = 'Erro ao fazer login: ' + error.message;
-                }
+                authMessage.className = 'text-danger';
+                authMessage.textContent = 'Email ou senha inválidos. Tente novamente.';
             }
             
-            loginButtonText.style.display = 'inline-block';
-            loginSpinner.style.display = 'none';
-        }
-        
-        async function handleLogout() {
-            await supabaseClient.auth.signOut();
-        }
+            setFormProcessing(loginForm, false);
+        });
 
-        // Monitora o estado da autenticação
+        signupForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            setFormProcessing(signupForm, true);
+            authMessage.textContent = '';
+            
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+
+            const { error } = await supabaseClient.auth.signUp({ email, password });
+
+            if (error) {
+                authMessage.className = 'text-danger';
+                if (error.message.includes("User already registered")) {
+                    authMessage.textContent = 'Este email já está cadastrado.';
+                } else if (error.message.includes("Password should be at least 6 characters")) {
+                     authMessage.textContent = 'A senha precisa ter no mínimo 6 caracteres.';
+                } else {
+                    authMessage.textContent = 'Erro ao criar conta: ' + error.message;
+                }
+            } else {
+                authMessage.className = 'text-success';
+                authMessage.textContent = 'Conta criada com sucesso! Faça o login para continuar.';
+                switchForms(false);
+            }
+            
+            setFormProcessing(signupForm, false);
+        });
+        
+        logoutButton.addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+        });
+
         supabaseClient.auth.onAuthStateChange((_event, session) => {
             if (session) {
-                // Usuário está logado
                 loginContainer.style.opacity = '0';
                 setTimeout(() => {
                     loginContainer.style.display = 'none';
                     dashboardContent.style.display = 'block';
-                }, 500); // Aguarda a transição de opacidade
+                }, 300);
                 
                 userInfoDiv.textContent = `Logado como: ${session.user.email}`;
             } else {
-                // Usuário não está logado
                 dashboardContent.style.display = 'none';
                 loginContainer.style.display = 'flex';
                 loginContainer.style.opacity = '1';
                 userInfoDiv.textContent = '';
             }
         });
-
-        loginForm.addEventListener('submit', handleLogin);
-        logoutButton.addEventListener('click', handleLogout);
 
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
