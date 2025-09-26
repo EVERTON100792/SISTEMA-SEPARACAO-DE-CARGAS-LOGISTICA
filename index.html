@@ -142,10 +142,6 @@
             color: white;
             box-shadow: inset 0 -1px 0 rgba(0,0,0,.125);
         }
-        
-        #controls-accordion .accordion-button {
-            background-color: var(--dark-surface);
-        }
 
         .accordion-body { background-color: var(--dark-surface); }
         
@@ -211,7 +207,7 @@
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             #login-container, #dashboard-content .no-print { display: none !important; }
             .container, .card, .accordion-item, .accordion-body, .card-header { background-color: #fff !important; color: #000 !important; border: none !important; box-shadow: none !important; }
-            .d-flex.align-items-center.mb-3, .card.p-3.mb-4.shadow-sm, button, .status-message, .card-subtitle, .accordion-button.collapsed, .accordion-collapse.collapse, .nav-tabs, .tab-content, #controls-accordion { display: none !important; }
+            .d-flex.align-items-center.mb-3, .card.p-3.mb-4.shadow-sm, button, .status-message, .card-subtitle, .accordion-button.collapsed, .accordion-collapse.collapse, .nav-tabs, .tab-content { display: none !important; }
             .table-responsive { overflow: visible !important; }
             table, th, td { border: 1px solid #dee2e6 !important; color: #000 !important; }
             h1, h2, h3, h4, h5 { color: #000 !important; margin-top: 1rem; margin-bottom: 0.5rem; }
@@ -300,208 +296,296 @@
                 </div>
             </div>
 
-            <div class="accordion mb-4 no-print" id="controls-accordion">
-                <div class="accordion-item" style="background-color: var(--dark-surface); border: 1px solid var(--dark-border); border-radius: 0.75rem;">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseControls">
-                            <i class="bi bi-gear-wide-connected me-2"></i> Painel de Controles e Configurações (Clique para expandir)
-                        </button>
-                    </h2>
-                    <div id="collapseControls" class="accordion-collapse collapse" data-bs-parent="#controls-accordion">
-                        <div class="accordion-body">
-                            <div class="card mb-4" id="drop-zone">
-                                <div class="card-header"><i class="bi bi-file-earmark-arrow-up-fill me-2"></i>1. Processar Planilha</div>
-                                <div class="card-body">
-                                    <div class="row g-3 align-items-center">
-                                        <div class="col-md-4">
-                                            <label for="fileInput" class="form-label fw-bold">Arquivo:</label>
-                                            <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv" style="display: none;">
-                                            <div id="drop-zone-text" class="text-center p-4 rounded-3">
-                                                <i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                                <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-5">
-                                            <label class="form-label fw-bold">Faixa de Rotas (Opcional):</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text"><i class="bi bi-signpost-split-fill"></i></span>
-                                                <input type="text" class="form-control" id="rotaInicialInput" placeholder="Rota Inicial">
-                                                <input type="text" class="form-control" id="rotaFinalInput" placeholder="Rota Final">
-                                            </div>
-                                            <div class="form-check form-switch mt-2">
-                                                <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
-                                                <label class="form-check-label" for="autoProcessCheckbox">Processar automaticamente</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 align-self-end">
-                                            <button class="btn btn-primary w-100 py-2" id="processarBtn" onclick="processar()" disabled><i class="bi bi-gear-fill me-2"></i>Processar Cargas</button>
-                                        </div>
-                                    </div>
-                                    <div id="status" class="mt-3 status-message"></div>
-                                </div>
+            <div class="card mb-4 no-print" id="drop-zone">
+                <div class="card-header"><i class="bi bi-file-earmark-arrow-up-fill me-2"></i>Painel de Controle</div>
+                <div class="card-body">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-4">
+                            <label for="fileInput" class="form-label fw-bold">1. Arraste a planilha:</label>
+                            <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv" style="display: none;">
+                            <div id="drop-zone-text" class="text-center p-4 rounded-3">
+                                <i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
+                                <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>
                             </div>
-                            <div class="card mb-4">
-                                <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-sliders me-2"></i>2. Configurações de Veículos</h2></div>
-                                <div class="card-body">
-                                     <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
-                                        <div class="col-md-12"><strong class="text-success">Fiorino</strong></div>
-                                        <div class="col-md-3"><label for="fiorinoMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="fiorinoMinCapacity" value="300" step="10"></div>
-                                        <div class="col-md-3"><label for="fiorinoMaxCapacity" class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control config-input" id="fiorinoMaxCapacity" value="500" step="10"></div>
-                                        <div class="col-md-3"><label for="fiorinoCubage" class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control config-input" id="fiorinoCubage" value="1.5" step="0.1"></div>
-                                        <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetFiorino">Reset</button></div>
-                                        <div class="col-md-3"></div>
-                                        <div class="col-md-3"><label for="fiorinoHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="fiorinoHardMaxCapacity" value="560" step="10"></div>
-                                        <div class="col-md-3"><label for="fiorinoHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="fiorinoHardCubage" value="1.7" step="0.1"></div>
-                                    </div>
-                                    <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
-                                        <div class="col-md-12"><strong class="text-primary">Van</strong></div>
-                                        <div class="col-md-3"><label for="vanMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="vanMinCapacity" value="1100" step="10"></div>
-                                        <div class="col-md-3"><label for="vanMaxCapacity" class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control config-input" id="vanMaxCapacity" value="1560" step="10"></div>
-                                        <div class="col-md-3"><label for="vanCubage" class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control config-input" id="vanCubage" value="5.0" step="0.1"></div>
-                                        <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetVan">Reset</button></div>
-                                        <div class="col-md-3"></div>
-                                        <div class="col-md-3"><label for="vanHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="vanHardMaxCapacity" value="1600" step="10"></div>
-                                        <div class="col-md-3"><label for="vanHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="vanHardCubage" value="5.6" step="0.1"></div>
-                                    </div>
-                                    <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
-                                        <div class="col-md-12"><strong class="text-warning">3/4</strong></div>
-                                        <div class="col-md-3"><label for="tresQuartosMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMinCapacity" value="2300" step="10"></div>
-                                        <div class="col-md-3"><label for="tresQuartosMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMaxCapacity" value="4100" step="10"></div>
-                                        <div class="col-md-3"><label for="tresQuartosCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tresQuartosCubage" value="15.0" step="0.1"></div>
-                                        <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetTresQuartos">Reset</button></div>
-                                    </div>
-                                    <div class="row g-3">
-                                        <div class="col-md-12"><strong>Toco</strong></div>
-                                        <div class="col-md-3"><label for="tocoMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tocoMinCapacity" value="5000" step="10"></div>
-                                        <div class="col-md-3"><label for="tocoMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tocoMaxCapacity" value="8500" step="10"></div>
-                                        <div class="col-md-3"><label for="tocoCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tocoCubage" value="30.0" step="0.1"></div>
-                                        <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetToco">Reset</button></div>
-                                    </div>
-                                    <div class="mt-4 d-flex justify-content-end"><button class="btn btn-success me-2" id="saveConfig"><i class="bi bi-check-circle-fill me-2"></i>Salvar Tudo</button><button class="btn btn-danger" id="resetAllConfigs"><i class="bi bi-arrow-clockwise me-2"></i>Resetar Tudo</button></div>
-                                    <div id="configStatus" class="mt-2 status-message text-end"></div>
-                                </div>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold">2. Defina a Faixa de Rotas (Opcional):</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-signpost-split-fill"></i></span>
+                                <input type="text" class="form-control" id="rotaInicialInput" placeholder="Rota Inicial">
+                                <input type="text" class="form-control" id="rotaFinalInput" placeholder="Rota Final">
                             </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-4 mb-md-0">
-                                    <div class="card h-100">
-                                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-slash-circle-fill me-2"></i>3. Bloqueio Manual</h2></div>
-                                        <div class="card-body d-flex flex-column">
-                                            <label for="bloquearPedidoInput" class="form-label">Número do Pedido a Bloquear:</label>
-                                            <div class="input-group mb-3"><input type="text" class="form-control" id="bloquearPedidoInput" placeholder="Digite o número..."><button class="btn btn-outline-danger" type="button" onclick="bloquearPedido()">Bloquear</button></div>
-                                            <label class="form-label mt-2">Pedidos Bloqueados:</label>
-                                            <div id="lista-pedidos-bloqueados" class="p-2 border rounded border-secondary flex-grow-1" style="background-color: var(--dark-bg);"><span class="text-muted">Nenhum.</span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                     <div class="card h-100">
-                                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>4. Carga Especial</h2></div>
-                                         <div class="card-body d-flex flex-column">
-                                            <div class="flex-grow-1">
-                                                <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
-                                                <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
-                                            </div>
-                                            <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaEspecial()"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
+                                <label class="form-check-label" for="autoProcessCheckbox">Processar automaticamente ao carregar arquivo</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3 align-self-end">
+                            <button class="btn btn-primary w-100 py-2" id="processarBtn" onclick="processar()" disabled><i class="bi bi-gear-fill me-2"></i>Processar Cargas</button>
+                        </div>
+                    </div>
+                     <div id="status" class="mt-3 status-message"></div>
+                </div>
+            </div>
+            
+            <div class="card mb-4 no-print">
+                <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-sliders me-2"></i>Configurações de Veículos</h2></div>
+                <div class="card-body">
+                    <p class="card-subtitle mb-3 text-body-secondary small">Defina as capacidades preferenciais e os limites máximos de peso/cubagem para cada veículo.</p>
+                    
+                    <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
+                        <div class="col-md-12"><strong class="text-success">Fiorino</strong></div>
+                        <div class="col-md-3">
+                            <label for="fiorinoMinCapacity" class="form-label">Peso Mín (kg)</label>
+                            <input type="number" class="form-control config-input" id="fiorinoMinCapacity" value="300" step="10">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="fiorinoMaxCapacity" class="form-label">Peso Pref. (kg)</label>
+                            <input type="number" class="form-control config-input" id="fiorinoMaxCapacity" value="500" step="10">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="fiorinoCubage" class="form-label">Cubagem Pref. (m³)</label>
+                            <input type="number" class="form-control config-input" id="fiorinoCubage" value="1.5" step="0.1">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-secondary w-100" id="resetFiorino">Reset Fiorino</button>
+                        </div>
+                        <div class="col-md-3"></div>
+                        <div class="col-md-3">
+                            <label for="fiorinoHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label>
+                            <input type="number" class="form-control config-input" id="fiorinoHardMaxCapacity" value="560" step="10">
+                        </div>
+                         <div class="col-md-3">
+                            <label for="fiorinoHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label>
+                            <input type="number" class="form-control config-input" id="fiorinoHardCubage" value="1.7" step="0.1">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
+                        <div class="col-md-12"><strong class="text-primary">Van</strong></div>
+                        <div class="col-md-3">
+                            <label for="vanMinCapacity" class="form-label">Peso Mín (kg)</label>
+                            <input type="number" class="form-control config-input" id="vanMinCapacity" value="1100" step="10">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="vanMaxCapacity" class="form-label">Peso Pref. (kg)</label>
+                            <input type="number" class="form-control config-input" id="vanMaxCapacity" value="1560" step="10">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="vanCubage" class="form-label">Cubagem Pref. (m³)</label>
+                            <input type="number" class="form-control config-input" id="vanCubage" value="5.0" step="0.1">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-secondary w-100" id="resetVan">Reset Van</button>
+                        </div>
+                        <div class="col-md-3"></div>
+                        <div class="col-md-3">
+                            <label for="vanHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label>
+                            <input type="number" class="form-control config-input" id="vanHardMaxCapacity" value="1600" step="10">
+                        </div>
+                         <div class="col-md-3">
+                            <label for="vanHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label>
+                            <input type="number" class="form-control config-input" id="vanHardCubage" value="5.6" step="0.1">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
+                        <div class="col-md-12"><strong class="text-warning">3/4</strong></div>
+                        <div class="col-md-3">
+                            <label for="tresQuartosMinCapacity" class="form-label">Peso Mín (kg)</label>
+                            <input type="number" class="form-control config-input" id="tresQuartosMinCapacity" value="2300" step="10">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="tresQuartosMaxCapacity" class="form-label">Peso Máx (kg)</label>
+                            <input type="number" class="form-control config-input" id="tresQuartosMaxCapacity" value="4100" step="10">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="tresQuartosCubage" class="form-label">Cubagem Máx (m³)</label>
+                            <input type="number" class="form-control config-input" id="tresQuartosCubage" value="15.0" step="0.1">
+                        </div>
+                         <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-secondary w-100" id="resetTresQuartos">Reset 3/4</button>
+                        </div>
+                    </div>
+
+                     <div class="row g-3">
+                         <div class="col-md-12"><strong>Toco</strong></div>
+                        <div class="col-md-3">
+                            <label for="tocoMinCapacity" class="form-label">Peso Mín (kg)</label>
+                            <input type="number" class="form-control config-input" id="tocoMinCapacity" value="5000" step="10">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="tocoMaxCapacity" class="form-label">Peso Máx (kg)</label>
+                            <input type="number" class="form-control config-input" id="tocoMaxCapacity" value="8500" step="10">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="tocoCubage" class="form-label">Cubagem Máx (m³)</label>
+                            <input type="number" class="form-control config-input" id="tocoCubage" value="30.0" step="0.1">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-secondary w-100" id="resetToco">Reset Toco</button>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex justify-content-end">
+                        <button class="btn btn-success me-2" id="saveConfig"><i class="bi bi-check-circle-fill me-2"></i>Salvar Configurações</button>
+                        <button class="btn btn-danger" id="resetAllConfigs"><i class="bi bi-arrow-clockwise me-2"></i>Resetar Todas</button>
+                    </div>
+                     <div id="configStatus" class="mt-2 status-message text-end"></div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 no-print">
+                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-slash-circle-fill me-2"></i>Bloqueio Manual de Pedidos</h2></div>
+                        <div class="card-body d-flex flex-column">
+                            <p class="card-subtitle mb-3 text-body-secondary small">Adicione o número de um pedido para impedi-lo de ser incluído em qualquer carga.</p>
+                            <label for="bloquearPedidoInput" class="form-label">Número do Pedido a Bloquear:</label>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" id="bloquearPedidoInput" placeholder="Digite o número do pedido...">
+                                <button class="btn btn-outline-danger" type="button" onclick="bloquearPedido()">Bloquear</button>
+                            </div>
+                            <label class="form-label mt-2">Pedidos Atualmente Bloqueados:</label>
+                            <div id="lista-pedidos-bloqueados" class="p-2 border rounded border-secondary flex-grow-1" style="background-color: var(--dark-bg);">
+                                <span class="text-muted">Nenhum pedido bloqueado.</span>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div class="col-md-6 mb-4">
+                     <div class="card h-100 no-print">
+                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>Montagem de Carga Especial</h2></div>
+                         <div class="card-body d-flex flex-column">
+                            <p class="card-subtitle mb-3 text-body-secondary small">Cole os números dos pedidos (um por linha) que devem ser agrupados em uma única carga.</p>
+                            <div class="flex-grow-1">
+                                <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos:</label>
+                                <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números dos pedidos aqui..."></textarea>
+                            </div>
+                            <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaEspecial()"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-
+            
             <div id="resultado-carga-especial" class="mb-4"></div>
+            
             <div id="card-resumo-geral-container" class="mb-4"></div>
 
-            <div class="row">
-                <div class="col-lg-8 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2>
-                        </div>
-                        <div class="card-body p-0">
-                             <ul class="nav nav-tabs nav-fill px-3" id="vehicleTabs" role="tablist">
-                                <li class="nav-item" role="presentation"><button class="nav-link active" id="fiorino-tab" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane" type="button" role="tab"><i class="bi bi-box-seam-fill me-2"></i>Fiorino</button></li>
-                                <li class="nav-item" role="presentation"><button class="nav-link" id="van-tab" data-bs-toggle="tab" data-bs-target="#van-tab-pane" type="button" role="tab"><i class="bi bi-truck-front-fill me-2"></i>Van</button></li>
-                                <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4</button></li>
-                            </ul>
-                            <div class="tab-content" id="vehicleTabsContent">
-                                <div class="tab-pane fade show active p-3 workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
-                                    <div class="manual-builder-slot"></div>
-                                    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Fiorinos.</p>
-                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-fiorino-geral', 'Cargas de Fiorino')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>
-                                    </div>
-                                    <div class="mb-3 no-print" id="botoes-fiorino"><p class="text-muted">Processe um arquivo para ver as rotas disponíveis.</p></div>
-                                    <hr class="no-print"><div id="resultado-fiorino-geral" class="mt-3"></div>
-                                </div>
-                                <div class="tab-pane fade p-3 workspace-tab-pane" id="van-tab-pane" role="tabpanel">
-                                    <div class="manual-builder-slot"></div>
-                                    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Vans.</p>
-                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>
-                                    </div>
-                                    <div class="mb-3 no-print" id="botoes-van"><p class="text-muted">Processe um arquivo para ver as rotas disponíveis.</p></div>
-                                    <hr class="no-print"><div id="resultado-van-geral" class="mt-3"></div>
-                                </div>
-                                <div class="tab-pane fade p-3 workspace-tab-pane" id="tres-quartos-tab-pane" role="tabpanel">
-                                    <div class="manual-builder-slot"></div>
-                                    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as cargas 3/4.</p>
-                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-34-geral', 'Cargas de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>
-                                    </div>
-                                    <div class="mb-3 no-print" id="botoes-34"><p class="text-muted">Processe um arquivo para ver as rotas disponíveis.</p></div>
-                                    <hr class="no-print"><div id="resultado-34-geral" class="mt-3"></div>
-                                </div>
+            <div class="card mb-4 border-danger">
+                <div class="card-header bg-danger-subtle text-danger-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-slash-circle-fill me-2"></i>Resultado do Bloqueio Manual</h2></div>
+                <div class="card-body">
+                    <p class="card-subtitle mb-2 text-body-secondary small">Pedidos removidos da lista geral por terem sido bloqueados manualmente por você.</p>
+                    <div id="resultado-bloqueados"></div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                 <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis para Montagem</h2>
+                     <div class="no-print">
+                        <button class="btn btn-sm btn-outline-danger ms-2" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i> Exportar Atrasados</button>
+                        <button class="btn btn-sm btn-outline-light" onclick="window.print()"><i class="bi bi-printer-fill me-1"></i> Imprimir Tudo</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-subtitle mb-3 text-body-secondary small">Pedidos que <strong>não possuem CF numérico</strong>, agrupados por rota. Use os botões no painel abaixo para montar as cargas.</p>
+                    <div class="input-group mb-3 no-print">
+                        <input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar por Nº do Pedido...">
+                        <button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()"><i class="bi bi-search"></i></button>
+                    </div>
+                    <div id="search-result" class="mb-3"></div>
+                    <div id="resultado-geral"></div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="card-title h5 mb-0"><i class="bi bi-check2-square me-2"></i>Painel de Montagem de Cargas</h2>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="nav nav-tabs nav-fill px-3" id="vehicleTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="fiorino-tab" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane" type="button" role="tab"><i class="bi bi-box-seam-fill me-2"></i>Fiorino</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="van-tab" data-bs-toggle="tab" data-bs-target="#van-tab-pane" type="button" role="tab"><i class="bi bi-truck-front-fill me-2"></i>Van</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="vehicleTabsContent">
+                        <div class="tab-pane fade show active p-3" id="fiorino-tab-pane" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+                                <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Fiorinos.</p>
+                                <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-fiorino-geral', 'Cargas de Fiorino')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas de Fiorino</button>
                             </div>
+                            <div class="mb-3 no-print" id="botoes-fiorino">
+                                <p class="text-muted">Processe um arquivo para ver as rotas de Fiorino disponíveis.</p>
+                            </div>
+                            <hr class="no-print">
+                            <div id="resultado-fiorino-geral" class="mt-3"></div>
+                        </div>
+                        <div class="tab-pane fade p-3" id="van-tab-pane" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+                                <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Vans.</p>
+                                <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas de Van</button>
+                            </div>
+                            <div class="mb-3 no-print" id="botoes-van">
+                               <p class="text-muted">Processe um arquivo para ver as rotas de Van disponíveis.</p>
+                            </div>
+                            <hr class="no-print">
+                            <div id="resultado-van-geral" class="mt-3"></div>
+                        </div>
+                        <div class="tab-pane fade p-3" id="tres-quartos-tab-pane" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+                                <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as cargas 3/4.</p>
+                                <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-34-geral', 'Cargas de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas de 3/4</button>
+                            </div>
+                            <div class="mb-3 no-print" id="botoes-34">
+                                <p class="text-muted">Processe um arquivo para ver as rotas de 3/4 disponíveis.</p>
+                            </div>
+                            <hr class="no-print">
+                            <div id="resultado-34-geral" class="mt-3"></div>
                         </div>
                     </div>
                 </div>
-
-                <div class="col-lg-4 mb-4">
-                    <div class="card" id="pedidos-disponiveis-card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                           <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis</h2>
-                            <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
-                       </div>
-                       <div class="card-body">
-                           <p class="card-subtitle mb-3 text-body-secondary small">Pedidos sem CF numérico, agrupados por rota.</p>
-                           <div class="input-group mb-3 no-print"><input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar por Nº do Pedido..."><button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()"><i class="bi bi-search"></i></button></div>
-                           <div id="search-result" class="mb-3"></div>
-                           <div id="resultado-geral"></div>
-                       </div>
-                   </div>
-                </div>
             </div>
-
-            <hr class="my-4">
-            <h3 class="mb-3">Resultados Adicionais da Análise</h3>
             
-            <div class="card mb-4 border-danger">
-                <div class="card-header bg-danger-subtle text-danger-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-slash-circle-fill me-2"></i>Pedidos Bloqueados Manualmente</h2></div>
-                <div class="card-body"><div id="resultado-bloqueados"></div></div>
-            </div>
+            <div id="manual-load-builder-container" class="mb-4"></div>
 
             <div class="card mb-4 border-warning">
                 <div class="card-header bg-warning-subtle text-warning-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-sign-turn-right-fill me-2"></i>Pedidos da Rota 1 para Alteração</h2></div>
-                <div class="card-body"><div id="resultado-rota1"></div></div>
+                <div class="card-body">
+                    <p class="card-subtitle mb-2 text-body-secondary small">Pedidos da Rota 1 sem CF numérico e com Coluna 5 específica, que precisam de alteração de rota.</p>
+                    <div id="resultado-rota1"></div>
+                </div>
             </div>
 
             <div class="card mb-4">
                 <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-lightning-charge-fill me-2"></i>Cargas 3/4 (Formadas Automaticamente)</h2></div>
-                <div class="card-body"><div id="resultado-tres-quartos"></div></div>
+                <div class="card-body">
+                    <p class="card-subtitle mb-2 text-body-secondary small">Cargas formadas a partir de um pedido muito grande na mesma rota.</p>
+                    <div id="resultado-tres-quartos"></div>
+                </div>
             </div>
 
             <div class="card mb-4">
                 <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-inboxes-fill me-2"></i>Cargas "Toco"</h2></div>
-                <div class="card-body"><div id="resultado-toco"></div></div>
+                <div class="card-body">
+                    <p class="card-subtitle mb-2 text-body-secondary small">Grupos de cargas onde a Coluna4/5 contém "TOCO" e o CF se repete.</p>
+                    <div id="resultado-toco"></div>
+                </div>
             </div>
             
             <div class="card mb-4 border-secondary">
-                <div class="card-header bg-secondary-subtle text-secondary-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (CF Numérico ou Bloqueio por Regra)</h2></div>
-                <div class="card-body"><div id="resultado-cf-numerico"></div></div>
+                <div class="card-header bg-secondary-subtle text-secondary-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (CF Numérico ou Bloqueados por Regra)</h2></div>
+                <div class="card-body">
+                    <p class="card-subtitle mb-2 text-body-secondary small">Pedidos removidos da lista geral por possuírem CF numérico, ou por pertencerem a clientes com pedidos bloqueados por regra do sistema.</p>
+                    <div id="resultado-cf-numerico"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -511,7 +595,21 @@
         document.addEventListener('DOMContentLoaded', function () {
             if (document.getElementById('particles-js')) {
                 particlesJS('particles-js', {
-                    "particles": { "number": { "value": 60, "density": { "enable": true, "value_area": 800 } }, "color": { "value": "#4a515a" }, "shape": { "type": "circle" }, "opacity": { "value": 0.5, "random": true, "anim": { "enable": true, "speed": 1, "opacity_min": 0.1, "sync": false } }, "size": { "value": 3, "random": true }, "line_linked": { "enable": true, "distance": 150, "color": "#4a515a", "opacity": 0.4, "width": 1 }, "move": { "enable": true, "speed": 2, "direction": "none", "out_mode": "out" } }, "interactivity": { "detect_on": "canvas", "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true }, "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 1 } } } }, "retina_detect": true
+                    "particles": {
+                        "number": { "value": 60, "density": { "enable": true, "value_area": 800 } },
+                        "color": { "value": "#4a515a" },
+                        "shape": { "type": "circle", "stroke": { "width": 0, "color": "#000000" } },
+                        "opacity": { "value": 0.5, "random": true, "anim": { "enable": true, "speed": 1, "opacity_min": 0.1, "sync": false } },
+                        "size": { "value": 3, "random": true, "anim": { "enable": false, "speed": 40, "size_min": 0.1, "sync": false } },
+                        "line_linked": { "enable": true, "distance": 150, "color": "#4a515a", "opacity": 0.4, "width": 1 },
+                        "move": { "enable": true, "speed": 2, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false, "attract": { "enable": false, "rotateX": 600, "rotateY": 1200 } }
+                    },
+                    "interactivity": {
+                        "detect_on": "canvas",
+                        "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true },
+                        "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 1 } }, "bubble": { "distance": 400, "size": 40, "duration": 2, "opacity": 8, "speed": 3 }, "repulse": { "distance": 200, "duration": 0.4 }, "push": { "particles_nb": 4 }, "remove": { "particles_nb": 2 } }
+                    },
+                    "retina_detect": true
                 });
             }
         });
@@ -520,7 +618,7 @@
     
     <script>
         // TODA A LÓGICA JAVASCRIPT ORIGINAL FOI MANTIDA AQUI.
-        // NENHUMA ALTERAÇÃO FUNCIONAL FOI FEITA, APENAS O LOCAL DE INSERÇÃO DO PAINEL MANUAL.
+        // NENHUMA ALTERAÇÃO FUNCIONAL FOI FEITA.
         const SUPABASE_URL = 'https://mwfsitvoshwipmvgcdmc.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13ZnNpdHZvc2h3aXBtdmdjZG1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTY3OTIsImV4cCI6MjA3NDMzMjc5Mn0.DvXQ_HMMnJZyQh17C6N426r1X9AeYjIMpXVbTRspFq0';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -790,7 +888,7 @@
             if (planilhaData.length === 0) { searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>'; return; }
             let pedidoEncontrado = null; let local = 'Não encontrado'; let accordionId = '';
             pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
-            if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = null; } // Changed to null because it's not in an accordion anymore
+            if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = 'accordionGeral'; }
             if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosComCFNumericoIsolado.find(p => String(p.Num_Pedido) === searchInput);
                 if (pedidoEncontrado) { local = 'Pedidos Filtrados'; accordionId = 'accordionCF'; }
@@ -812,10 +910,10 @@
                         if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
                             local = 'Bloqueado Manualmente por você.';
                         } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                            local = 'Alocado na Carga Especial.';
+                            local = 'Alocado na Carga Especial (Batista & Izepe).';
                         }
                         else {
-                            local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
+                            local = 'Encontrado na planilha original, mas foi filtrado por alguma regra (bloqueio, tipo de coluna, etc.).';
                         }
                 }
             }
@@ -825,7 +923,7 @@
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
                                      <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
-                } else if (accordionId !== null) { // Allow highlighting in bottom accordions
+                } else if (accordionId) {
                                 buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
@@ -840,9 +938,7 @@
                 row.classList.toggle('table-info');
                 if (row.classList.contains('table-info')) {
                     const collapseEl = row.closest('.accordion-collapse');
-                    if (collapseEl && !collapseEl.classList.contains('show')) { 
-                        bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); 
-                    }
+                    if (collapseEl && !collapseEl.classList.contains('show')) { bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); }
                     setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350);
                 }
             }
@@ -1201,7 +1297,7 @@
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const veiculo = rotaVeiculoMap[rota]?.type || 'N/D';
                 const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota} (${veiculoNome})</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota} (${veiculoNome})</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length} pedidos</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -1227,14 +1323,14 @@
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length} pedidos</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
         function displayTresQuartos(div, loads) {
             if (loads.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga 3/4 formada automaticamente.</div>'; return; }
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2 no-print"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>` : ''}</div>`;
+            let html = `<div class="d-flex justify-content-between align-items-center mb-2"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light no-print" onclick="imprimirGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Concluídas</button>` : ''}</div>`;
             
             const maxKg = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
 
@@ -1267,8 +1363,8 @@
             }
 
             let html = `
-                <div class="d-flex justify-content-end mb-2 no-print">
-                    <button class="btn btn-sm btn-outline-warning" onclick="imprimirGeneric('resultado-rota1', 'Pedidos Rota 1 para Alteração')">
+                <div class="d-flex justify-content-end mb-2">
+                    <button class="btn btn-sm btn-outline-warning no-print" onclick="imprimirGeneric('resultado-rota1', 'Pedidos Rota 1 para Alteração')">
                         <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
                     </button>
                 </div>
@@ -1283,8 +1379,10 @@
 
             const printWindow = createPrintWindow(title);
             const contentToPrint = divToPrint.cloneNode(true);
-            const buttonsInContent = contentToPrint.querySelectorAll('button.no-print');
-            buttonsInContent.forEach(btn => btn.remove());
+            const buttonInContent = contentToPrint.querySelector('button');
+            if (buttonInContent) {
+                buttonInContent.remove();
+            }
 
             printWindow.document.body.innerHTML = `<h3>${title}</h3>` + contentToPrint.innerHTML;
             printWindow.document.close();
@@ -1448,8 +1546,8 @@
                         acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
                     }
                     acc[clienteId].pedidos.push(pedido);
-                    acc[clienteId].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                    acc[clienteId].totalCubagem += parseFloat(String(p.Cubagem).replace(',', '.')) || 0;
+                    acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                    acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
                     return acc;
                 }, {});
                 const packableGroups = Object.values(clientGroupsMap);
@@ -1502,7 +1600,7 @@
                     tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
                 };
                 
-                let html = `<div class="resultado-container">`; // Wrapper for easier clearing
+                let html = `<h5 class="mt-3">Cargas Automáticas para <strong>${title}</strong></h5>`;
 
                 if (primaryLoads.length === 0) {
                     html += `<div class="alert alert-secondary">Nenhuma carga de ${vehicleInfo[vehicleType].name} foi formada para esta rota.</div>`;
@@ -1522,8 +1620,8 @@
                 if (currentLeftoversForPrinting.length > 0) {
                     const finalLeftoverKg = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                     
-                    const manualLoadButton = `<button id="start-manual-load-btn" class="btn btn-success ms-auto no-print" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual</button>`;
-                    const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
+                    const manualLoadButton = `<button id="start-manual-load-btn" class="btn btn-success ms-auto no-print" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual com Sobras</button>`;
+                    const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra</button>`;
 
                     html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
                                 <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
@@ -1536,8 +1634,7 @@
                                 </div>
                             </div>`;
                 }
-                html += `</div>`;
-                resultadoDiv.innerHTML = html;
+                resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${html}</div>`);
             }, 50);
         }
         
@@ -1616,7 +1713,7 @@
                 const progressBar = `<div class="progress mb-3" role="progressbar" style="height: 10px;"><div class="progress-bar ${progressColor}" style="width: ${Math.min(pesoPercentual, 100)}%"></div></div>`;
                 const headerColorClass = isOverloaded ? 'bg-danger' : '';
 
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length}</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>${progressBar}${createTable(pedidos, null, loadId)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} pedidos</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir esta Carga Toco</button>${progressBar}${createTable(pedidos, null, loadId)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -1780,7 +1877,7 @@
                 return;
             }
 
-            const title = 'Carga Especial';
+            const title = 'Carga Especial - Batista & Izepe';
             const printWindow = createPrintWindow(title);
             
             let contentToPrint = `<h3>${title}</h3>` + cardToPrint.outerHTML;
@@ -1824,26 +1921,26 @@
                     <div class="row">
                         <div class="col-md-4">
                             <h6 class="text-white-50">TOTAIS DA PLANILHA</h6>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Pedidos no Arquivo <span class="badge bg-primary rounded-pill">${nf(stats.totalPlanilha)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Peso Total no Arquivo <span class="badge bg-primary rounded-pill">${kf(stats.pesoTotal)} kg</span></li>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Pedidos no Arquivo <span class="badge bg-primary rounded-pill">${nf(stats.totalPlanilha)}</span></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Peso Total no Arquivo <span class="badge bg-primary rounded-pill">${kf(stats.pesoTotal)} kg</span></li>
                             </ul>
                         </div>
                         <div class="col-md-4">
                             <h6 class="text-white-50">PEDIDOS PRÉ-PROCESSADOS</h6>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Carga Especial<span class="badge bg-info rounded-pill">${nf(stats.pedidosEspeciais)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas Toco (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosToco)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas 3/4 Auto (pedidos)<span class="badge bg-warning rounded-pill">${nf(stats.pedidos34Auto)}</span></li>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Carga Especial<span class="badge bg-info rounded-pill">${nf(stats.pedidosEspeciais)}</span></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Cargas Toco (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosToco)}</span></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Cargas 3/4 Auto (pedidos)<span class="badge bg-warning rounded-pill">${nf(stats.pedidos34Auto)}</span></li>
                             </ul>
                         </div>
                         <div class="col-md-4">
                             <h6 class="text-white-50">DISPONÍVEL PARA MONTAGEM</h6>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Filtrados (CF Num./Rota 1)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosFiltrados)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center"><strong>Pedidos Disponíveis</strong><span class="badge bg-success rounded-pill"><strong>${nf(stats.pedidosDisponiveis)}</strong></span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center"><strong>Peso Disponível</strong><span class="badge bg-success rounded-pill"><strong>${kf(stats.pesoDisponivel)} kg</strong></span></li>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">Pedidos Filtrados (CF Num./Rota 1)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosFiltrados)}</span></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-success"><strong>Pedidos Disponíveis</strong><span class="badge bg-success rounded-pill"><strong>${nf(stats.pedidosDisponiveis)}</strong></span></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-success"><strong>Peso Disponível</strong><span class="badge bg-success rounded-pill"><strong>${kf(stats.pesoDisponivel)} kg</strong></span></li>
                             </ul>
                         </div>
                     </div>
@@ -1979,8 +2076,8 @@
                         </div>`;
                 } else {
                     const totalKgUnassigned = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                    const manualLoadButton = `<button id="start-manual-load-btn" class="btn btn-success ms-auto no-print" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual</button>`;
-                    const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
+                    const manualLoadButton = `<button id="start-manual-load-btn" class="btn btn-success ms-auto no-print" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual com Sobras</button>`;
+                    const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobra</button>`;
                     leftoversCard.innerHTML = `
                         <h5 class="mt-4">Sobras Finais: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
                         <div class="card mb-3">
@@ -2034,35 +2131,49 @@
         }
         
         function startManualLoadBuilder() {
-            if (document.querySelector('.manual-builder-slot:not(:empty)')) return;
+            if (manualLoadInProgress) return; 
 
             manualLoadInProgress = {
-                pedidos: [], totalKg: 0, totalCubagem: 0, vehicleType: 'fiorino' 
+                pedidos: [],
+                totalKg: 0,
+                totalCubagem: 0,
+                vehicleType: 'fiorino' 
             };
 
-            const activeTabPane = document.querySelector('.tab-pane.active');
-            if (!activeTabPane) {
-                alert("Erro: Nenhuma aba de trabalho ativa para criar o painel.");
-                return;
-            }
-            const builderSlot = activeTabPane.querySelector('.manual-builder-slot');
-            
-            builderSlot.innerHTML = `
-                <div class="card border-info shadow-lg mb-4" id="manual-load-card">
-                    <div class="card-header bg-info text-dark"><h5 class="mb-0"><i class="bi bi-tools me-2"></i>Painel de Montagem de Carga Manual</h5></div>
+            const builderContainer = document.getElementById('manual-load-builder-container');
+            builderContainer.innerHTML = `
+                <div class="card border-info shadow-lg" id="manual-load-card">
+                    <div class="card-header bg-info text-dark">
+                        <h5 class="mb-0"><i class="bi bi-tools me-2"></i>Painel de Montagem de Carga Manual</h5>
+                    </div>
                     <div class="card-body">
                         <div class="row align-items-center mb-3">
-                            <div class="col-md-4"><label for="manualVehicleType" class="form-label">Montar para o veículo:</label><select id="manualVehicleType" class="form-select" onchange="updateManualBuilderUI()"><option value="fiorino">Fiorino</option><option value="van">Van</option><option value="tresQuartos">3/4</option></select></div>
-                            <div class="col-md-5"><p class="mb-1"><strong>Peso Total:</strong> <span id="manualLoadKg">0,00</span> kg</p><p class="mb-0"><strong>Cubagem Total:</strong> <span id="manualLoadCubage">0,00</span> m³</p></div>
-                            <div class="col-md-3 text-end"><button class="btn btn-danger me-2" onclick="cancelManualLoad()"><i class="bi bi-x-circle me-1"></i>Cancelar</button><button id="finalizeManualLoadBtn" class="btn btn-success" onclick="finalizeManualLoad()" disabled><i class="bi bi-check-circle me-1"></i>Criar</button></div>
+                            <div class="col-md-4">
+                                <label for="manualVehicleType" class="form-label">Montar para o veículo:</label>
+                                <select id="manualVehicleType" class="form-select" onchange="updateManualBuilderUI()">
+                                    <option value="fiorino">Fiorino</option>
+                                    <option value="van">Van</option>
+                                    <option value="tresQuartos">3/4</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <p class="mb-1"><strong>Peso Total:</strong> <span id="manualLoadKg">0,00</span> kg</p>
+                                <p class="mb-0"><strong>Cubagem Total:</strong> <span id="manualLoadCubage">0,00</span> m³</p>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <button class="btn btn-danger me-2" onclick="cancelManualLoad()"><i class="bi bi-x-circle me-1"></i>Cancelar</button>
+                                <button id="finalizeManualLoadBtn" class="btn btn-success" onclick="finalizeManualLoad()" disabled><i class="bi bi-check-circle me-1"></i>Criar Carga</button>
+                            </div>
                         </div>
                         <div id="manual-progress-bar-container"></div>
-                        <div id="manual-drop-zone" class="p-3 border rounded drop-zone-card bg-dark-subtle" style="min-height: 150px;" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="manual-builder">
+                        <div id="manual-drop-zone" class="p-3 border rounded drop-zone-card bg-dark-subtle" style="min-height: 150px;" 
+                             ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="manual-builder">
                             <p class="text-muted text-center" id="manual-drop-text">Arraste os pedidos da lista de "Sobras" para cá.</p>
                             <div id="manual-load-table-container"></div>
                         </div>
                     </div>
-                </div>`;
+                </div>
+            `;
             
             const startBtn = document.getElementById('start-manual-load-btn');
             if (startBtn) startBtn.style.display = 'none';
@@ -2132,9 +2243,8 @@
             if(resultContainer) {
                resultContainer.insertAdjacentHTML('beforeend', newCardHTML);
             }
-            
-            const activeBuilderSlot = document.querySelector('.tab-pane.active .manual-builder-slot');
-            if (activeBuilderSlot) activeBuilderSlot.innerHTML = '';
+
+            document.getElementById('manual-load-builder-container').innerHTML = '';
             manualLoadInProgress = null;
             
             const startBtn = document.getElementById('start-manual-load-btn');
@@ -2146,8 +2256,7 @@
              
              currentLeftoversForPrinting.push(...manualLoadInProgress.pedidos);
              
-             const activeBuilderSlot = document.querySelector('.tab-pane.active .manual-builder-slot');
-             if (activeBuilderSlot) activeBuilderSlot.innerHTML = '';
+             document.getElementById('manual-load-builder-container').innerHTML = '';
              manualLoadInProgress = null;
 
              updateLoadUI('leftovers'); 
