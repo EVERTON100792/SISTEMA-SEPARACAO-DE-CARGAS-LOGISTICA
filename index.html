@@ -204,14 +204,9 @@
             box-shadow: 0 0 15px rgba(54, 119, 245, 0.5);
         }
 
-        /* --- AJUSTE DE ROLAGEM --- */
-        /* Aplica a rolagem APENAS no painel da esquerda (Mesa de Trabalho) */
-        .workspace-tab-pane {
-            max-height: 75vh;
-            overflow-y: auto;
-        }
-        /* O painel da direita (Pedidos Disponíveis) NÃO terá rolagem interna, ele se expandirá conforme o conteúdo */
-        #pedidos-disponiveis-card .card-body {
+        /* --- AJUSTE DE ROLAGEM (ALTERADO) --- */
+        /* Remove a rolagem interna do painel Mesa de Trabalho e do painel Pedidos Disponíveis. */
+        .workspace-tab-pane, #pedidos-disponiveis-card .card-body {
             max-height: none;
             overflow-y: visible;
         }
@@ -357,39 +352,39 @@
                                 <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-sliders me-2"></i>2. Configurações de Veículos</h2></div>
                                 <div class="card-body">
                                      <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
-                                        <div class="col-md-12"><strong class="text-success">Fiorino</strong></div>
-                                        <div class="col-md-3"><label for="fiorinoMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="fiorinoMinCapacity" value="300" step="10"></div>
-                                        <div class="col-md-3"><label for="fiorinoMaxCapacity" class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control config-input" id="fiorinoMaxCapacity" value="500" step="10"></div>
-                                        <div class="col-md-3"><label for="fiorinoCubage" class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control config-input" id="fiorinoCubage" value="1.5" step="0.1"></div>
-                                        <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetFiorino">Reset</button></div>
-                                        <div class="col-md-3"></div>
-                                        <div class="col-md-3"><label for="fiorinoHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="fiorinoHardMaxCapacity" value="560" step="10"></div>
-                                        <div class="col-md-3"><label for="fiorinoHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="fiorinoHardCubage" value="1.7" step="0.1"></div>
-                                    </div>
+                                         <div class="col-md-12"><strong class="text-success">Fiorino</strong></div>
+                                         <div class="col-md-3"><label for="fiorinoMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="fiorinoMinCapacity" value="300" step="10"></div>
+                                         <div class="col-md-3"><label for="fiorinoMaxCapacity" class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control config-input" id="fiorinoMaxCapacity" value="500" step="10"></div>
+                                         <div class="col-md-3"><label for="fiorinoCubage" class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control config-input" id="fiorinoCubage" value="1.5" step="0.1"></div>
+                                         <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetFiorino">Reset</button></div>
+                                         <div class="col-md-3"></div>
+                                         <div class="col-md-3"><label for="fiorinoHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="fiorinoHardMaxCapacity" value="560" step="10"></div>
+                                         <div class="col-md-3"><label for="fiorinoHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="fiorinoHardCubage" value="1.7" step="0.1"></div>
+                                     </div>
                                     <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
-                                        <div class="col-md-12"><strong class="text-primary">Van</strong></div>
-                                        <div class="col-md-3"><label for="vanMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="vanMinCapacity" value="1100" step="10"></div>
-                                        <div class="col-md-3"><label for="vanMaxCapacity" class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control config-input" id="vanMaxCapacity" value="1560" step="10"></div>
-                                        <div class="col-md-3"><label for="vanCubage" class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control config-input" id="vanCubage" value="5.0" step="0.1"></div>
-                                        <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetVan">Reset</button></div>
-                                        <div class="col-md-3"></div>
-                                        <div class="col-md-3"><label for="vanHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="vanHardMaxCapacity" value="1600" step="10"></div>
-                                        <div class="col-md-3"><label for="vanHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="vanHardCubage" value="5.6" step="0.1"></div>
-                                    </div>
+                                         <div class="col-md-12"><strong class="text-primary">Van</strong></div>
+                                         <div class="col-md-3"><label for="vanMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="vanMinCapacity" value="1100" step="10"></div>
+                                         <div class="col-md-3"><label for="vanMaxCapacity" class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control config-input" id="vanMaxCapacity" value="1560" step="10"></div>
+                                         <div class="col-md-3"><label for="vanCubage" class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control config-input" id="vanCubage" value="5.0" step="0.1"></div>
+                                         <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetVan">Reset</button></div>
+                                         <div class="col-md-3"></div>
+                                         <div class="col-md-3"><label for="vanHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="vanHardMaxCapacity" value="1600" step="10"></div>
+                                         <div class="col-md-3"><label for="vanHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="vanHardCubage" value="5.6" step="0.1"></div>
+                                     </div>
                                     <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
-                                        <div class="col-md-12"><strong class="text-warning">3/4</strong></div>
-                                        <div class="col-md-3"><label for="tresQuartosMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMinCapacity" value="2300" step="10"></div>
-                                        <div class="col-md-3"><label for="tresQuartosMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMaxCapacity" value="4100" step="10"></div>
-                                        <div class="col-md-3"><label for="tresQuartosCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tresQuartosCubage" value="15.0" step="0.1"></div>
-                                        <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetTresQuartos">Reset</button></div>
-                                    </div>
+                                         <div class="col-md-12"><strong class="text-warning">3/4</strong></div>
+                                         <div class="col-md-3"><label for="tresQuartosMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMinCapacity" value="2300" step="10"></div>
+                                         <div class="col-md-3"><label for="tresQuartosMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMaxCapacity" value="4100" step="10"></div>
+                                         <div class="col-md-3"><label for="tresQuartosCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tresQuartosCubage" value="15.0" step="0.1"></div>
+                                         <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetTresQuartos">Reset</button></div>
+                                     </div>
                                     <div class="row g-3">
-                                        <div class="col-md-12"><strong>Toco</strong></div>
-                                        <div class="col-md-3"><label for="tocoMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tocoMinCapacity" value="5000" step="10"></div>
-                                        <div class="col-md-3"><label for="tocoMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tocoMaxCapacity" value="8500" step="10"></div>
-                                        <div class="col-md-3"><label for="tocoCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tocoCubage" value="30.0" step="0.1"></div>
-                                        <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetToco">Reset</button></div>
-                                    </div>
+                                         <div class="col-md-12"><strong>Toco</strong></div>
+                                         <div class="col-md-3"><label for="tocoMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tocoMinCapacity" value="5000" step="10"></div>
+                                         <div class="col-md-3"><label for="tocoMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tocoMaxCapacity" value="8500" step="10"></div>
+                                         <div class="col-md-3"><label for="tocoCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tocoCubage" value="30.0" step="0.1"></div>
+                                         <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetToco">Reset</button></div>
+                                     </div>
                                     <div class="mt-4 d-flex justify-content-end"><button class="btn btn-success me-2" id="saveConfig"><i class="bi bi-check-circle-fill me-2"></i>Salvar Tudo</button><button class="btn btn-danger" id="resetAllConfigs"><i class="bi bi-arrow-clockwise me-2"></i>Resetar Tudo</button></div>
                                     <div id="configStatus" class="mt-2 status-message text-end"></div>
                                 </div>
@@ -481,7 +476,7 @@
                            <div id="search-result" class="mb-3"></div>
                            <div id="resultado-geral"></div>
                        </div>
-                   </div>
+                    </div>
                 </div>
             </div>
 
@@ -833,9 +828,9 @@
                 if (local === 'Pedidos Disponíveis para Montagem') {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId !== null) { // Allow highlighting in bottom accordions
-                                buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                   buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -929,8 +924,8 @@
             atualizarListaBloqueados();
 
             dropZoneText.innerHTML = `<i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                      <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                      <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+                                       <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
+                                       <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
             
             planilhaData = [];
             processarBtn.disabled = true;
@@ -1134,12 +1129,12 @@
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
                 table += `<tr id="pedido-${p.Num_Pedido}" 
-                                      class="${isPriorityRow ? 'table-primary' : ''}" 
-                                      data-cliente-id="${clienteIdNormalizado}" 
-                                      data-pedido-id="${p.Num_Pedido}"
-                                      onclick="highlightClientRows(event)"
-                                      draggable="true"
-                                      ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
+                                       class="${isPriorityRow ? 'table-primary' : ''}" 
+                                       data-cliente-id="${clienteIdNormalizado}" 
+                                       data-pedido-id="${p.Num_Pedido}"
+                                       onclick="highlightClientRows(event)"
+                                       draggable="true"
+                                       ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') {
@@ -1535,15 +1530,15 @@
                     const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
 
                     html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
-                                <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                <div class="card mb-3">
-                                    <div class="card-header bg-danger text-white d-flex align-items-center">
-                                        Pedidos Restantes
-                                        <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
-                                    </div>
-                                    <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                </div>
-                            </div>`;
+                                 <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                 <div class="card mb-3">
+                                     <div class="card-header bg-danger text-white d-flex align-items-center">
+                                         Pedidos Restantes
+                                         <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                     </div>
+                                     <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                 </div>
+                             </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
@@ -2041,22 +2036,25 @@
             }
         }
         
+        // --- FUNÇÃO startManualLoadBuilder MODIFICADA ---
         function startManualLoadBuilder() {
             if (document.getElementById('manual-load-builder-wrapper')) return; 
 
             manualLoadInProgress = {
                 pedidos: [], totalKg: 0, totalCubagem: 0, vehicleType: 'fiorino' 
             };
-
-            const activeTabPane = document.querySelector('.tab-pane.active');
-            if (!activeTabPane) {
-                alert("Erro: Não foi possível encontrar a aba de trabalho ativa para criar o painel.");
+            
+            // Alterado: Encontrar o card-body da Mesa de Trabalho
+            const workspaceCardBody = document.getElementById('vehicleTabsContent').parentElement;
+            if (!workspaceCardBody) {
+                alert("Erro: Não foi possível encontrar a Mesa de Trabalho para criar o painel.");
                 return;
             }
 
             const builderWrapper = document.createElement('div');
             builderWrapper.id = 'manual-load-builder-wrapper';
-            builderWrapper.className = 'mb-4';
+            // Adicionado padding e borda para melhor separação visual
+            builderWrapper.className = 'p-3 border-top border-secondary'; 
             
             builderWrapper.innerHTML = `
                 <div class="card border-info shadow-lg" id="manual-load-card">
@@ -2068,14 +2066,15 @@
                             <div class="col-md-3 text-end"><button class="btn btn-danger me-2" onclick="cancelManualLoad()"><i class="bi bi-x-circle me-1"></i>Cancelar</button><button id="finalizeManualLoadBtn" class="btn btn-success" onclick="finalizeManualLoad()" disabled><i class="bi bi-check-circle me-1"></i>Criar</button></div>
                         </div>
                         <div id="manual-progress-bar-container"></div>
-                        <div id="manual-drop-zone" class="p-3 border rounded drop-zone-card bg-dark-subtle" style="min-height: 150px;" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="manual-builder">
+                        <div id="manual-drop-zone" class="p-3 border rounded drop-zone-card" style="background-color: var(--dark-bg); min-height: 150px;" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="manual-builder">
                             <p class="text-muted text-center" id="manual-drop-text">Arraste os pedidos da lista de "Sobras" para cá.</p>
                             <div id="manual-load-table-container"></div>
                         </div>
                     </div>
                 </div>`;
             
-            activeTabPane.prepend(builderWrapper);
+            // Alterado: Adicionar o painel ao final do card-body
+            workspaceCardBody.appendChild(builderWrapper);
             
             const startBtn = document.getElementById('start-manual-load-btn');
             if (startBtn) startBtn.style.display = 'none';
