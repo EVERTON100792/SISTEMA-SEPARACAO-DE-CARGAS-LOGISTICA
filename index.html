@@ -204,6 +204,12 @@
             box-shadow: 0 0 15px rgba(54, 119, 245, 0.5);
         }
 
+        /* Estilo para a coluna de pedidos disponíveis ser rolável */
+        #pedidos-disponiveis-card .card-body {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
         .status-message { min-height: 24px; }
 
         /* --- ESTILOS DE IMPRESSÃO (Mantidos) --- */
@@ -417,7 +423,7 @@
 
             <div class="row">
                 <div class="col-lg-8 mb-4">
-                    <div class="card">
+                    <div class="card h-100">
                         <div class="card-header">
                             <h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2>
                         </div>
@@ -428,8 +434,7 @@
                                 <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4</button></li>
                             </ul>
                             <div class="tab-content" id="vehicleTabsContent">
-                                <div class="tab-pane fade show active p-3 workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
-                                    <div class="manual-builder-slot"></div>
+                                <div class="tab-pane fade show active p-3" id="fiorino-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
                                         <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Fiorinos.</p>
                                         <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-fiorino-geral', 'Cargas de Fiorino')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>
@@ -437,8 +442,7 @@
                                     <div class="mb-3 no-print" id="botoes-fiorino"><p class="text-muted">Processe um arquivo para ver as rotas disponíveis.</p></div>
                                     <hr class="no-print"><div id="resultado-fiorino-geral" class="mt-3"></div>
                                 </div>
-                                <div class="tab-pane fade p-3 workspace-tab-pane" id="van-tab-pane" role="tabpanel">
-                                    <div class="manual-builder-slot"></div>
+                                <div class="tab-pane fade p-3" id="van-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
                                         <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Vans.</p>
                                         <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>
@@ -446,8 +450,7 @@
                                     <div class="mb-3 no-print" id="botoes-van"><p class="text-muted">Processe um arquivo para ver as rotas disponíveis.</p></div>
                                     <hr class="no-print"><div id="resultado-van-geral" class="mt-3"></div>
                                 </div>
-                                <div class="tab-pane fade p-3 workspace-tab-pane" id="tres-quartos-tab-pane" role="tabpanel">
-                                    <div class="manual-builder-slot"></div>
+                                <div class="tab-pane fade p-3" id="tres-quartos-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
                                         <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as cargas 3/4.</p>
                                         <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-34-geral', 'Cargas de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>
@@ -458,10 +461,11 @@
                             </div>
                         </div>
                     </div>
+                     <div id="manual-load-builder-container" class="mt-4"></div>
                 </div>
 
                 <div class="col-lg-4 mb-4">
-                    <div class="card" id="pedidos-disponiveis-card">
+                    <div class="card h-100" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                            <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis</h2>
                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
@@ -520,7 +524,7 @@
     
     <script>
         // TODA A LÓGICA JAVASCRIPT ORIGINAL FOI MANTIDA AQUI.
-        // NENHUMA ALTERAÇÃO FUNCIONAL FOI FEITA, APENAS O LOCAL DE INSERÇÃO DO PAINEL MANUAL.
+        // NENHUMA ALTERAÇÃO FUNCIONAL FOI FEITA.
         const SUPABASE_URL = 'https://mwfsitvoshwipmvgcdmc.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13ZnNpdHZvc2h3aXBtdmdjZG1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTY3OTIsImV4cCI6MjA3NDMzMjc5Mn0.DvXQ_HMMnJZyQh17C6N426r1X9AeYjIMpXVbTRspFq0';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -825,7 +829,7 @@
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
                                      <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
-                } else if (accordionId !== null) { // Allow highlighting in bottom accordions
+                } else if (accordionId) {
                                 buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
@@ -1448,8 +1452,8 @@
                         acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
                     }
                     acc[clienteId].pedidos.push(pedido);
-                    acc[clienteId].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                    acc[clienteId].totalCubagem += parseFloat(String(p.Cubagem).replace(',', '.')) || 0;
+                    acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                    acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
                     return acc;
                 }, {});
                 const packableGroups = Object.values(clientGroupsMap);
@@ -1502,7 +1506,7 @@
                     tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
                 };
                 
-                let html = `<div class="resultado-container">`; // Wrapper for easier clearing
+                let html = `<h5 class="mt-3">Cargas para <strong>${title}</strong></h5>`;
 
                 if (primaryLoads.length === 0) {
                     html += `<div class="alert alert-secondary">Nenhuma carga de ${vehicleInfo[vehicleType].name} foi formada para esta rota.</div>`;
@@ -1536,8 +1540,7 @@
                                 </div>
                             </div>`;
                 }
-                html += `</div>`;
-                resultadoDiv.innerHTML = html;
+                resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${html}</div>`);
             }, 50);
         }
         
@@ -2034,35 +2037,49 @@
         }
         
         function startManualLoadBuilder() {
-            if (document.querySelector('.manual-builder-slot:not(:empty)')) return;
+            if (manualLoadInProgress) return; 
 
             manualLoadInProgress = {
-                pedidos: [], totalKg: 0, totalCubagem: 0, vehicleType: 'fiorino' 
+                pedidos: [],
+                totalKg: 0,
+                totalCubagem: 0,
+                vehicleType: 'fiorino' 
             };
 
-            const activeTabPane = document.querySelector('.tab-pane.active');
-            if (!activeTabPane) {
-                alert("Erro: Nenhuma aba de trabalho ativa para criar o painel.");
-                return;
-            }
-            const builderSlot = activeTabPane.querySelector('.manual-builder-slot');
-            
-            builderSlot.innerHTML = `
-                <div class="card border-info shadow-lg mb-4" id="manual-load-card">
-                    <div class="card-header bg-info text-dark"><h5 class="mb-0"><i class="bi bi-tools me-2"></i>Painel de Montagem de Carga Manual</h5></div>
+            const builderContainer = document.getElementById('manual-load-builder-container');
+            builderContainer.innerHTML = `
+                <div class="card border-info shadow-lg" id="manual-load-card">
+                    <div class="card-header bg-info text-dark">
+                        <h5 class="mb-0"><i class="bi bi-tools me-2"></i>Painel de Montagem de Carga Manual</h5>
+                    </div>
                     <div class="card-body">
                         <div class="row align-items-center mb-3">
-                            <div class="col-md-4"><label for="manualVehicleType" class="form-label">Montar para o veículo:</label><select id="manualVehicleType" class="form-select" onchange="updateManualBuilderUI()"><option value="fiorino">Fiorino</option><option value="van">Van</option><option value="tresQuartos">3/4</option></select></div>
-                            <div class="col-md-5"><p class="mb-1"><strong>Peso Total:</strong> <span id="manualLoadKg">0,00</span> kg</p><p class="mb-0"><strong>Cubagem Total:</strong> <span id="manualLoadCubage">0,00</span> m³</p></div>
-                            <div class="col-md-3 text-end"><button class="btn btn-danger me-2" onclick="cancelManualLoad()"><i class="bi bi-x-circle me-1"></i>Cancelar</button><button id="finalizeManualLoadBtn" class="btn btn-success" onclick="finalizeManualLoad()" disabled><i class="bi bi-check-circle me-1"></i>Criar</button></div>
+                            <div class="col-md-4">
+                                <label for="manualVehicleType" class="form-label">Montar para o veículo:</label>
+                                <select id="manualVehicleType" class="form-select" onchange="updateManualBuilderUI()">
+                                    <option value="fiorino">Fiorino</option>
+                                    <option value="van">Van</option>
+                                    <option value="tresQuartos">3/4</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <p class="mb-1"><strong>Peso Total:</strong> <span id="manualLoadKg">0,00</span> kg</p>
+                                <p class="mb-0"><strong>Cubagem Total:</strong> <span id="manualLoadCubage">0,00</span> m³</p>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <button class="btn btn-danger me-2" onclick="cancelManualLoad()"><i class="bi bi-x-circle me-1"></i>Cancelar</button>
+                                <button id="finalizeManualLoadBtn" class="btn btn-success" onclick="finalizeManualLoad()" disabled><i class="bi bi-check-circle me-1"></i>Criar Carga</button>
+                            </div>
                         </div>
                         <div id="manual-progress-bar-container"></div>
-                        <div id="manual-drop-zone" class="p-3 border rounded drop-zone-card bg-dark-subtle" style="min-height: 150px;" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="manual-builder">
+                        <div id="manual-drop-zone" class="p-3 border rounded drop-zone-card bg-dark-subtle" style="min-height: 150px;" 
+                             ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="manual-builder">
                             <p class="text-muted text-center" id="manual-drop-text">Arraste os pedidos da lista de "Sobras" para cá.</p>
                             <div id="manual-load-table-container"></div>
                         </div>
                     </div>
-                </div>`;
+                </div>
+            `;
             
             const startBtn = document.getElementById('start-manual-load-btn');
             if (startBtn) startBtn.style.display = 'none';
@@ -2132,9 +2149,8 @@
             if(resultContainer) {
                resultContainer.insertAdjacentHTML('beforeend', newCardHTML);
             }
-            
-            const activeBuilderSlot = document.querySelector('.tab-pane.active .manual-builder-slot');
-            if (activeBuilderSlot) activeBuilderSlot.innerHTML = '';
+
+            document.getElementById('manual-load-builder-container').innerHTML = '';
             manualLoadInProgress = null;
             
             const startBtn = document.getElementById('start-manual-load-btn');
@@ -2146,8 +2162,7 @@
              
              currentLeftoversForPrinting.push(...manualLoadInProgress.pedidos);
              
-             const activeBuilderSlot = document.querySelector('.tab-pane.active .manual-builder-slot');
-             if (activeBuilderSlot) activeBuilderSlot.innerHTML = '';
+             document.getElementById('manual-load-builder-container').innerHTML = '';
              manualLoadInProgress = null;
 
              updateLoadUI('leftovers'); 
