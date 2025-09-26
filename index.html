@@ -1089,7 +1089,7 @@
             }, 50);
         }
 
-        // --- INÍCIO DAS FUNÇÕES DE OTIMIZAÇÃO NOVAS E MELHORADAS ---
+        // --- INÍCIO DAS FUNÇÕES DE OTIMIZAÇÃO E EXIBIÇÃO ---
 
         function createSolution(itemsParaEmpacotar, vehicleType) {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
@@ -1230,12 +1230,10 @@
             while(wasRefined) {
                 wasRefined = false;
                 let leftoversToKeep = [];
-                // Ordena as sobras da maior para a menor para tentar encaixar as mais difíceis primeiro
                 remainingLeftovers.sort((a,b) => b.totalKg - a.totalKg);
 
                 for (const leftover of remainingLeftovers) {
                     let added = false;
-                    // Tenta encaixar a sobra em alguma carga existente
                     for (const load of loads) {
                         if ((load.totalKg + leftover.totalKg <= HARD_MAX_KG) && (load.totalCubagem + leftover.totalCubagem <= HARD_MAX_CUBAGE)) {
                             load.pedidos.push(...leftover.pedidos);
@@ -1297,12 +1295,11 @@
                     if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) }; }
                     acc[clienteId].pedidos.push(pedido);
                     acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                    acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+                    acc[clienteId].totalCubagem += parseFloat(String(p.Cubagem).replace(',', '.')) || 0;
                     return acc;
                 }, {});
                 const packableGroups = Object.values(clientGroupsMap);
 
-                // --- INÍCIO DA LÓGICA DE OTIMIZAÇÃO EM CASCATA COM REFINAMENTO ---
                 let bestInitialResult = runMultiStrategyOptimization(packableGroups, vehicleType);
                 let { loads: primaryLoads, leftovers: leftoverGroups } = refineSolution(bestInitialResult.loads, bestInitialResult.leftovers, vehicleType);
                 
@@ -1398,7 +1395,18 @@
         function separarCargasVan(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'van', buttonElement); }
         function separarCargas34(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'tresQuartos', buttonElement); }
         
-        // --- As funções de UI, Drag-and-Drop, etc., que vêm a seguir estão completas ---
+        // --- FUNÇÃO CORRIGIDA/REINSERIDA ---
+        function displayPedidosBloqueados(div, pedidos) {
+            if (pedidos.length === 0) {
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido bloqueado manualmente no último processamento.</div>';
+                return;
+            }
+            const totalKg = pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            let html = `<div class="alert alert-danger"><strong>Total Bloqueado:</strong> ${pedidos.length} pedidos / ${totalKgFormatado} kg</div>`;
+            html += createTable(pedidos);
+            div.innerHTML = html;
+        }
 
         function renderLoadCard(load, vehicleType, vInfo) {
             load.pedidos.sort((a, b) => {
