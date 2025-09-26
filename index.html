@@ -204,18 +204,6 @@
             box-shadow: 0 0 15px rgba(54, 119, 245, 0.5);
         }
 
-        /* --- AJUSTE DE ROLAGEM --- */
-        /* Aplica a rolagem APENAS no painel da esquerda (Mesa de Trabalho) */
-        .workspace-tab-pane {
-            max-height: 75vh;
-            overflow-y: auto;
-        }
-        /* O painel da direita (Pedidos Disponíveis) NÃO terá rolagem interna, ele se expandirá conforme o conteúdo */
-        #pedidos-disponiveis-card .card-body {
-            max-height: none;
-            overflow-y: visible;
-        }
-
         .status-message { min-height: 24px; }
 
         /* --- ESTILOS DE IMPRESSÃO (Mantidos) --- */
@@ -429,7 +417,7 @@
 
             <div class="row">
                 <div class="col-lg-8 mb-4">
-                    <div class="card h-100">
+                    <div class="card">
                         <div class="card-header">
                             <h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2>
                         </div>
@@ -441,6 +429,7 @@
                             </ul>
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active p-3 workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
+                                    <div class="manual-builder-slot"></div>
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
                                         <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Fiorinos.</p>
                                         <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-fiorino-geral', 'Cargas de Fiorino')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>
@@ -449,6 +438,7 @@
                                     <hr class="no-print"><div id="resultado-fiorino-geral" class="mt-3"></div>
                                 </div>
                                 <div class="tab-pane fade p-3 workspace-tab-pane" id="van-tab-pane" role="tabpanel">
+                                    <div class="manual-builder-slot"></div>
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
                                         <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Vans.</p>
                                         <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>
@@ -457,6 +447,7 @@
                                     <hr class="no-print"><div id="resultado-van-geral" class="mt-3"></div>
                                 </div>
                                 <div class="tab-pane fade p-3 workspace-tab-pane" id="tres-quartos-tab-pane" role="tabpanel">
+                                    <div class="manual-builder-slot"></div>
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
                                         <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as cargas 3/4.</p>
                                         <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-34-geral', 'Cargas de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>
@@ -1457,8 +1448,8 @@
                         acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
                     }
                     acc[clienteId].pedidos.push(pedido);
-                    acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                    acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+                    acc[clienteId].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                    acc[clienteId].totalCubagem += parseFloat(String(p.Cubagem).replace(',', '.')) || 0;
                     return acc;
                 }, {});
                 const packableGroups = Object.values(clientGroupsMap);
@@ -1511,7 +1502,7 @@
                     tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
                 };
                 
-                let html = `<h5 class="mt-3">Cargas para <strong>${title}</strong></h5>`;
+                let html = `<div class="resultado-container">`; // Wrapper for easier clearing
 
                 if (primaryLoads.length === 0) {
                     html += `<div class="alert alert-secondary">Nenhuma carga de ${vehicleInfo[vehicleType].name} foi formada para esta rota.</div>`;
@@ -1545,7 +1536,8 @@
                                 </div>
                             </div>`;
                 }
-                resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
+                html += `</div>`;
+                resultadoDiv.innerHTML = html;
             }, 50);
         }
         
@@ -2042,7 +2034,7 @@
         }
         
         function startManualLoadBuilder() {
-            if (document.getElementById('manual-load-builder-wrapper')) return; 
+            if (document.querySelector('.manual-builder-slot:not(:empty)')) return;
 
             manualLoadInProgress = {
                 pedidos: [], totalKg: 0, totalCubagem: 0, vehicleType: 'fiorino' 
@@ -2050,16 +2042,13 @@
 
             const activeTabPane = document.querySelector('.tab-pane.active');
             if (!activeTabPane) {
-                alert("Erro: Não foi possível encontrar a aba de trabalho ativa para criar o painel.");
+                alert("Erro: Nenhuma aba de trabalho ativa para criar o painel.");
                 return;
             }
-
-            const builderWrapper = document.createElement('div');
-            builderWrapper.id = 'manual-load-builder-wrapper';
-            builderWrapper.className = 'mb-4';
+            const builderSlot = activeTabPane.querySelector('.manual-builder-slot');
             
-            builderWrapper.innerHTML = `
-                <div class="card border-info shadow-lg" id="manual-load-card">
+            builderSlot.innerHTML = `
+                <div class="card border-info shadow-lg mb-4" id="manual-load-card">
                     <div class="card-header bg-info text-dark"><h5 class="mb-0"><i class="bi bi-tools me-2"></i>Painel de Montagem de Carga Manual</h5></div>
                     <div class="card-body">
                         <div class="row align-items-center mb-3">
@@ -2074,8 +2063,6 @@
                         </div>
                     </div>
                 </div>`;
-            
-            activeTabPane.prepend(builderWrapper);
             
             const startBtn = document.getElementById('start-manual-load-btn');
             if (startBtn) startBtn.style.display = 'none';
@@ -2145,9 +2132,9 @@
             if(resultContainer) {
                resultContainer.insertAdjacentHTML('beforeend', newCardHTML);
             }
-
-            const builderWrapper = document.getElementById('manual-load-builder-wrapper');
-            if (builderWrapper) builderWrapper.remove();
+            
+            const activeBuilderSlot = document.querySelector('.tab-pane.active .manual-builder-slot');
+            if (activeBuilderSlot) activeBuilderSlot.innerHTML = '';
             manualLoadInProgress = null;
             
             const startBtn = document.getElementById('start-manual-load-btn');
@@ -2159,8 +2146,8 @@
              
              currentLeftoversForPrinting.push(...manualLoadInProgress.pedidos);
              
-             const builderWrapper = document.getElementById('manual-load-builder-wrapper');
-             if (builderWrapper) builderWrapper.remove();
+             const activeBuilderSlot = document.querySelector('.tab-pane.active .manual-builder-slot');
+             if (activeBuilderSlot) activeBuilderSlot.innerHTML = '';
              manualLoadInProgress = null;
 
              updateLoadUI('leftovers'); 
