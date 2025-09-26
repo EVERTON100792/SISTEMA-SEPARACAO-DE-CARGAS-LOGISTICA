@@ -1434,7 +1434,6 @@
             return { loads: finalLoads, leftovers };
         }
 
-        // --- NOVA FUNÇÃO DE OTIMIZAÇÃO MULTI-ESTRATÉGIA ---
         function runMultiStrategyOptimization(packableGroups, vehicleType) {
             const strategies = [
                 { name: 'priority-weight-desc',
@@ -1457,7 +1456,6 @@
                 },
                 { name: 'weight-desc', sorter: (a, b) => b.totalKg - a.totalKg },
                 { name: 'weight-asc', sorter: (a, b) => a.totalKg - b.totalKg },
-                // NOVAS ESTRATÉGIAS DE DENSIDADE
                 { name: 'density-desc', sorter: (a, b) => b.density - a.density },
                 { name: 'density-asc', sorter: (a, b) => a.density - b.density }
             ];
@@ -1479,7 +1477,6 @@
             return bestResult;
         }
 
-        // --- NOVA FUNÇÃO DE REFINAMENTO "PENTE FINO" ---
         function refineLoadsWithSimpleFit(initialLoads, initialLeftovers) {
             let refinedLoads = JSON.parse(JSON.stringify(initialLoads));
             let remainingLeftovers = JSON.parse(JSON.stringify(initialLeftovers));
@@ -1510,7 +1507,6 @@
             return { refinedLoads, remainingLeftovers };
         }
 
-        // --- FUNÇÃO SEPARARCARGASGENERIC ATUALIZADA COM NOVA LÓGICA ---
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
             
@@ -1557,7 +1553,6 @@
                 }, {});
                 const packableGroups = Object.values(clientGroupsMap);
 
-                // **NOVO: CÁLCULO DE DENSIDADE**
                 packableGroups.forEach(group => {
                     if (group.totalCubagem > 0) {
                         group.density = group.totalKg / group.totalCubagem;
@@ -1566,7 +1561,6 @@
                     }
                 });
 
-                // --- INÍCIO DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
                 let initialResult = runMultiStrategyOptimization(packableGroups, vehicleType);
                 
                 initialResult.loads.forEach(load => {
@@ -1612,8 +1606,7 @@
                           leftoverGroups = tresQuartosResult.leftovers;
                       }
                 }
-                // --- FIM DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
-
+                
                 currentLeftoversForPrinting = leftoverGroups.flatMap(group => group.pedidos);
 
                 const allLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads ];
@@ -1644,8 +1637,8 @@
                 
                 if (currentLeftoversForPrinting.length > 0) {
                     const finalLeftoverKg = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                    
-                    const optimizeBtn = `<button class="btn btn-outline-light ms-2 no-print" style="--bs-btn-color: #6f42c1; --bs-btn-border-color: #6f42c1; --bs-btn-hover-bg: #6f42c1; --bs-btn-hover-border-color: #6f42c1;" onclick="runMathematicalOptimization('${divId}')"><i class="bi bi-magic me-1"></i>Otimização Máxima</button>`;
+                    // ### CORREÇÃO AQUI: Removido o argumento da chamada da função
+                    const optimizeBtn = `<button class="btn btn-outline-light ms-2 no-print" style="--bs-btn-color: #6f42c1; --bs-btn-border-color: #6f42c1; --bs-btn-hover-bg: #6f42c1; --bs-btn-hover-border-color: #6f42c1;" onclick="runMathematicalOptimization()"><i class="bi bi-magic me-1"></i>Otimização Máxima</button>`;
                     const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
 
                     html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
@@ -2376,8 +2369,10 @@
         async function runMathematicalOptimization() {
             const container = document.getElementById('optimization-result-container');
             container.innerHTML = `<div class="alert alert-info d-flex align-items-center"><div class="spinner-border spinner-border-sm me-3" role="status"></div> <span>Executando otimização matemática pura... Isso pode levar alguns segundos.</span></div>`;
+            // ### CORREÇÃO 2: Rolar a tela para o contêiner de resultado para o usuário ver o que está acontecendo.
+            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-            await new Promise(resolve => setTimeout(resolve, 50)); // Força a UI a atualizar
+            await new Promise(resolve => setTimeout(resolve, 50));
 
             try {
                 const items = currentLeftoversForPrinting.map((p, index) => ({
@@ -2387,6 +2382,11 @@
                     cubage: parseFloat(String(p.Cubagem).replace(',', '.')) || 0,
                     originalPedido: p
                 }));
+
+                if (items.length === 0) {
+                    container.innerHTML = `<div class="alert alert-warning">Não há sobras para otimizar.</div>`;
+                    return;
+                }
 
                 const vehicles = [
                     { type: 'fiorino', minKg: parseFloat(document.getElementById('fiorinoMinCapacity').value), maxKg: parseFloat(document.getElementById('fiorinoHardMaxCapacity').value), maxCubage: parseFloat(document.getElementById('fiorinoHardCubage').value) },
@@ -2409,10 +2409,10 @@
                 lp.subjectTo[0].vars.push(...vehicles.map(v => ({ name: `y_${v.type}`, coef: -v.maxKg })));
                 lp.subjectTo[1].vars.push(...vehicles.map(v => ({ name: `y_${v.type}`, coef: -v.maxCubage })));
                 
-                const result = glpk.solve(lp);
+                const result = glpk.solve(lp, { msglev: glpk.GLP_MSG_OFF }); // Desliga logs do console
 
                 if (result.result.status !== glpk.GLP_OPT) {
-                    throw new Error("Não foi possível encontrar uma solução ótima.");
+                     throw new Error("Não foi possível encontrar uma solução ótima. Status: " + result.result.status);
                 }
 
                 const packedItems = [];
@@ -2440,7 +2440,7 @@
                 const newLoadKg = packedItems.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
 
                 if (newLoadKg < chosenVehicle.minKg) {
-                     container.innerHTML = `<div class="alert alert-warning"><strong>Otimização Concluída:</strong> A melhor carga encontrada (${newLoadKg.toFixed(2)}kg) não atinge o peso mínimo de ${chosenVehicle.minKg.toFixed(2)}kg para um(a) ${chosenVehicle.type}.</div>`;
+                     container.innerHTML = `<div class="alert alert-warning"><strong>Otimização Concluída:</strong> A melhor carga encontrada (${newLoadKg.toFixed(2)} kg) não atinge o peso mínimo de ${chosenVehicle.minKg.toFixed(2)} kg para um(a) ${chosenVehicle.type}.</div>`;
                      return;
                 }
 
@@ -2477,9 +2477,10 @@
 
             } catch(error) {
                 console.error("Erro na Otimização Matemática:", error);
-                container.innerHTML = `<div class="alert alert-danger"><strong>Erro:</strong> A otimização falhou. Verifique o console para mais detalhes.</div>`;
+                container.innerHTML = `<div class="alert alert-danger"><strong>Erro:</strong> A otimização matemática falhou. Verifique o console para mais detalhes.</div>`;
             }
         }
+
 
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
