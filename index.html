@@ -268,16 +268,18 @@
     
     <div id="dashboard-content" style="display: none;">
         <div class="container mt-4 mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                 <div class="d-flex align-items-center">
-                     <i class="bi bi-truck display-4 me-3"></i>
-                     <h1 class="mb-0">Dashboard de Separação de Cargas</h1>
-                 </div>
-                 <div class="d-flex align-items-center no-print">
-                    <div id="user-info" class="me-3 text-body-secondary small"></div>
-                    <button class="btn btn-outline-danger" id="logout-button"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
-                    <button class="btn btn-outline-secondary ms-2" id="limparResultadosBtn"><i class="bi bi-eraser-fill me-2"></i>Limpar Resultados</button>
-                 </div>
+             <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                <div class="d-flex align-items-center mb-2 mb-md-0">
+                    <i class="bi bi-truck display-4 me-3"></i>
+                    <h1 class="mb-0 h3">Dashboard de Separação de Cargas</h1>
+                </div>
+                <div class="d-flex align-items-center no-print">
+                   <div id="user-info" class="me-3 text-body-secondary small text-nowrap"></div>
+                   <div class="btn-group">
+                       <button class="btn btn-outline-secondary" id="limparResultadosBtn"><i class="bi bi-eraser-fill me-2"></i>Limpar</button>
+                       <button class="btn btn-outline-danger" id="logout-button"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
+                   </div>
+                </div>
             </div>
 
             <div class="card p-3 mb-4 no-print" id="drop-zone">
@@ -2248,7 +2250,7 @@
              if(startBtn) startBtn.style.display = 'inline-block';
         }
 
-        // --- CÓDIGO DE AUTENTICAÇÃO COM SUPABASE ---
+        // --- FUNÇÕES DE LOGIN, CADASTRO E CONTROLE DE UI ---
 
         const loginContainer = document.getElementById('login-container');
         const dashboardContent = document.getElementById('dashboard-content');
@@ -2283,16 +2285,21 @@
         const switchForms = (showSignup) => {
             const formToHide = showSignup ? loginFormContainer : signupFormContainer;
             const formToShow = showSignup ? signupFormContainer : loginFormContainer;
-
+        
             formToHide.classList.add('form-exit');
-            
-            formToHide.addEventListener('animationend', () => {
+        
+            setTimeout(() => {
                 formToHide.classList.remove('form-exit');
                 formToHide.classList.add('hidden');
-                
+        
                 formToShow.classList.remove('hidden');
                 formToShow.classList.add('form-enter');
-            }, { once: true });
+                
+                setTimeout(() => {
+                    formToShow.classList.remove('form-enter');
+                }, 300);
+        
+            }, 300); 
         };
         
         toggleToSignup.addEventListener('click', (e) => {
@@ -2325,6 +2332,7 @@
             setFormProcessing(loginForm, false);
         });
 
+        // ATUALIZADO: Handler para o formulário de CADASTRO com redirecionamento
         signupForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             setFormProcessing(signupForm, true);
@@ -2346,8 +2354,16 @@
                 }
             } else {
                 authMessage.className = 'text-success';
-                authMessage.textContent = 'Conta criada com sucesso! Faça o login para continuar.';
-                switchForms(false);
+                authMessage.textContent = 'Conta criada com sucesso! Redirecionando...';
+                // Espera 2 segundos e então muda para a tela de login
+                setTimeout(() => {
+                    switchForms(false); 
+                    // Limpa a mensagem para não poluir a tela de login
+                    authMessage.textContent = '';
+                    // Preenche o campo de email para facilitar
+                    document.getElementById('email').value = email;
+                    document.getElementById('password').focus();
+                }, 2000);
             }
             
             setFormProcessing(signupForm, false);
