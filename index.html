@@ -523,8 +523,6 @@
     </script>
     
     <script>
-        // TODA A LÓGICA JAVASCRIPT ORIGINAL FOI MANTIDA AQUI.
-        // NENHUMA ALTERAÇÃO FUNCIONAL FOI FEITA, APENAS O LOCAL DE INSERÇÃO DO PAINEL MANUAL.
         const SUPABASE_URL = 'https://mwfsitvoshwipmvgcdmc.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13ZnNpdHZvc2h3aXBtdmdjZG1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTY3OTIsImV4cCI6MjA3NDMzMjc5Mn0.DvXQ_HMMnJZyQh17C6N426r1X9AeYjIMpXVbTRspFq0';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -553,7 +551,6 @@
         let rota1SemCarga = [];
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
-        let currentAllOrdersForReoptimization = [];
         let activeLoads = {};
         let manualLoadInProgress = null;
 
@@ -794,7 +791,7 @@
             if (planilhaData.length === 0) { searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>'; return; }
             let pedidoEncontrado = null; let local = 'Não encontrado'; let accordionId = '';
             pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
-            if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = null; } // Changed to null because it's not in an accordion anymore
+            if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = null; } 
             if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosComCFNumericoIsolado.find(p => String(p.Num_Pedido) === searchInput);
                 if (pedidoEncontrado) { local = 'Pedidos Filtrados'; accordionId = 'accordionCF'; }
@@ -829,7 +826,7 @@
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
                                        <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
-                } else if (accordionId !== null) { // Allow highlighting in bottom accordions
+                } else if (accordionId !== null) { 
                                    buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
@@ -894,7 +891,6 @@
             rota1SemCarga = [];
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
-            currentAllOrdersForReoptimization = [];
             activeLoads = {};
         }
 
@@ -1287,7 +1283,7 @@
 
             const printWindow = createPrintWindow(title);
             const contentToPrint = divToPrint.cloneNode(true);
-            const buttonsInContent = contentToPrint.querySelectorAll('button.no-print');
+            const buttonsInContent = contentToPrint.querySelectorAll('button.no-print, .no-print');
             buttonsInContent.forEach(btn => btn.remove());
 
             printWindow.document.body.innerHTML = `<h3>${title}</h3>` + contentToPrint.innerHTML;
@@ -1299,37 +1295,73 @@
             }, 500);
         }
 
-        function createInitialSolution(itemsParaEmpacotar, vehicleType, sortStrategy = 'descending', minKgOverride = null) {
-            const MIN_KG = minKgOverride !== null ? minKgOverride : parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
+        function createPrintWindow(title) {
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>' + title + '</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
+            printWindow.document.write(`<style>body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; } .no-print { display: none !important; } .bg-success { background-color: #198754 !important; color: white !important; } .bg-primary { background-color: #0d6efd !important; color: white !important; } .bg-warning { background-color: #ffc107 !important; color: black !important; } .bg-danger { background-color: #dc3545 !important; color: white !important; } .table-responsive { overflow: visible !important; } table, th, td { border: 1px solid #dee2e6 !important; } .table-primary, .table-primary > th, .table-primary > td { --bs-table-bg: #cfe2ff !important; color: #000 !important; } h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }</style></head><body>`);
+            return printWindow;
+        }
+        
+        function imprimirSobras(title) {
+            if (currentLeftoversForPrinting.length === 0) { alert("Nenhuma sobra para imprimir."); return; }
+            const totalKgFormatado = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const printWindow = createPrintWindow(title);
+            let contentToPrint = `<h3>${title} - Total: ${totalKgFormatado} kg</h3>` + createTable(currentLeftoversForPrinting);
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+        }
+
+        function imprimirCargasGeneric(divId, title) {
+            const divToPrint = document.getElementById(divId);
+            if (!divToPrint) return;
+            
+            const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
+            
+            if (completedLoadsCards.length === 0) { alert(`Nenhuma carga concluída para imprimir na seção "${title}".`); return; }
+            
+            const printWindow = createPrintWindow('Imprimir: ' + title);
+            let contentToPrint = `<h3>${title}</h3>`;
+            completedLoadsCards.forEach(header => { contentToPrint += header.closest('.card.mb-3').outerHTML; });
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { 
+                printWindow.print(); 
+                printWindow.close(); 
+            }, 500);
+        }
+
+        function imprimirTocoIndividual(cf) {
+            if (!gruposToco[cf]) { alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`); return; }
+            const grupo = gruposToco[cf]; const pedidos = grupo.pedidos;
+            const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const printWindow = createPrintWindow('Imprimir Carga Toco CF: ' + cf);
+            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos);
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+        }
+
+        // --- INÍCIO DAS FUNÇÕES DE OTIMIZAÇÃO NOVAS E MELHORADAS ---
+
+        function createSolution(itemsParaEmpacotar, vehicleType) {
+            const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
             const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
-            let HARD_MAX_KG, HARD_MAX_CUBAGE;
-            if (vehicleType === 'tresQuartos') {
-                HARD_MAX_KG = SOFT_MAX_KG;
-                HARD_MAX_CUBAGE = SOFT_MAX_CUBAGE;
-            } else {
-                HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : SOFT_MAX_KG;
-                HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : SOFT_MAX_CUBAGE;
-            }
+            const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : SOFT_MAX_KG;
+            const HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : SOFT_MAX_CUBAGE;
             
             let loads = [];
-            
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
             const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
             
             let packableItems = [...itemsParaEmpacotar];
-            
-            const priorityItems = packableItems.filter(item => item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
-            const regularItems = packableItems.filter(item => !item.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))));
-            
-            if (sortStrategy === 'ascending') {
-                priorityItems.sort((a, b) => a.totalKg - b.totalKg); regularItems.sort((a, b) => a.totalKg - b.totalKg);
-            } else {
-                priorityItems.sort((a, b) => b.totalKg - a.totalKg); regularItems.sort((a, b) => b.totalKg - a.totalKg);
-            }
-            packableItems = [...priorityItems, ...regularItems];
-
             let leftoverItems = [];
+
             packableItems.forEach(item => {
                 if (item.totalKg > HARD_MAX_KG || item.totalCubagem > HARD_MAX_CUBAGE) {
                     leftoverItems.push(item); return;
@@ -1399,25 +1431,59 @@
             return { loads: finalLoads, leftovers };
         }
 
-        function runAdvancedOptimization(packableGroups, vehicleType, minKgOverride = null) {
-            const result = createInitialSolution(packableGroups, vehicleType, 'descending', minKgOverride);
-            return result;
+        // --- NOVA FUNÇÃO DE OTIMIZAÇÃO MULTI-ESTRATÉGIA ---
+        function runMultiStrategyOptimization(packableGroups, vehicleType) {
+            const strategies = [
+                { name: 'priority-weight-desc',
+                  sorter: (a, b) => {
+                    const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+                    const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+                    if (aHasPrio && !bHasPrio) return -1;
+                    if (!aHasPrio && bHasPrio) return 1;
+                    return b.totalKg - a.totalKg;
+                  }
+                },
+                { name: 'scheduled-weight-desc',
+                  sorter: (a, b) => {
+                    const aHasSched = a.pedidos.some(p => p.Agendamento === 'Sim');
+                    const bHasSched = b.pedidos.some(p => p.Agendamento === 'Sim');
+                    if (aHasSched && !bHasSched) return -1;
+                    if (!aHasSched && bHasSched) return 1;
+                    return b.totalKg - a.totalKg;
+                  }
+                },
+                { name: 'weight-desc', sorter: (a, b) => b.totalKg - a.totalKg },
+                { name: 'weight-asc', sorter: (a, b) => a.totalKg - b.totalKg }
+            ];
+
+            let bestResult = null;
+
+            for (const strategy of strategies) {
+                const sortedGroups = [...packableGroups].sort(strategy.sorter);
+                const result = createSolution(sortedGroups, vehicleType);
+                
+                const leftoverWeight = result.leftovers.reduce((sum, g) => sum + g.totalKg, 0);
+
+                if (bestResult === null || leftoverWeight < bestResult.leftoverWeight) {
+                    bestResult = { ...result, leftoverWeight: leftoverWeight, strategy: strategy.name };
+                }
+            }
+            
+            console.log(`Melhor estratégia para ${vehicleType}: ${bestResult.strategy} com ${bestResult.leftoverWeight.toFixed(2)}kg de sobra.`);
+            return bestResult;
         }
-        
+
+        // --- FUNÇÃO SEPARARCARGASGENERIC ATUALIZADA COM NOVA LÓGICA ---
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
             
             const autoGeneratedContent = resultadoDiv.querySelector('.resultado-container');
-            if (autoGeneratedContent) {
-                autoGeneratedContent.remove();
-            }
+            if (autoGeneratedContent) { autoGeneratedContent.remove(); }
 
-            resultadoDiv.insertAdjacentHTML('beforeend', '<div id="spinner-temp-container" class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Otimizando e montando cargas...</span></div>');
-
+            resultadoDiv.insertAdjacentHTML('beforeend', '<div id="spinner-temp-container" class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Analisando estratégias e montando cargas...</span></div>');
 
             if (buttonElement) {
                 currentLeftoversForPrinting = [];
-                currentAllOrdersForReoptimization = [];
                 const parentContainer = buttonElement.parentElement;
                 parentContainer.querySelectorAll('button').forEach(btn => {
                     btn.classList.remove('active', 'btn-success', 'btn-primary', 'btn-warning', 'btn-secondary');
@@ -1434,10 +1500,8 @@
             setTimeout(() => {
                 const spinner = document.getElementById('spinner-temp-container');
                 if (spinner) spinner.remove();
-
                 if (planilhaData.length === 0) {
-                    resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
-                    return;
+                    resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return;
                 }
 
                 const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
@@ -1448,9 +1512,7 @@
 
                 const clientGroupsMap = pedidosRota.reduce((acc, pedido) => {
                     const clienteId = normalizeClientId(pedido.Cliente);
-                    if (!acc[clienteId]) {
-                        acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
-                    }
+                    if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) }; }
                     acc[clienteId].pedidos.push(pedido);
                     acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
                     acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
@@ -1458,45 +1520,58 @@
                 }, {});
                 const packableGroups = Object.values(clientGroupsMap);
 
-                let primaryResult = runAdvancedOptimization(packableGroups, vehicleType);
+                // --- INÍCIO DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
+                let primaryResult = runMultiStrategyOptimization(packableGroups, vehicleType);
                 let primaryLoads = primaryResult.loads;
                 let leftoverGroups = primaryResult.leftovers;
                 
                 let secondaryLoads = [];
-                let secondaryVehicleType = '';
-
-                const totalKgUnassigned = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
-                const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
-                const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
+                let tertiaryLoads = [];
 
                 if (vehicleType === 'fiorino' && leftoverGroups.length > 0) {
-                    if (totalKgUnassigned >= tresQuartosMin) secondaryVehicleType = 'tresQuartos';
-                    else if (totalKgUnassigned >= vanMin) secondaryVehicleType = 'van';
-                } else if (vehicleType === 'van' && leftoverGroups.length > 0) {
-                    if (totalKgUnassigned >= tresQuartosMin) secondaryVehicleType = 'tresQuartos';
-                }
+                    // 1. Tenta montar mais Fiorinos com as sobras
+                    const fiorinoLeftoversResult = runMultiStrategyOptimization(leftoverGroups, 'fiorino');
+                    if (fiorinoLeftoversResult.loads.length > 0) {
+                        primaryLoads.push(...fiorinoLeftoversResult.loads);
+                    }
+                    leftoverGroups = fiorinoLeftoversResult.leftovers;
 
-                if (secondaryVehicleType) {
-                    let secondaryResult = runAdvancedOptimization(leftoverGroups, secondaryVehicleType);
-                    secondaryLoads = secondaryResult.loads;
-                    leftoverGroups = secondaryResult.leftovers;
+                    // 2. Com o que sobrou, tenta montar uma Van
+                    const totalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
+                    const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
+                    if (totalLeftoverKg >= vanMin && leftoverGroups.length > 0) {
+                        const vanResult = runMultiStrategyOptimization(leftoverGroups, 'van');
+                        secondaryLoads = vanResult.loads;
+                        leftoverGroups = vanResult.leftovers;
+                    }
                 }
+                
+                // 3. Tenta montar um 3/4 com o que sobrou de qualquer processo anterior
+                const totalFinalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
+                const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
+                if (totalFinalLeftoverKg >= tresQuartosMin && leftoverGroups.length > 0) {
+                     const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
+                     if(vehicleForTertiary) {
+                        const tresQuartosResult = runMultiStrategyOptimization(leftoverGroups, vehicleForTertiary);
+                        tertiaryLoads = tresQuartosResult.loads;
+                        leftoverGroups = tresQuartosResult.leftovers;
+                     }
+                }
+                // --- FIM DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
 
                 currentLeftoversForPrinting = leftoverGroups.flatMap(group => group.pedidos);
 
-                primaryLoads.forEach((load, index) => {
-                    load.numero = index + 1;
-                    const loadId = `${vehicleType}-${load.numero}`;
+                const allLoads = [
+                    ...primaryLoads.map(load => ({ ...load, vType: vehicleType })),
+                    ...secondaryLoads.map(load => ({ ...load, vType: 'van' })),
+                    ...tertiaryLoads.map(load => ({ ...load, vType: 'tresQuartos' }))
+                ];
+
+                allLoads.forEach((load, index) => {
+                    load.numero = `${load.vType.charAt(0).toUpperCase()}-${index + 1}`;
+                    const loadId = `${load.vType}-${Date.now()}-${index}`;
                     load.id = loadId;
-                    load.vehicleType = vehicleType;
-                    activeLoads[loadId] = load;
-                });
-                
-                secondaryLoads.forEach((load, index) => {
-                    load.numero = `S-${index + 1}`;
-                    const loadId = `${secondaryVehicleType}-${load.numero}`;
-                    load.id = loadId;
-                    load.vehicleType = secondaryVehicleType;
+                    load.vehicleType = load.vType;
                     activeLoads[loadId] = load;
                 });
 
@@ -1507,25 +1582,18 @@
                 };
                 
                 let html = `<h5 class="mt-3">Cargas para <strong>${title}</strong></h5>`;
-
-                if (primaryLoads.length === 0) {
-                    html += `<div class="alert alert-secondary">Nenhuma carga de ${vehicleInfo[vehicleType].name} foi formada para esta rota.</div>`;
-                }
-                primaryLoads.forEach(load => {
-                    html += renderLoadCard(load, vehicleType, vehicleInfo[vehicleType]);
-                });
-
-                if(secondaryLoads.length > 0) {
-                    const vInfo = vehicleInfo[secondaryVehicleType];
-                    html += `<h5 class="mt-4 border-top pt-3 border-secondary">Cargas Formadas com as Sobras:</h5>`;
-                    secondaryLoads.forEach(load => {
-                        html += renderLoadCard(load, secondaryVehicleType, vInfo);
+                
+                const generatedLoads = allLoads.filter(l => l.pedidos.length > 0);
+                if(generatedLoads.length === 0){
+                     html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
+                } else {
+                    generatedLoads.forEach(load => {
+                        html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType]);
                     });
                 }
-
+                
                 if (currentLeftoversForPrinting.length > 0) {
                     const finalLeftoverKg = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-                    
                     const manualLoadButton = `<button id="start-manual-load-btn" class="btn btn-success ms-auto no-print" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual</button>`;
                     const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
 
@@ -1624,57 +1692,8 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        function createPrintWindow(title) {
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>' + title + '</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write(`<style>body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; } .no-print { display: none !important; } .bg-success { background-color: #198754 !important; color: white !important; } .bg-primary { background-color: #0d6efd !important; color: white !important; } .bg-warning { background-color: #ffc107 !important; color: black !important; } .bg-danger { background-color: #dc3545 !important; color: white !important; } .table-responsive { overflow: visible !important; } table, th, td { border: 1px solid #dee2e6 !important; } .table-primary, .table-primary > th, .table-primary > td { --bs-table-bg: #cfe2ff !important; color: #000 !important; } h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }</style></head><body>`);
-            return printWindow;
-        }
+        // --- As demais funções de UI, Drag-and-Drop, Impressão, Login, etc., permanecem as mesmas ---
         
-        function imprimirSobras(title) {
-            if (currentLeftoversForPrinting.length === 0) { alert("Nenhuma sobra para imprimir."); return; }
-            const totalKgFormatado = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const printWindow = createPrintWindow(title);
-            let contentToPrint = `<h3>${title} - Total: ${totalKgFormatado} kg</h3>` + createTable(currentLeftoversForPrinting);
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
-        }
-
-        function imprimirCargasGeneric(divId, title) {
-            const divToPrint = document.getElementById(divId);
-            if (!divToPrint) return;
-            
-            const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
-            
-            if (completedLoadsCards.length === 0) { alert(`Nenhuma carga concluída para imprimir na seção "${title}".`); return; }
-            
-            const printWindow = createPrintWindow('Imprimir: ' + title);
-            let contentToPrint = `<h3>${title}</h3>`;
-            completedLoadsCards.forEach(header => { contentToPrint += header.closest('.card.mb-3').outerHTML; });
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
-        }
-
-        function imprimirTocoIndividual(cf) {
-            if (!gruposToco[cf]) { alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`); return; }
-            const grupo = gruposToco[cf]; const pedidos = grupo.pedidos;
-            const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const printWindow = createPrintWindow('Imprimir Carga Toco CF: ' + cf);
-            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos);
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
-        }
-
         function montarCargaEspecial() {
             const resultadoDiv = document.getElementById('resultado-carga-especial');
             const input = document.getElementById('pedidosEspeciaisInput');
@@ -1908,7 +1927,7 @@
             }
             
             if (!sourceLoad || !targetLoad) {
-                console.error("ERRO: Carga de origem ou destino não encontrada.", { sourceId, targetId });
+                console.error("ERRO: Carga de origem ou destino não encontrada.", { sourceId, targetId, activeLoads });
                 return;
             }
 
@@ -2036,7 +2055,6 @@
             }
         }
         
-        // --- FUNÇÃO startManualLoadBuilder MODIFICADA ---
         function startManualLoadBuilder() {
             if (document.getElementById('manual-load-builder-wrapper')) return; 
 
@@ -2044,7 +2062,6 @@
                 pedidos: [], totalKg: 0, totalCubagem: 0, vehicleType: 'fiorino' 
             };
             
-            // Alterado: Encontrar o card-body da Mesa de Trabalho
             const workspaceCardBody = document.getElementById('vehicleTabsContent').parentElement;
             if (!workspaceCardBody) {
                 alert("Erro: Não foi possível encontrar a Mesa de Trabalho para criar o painel.");
@@ -2053,7 +2070,6 @@
 
             const builderWrapper = document.createElement('div');
             builderWrapper.id = 'manual-load-builder-wrapper';
-            // Adicionado padding e borda para melhor separação visual
             builderWrapper.className = 'p-3 border-top border-secondary'; 
             
             builderWrapper.innerHTML = `
@@ -2073,7 +2089,6 @@
                     </div>
                 </div>`;
             
-            // Alterado: Adicionar o painel ao final do card-body
             workspaceCardBody.appendChild(builderWrapper);
             
             const startBtn = document.getElementById('start-manual-load-btn');
