@@ -1085,56 +1085,7 @@
                 }
             }, 50);
         }
-
-        function createTable(pedidos, columnsToDisplay, sourceId = '') {
-            if (!pedidos || pedidos.length === 0) return '';
-            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'Predat', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
-            let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped table-hover"><thead><tr>';
-            colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
-            table += '</tr></thead><tbody>';
-            pedidos.forEach(p => {
-                const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
-                const clienteIdNormalizado = normalizeClientId(p.Cliente);
-                table += `<tr id="pedido-${p.Num_Pedido}" 
-                                 class="${isPriorityRow ? 'table-primary' : ''}" 
-                                 data-cliente-id="${clienteIdNormalizado}" 
-                                 data-pedido-id="${p.Num_Pedido}"
-                                 onclick="highlightClientRows(event)"
-                                 draggable="true"
-                                 ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
-                colunasExibir.forEach(c => {
-                    let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
-                    if (c === 'Num_Pedido') {
-                        const isPriority = pedidosPrioritarios.includes(String(p.Num_Pedido));
-                        const priorityBadge = isPriority ? ' <span class="badge bg-primary">Prioridade</span>' : '';
-                        table += `<td>${cellContent}${priorityBadge}</td>`;
-                    } else if (c === 'Agendamento' && cellContent === 'Sim') {
-                        table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
-                    } else if (c === 'Predat' || c === 'Dat_Ped') {
-                        let formattedDate = '';
-                        const dateObj = cellContent instanceof Date ? cellContent : new Date(cellContent);
-
-                        if (dateObj instanceof Date && !isNaN(dateObj)) {
-                            formattedDate = dateObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-                        } else {
-                            formattedDate = cellContent || '';
-                        }
-                        
-                        if (c === 'Predat' && isOverdue(p.Predat)) {
-                            table += `<td><span class="text-danger fw-bold">${formattedDate}</span></td>`;
-                        } else {
-                            table += `<td>${formattedDate}</td>`;
-                        }
-                    } else {
-                        table += `<td>${cellContent}</td>`;
-                    }
-                });
-                table += '</tr>';
-            });
-            table += '</tbody></table></div>';
-            return table;
-        }
-
+        
         // =======================================================================
         //          >>> INÍCIO DO NOVO BLOCO DE OTIMIZAÇÃO COM SOLVER <<<
         // =======================================================================
@@ -1349,6 +1300,17 @@
         //          >>> FUNÇÕES DE DISPLAY RESTAURADAS <<<
         // =======================================================================
         
+        function isOverdue(predat) {
+            if (!predat) { return false; }
+            const date = predat instanceof Date ? predat : new Date(predat);
+            if (isNaN(date.getTime())) { return false; } 
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); 
+            
+            return date < today;
+        }
+
         function displayPedidosBloqueados(div, pedidos) {
             if (pedidos.length === 0) {
                 div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido bloqueado manualmente no último processamento.</div>';
