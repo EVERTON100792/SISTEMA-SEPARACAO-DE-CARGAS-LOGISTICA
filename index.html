@@ -360,7 +360,7 @@
                                          <div class="col-md-3"></div>
                                          <div class="col-md-3"><label for="fiorinoHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="fiorinoHardMaxCapacity" value="560" step="10"></div>
                                          <div class="col-md-3"><label for="fiorinoHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="fiorinoHardCubage" value="1.7" step="0.1"></div>
-                                     </div>
+                                      </div>
                                     <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
                                          <div class="col-md-12"><strong class="text-primary">Van</strong></div>
                                          <div class="col-md-3"><label for="vanMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="vanMinCapacity" value="1100" step="10"></div>
@@ -370,21 +370,21 @@
                                          <div class="col-md-3"></div>
                                          <div class="col-md-3"><label for="vanHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="vanHardMaxCapacity" value="1600" step="10"></div>
                                          <div class="col-md-3"><label for="vanHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="vanHardCubage" value="5.6" step="0.1"></div>
-                                     </div>
+                                      </div>
                                     <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
                                          <div class="col-md-12"><strong class="text-warning">3/4</strong></div>
                                          <div class="col-md-3"><label for="tresQuartosMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMinCapacity" value="2300" step="10"></div>
                                          <div class="col-md-3"><label for="tresQuartosMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMaxCapacity" value="4100" step="10"></div>
                                          <div class="col-md-3"><label for="tresQuartosCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tresQuartosCubage" value="15.0" step="0.1"></div>
                                          <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetTresQuartos">Reset</button></div>
-                                     </div>
+                                      </div>
                                     <div class="row g-3">
                                          <div class="col-md-12"><strong>Toco</strong></div>
                                          <div class="col-md-3"><label for="tocoMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tocoMinCapacity" value="5000" step="10"></div>
                                          <div class="col-md-3"><label for="tocoMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tocoMaxCapacity" value="8500" step="10"></div>
                                          <div class="col-md-3"><label for="tocoCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tocoCubage" value="30.0" step="0.1"></div>
                                          <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetToco">Reset</button></div>
-                                     </div>
+                                      </div>
                                     <div class="mt-4 d-flex justify-content-end"><button class="btn btn-success me-2" id="saveConfig"><i class="bi bi-check-circle-fill me-2"></i>Salvar Tudo</button><button class="btn btn-danger" id="resetAllConfigs"><i class="bi bi-arrow-clockwise me-2"></i>Resetar Tudo</button></div>
                                     <div id="configStatus" class="mt-2 status-message text-end"></div>
                                 </div>
@@ -468,8 +468,8 @@
                     <div class="card" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                            <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis</h2>
-                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
-                        </div>
+                            <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
+                       </div>
                        <div class="card-body">
                            <p class="card-subtitle mb-3 text-body-secondary small">Pedidos sem CF numérico, agrupados por rota.</p>
                            <div class="input-group mb-3 no-print"><input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar por Nº do Pedido..."><button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()"><i class="bi bi-search"></i></button></div>
@@ -920,8 +920,8 @@
             atualizarListaBloqueados();
 
             dropZoneText.innerHTML = `<i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                     <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                     <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+                                       <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
+                                       <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
             
             planilhaData = [];
             processarBtn.disabled = true;
@@ -1125,12 +1125,12 @@
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
                 table += `<tr id="pedido-${p.Num_Pedido}" 
-                                class="${isPriorityRow ? 'table-primary' : ''}" 
-                                data-cliente-id="${clienteIdNormalizado}" 
-                                data-pedido-id="${p.Num_Pedido}"
-                                onclick="highlightClientRows(event)"
-                                draggable="true"
-                                ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
+                                 class="${isPriorityRow ? 'table-primary' : ''}" 
+                                 data-cliente-id="${clienteIdNormalizado}" 
+                                 data-pedido-id="${p.Num_Pedido}"
+                                 onclick="highlightClientRows(event)"
+                                 draggable="true"
+                                 ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') {
@@ -1486,9 +1486,6 @@
                 
                 for (const load of refinedLoads) {
                     const vehicleType = load.vehicleType;
-                    // CORREÇÃO: VERIFICA SE VEHICLETYPE EXISTE ANTES DE PROSSEGUIR
-                    if (!vehicleType) continue; 
-                    
                     const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
                     const HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
 
@@ -1567,14 +1564,6 @@
 
                 // --- INÍCIO DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
                 let initialResult = runMultiStrategyOptimization(packableGroups, vehicleType);
-
-                // ########## CORREÇÃO CRÍTICA ##########
-                // Atribui o tipo de veículo a cada carga gerada. Sem isso, a função de refinamento
-                // não sabe quais limites de capacidade usar.
-                initialResult.loads.forEach(load => {
-                    load.vehicleType = vehicleType;
-                });
-                // #####################################
                 
                 // **NOVO: FASE DE REFINAMENTO "PENTE FINO"**
                 console.log(`Solução inicial encontrada com ${initialResult.leftovers.length} grupos sobrando. Iniciando fase de refinamento...`);
@@ -1591,8 +1580,6 @@
                     // 1. Tenta montar mais Fiorinos com as sobras
                     const fiorinoLeftoversResult = runMultiStrategyOptimization(leftoverGroups, 'fiorino');
                     if (fiorinoLeftoversResult.loads.length > 0) {
-                        // Atribui o tipo de veículo para as novas cargas de fiorino
-                        fiorinoLeftoversResult.loads.forEach(l => l.vehicleType = 'fiorino');
                         primaryLoads.push(...fiorinoLeftoversResult.loads);
                     }
                     leftoverGroups = fiorinoLeftoversResult.leftovers;
@@ -1602,8 +1589,6 @@
                     const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
                     if (totalLeftoverKg >= vanMin && leftoverGroups.length > 0) {
                         const vanResult = runMultiStrategyOptimization(leftoverGroups, 'van');
-                        // Atribui o tipo de veículo para as novas cargas de van
-                        vanResult.loads.forEach(l => l.vehicleType = 'van');
                         secondaryLoads = vanResult.loads;
                         leftoverGroups = vanResult.leftovers;
                     }
@@ -1613,29 +1598,28 @@
                 const totalFinalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
                 const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
                 if (totalFinalLeftoverKg >= tresQuartosMin && leftoverGroups.length > 0) {
-                      const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
-                      if(vehicleForTertiary) {
-                          const tresQuartosResult = runMultiStrategyOptimization(leftoverGroups, vehicleForTertiary);
-                           // Atribui o tipo de veículo para as novas cargas 3/4
-                          tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
-                          tertiaryLoads = tresQuartosResult.loads;
-                          leftoverGroups = tresQuartosResult.leftovers;
-                      }
+                     const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
+                     if(vehicleForTertiary) {
+                         const tresQuartosResult = runMultiStrategyOptimization(leftoverGroups, vehicleForTertiary);
+                         tertiaryLoads = tresQuartosResult.loads;
+                         leftoverGroups = tresQuartosResult.leftovers;
+                     }
                 }
                 // --- FIM DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
 
                 currentLeftoversForPrinting = leftoverGroups.flatMap(group => group.pedidos);
 
                 const allLoads = [
-                    ...primaryLoads, // Já tem o vehicleType
-                    ...secondaryLoads, // Já tem o vehicleType
-                    ...tertiaryLoads // Já tem o vehicleType
+                    ...primaryLoads.map(load => ({ ...load, vType: vehicleType })),
+                    ...secondaryLoads.map(load => ({ ...load, vType: 'van' })),
+                    ...tertiaryLoads.map(load => ({ ...load, vType: 'tresQuartos' }))
                 ];
 
                 allLoads.forEach((load, index) => {
-                    load.numero = `${load.vehicleType.charAt(0).toUpperCase()}-${index + 1}`;
-                    const loadId = `${load.vehicleType}-${Date.now()}-${index}`;
+                    load.numero = `${load.vType.charAt(0).toUpperCase()}-${index + 1}`;
+                    const loadId = `${load.vType}-${Date.now()}-${index}`;
                     load.id = loadId;
+                    load.vehicleType = load.vType; // Garante que a propriedade vehicleType esteja presente
                     activeLoads[loadId] = load;
                 });
 
@@ -1649,7 +1633,7 @@
                 
                 const generatedLoads = allLoads.filter(l => l.pedidos.length > 0);
                 if(generatedLoads.length === 0){
-                      html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
+                     html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
                 } else {
                     generatedLoads.forEach(load => {
                         html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType]);
@@ -1662,14 +1646,14 @@
                     const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
 
                     html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
-                                <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                <div class="card mb-3">
-                                    <div class="card-header bg-danger text-white d-flex align-items-center">
-                                        Pedidos Restantes
-                                        <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
-                                    </div>
-                                    <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                </div>
+                                 <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                 <div class="card mb-3">
+                                     <div class="card-header bg-danger text-white d-flex align-items-center">
+                                         Pedidos Restantes
+                                         <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                     </div>
+                                     <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                 </div>
                              </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
@@ -2282,20 +2266,20 @@
         const switchForms = (showSignup) => {
             const formToHide = showSignup ? loginFormContainer : signupFormContainer;
             const formToShow = showSignup ? signupFormContainer : loginFormContainer;
-            
+        
             formToHide.classList.add('form-exit');
-            
+        
             setTimeout(() => {
                 formToHide.classList.remove('form-exit');
                 formToHide.classList.add('hidden');
-            
+        
                 formToShow.classList.remove('hidden');
                 formToShow.classList.add('form-enter');
                 
                 setTimeout(() => {
                     formToShow.classList.remove('form-enter');
                 }, 300);
-            
+        
             }, 300); 
         };
         
