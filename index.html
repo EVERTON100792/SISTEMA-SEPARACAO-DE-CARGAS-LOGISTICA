@@ -1208,146 +1208,6 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
         
-        function displayPedidosBloqueados(div, pedidos) {
-            if (pedidos.length === 0) {
-                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido bloqueado manualmente no último processamento.</div>';
-                return;
-            }
-            const totalKg = pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
-            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            let html = `<div class="alert alert-danger"><strong>Total Bloqueado:</strong> ${pedidos.length} pedidos / ${totalKgFormatado} kg</div>`;
-            html += createTable(pedidos);
-            div.innerHTML = html;
-        }
-
-        function displayPedidosCFNumerico(div, pedidos) {
-            if (pedidos.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido filtrado por CF numérico ou por Regra de Bloqueio.</div>'; return; }
-            const grupos = pedidos.reduce((acc, p) => {
-                const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
-            }, {});
-            let accordionHtml = '<div class="accordion accordion-flush" id="accordionCF">';
-            Object.keys(grupos).sort().forEach((rota, index) => {
-                const grupo = grupos[rota];
-                const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos)}</div></div></div>`;
-            });
-            accordionHtml += '</div>'; div.innerHTML = accordionHtml;
-        }
-
-        function displayTresQuartos(div, loads) {
-            if (loads.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga 3/4 formada automaticamente.</div>'; return; }
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2 no-print"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>` : ''}</div>`;
-            
-            const maxKg = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
-
-            loads.forEach(load => {
-                const loadId = `tres-quartos-auto-${load.numero}`;
-                load.id = loadId;
-                load.vehicleType = 'tresQuartos';
-                activeLoads[loadId] = load;
-
-                const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const pesoPercentual = (load.totalKg / maxKg) * 100;
-                let progressColor = 'bg-success';
-                if (pesoPercentual > 95) progressColor = 'bg-danger';
-                else if (pesoPercentual > 75) progressColor = 'bg-warning';
-
-                const progressBar = `
-                    <div class="progress mt-2" role="progressbar" style="height: 10px;">
-                      <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
-                    </div>`;
-
-                html += `<div id="${loadId}" class="card mb-3 drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="tresQuartos"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${progressBar}${createTable(load.pedidos, null, loadId)}</div></div>`;
-            });
-            div.innerHTML = html;
-        }
-        
-        function displayRota1(div, pedidos) {
-            if (!pedidos || pedidos.length === 0) {
-                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido da Rota 1 para alteração encontrado.</div>';
-                return;
-            }
-
-            let html = `
-                <div class="d-flex justify-content-end mb-2 no-print">
-                    <button class="btn btn-sm btn-outline-warning" onclick="imprimirGeneric('resultado-rota1', 'Pedidos Rota 1 para Alteração')">
-                        <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
-                    </button>
-                </div>
-                ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'CF', 'Coluna5'])}
-            `;
-            div.innerHTML = html;
-        }
-
-        function imprimirGeneric(divId, title) {
-            const divToPrint = document.getElementById(divId);
-            if (!divToPrint) return;
-
-            const printWindow = createPrintWindow(title);
-            const contentToPrint = divToPrint.cloneNode(true);
-            const buttonsInContent = contentToPrint.querySelectorAll('button.no-print, .no-print');
-            buttonsInContent.forEach(btn => btn.remove());
-
-            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + contentToPrint.innerHTML;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
-        }
-
-        function createPrintWindow(title) {
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>' + title + '</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write(`<style>body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; } .no-print { display: none !important; } .bg-success { background-color: #198754 !important; color: white !important; } .bg-primary { background-color: #0d6efd !important; color: white !important; } .bg-warning { background-color: #ffc107 !important; color: black !important; } .bg-danger { background-color: #dc3545 !important; color: white !important; } .table-responsive { overflow: visible !important; } table, th, td { border: 1px solid #dee2e6 !important; } .table-primary, .table-primary > th, .table-primary > td { --bs-table-bg: #cfe2ff !important; color: #000 !important; } h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }</style></head><body>`);
-            return printWindow;
-        }
-        
-        function imprimirSobras(title) {
-            if (currentLeftoversForPrinting.length === 0) { alert("Nenhuma sobra para imprimir."); return; }
-            const totalKgFormatado = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const printWindow = createPrintWindow(title);
-            let contentToPrint = `<h3>${title} - Total: ${totalKgFormatado} kg</h3>` + createTable(currentLeftoversForPrinting);
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
-        }
-
-        function imprimirCargasGeneric(divId, title) {
-            const divToPrint = document.getElementById(divId);
-            if (!divToPrint) return;
-            
-            const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
-            
-            if (completedLoadsCards.length === 0) { alert(`Nenhuma carga concluída para imprimir na seção "${title}".`); return; }
-            
-            const printWindow = createPrintWindow('Imprimir: ' + title);
-            let contentToPrint = `<h3>${title}</h3>`;
-            completedLoadsCards.forEach(header => { contentToPrint += header.closest('.card.mb-3').outerHTML; });
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
-        }
-
-        function imprimirTocoIndividual(cf) {
-            if (!gruposToco[cf]) { alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`); return; }
-            const grupo = gruposToco[cf]; const pedidos = grupo.pedidos;
-            const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const printWindow = createPrintWindow('Imprimir Carga Toco CF: ' + cf);
-            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos);
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
-        }
-        
         // =======================================================================
         //          >>> INÍCIO DO NOVO BLOCO DE OTIMIZAÇÃO COM SOLVER <<<
         // =======================================================================
@@ -1433,14 +1293,14 @@
                     const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
 
                     html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
-                                <h5 class="mt-4">Sobras Finais: ${totalKgSobra.toLocaleString('pt-BR')} kg</h5>
-                                <div class="card mb-3">
-                                    <div class="card-header bg-danger text-white d-flex align-items-center">
-                                        Pedidos Restantes
-                                        <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
-                                    </div>
-                                    <div class="card-body">${createTable(leftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                </div>
+                                 <h5 class="mt-4">Sobras Finais: ${totalKgSobra.toLocaleString('pt-BR')} kg</h5>
+                                 <div class="card mb-3">
+                                     <div class="card-header bg-danger text-white d-flex align-items-center">
+                                         Pedidos Restantes
+                                         <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                     </div>
+                                     <div class="card-body">${createTable(leftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                 </div>
                             </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
@@ -1467,7 +1327,7 @@
             }, {}));
 
             // 2. Configurar o solver
-            const solver = await glpk();
+            const solver = await glpk(); // <<<< CORREÇÃO APLICADA AQUI
             const problem = {
                 name: `Rota-${pedidos[0].Cod_Rota}`,
                 direction: solver.GLP_MAX,
@@ -1483,7 +1343,7 @@
             };
 
             // Estimamos um número máximo de caminhões que poderiam ser necessários
-            const maxVehicles = Math.ceil(pedidos.length / 2) + 1;
+            const maxVehicles = Math.ceil(pedidos.length / 2) + 2;
             const vehicles = Array.from({ length: maxVehicles }, (_, i) => ({ id: `v${i}` }));
 
             // 3. Criar variáveis de decisão e objetivo
@@ -1501,7 +1361,7 @@
                 problem.subjectTo.push({
                     name: `item_once_${item.id}`,
                     vars: vehicles.map(v => ({ name: `x_${item.id}_${v.id}`, coef: 1 })),
-                    bnds: { type: solver.GLP_UP, ub: 1 }
+                    bnds: { type: solver.GLP_UP, ub: 1 } // <<<< CORREÇÃO APLICADA AQUI
                 });
             });
 
@@ -1510,19 +1370,19 @@
                 problem.subjectTo.push({
                     name: `weight_cap_${vehicle.id}`,
                     vars: clientGroups.map(item => ({ name: `x_${item.id}_${vehicle.id}`, coef: item.totalKg })),
-                    bnds: { type: glpk.GLP_UP, ub: capacity.maxKg }
+                    bnds: { type: solver.GLP_UP, ub: capacity.maxKg } // <<<< CORREÇÃO APLICADA AQUI
                 });
                 problem.subjectTo.push({
                     name: `cubage_cap_${vehicle.id}`,
                     vars: clientGroups.map(item => ({ name: `x_${item.id}_${vehicle.id}`, coef: item.totalCubagem })),
-                    bnds: { type: glpk.GLP_UP, ub: capacity.maxCubagem }
+                    bnds: { type: solver.GLP_UP, ub: capacity.maxCubagem } // <<<< CORREÇÃO APLICADA AQUI
                 });
             });
 
             // 5. Rodar o solver
-            const result = solver.solve(problem, { msglev: glpk.GLP_MSG_OFF });
+            const result = solver.solve(problem, { msglev: solver.GLP_MSG_OFF }); // <<<< CORREÇÃO APLICADA AQUI
 
-            if (result.result.status !== solver.GLP_OPT) {
+            if (result.result.status !== solver.GLP_OPT) { // <<<< CORREÇÃO APLICADA AQUI
                 console.error("Solver falhou para a rota", pedidos[0].Cod_Rota, result);
                 return { loads: [], leftovers: pedidos }; // Se falhar, retorna todos como sobra
             }
@@ -1562,7 +1422,7 @@
         // =======================================================================
         //          <<< FIM DO NOVO BLOCO DE OTIMIZAÇÃO COM SOLVER >>>
         // =======================================================================
-
+        
         function renderLoadCard(load, vehicleType, vInfo) {
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
