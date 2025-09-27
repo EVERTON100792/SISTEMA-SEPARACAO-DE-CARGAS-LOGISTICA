@@ -1327,7 +1327,7 @@
             }, {}));
 
             // 2. Configurar o solver
-            const solver = await glpk(); // <<<< CORREÇÃO APLICADA AQUI
+            const solver = await glpk();
             const problem = {
                 name: `Rota-${pedidos[0].Cod_Rota}`,
                 direction: solver.GLP_MAX,
@@ -1361,7 +1361,7 @@
                 problem.subjectTo.push({
                     name: `item_once_${item.id}`,
                     vars: vehicles.map(v => ({ name: `x_${item.id}_${v.id}`, coef: 1 })),
-                    bnds: { type: solver.GLP_UP, ub: 1 } // <<<< CORREÇÃO APLICADA AQUI
+                    bnds: { type: solver.GLP_UP, ub: 1 }
                 });
             });
 
@@ -1370,19 +1370,19 @@
                 problem.subjectTo.push({
                     name: `weight_cap_${vehicle.id}`,
                     vars: clientGroups.map(item => ({ name: `x_${item.id}_${vehicle.id}`, coef: item.totalKg })),
-                    bnds: { type: solver.GLP_UP, ub: capacity.maxKg } // <<<< CORREÇÃO APLICADA AQUI
+                    bnds: { type: solver.GLP_UP, ub: capacity.maxKg }
                 });
                 problem.subjectTo.push({
                     name: `cubage_cap_${vehicle.id}`,
                     vars: clientGroups.map(item => ({ name: `x_${item.id}_${vehicle.id}`, coef: item.totalCubagem })),
-                    bnds: { type: solver.GLP_UP, ub: capacity.maxCubagem } // <<<< CORREÇÃO APLICADA AQUI
+                    bnds: { type: solver.GLP_UP, ub: capacity.maxCubagem }
                 });
             });
 
             // 5. Rodar o solver
-            const result = solver.solve(problem, { msglev: solver.GLP_MSG_OFF }); // <<<< CORREÇÃO APLICADA AQUI
+            const result = solver.solve(problem, { msglev: solver.GLP_MSG_OFF });
 
-            if (result.result.status !== solver.GLP_OPT) { // <<<< CORREÇÃO APLICADA AQUI
+            if (result.result.status !== solver.GLP_OPT) {
                 console.error("Solver falhou para a rota", pedidos[0].Cod_Rota, result);
                 return { loads: [], leftovers: pedidos }; // Se falhar, retorna todos como sobra
             }
@@ -1423,6 +1423,65 @@
         //          <<< FIM DO NOVO BLOCO DE OTIMIZAÇÃO COM SOLVER >>>
         // =======================================================================
         
+        // =======================================================================
+        //          >>> FUNÇÕES DE DISPLAY RESTAURADAS <<<
+        // =======================================================================
+
+        function displayPedidosBloqueados(div, pedidos) {
+            if (pedidos.length === 0) {
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido bloqueado manualmente no último processamento.</div>';
+                return;
+            }
+            const totalKg = pedidos.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            let html = `<div class="alert alert-danger"><strong>Total Bloqueado:</strong> ${pedidos.length} pedidos / ${totalKgFormatado} kg</div>`;
+            html += createTable(pedidos);
+            div.innerHTML = html;
+        }
+
+        function displayResumoGeral(stats) {
+            const container = document.getElementById('card-resumo-geral-container');
+            const nf = (num) => num.toLocaleString('pt-BR');
+            const kf = (num) => num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const html = `
+            <div class="card">
+                <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo do Processamento</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="text-white-50">TOTAIS DA PLANILHA</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Pedidos no Arquivo <span class="badge bg-primary rounded-pill">${nf(stats.totalPlanilha)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Peso Total no Arquivo <span class="badge bg-primary rounded-pill">${kf(stats.pesoTotal)} kg</span></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-white-50">PEDIDOS PRÉ-PROCESSADOS</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Carga Especial<span class="badge bg-info rounded-pill">${nf(stats.pedidosEspeciais)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas Toco (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosToco)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas 3/4 Auto (pedidos)<span class="badge bg-warning rounded-pill">${nf(stats.pedidos34Auto)}</span></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-white-50">DISPONÍVEL PARA MONTAGEM</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Filtrados (CF Num./Rota 1)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosFiltrados)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center"><strong>Pedidos Disponíveis</strong><span class="badge bg-success rounded-pill"><strong>${nf(stats.pedidosDisponiveis)}</strong></span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center"><strong>Peso Disponível</strong><span class="badge bg-success rounded-pill"><strong>${kf(stats.pesoDisponivel)} kg</strong></span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+        // =======================================================================
+
         function renderLoadCard(load, vehicleType, vInfo) {
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
@@ -1639,47 +1698,6 @@
                     row.classList.add('client-highlight');
                 });
             }
-        }
-
-        function displayResumoGeral(stats) {
-            const container = document.getElementById('card-resumo-geral-container');
-            const nf = (num) => num.toLocaleString('pt-BR');
-            const kf = (num) => num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-            const html = `
-            <div class="card">
-                <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo do Processamento</div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <h6 class="text-white-50">TOTAIS DA PLANILHA</h6>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Pedidos no Arquivo <span class="badge bg-primary rounded-pill">${nf(stats.totalPlanilha)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Peso Total no Arquivo <span class="badge bg-primary rounded-pill">${kf(stats.pesoTotal)} kg</span></li>
-                            </ul>
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="text-white-50">PEDIDOS PRÉ-PROCESSADOS</h6>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Carga Especial<span class="badge bg-info rounded-pill">${nf(stats.pedidosEspeciais)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas Toco (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosToco)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas 3/4 Auto (pedidos)<span class="badge bg-warning rounded-pill">${nf(stats.pedidos34Auto)}</span></li>
-                            </ul>
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="text-white-50">DISPONÍVEL PARA MONTAGEM</h6>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Filtrados (CF Num./Rota 1)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosFiltrados)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center"><strong>Pedidos Disponíveis</strong><span class="badge bg-success rounded-pill"><strong>${nf(stats.pedidosDisponiveis)}</strong></span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center"><strong>Peso Disponível</strong><span class="badge bg-success rounded-pill"><strong>${kf(stats.pesoDisponivel)} kg</strong></span></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-            container.innerHTML = html;
-            container.style.display = 'block';
         }
         
         function dragStart(event, pedidoId, clienteId, sourceId) {
