@@ -16,6 +16,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    
+    <script src="https://unpkg.com/javascript-lp-solver/prod/solver.js"></script>
 
     <style>
         :root {
@@ -403,8 +405,8 @@
                                 </div>
                                 <div class="col-md-6">
                                      <div class="card h-100">
-                                          <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>4. Carga Especial</h2></div>
-                                           <div class="card-body d-flex flex-column">
+                                         <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>4. Carga Especial</h2></div>
+                                          <div class="card-body d-flex flex-column">
                                             <div class="flex-grow-1">
                                                 <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
                                                 <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
@@ -1125,12 +1127,12 @@
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
                 table += `<tr id="pedido-${p.Num_Pedido}" 
-                                 class="${isPriorityRow ? 'table-primary' : ''}" 
-                                 data-cliente-id="${clienteIdNormalizado}" 
-                                 data-pedido-id="${p.Num_Pedido}"
-                                 onclick="highlightClientRows(event)"
-                                 draggable="true"
-                                 ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
+                                   class="${isPriorityRow ? 'table-primary' : ''}" 
+                                   data-cliente-id="${clienteIdNormalizado}" 
+                                   data-pedido-id="${p.Num_Pedido}"
+                                   onclick="highlightClientRows(event)"
+                                   draggable="true"
+                                   ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') {
@@ -1346,176 +1348,130 @@
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
 
-        // --- INÍCIO DAS FUNÇÕES DE OTIMIZAÇÃO NOVAS E MELHORADAS ---
+        // --- INÍCIO DAS FUNÇÕES DE OTIMIZAÇÃO COM SOLVER MATEMÁTICO ---
 
-        function createSolution(itemsParaEmpacotar, vehicleType) {
+        function solveBinPackingMIP(clientGroups, vehicleType, maxLoads = 10) {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
-            const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
-            const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
-            const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : SOFT_MAX_KG;
-            const HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : SOFT_MAX_CUBAGE;
+            const MAX_KG = parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`)?.value || document.getElementById(`${vehicleType}MaxCapacity`).value);
+            const MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}HardCubage`)?.value || document.getElementById(`${vehicleType}Cubage`).value);
+
+            const model = {
+                optimize: "totalWeight",
+                opType: "max",
+                constraints: {},
+                variables: {},
+                ints: {}
+            };
+
+            // Variáveis: x_ij = 1 se o grupo de cliente i for para o caminhão j
+            clientGroups.forEach((group, i) => {
+                model.variables[`g${i}`] = {};
+                for (let j = 0; j < maxLoads; j++) {
+                    const varName = `x_${i}_${j}`;
+                    model.variables[`g${i}`][varName] = group.totalKg; // Coeficiente na função objetivo
+                    model.ints[varName] = 1;
+                }
+            });
+
+            // Restrições de Capacidade (Peso e Cubagem) para cada caminhão
+            for (let j = 0; j < maxLoads; j++) {
+                model.constraints[`weight_${j}`] = { max: MAX_KG };
+                model.constraints[`cubage_${j}`] = { max: MAX_CUBAGE };
+                 clientGroups.forEach((group, i) => {
+                    model.constraints[`weight_${j}`][`x_${i}_${j}`] = group.totalKg;
+                    model.constraints[`cubage_${j}`][`x_${i}_${j}`] = group.totalCubagem;
+                });
+            }
+
+            // Restrição: Cada grupo de cliente pode ir para no máximo um caminhão
+            clientGroups.forEach((group, i) => {
+                model.constraints[`group_assign_${i}`] = { max: 1 };
+                for (let j = 0; j < maxLoads; j++) {
+                    model.constraints[`group_assign_${i}`][`x_${i}_${j}`] = 1;
+                }
+            });
+
+            // Adiciona variáveis para saber se um caminhão é usado, para forçar o peso mínimo
+            for (let j = 0; j < maxLoads; j++) {
+                const useVar = `use_${j}`;
+                model.variables[useVar] = { [useVar]: 0 }; // não contribui para o peso total
+                model.ints[useVar] = 1;
+                
+                // Se o caminhão é usado (use_j = 1), a soma dos pesos deve ser >= MIN_KG
+                model.constraints[`min_weight_${j}`] = { min: 0 };
+                 clientGroups.forEach((group, i) => {
+                    model.constraints[`min_weight_${j}`][`x_${i}_${j}`] = group.totalKg;
+                });
+                model.constraints[`min_weight_${j}`][useVar] = -MIN_KG;
+                
+                // Se um item está no caminhão, o caminhão deve ser marcado como usado
+                 clientGroups.forEach((group, i) => {
+                    model.constraints[`force_use_${i}_${j}`] = { max: 0 };
+                    model.constraints[`force_use_${i}_${j}`][`x_${i}_${j}`] = 1;
+                    model.constraints[`force_use_${i}_${j}`][useVar] = -1;
+                });
+            }
             
-            let loads = [];
+            // Regras de negócio (Agendamento e Clientes Especiais)
             const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
-            const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
-            
-            let packableItems = [...itemsParaEmpacotar];
-            let leftoverItems = [];
+            for (let j = 0; j < maxLoads; j++) {
+                // No máximo um grupo com agendamento por caminhão
+                model.constraints[`schedule_rule_${j}`] = { max: 1 };
+                // No máximo um grupo de cliente especial por caminhão
+                model.constraints[`special_client_rule_${j}`] = { max: 1 };
 
-            packableItems.forEach(item => {
-                if (item.totalKg > HARD_MAX_KG || item.totalCubagem > HARD_MAX_CUBAGE) {
-                    leftoverItems.push(item); return;
-                }
-                
-                let bestFit = null;
-
-                for (const load of loads) {
-                    const newKg = load.totalKg + item.totalKg;
-                    const newCubage = load.totalCubagem + item.totalCubagem;
-                    
-                    const loadHasScheduledOrder = load.pedidos.some(p => p.Agendamento === 'Sim');
-                    const itemHasScheduledOrder = item.pedidos.some(p => p.Agendamento === 'Sim');
-                    if (loadHasScheduledOrder && itemHasScheduledOrder) continue;
-
-                    const itemIsSpecial = item.isSpecial;
-                    const loadAlreadyHasSpecial = load.pedidos.some(p => isSpecialClient(p));
-                    if (itemIsSpecial && loadAlreadyHasSpecial) continue;
-
-                    if (newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
-                        const remainingCapacity = HARD_MAX_KG - newKg;
-                        if (bestFit === null || remainingCapacity < bestFit.remainingCapacity) {
-                            bestFit = { load: load, remainingCapacity: remainingCapacity };
-                        }
+                clientGroups.forEach((group, i) => {
+                    if (group.pedidos.some(p => p.Agendamento === 'Sim')) {
+                        model.constraints[`schedule_rule_${j}`][`x_${i}_${j}`] = 1;
                     }
-                }
+                    if (group.isSpecial) {
+                         model.constraints[`special_client_rule_${j}`][`x_${i}_${j}`] = 1;
+                    }
+                });
+            }
+            
+            // Adiciona os coeficientes da função objetivo
+            model.variables.totalWeight = {};
+            clientGroups.forEach((group, i) => {
+                 for (let j = 0; j < maxLoads; j++) {
+                    model.variables.totalWeight[`x_${i}_${j}`] = group.totalKg;
+                 }
+            });
 
-                if (bestFit) {
-                    bestFit.load.pedidos.push(...item.pedidos);
-                    bestFit.load.totalKg += item.totalKg;
-                    bestFit.load.totalCubagem += item.totalCubagem;
-                    bestFit.load.usedHardLimit = bestFit.load.totalKg > SOFT_MAX_KG || bestFit.load.totalCubagem > SOFT_MAX_CUBAGE;
-                } else {
-                    loads.push({
-                        pedidos: [...item.pedidos],
-                        totalKg: item.totalKg,
-                        totalCubagem: item.totalCubagem,
-                        usedHardLimit: (item.totalKg > SOFT_MAX_KG || item.totalCubagem > SOFT_MAX_CUBAGE)
+
+            const result = solver.Solve(model);
+            
+            const loads = [];
+            const assignedGroupIndices = new Set();
+            if (result.feasible) {
+                for (let j = 0; j < maxLoads; j++) {
+                    const currentLoad = { pedidos: [], totalKg: 0, totalCubagem: 0, vehicleType: vehicleType };
+                    clientGroups.forEach((group, i) => {
+                        if (result[`x_${i}_${j}`] === 1) {
+                            currentLoad.pedidos.push(...group.pedidos);
+                            currentLoad.totalKg += group.totalKg;
+                            currentLoad.totalCubagem += group.totalCubagem;
+                            assignedGroupIndices.add(i);
+                        }
                     });
-                }
-            });
-            
-            let finalLoads = [];
-            let unplacedGroups = [];
-            loads.forEach(load => {
-                const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                const allowPriorityOverride = vehicleType !== 'tresQuartos';
-                
-                if (load.pedidos.length > 0 && (load.totalKg >= MIN_KG || (hasPriority && allowPriorityOverride))) {
-                    finalLoads.push(load);
-                } else {
-                    const clientGroupsInFailedLoad = load.pedidos.reduce((acc, pedido) => {
-                        const clienteId = normalizeClientId(pedido.Cliente);
-                        if (!acc[clienteId]) {
-                            acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
-                        }
-                        acc[clienteId].pedidos.push(pedido);
-                        acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                        acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
-                        return acc;
-                    }, {});
-                    unplacedGroups.push(...Object.values(clientGroupsInFailedLoad));
-                }
-            });
-            
-            const leftovers = [...leftoverItems, ...unplacedGroups];
-            return { loads: finalLoads, leftovers };
-        }
-
-        // --- NOVA FUNÇÃO DE OTIMIZAÇÃO MULTI-ESTRATÉGIA ---
-        function runMultiStrategyOptimization(packableGroups, vehicleType) {
-            const strategies = [
-                { name: 'priority-weight-desc',
-                  sorter: (a, b) => {
-                    const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                    const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                    if (aHasPrio && !bHasPrio) return -1;
-                    if (!aHasPrio && bHasPrio) return 1;
-                    return b.totalKg - a.totalKg;
-                  }
-                },
-                { name: 'scheduled-weight-desc',
-                  sorter: (a, b) => {
-                    const aHasSched = a.pedidos.some(p => p.Agendamento === 'Sim');
-                    const bHasSched = b.pedidos.some(p => p.Agendamento === 'Sim');
-                    if (aHasSched && !bHasSched) return -1;
-                    if (!aHasSched && bHasSched) return 1;
-                    return b.totalKg - a.totalKg;
-                  }
-                },
-                { name: 'weight-desc', sorter: (a, b) => b.totalKg - a.totalKg },
-                { name: 'weight-asc', sorter: (a, b) => a.totalKg - b.totalKg },
-                // NOVAS ESTRATÉGIAS DE DENSIDADE
-                { name: 'density-desc', sorter: (a, b) => b.density - a.density },
-                { name: 'density-asc', sorter: (a, b) => a.density - b.density }
-            ];
-
-            let bestResult = null;
-
-            for (const strategy of strategies) {
-                const sortedGroups = [...packableGroups].sort(strategy.sorter);
-                const result = createSolution(sortedGroups, vehicleType);
-                
-                const leftoverWeight = result.leftovers.reduce((sum, g) => sum + g.totalKg, 0);
-
-                if (bestResult === null || leftoverWeight < bestResult.leftoverWeight) {
-                    bestResult = { ...result, leftoverWeight: leftoverWeight, strategy: strategy.name };
-                }
-            }
-            
-            console.log(`Melhor estratégia para ${vehicleType}: ${bestResult.strategy} com ${bestResult.leftoverWeight.toFixed(2)}kg de sobra.`);
-            return bestResult;
-        }
-
-        // --- NOVA FUNÇÃO DE REFINAMENTO "PENTE FINO" ---
-        function refineLoadsWithSimpleFit(initialLoads, initialLeftovers) {
-            let refinedLoads = JSON.parse(JSON.stringify(initialLoads));
-            let remainingLeftovers = JSON.parse(JSON.stringify(initialLeftovers));
-
-            for (let i = remainingLeftovers.length - 1; i >= 0; i--) {
-                const leftoverGroup = remainingLeftovers[i];
-                
-                for (const load of refinedLoads) {
-                    const vehicleType = load.vehicleType;
-                    // CORREÇÃO: VERIFICA SE VEHICLETYPE EXISTE ANTES DE PROSSEGUIR
-                    if (!vehicleType) continue; 
-                    
-                    const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
-                    const HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
-
-                    const newKg = load.totalKg + leftoverGroup.totalKg;
-                    const newCubage = load.totalCubagem + leftoverGroup.totalCubagem;
-
-                    if (newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
-                        load.pedidos.push(...leftoverGroup.pedidos);
-                        load.totalKg = newKg;
-                        load.totalCubagem = newCubage;
-                        
-                        remainingLeftovers.splice(i, 1);
-                        break; 
+                    if (currentLoad.pedidos.length > 0) {
+                        loads.push(currentLoad);
                     }
                 }
             }
-            return { refinedLoads, remainingLeftovers };
+
+            const leftovers = clientGroups.filter((_, i) => !assignedGroupIndices.has(i));
+            return { loads, leftovers };
         }
 
-        // --- FUNÇÃO SEPARARCARGASGENERIC ATUALIZADA COM NOVA LÓGICA ---
+        // --- FUNÇÃO SEPARARCARGASGENERIC ATUALIZADA COM NOVA LÓGICA DE SOLVER ---
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
             
             const autoGeneratedContent = resultadoDiv.querySelector('.resultado-container');
             if (autoGeneratedContent) { autoGeneratedContent.remove(); }
 
-            resultadoDiv.insertAdjacentHTML('beforeend', '<div id="spinner-temp-container" class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Analisando estratégias e montando cargas...</span></div>');
+            resultadoDiv.insertAdjacentHTML('beforeend', `<div id="spinner-temp-container" class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Executando otimização matemática para encontrar a solução ideal...</span></div>`);
 
             if (buttonElement) {
                 currentLeftoversForPrinting = [];
@@ -1547,92 +1503,23 @@
 
                 const clientGroupsMap = pedidosRota.reduce((acc, pedido) => {
                     const clienteId = normalizeClientId(pedido.Cliente);
-                    if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) }; }
+                    if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido), clienteId: clienteId }; }
                     acc[clienteId].pedidos.push(pedido);
-                    acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                    acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+                    acc[clienteId].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                    acc[clienteId].totalCubagem += parseFloat(String(p.Cubagem).replace(',', '.')) || 0;
                     return acc;
                 }, {});
                 const packableGroups = Object.values(clientGroupsMap);
 
-                // **NOVO: CÁLCULO DE DENSIDADE**
-                packableGroups.forEach(group => {
-                    if (group.totalCubagem > 0) {
-                        group.density = group.totalKg / group.totalCubagem;
-                    } else {
-                        // Se não tem volume, é infinitamente denso, prioridade máxima na estratégia de densidade.
-                        group.density = Infinity; 
-                    }
-                });
-
-                // --- INÍCIO DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
-                let initialResult = runMultiStrategyOptimization(packableGroups, vehicleType);
-
-                // ########## CORREÇÃO CRÍTICA ##########
-                // Atribui o tipo de veículo a cada carga gerada. Sem isso, a função de refinamento
-                // não sabe quais limites de capacidade usar.
-                initialResult.loads.forEach(load => {
-                    load.vehicleType = vehicleType;
-                });
-                // #####################################
+                // --- LÓGICA DE OTIMIZAÇÃO COM SOLVER ---
+                const { loads, leftovers } = solveBinPackingMIP(packableGroups, vehicleType);
                 
-                // **NOVO: FASE DE REFINAMENTO "PENTE FINO"**
-                console.log(`Solução inicial encontrada com ${initialResult.leftovers.length} grupos sobrando. Iniciando fase de refinamento...`);
-                const { refinedLoads, remainingLeftovers } = refineLoadsWithSimpleFit(initialResult.loads, initialResult.leftovers);
-                console.log(`Refinamento finalizado. ${initialResult.leftovers.length - remainingLeftovers.length} grupos foram encaixados.`);
-
-                let primaryLoads = refinedLoads;
-                let leftoverGroups = remainingLeftovers;
-
-                let secondaryLoads = [];
-                let tertiaryLoads = [];
-
-                if (vehicleType === 'fiorino' && leftoverGroups.length > 0) {
-                    // 1. Tenta montar mais Fiorinos com as sobras
-                    const fiorinoLeftoversResult = runMultiStrategyOptimization(leftoverGroups, 'fiorino');
-                    if (fiorinoLeftoversResult.loads.length > 0) {
-                        // Atribui o tipo de veículo para as novas cargas de fiorino
-                        fiorinoLeftoversResult.loads.forEach(l => l.vehicleType = 'fiorino');
-                        primaryLoads.push(...fiorinoLeftoversResult.loads);
-                    }
-                    leftoverGroups = fiorinoLeftoversResult.leftovers;
-
-                    // 2. Com o que sobrou, tenta montar uma Van
-                    const totalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
-                    const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
-                    if (totalLeftoverKg >= vanMin && leftoverGroups.length > 0) {
-                        const vanResult = runMultiStrategyOptimization(leftoverGroups, 'van');
-                        // Atribui o tipo de veículo para as novas cargas de van
-                        vanResult.loads.forEach(l => l.vehicleType = 'van');
-                        secondaryLoads = vanResult.loads;
-                        leftoverGroups = vanResult.leftovers;
-                    }
-                }
+                let finalLoads = loads;
+                let leftoverGroups = leftovers;
                 
-                // 3. Tenta montar um 3/4 com o que sobrou de qualquer processo anterior
-                const totalFinalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
-                const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
-                if (totalFinalLeftoverKg >= tresQuartosMin && leftoverGroups.length > 0) {
-                        const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
-                        if(vehicleForTertiary) {
-                            const tresQuartosResult = runMultiStrategyOptimization(leftoverGroups, vehicleForTertiary);
-                              // Atribui o tipo de veículo para as novas cargas 3/4
-                            tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
-                            tertiaryLoads = tresQuartosResult.loads;
-                            leftoverGroups = tresQuartosResult.leftovers;
-                        }
-                }
-                // --- FIM DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
-
                 currentLeftoversForPrinting = leftoverGroups.flatMap(group => group.pedidos);
 
-                const allLoads = [
-                    ...primaryLoads, // Já tem o vehicleType
-                    ...secondaryLoads, // Já tem o vehicleType
-                    ...tertiaryLoads // Já tem o vehicleType
-                ];
-
-                allLoads.forEach((load, index) => {
+                finalLoads.forEach((load, index) => {
                     load.numero = `${load.vehicleType.charAt(0).toUpperCase()}-${index + 1}`;
                     const loadId = `${load.vehicleType}-${Date.now()}-${index}`;
                     load.id = loadId;
@@ -1645,9 +1532,9 @@
                     tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
                 };
                 
-                let html = `<h5 class="mt-3">Cargas para <strong>${title}</strong></h5>`;
+                let html = `<h5 class="mt-3">Cargas para <strong>${title}</strong> (Solução Ótima)</h5>`;
                 
-                const generatedLoads = allLoads.filter(l => l.pedidos.length > 0);
+                const generatedLoads = finalLoads.filter(l => l.pedidos.length > 0);
                 if(generatedLoads.length === 0){
                         html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
                 } else {
@@ -1670,7 +1557,7 @@
                                      </div>
                                      <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                                  </div>
-                            </div>`;
+                             </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
