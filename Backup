@@ -403,8 +403,8 @@
                                 </div>
                                 <div class="col-md-6">
                                      <div class="card h-100">
-                                         <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>4. Carga Especial</h2></div>
-                                          <div class="card-body d-flex flex-column">
+                                          <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>4. Carga Especial</h2></div>
+                                           <div class="card-body d-flex flex-column">
                                             <div class="flex-grow-1">
                                                 <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
                                                 <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
@@ -468,7 +468,7 @@
                     <div class="card" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                            <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis</h2>
-                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
+                            <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
                         </div>
                        <div class="card-body">
                            <p class="card-subtitle mb-3 text-body-secondary small">Pedidos sem CF numérico, agrupados por rota.</p>
@@ -920,8 +920,8 @@
             atualizarListaBloqueados();
 
             dropZoneText.innerHTML = `<i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                     <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                     <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+                                       <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
+                                       <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
             
             planilhaData = [];
             processarBtn.disabled = true;
@@ -1125,12 +1125,12 @@
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
                 table += `<tr id="pedido-${p.Num_Pedido}" 
-                                class="${isPriorityRow ? 'table-primary' : ''}" 
-                                data-cliente-id="${clienteIdNormalizado}" 
-                                data-pedido-id="${p.Num_Pedido}"
-                                onclick="highlightClientRows(event)"
-                                draggable="true"
-                                ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
+                                 class="${isPriorityRow ? 'table-primary' : ''}" 
+                                 data-cliente-id="${clienteIdNormalizado}" 
+                                 data-pedido-id="${p.Num_Pedido}"
+                                 onclick="highlightClientRows(event)"
+                                 draggable="true"
+                                 ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') {
@@ -1613,14 +1613,14 @@
                 const totalFinalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
                 const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
                 if (totalFinalLeftoverKg >= tresQuartosMin && leftoverGroups.length > 0) {
-                      const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
-                      if(vehicleForTertiary) {
-                          const tresQuartosResult = runMultiStrategyOptimization(leftoverGroups, vehicleForTertiary);
-                           // Atribui o tipo de veículo para as novas cargas 3/4
-                          tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
-                          tertiaryLoads = tresQuartosResult.loads;
-                          leftoverGroups = tresQuartosResult.leftovers;
-                      }
+                        const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
+                        if(vehicleForTertiary) {
+                            const tresQuartosResult = runMultiStrategyOptimization(leftoverGroups, vehicleForTertiary);
+                              // Atribui o tipo de veículo para as novas cargas 3/4
+                            tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
+                            tertiaryLoads = tresQuartosResult.loads;
+                            leftoverGroups = tresQuartosResult.leftovers;
+                        }
                 }
                 // --- FIM DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
 
@@ -1649,7 +1649,7 @@
                 
                 const generatedLoads = allLoads.filter(l => l.pedidos.length > 0);
                 if(generatedLoads.length === 0){
-                      html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
+                        html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
                 } else {
                     generatedLoads.forEach(load => {
                         html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType]);
@@ -1662,15 +1662,15 @@
                     const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
 
                     html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
-                                <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                <div class="card mb-3">
-                                    <div class="card-header bg-danger text-white d-flex align-items-center">
-                                        Pedidos Restantes
-                                        <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
-                                    </div>
-                                    <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                </div>
-                             </div>`;
+                                 <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                 <div class="card mb-3">
+                                     <div class="card-header bg-danger text-white d-flex align-items-center">
+                                         Pedidos Restantes
+                                         <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                     </div>
+                                     <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                 </div>
+                            </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             }, 50);
