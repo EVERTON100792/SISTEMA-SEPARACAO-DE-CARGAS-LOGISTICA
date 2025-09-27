@@ -1086,32 +1086,6 @@
             }, 50);
         }
 
-        function isOverdue(predat) {
-            if (!predat) { return false; }
-            const date = predat instanceof Date ? predat : new Date(predat);
-            if (isNaN(date)) { return false; } 
-
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            return date < today;
-        }
-
-        function exportarPedidosAtrasados() {
-            if (pedidosGeraisAtuais.length === 0) { alert("Por favor, processe a planilha primeiro para definir as rotas."); return; }
-            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => isOverdue(p.Predat));
-            if (pedidosAtrasados.length === 0) { alert("Nenhum pedido em atraso encontrado nos resultados processados."); return; }
-            const header = [ "Empresa", "Cod_Rota", "Den_Rota", "Cliente", "Nome_Cliente", "AGENDAS/PALLET", "Nome_Repres", "Cod_Supervisor", "Nome_Supervisor", "Cod_Regional", "Nome_Regional", "Num_Pedido", "Quilos_Saldo", "OBS", "Predat", "Cidade", "UF", "Dat_Ped", "BLOQ.", "Coluna4", "Coluna5", "CF", "Descricao_CF", "Cubagem", "PED. ATRASO 3D.", "PED. ATRASO 3D.2", "PED. ATRASO 4D.", "PED. ATRASO 4D.2", "PED. ATRASO 6D.", "PED. ATRASO 6D.2" ];
-            const dataToExport = pedidosAtrasados.map(p => {
-                const newP = {...p};
-                if (newP.Predat instanceof Date) { newP.Predat = newP.Predat.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
-                return newP;
-            });
-            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: header });
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
-            XLSX.writeFile(workbook, "pedidos_atrasados.xlsx");
-        }
-        
         function createTable(pedidos, columnsToDisplay, sourceId = '') {
             if (!pedidos || pedidos.length === 0) return '';
             const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'Predat', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
@@ -1256,22 +1230,25 @@
             }, 50);
         }
 
+        // O coração da nova lógica - usa o solver GLPK
         async function otimizarRotaComSolver(pedidos, vehicleType) {
             if (!pedidos || pedidos.length === 0) {
                 return { loads: [], leftovers: [] };
             }
 
+            // 1. Agrupar pedidos por cliente (itens a serem empacotados)
             const clientGroups = Object.values(pedidos.reduce((acc, pedido) => {
                 const clienteId = normalizeClientId(pedido.Cliente);
                 if (!acc[clienteId]) {
                     acc[clienteId] = { id: clienteId, pedidos: [], totalKg: 0, totalCubagem: 0 };
                 }
                 acc[clienteId].pedidos.push(pedido);
-                acc[clienteId].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
-                acc[clienteId].totalCubagem += parseFloat(String(p.Cubagem).replace(',', '.')) || 0;
+                acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
                 return acc;
             }, {}));
 
+            // 2. Configurar o solver
             const solver = await glpk();
             const problem = {
                 name: `Rota-${pedidos[0].Cod_Rota}`,
@@ -1287,9 +1264,11 @@
                 maxCubagem: parseFloat(document.getElementById(vehicleType === 'tresQuartos' ? `${vehicleType}Cubage` : `${vehicleType}HardCubage`).value),
             };
 
+            // Estimamos um número máximo de caminhões que poderiam ser necessários
             const maxVehicles = Math.ceil(pedidos.length / 2) + 2;
             const vehicles = Array.from({ length: maxVehicles }, (_, i) => ({ id: `v${i}` }));
 
+            // 3. Criar variáveis de decisão e objetivo
             clientGroups.forEach(item => {
                 vehicles.forEach(vehicle => {
                     const varName = `x_${item.id}_${vehicle.id}`;
@@ -1298,6 +1277,8 @@
                 });
             });
 
+            // 4. Criar Restrições
+            // Restrição 1: Cada grupo de cliente vai para no máximo 1 caminhão
             clientGroups.forEach(item => {
                 problem.subjectTo.push({
                     name: `item_once_${item.id}`,
@@ -1306,6 +1287,7 @@
                 });
             });
 
+            // Restrições 2 e 3: Capacidade de peso e cubagem de cada caminhão
             vehicles.forEach(vehicle => {
                 problem.subjectTo.push({
                     name: `weight_cap_${vehicle.id}`,
@@ -1319,6 +1301,7 @@
                 });
             });
 
+            // 5. Rodar o solver
             const result = solver.solve(problem, { msglev: solver.GLP_MSG_OFF });
 
             if (result.result.status !== solver.GLP_OPT) {
@@ -1326,6 +1309,7 @@
                 return { loads: [], leftovers: pedidos };
             }
 
+            // 6. Montar as cargas com base na resposta do solver
             const tempLoads = {};
             const assignedItemIds = new Set();
             for (const varName in result.result.vars) {
@@ -1342,6 +1326,7 @@
                 }
             }
 
+            // 7. Pós-processamento: Validar peso mínimo e separar sobras
             const finalLoads = [];
             let leftovers = clientGroups.filter(item => !assignedItemIds.has(item.id)).flatMap(i => i.pedidos);
             
