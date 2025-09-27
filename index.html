@@ -1467,7 +1467,7 @@
             }, {}));
 
             // 2. Configurar o solver
-            const glpk = await glpk();
+            const solver = await glpk();
             const problem = {
                 name: `Rota-${pedidos[0].Cod_Rota}`,
                 direction: glpk.GLP_MAX,
