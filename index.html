@@ -35,7 +35,6 @@
             font-family: 'Inter', sans-serif;
         }
 
-        /* --- TELA DE LOGIN REFORMULADA --- */
         #login-container {
             position: fixed;
             top: 0;
@@ -108,7 +107,6 @@
         
         #auth-message { min-height: 24px; }
 
-        /* --- DASHBOARD REFORMULADO --- */
         #dashboard-content {
             animation: fadeIn 0.6s ease-in-out;
         }
@@ -206,8 +204,6 @@
             box-shadow: 0 0 15px rgba(54, 119, 245, 0.5);
         }
 
-        /* --- AJUSTE DE ROLAGEM (ALTERADO) --- */
-        /* Remove a rolagem interna do painel Mesa de Trabalho e do painel Pedidos Disponíveis. */
         .workspace-tab-pane, #pedidos-disponiveis-card .card-body {
             max-height: none;
             overflow-y: visible;
@@ -215,7 +211,6 @@
 
         .status-message { min-height: 24px; }
 
-        /* --- ESTILOS DE IMPRESSÃO (Mantidos) --- */
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             #login-container, #dashboard-content .no-print { display: none !important; }
@@ -1166,48 +1161,6 @@
             return table;
         }
 
-        function displayGerais(div, grupos) {
-            if (Object.keys(grupos).length === 0) { 
-                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido disponível para montagem.</div>'; 
-                document.getElementById('botoes-fiorino').innerHTML = '<p class="text-muted">Nenhuma rota de Fiorino encontrada.</p>';
-                document.getElementById('botoes-van').innerHTML = '<p class="text-muted">Nenhuma rota de Van encontrada.</p>';
-                document.getElementById('botoes-34').innerHTML = '<p class="text-muted">Nenhuma rota de 3/4 encontrada.</p>';
-                return; 
-            }
-            const rotasDisponiveis = new Set(Object.keys(grupos));
-            const botoes = { fiorino: '', van: '', tresQuartos: '' };
-            const addedButtons = new Set();
-            rotasDisponiveis.forEach(rota => {
-                const config = rotaVeiculoMap[rota];
-                if (config && !addedButtons.has(rota)) {
-                    let rotaValue = `'${rota}'`;
-                    if (config.combined) {
-                        const combinedRoutes = [rota, ...config.combined];
-                        rotaValue = `[${combinedRoutes.map(r => `'${r}'`).join(', ')}]`;
-                        combinedRoutes.forEach(r => addedButtons.add(r));
-                    }
-                    const vehicleType = config.type;
-                    const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
-                    const functionCall = vehicleType === 'fiorino' ? 'separarCargasFiorino' : (vehicleType === 'van' ? 'separarCargasVan' : 'separarCargas34');
-                    const divId = vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : (vehicleType === 'van' ? 'resultado-van-geral' : 'resultado-34-geral');
-                    const btnId = `btn-${vehicleType}-${rota}`;
-                    botoes[vehicleType] += `<button id="${btnId}" class="btn btn-outline-${colorClass} mt-2 me-2" onclick="${functionCall}(${rotaValue}, '${divId}', '${config.title}', this)">${config.title}</button>`;
-                }
-            });
-            document.getElementById('botoes-fiorino').innerHTML = botoes.fiorino || '<p class="text-muted">Nenhuma rota de Fiorino encontrada.</p>';
-            document.getElementById('botoes-van').innerHTML = botoes.van || '<p class="text-muted">Nenhuma rota de Van encontrada.</p>';
-            document.getElementById('botoes-34').innerHTML = botoes.tresQuartos || '<p class="text-muted">Nenhuma rota de 3/4 encontrada.</p>';
-            let accordionHtml = '<div class="accordion accordion-flush" id="accordionGeral">';
-            Object.keys(grupos).sort().forEach((rota, index) => {
-                const grupo = grupos[rota];
-                const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const veiculo = rotaVeiculoMap[rota]?.type || 'N/D';
-                const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota} (${veiculoNome})</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
-            });
-            accordionHtml += '</div>'; div.innerHTML = accordionHtml;
-        }
-        
         // =======================================================================
         //          >>> INÍCIO DO NOVO BLOCO DE OTIMIZAÇÃO COM SOLVER <<<
         // =======================================================================
@@ -1426,7 +1379,7 @@
         // =======================================================================
         //          >>> FUNÇÕES DE DISPLAY RESTAURADAS <<<
         // =======================================================================
-
+        
         function displayPedidosBloqueados(div, pedidos) {
             if (pedidos.length === 0) {
                 div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido bloqueado manualmente no último processamento.</div>';
@@ -1437,6 +1390,44 @@
             let html = `<div class="alert alert-danger"><strong>Total Bloqueado:</strong> ${pedidos.length} pedidos / ${totalKgFormatado} kg</div>`;
             html += createTable(pedidos);
             div.innerHTML = html;
+        }
+        
+        function displayRota1(div, pedidos) {
+            if (!pedidos || pedidos.length === 0) {
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido da Rota 1 para alteração encontrado.</div>';
+                return;
+            }
+            let html = `
+                <div class="d-flex justify-content-end mb-2 no-print">
+                    <button class="btn btn-sm btn-outline-warning" onclick="imprimirGeneric('resultado-rota1', 'Pedidos Rota 1 para Alteração')">
+                        <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
+                    </button>
+                </div>
+                ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'CF', 'Coluna5'])}
+            `;
+            div.innerHTML = html;
+        }
+        
+        function displayPedidosCFNumerico(div, pedidos) {
+            if (pedidos.length === 0) { 
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido filtrado por CF numérico ou por Regra de Bloqueio.</div>'; 
+                return; 
+            }
+            const grupos = pedidos.reduce((acc, p) => {
+                const rota = p.Cod_Rota; 
+                if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } 
+                acc[rota].pedidos.push(p); 
+                acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; 
+                return acc;
+            }, {});
+            let accordionHtml = '<div class="accordion accordion-flush" id="accordionCF">';
+            Object.keys(grupos).sort().forEach((rota, index) => {
+                const grupo = grupos[rota];
+                const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos)}</div></div></div>`;
+            });
+            accordionHtml += '</div>'; 
+            div.innerHTML = accordionHtml;
         }
 
         function displayResumoGeral(stats) {
