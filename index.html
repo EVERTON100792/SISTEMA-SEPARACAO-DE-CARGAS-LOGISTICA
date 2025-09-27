@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Separação de Cargas</title>
+    <title>Dashboard de Separação de Cargas Otimizado</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -16,6 +16,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+    <script src="https://unpkg.com/glpk.js@4.64.0/glpk.min.js"></script>
 
     <style>
         :root {
@@ -1345,178 +1347,33 @@
             printWindow.focus(); 
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
+        
+        // =======================================================================
+        //          >>> INÍCIO DO NOVO BLOCO DE OTIMIZAÇÃO COM SOLVER <<<
+        // =======================================================================
 
-        // --- INÍCIO DAS FUNÇÕES DE OTIMIZAÇÃO NOVAS E MELHORADAS ---
-
-        function createSolution(itemsParaEmpacotar, vehicleType) {
-            const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
-            const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
-            const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
-            const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : SOFT_MAX_KG;
-            const HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : SOFT_MAX_CUBAGE;
-            
-            let loads = [];
-            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
-            const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
-            
-            let packableItems = [...itemsParaEmpacotar];
-            let leftoverItems = [];
-
-            packableItems.forEach(item => {
-                if (item.totalKg > HARD_MAX_KG || item.totalCubagem > HARD_MAX_CUBAGE) {
-                    leftoverItems.push(item); return;
-                }
-                
-                let bestFit = null;
-
-                for (const load of loads) {
-                    const newKg = load.totalKg + item.totalKg;
-                    const newCubage = load.totalCubagem + item.totalCubagem;
-                    
-                    const loadHasScheduledOrder = load.pedidos.some(p => p.Agendamento === 'Sim');
-                    const itemHasScheduledOrder = item.pedidos.some(p => p.Agendamento === 'Sim');
-                    if (loadHasScheduledOrder && itemHasScheduledOrder) continue;
-
-                    const itemIsSpecial = item.isSpecial;
-                    const loadAlreadyHasSpecial = load.pedidos.some(p => isSpecialClient(p));
-                    if (itemIsSpecial && loadAlreadyHasSpecial) continue;
-
-                    if (newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
-                        const remainingCapacity = HARD_MAX_KG - newKg;
-                        if (bestFit === null || remainingCapacity < bestFit.remainingCapacity) {
-                            bestFit = { load: load, remainingCapacity: remainingCapacity };
-                        }
-                    }
-                }
-
-                if (bestFit) {
-                    bestFit.load.pedidos.push(...item.pedidos);
-                    bestFit.load.totalKg += item.totalKg;
-                    bestFit.load.totalCubagem += item.totalCubagem;
-                    bestFit.load.usedHardLimit = bestFit.load.totalKg > SOFT_MAX_KG || bestFit.load.totalCubagem > SOFT_MAX_CUBAGE;
-                } else {
-                    loads.push({
-                        pedidos: [...item.pedidos],
-                        totalKg: item.totalKg,
-                        totalCubagem: item.totalCubagem,
-                        usedHardLimit: (item.totalKg > SOFT_MAX_KG || item.totalCubagem > SOFT_MAX_CUBAGE)
-                    });
-                }
-            });
-            
-            let finalLoads = [];
-            let unplacedGroups = [];
-            loads.forEach(load => {
-                const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                const allowPriorityOverride = vehicleType !== 'tresQuartos';
-                
-                if (load.pedidos.length > 0 && (load.totalKg >= MIN_KG || (hasPriority && allowPriorityOverride))) {
-                    finalLoads.push(load);
-                } else {
-                    const clientGroupsInFailedLoad = load.pedidos.reduce((acc, pedido) => {
-                        const clienteId = normalizeClientId(pedido.Cliente);
-                        if (!acc[clienteId]) {
-                            acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
-                        }
-                        acc[clienteId].pedidos.push(pedido);
-                        acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                        acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
-                        return acc;
-                    }, {});
-                    unplacedGroups.push(...Object.values(clientGroupsInFailedLoad));
-                }
-            });
-            
-            const leftovers = [...leftoverItems, ...unplacedGroups];
-            return { loads: finalLoads, leftovers };
+        // FUNÇÕES DE DISPARO (Mantêm a compatibilidade com os botões)
+        function separarCargasFiorino(routes, divId, title, buttonElement) { 
+            iniciarOtimizacaoDeRota(routes, divId, title, 'fiorino', buttonElement); 
+        }
+        function separarCargasVan(routes, divId, title, buttonElement) { 
+            iniciarOtimizacaoDeRota(routes, divId, title, 'van', buttonElement); 
+        }
+        function separarCargas34(routes, divId, title, buttonElement) { 
+            iniciarOtimizacaoDeRota(routes, divId, title, 'tresQuartos', buttonElement); 
         }
 
-        // --- NOVA FUNÇÃO DE OTIMIZAÇÃO MULTI-ESTRATÉGIA ---
-        function runMultiStrategyOptimization(packableGroups, vehicleType) {
-            const strategies = [
-                { name: 'priority-weight-desc',
-                  sorter: (a, b) => {
-                    const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                    const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                    if (aHasPrio && !bHasPrio) return -1;
-                    if (!aHasPrio && bHasPrio) return 1;
-                    return b.totalKg - a.totalKg;
-                  }
-                },
-                { name: 'scheduled-weight-desc',
-                  sorter: (a, b) => {
-                    const aHasSched = a.pedidos.some(p => p.Agendamento === 'Sim');
-                    const bHasSched = b.pedidos.some(p => p.Agendamento === 'Sim');
-                    if (aHasSched && !bHasSched) return -1;
-                    if (!aHasSched && bHasSched) return 1;
-                    return b.totalKg - a.totalKg;
-                  }
-                },
-                { name: 'weight-desc', sorter: (a, b) => b.totalKg - a.totalKg },
-                { name: 'weight-asc', sorter: (a, b) => a.totalKg - b.totalKg },
-                // NOVAS ESTRATÉGIAS DE DENSIDADE
-                { name: 'density-desc', sorter: (a, b) => b.density - a.density },
-                { name: 'density-asc', sorter: (a, b) => a.density - b.density }
-            ];
-
-            let bestResult = null;
-
-            for (const strategy of strategies) {
-                const sortedGroups = [...packableGroups].sort(strategy.sorter);
-                const result = createSolution(sortedGroups, vehicleType);
-                
-                const leftoverWeight = result.leftovers.reduce((sum, g) => sum + g.totalKg, 0);
-
-                if (bestResult === null || leftoverWeight < bestResult.leftoverWeight) {
-                    bestResult = { ...result, leftoverWeight: leftoverWeight, strategy: strategy.name };
-                }
-            }
-            
-            console.log(`Melhor estratégia para ${vehicleType}: ${bestResult.strategy} com ${bestResult.leftoverWeight.toFixed(2)}kg de sobra.`);
-            return bestResult;
-        }
-
-        // --- NOVA FUNÇÃO DE REFINAMENTO "PENTE FINO" ---
-        function refineLoadsWithSimpleFit(initialLoads, initialLeftovers) {
-            let refinedLoads = JSON.parse(JSON.stringify(initialLoads));
-            let remainingLeftovers = JSON.parse(JSON.stringify(initialLeftovers));
-
-            for (let i = remainingLeftovers.length - 1; i >= 0; i--) {
-                const leftoverGroup = remainingLeftovers[i];
-                
-                for (const load of refinedLoads) {
-                    const vehicleType = load.vehicleType;
-                    // CORREÇÃO: VERIFICA SE VEHICLETYPE EXISTE ANTES DE PROSSEGUIR
-                    if (!vehicleType) continue; 
-                    
-                    const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
-                    const HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
-
-                    const newKg = load.totalKg + leftoverGroup.totalKg;
-                    const newCubage = load.totalCubagem + leftoverGroup.totalCubagem;
-
-                    if (newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
-                        load.pedidos.push(...leftoverGroup.pedidos);
-                        load.totalKg = newKg;
-                        load.totalCubagem = newCubage;
-                        
-                        remainingLeftovers.splice(i, 1);
-                        break; 
-                    }
-                }
-            }
-            return { refinedLoads, remainingLeftovers };
-        }
-
-        // --- FUNÇÃO SEPARARCARGASGENERIC ATUALIZADA COM NOVA LÓGICA ---
-        function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
+        // Função principal que controla a UI e chama o solver
+        async function iniciarOtimizacaoDeRota(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
             
+            // Limpa resultados anteriores na mesma aba
             const autoGeneratedContent = resultadoDiv.querySelector('.resultado-container');
             if (autoGeneratedContent) { autoGeneratedContent.remove(); }
 
-            resultadoDiv.insertAdjacentHTML('beforeend', '<div id="spinner-temp-container" class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Analisando estratégias e montando cargas...</span></div>');
-
+            resultadoDiv.insertAdjacentHTML('beforeend', '<div id="spinner-temp-container" class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Otimizando rota com solver matemático...</span></div>');
+            
+            // Atualiza a aparência dos botões
             if (buttonElement) {
                 currentLeftoversForPrinting = [];
                 const parentContainer = buttonElement.parentElement;
@@ -1532,150 +1389,180 @@
                 buttonElement.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>${title}`;
             }
 
-            setTimeout(() => {
+            // Dá tempo para a UI atualizar antes de iniciar o cálculo pesado
+            setTimeout(async () => {
                 const spinner = document.getElementById('spinner-temp-container');
                 if (spinner) spinner.remove();
+
                 if (planilhaData.length === 0) {
-                    resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return;
+                    resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>';
+                    return;
                 }
 
                 const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
-                let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
+                const pedidosDaRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
 
-                const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
-                const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
-
-                const clientGroupsMap = pedidosRota.reduce((acc, pedido) => {
-                    const clienteId = normalizeClientId(pedido.Cliente);
-                    if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) }; }
-                    acc[clienteId].pedidos.push(pedido);
-                    acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                    acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
-                    return acc;
-                }, {});
-                const packableGroups = Object.values(clientGroupsMap);
-
-                // **NOVO: CÁLCULO DE DENSIDADE**
-                packableGroups.forEach(group => {
-                    if (group.totalCubagem > 0) {
-                        group.density = group.totalKg / group.totalCubagem;
-                    } else {
-                        // Se não tem volume, é infinitamente denso, prioridade máxima na estratégia de densidade.
-                        group.density = Infinity; 
-                    }
-                });
-
-                // --- INÍCIO DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
-                let initialResult = runMultiStrategyOptimization(packableGroups, vehicleType);
-
-                // ########## CORREÇÃO CRÍTICA ##########
-                // Atribui o tipo de veículo a cada carga gerada. Sem isso, a função de refinamento
-                // não sabe quais limites de capacidade usar.
-                initialResult.loads.forEach(load => {
-                    load.vehicleType = vehicleType;
-                });
-                // #####################################
+                // Chama o solver para a rota específica
+                const { loads, leftovers } = await otimizarRotaComSolver(pedidosDaRota, vehicleType);
                 
-                // **NOVO: FASE DE REFINAMENTO "PENTE FINO"**
-                console.log(`Solução inicial encontrada com ${initialResult.leftovers.length} grupos sobrando. Iniciando fase de refinamento...`);
-                const { refinedLoads, remainingLeftovers } = refineLoadsWithSimpleFit(initialResult.loads, initialResult.leftovers);
-                console.log(`Refinamento finalizado. ${initialResult.leftovers.length - remainingLeftovers.length} grupos foram encaixados.`);
+                currentLeftoversForPrinting = leftovers;
 
-                let primaryLoads = refinedLoads;
-                let leftoverGroups = remainingLeftovers;
-
-                let secondaryLoads = [];
-                let tertiaryLoads = [];
-
-                if (vehicleType === 'fiorino' && leftoverGroups.length > 0) {
-                    // 1. Tenta montar mais Fiorinos com as sobras
-                    const fiorinoLeftoversResult = runMultiStrategyOptimization(leftoverGroups, 'fiorino');
-                    if (fiorinoLeftoversResult.loads.length > 0) {
-                        // Atribui o tipo de veículo para as novas cargas de fiorino
-                        fiorinoLeftoversResult.loads.forEach(l => l.vehicleType = 'fiorino');
-                        primaryLoads.push(...fiorinoLeftoversResult.loads);
-                    }
-                    leftoverGroups = fiorinoLeftoversResult.leftovers;
-
-                    // 2. Com o que sobrou, tenta montar uma Van
-                    const totalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
-                    const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
-                    if (totalLeftoverKg >= vanMin && leftoverGroups.length > 0) {
-                        const vanResult = runMultiStrategyOptimization(leftoverGroups, 'van');
-                        // Atribui o tipo de veículo para as novas cargas de van
-                        vanResult.loads.forEach(l => l.vehicleType = 'van');
-                        secondaryLoads = vanResult.loads;
-                        leftoverGroups = vanResult.leftovers;
-                    }
-                }
-                
-                // 3. Tenta montar um 3/4 com o que sobrou de qualquer processo anterior
-                const totalFinalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
-                const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
-                if (totalFinalLeftoverKg >= tresQuartosMin && leftoverGroups.length > 0) {
-                        const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
-                        if(vehicleForTertiary) {
-                            const tresQuartosResult = runMultiStrategyOptimization(leftoverGroups, vehicleForTertiary);
-                              // Atribui o tipo de veículo para as novas cargas 3/4
-                            tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
-                            tertiaryLoads = tresQuartosResult.loads;
-                            leftoverGroups = tresQuartosResult.leftovers;
-                        }
-                }
-                // --- FIM DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
-
-                currentLeftoversForPrinting = leftoverGroups.flatMap(group => group.pedidos);
-
-                const allLoads = [
-                    ...primaryLoads, // Já tem o vehicleType
-                    ...secondaryLoads, // Já tem o vehicleType
-                    ...tertiaryLoads // Já tem o vehicleType
-                ];
-
-                allLoads.forEach((load, index) => {
-                    load.numero = `${load.vehicleType.charAt(0).toUpperCase()}-${index + 1}`;
-                    const loadId = `${load.vehicleType}-${Date.now()}-${index}`;
-                    load.id = loadId;
-                    activeLoads[loadId] = load;
-                });
-
-                const vehicleInfo = {
+                // Renderiza os resultados
+                const vehicleInfoMap = {
                     fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
                     van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
                     tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
                 };
-                
-                let html = `<h5 class="mt-3">Cargas para <strong>${title}</strong></h5>`;
-                
-                const generatedLoads = allLoads.filter(l => l.pedidos.length > 0);
-                if(generatedLoads.length === 0){
-                        html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
+
+                let html = `<h5 class="mt-3">Cargas Otimizadas para <strong>${title}</strong></h5>`;
+                if (loads.length === 0) {
+                    html += `<div class="alert alert-secondary">Nenhuma carga completa foi formada para esta rota.</div>`;
                 } else {
-                    generatedLoads.forEach(load => {
-                        html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType]);
+                    loads.forEach((load, index) => {
+                        load.numero = index + 1;
+                        const loadId = `${load.vehicleType}-${Date.now()}-${index}`;
+                        load.id = loadId;
+                        activeLoads[loadId] = load;
+                        html += renderLoadCard(load, load.vehicleType, vehicleInfoMap[load.vehicleType]);
                     });
                 }
-                
-                if (currentLeftoversForPrinting.length > 0) {
-                    const finalLeftoverKg = currentLeftoversForPrinting.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
+
+                if (leftovers.length > 0) {
+                    const totalKgSobra = leftovers.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
                     const manualLoadButton = `<button id="start-manual-load-btn" class="btn btn-success ms-auto no-print" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual</button>`;
-                    const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
+                    const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
 
                     html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
-                                 <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                 <div class="card mb-3">
-                                     <div class="card-header bg-danger text-white d-flex align-items-center">
-                                         Pedidos Restantes
-                                         <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
-                                     </div>
-                                     <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                 </div>
+                                <h5 class="mt-4">Sobras Finais: ${totalKgSobra.toLocaleString('pt-BR')} kg</h5>
+                                <div class="card mb-3">
+                                    <div class="card-header bg-danger text-white d-flex align-items-center">
+                                        Pedidos Restantes
+                                        <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                    </div>
+                                    <div class="card-body">${createTable(leftovers, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                </div>
                             </div>`;
                 }
                 resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
+
             }, 50);
         }
-        
+
+        // O coração da nova lógica - usa o solver GLPK
+        async function otimizarRotaComSolver(pedidos, vehicleType) {
+            if (!pedidos || pedidos.length === 0) {
+                return { loads: [], leftovers: [] };
+            }
+
+            // 1. Agrupar pedidos por cliente (itens a serem empacotados)
+            const clientGroups = Object.values(pedidos.reduce((acc, pedido) => {
+                const clienteId = normalizeClientId(pedido.Cliente);
+                if (!acc[clienteId]) {
+                    acc[clienteId] = { id: clienteId, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                }
+                acc[clienteId].pedidos.push(pedido);
+                acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+                return acc;
+            }, {}));
+
+            // 2. Configurar o solver
+            const glpk = await GLPK();
+            const problem = {
+                name: `Rota-${pedidos[0].Cod_Rota}`,
+                direction: glpk.GLP_MAX,
+                objective: { name: 'z', vars: [] },
+                subjectTo: [],
+                binaries: []
+            };
+
+            const capacity = {
+                minKg: parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value),
+                maxKg: parseFloat(document.getElementById(vehicleType === 'tresQuartos' ? `${vehicleType}MaxCapacity` : `${vehicleType}HardMaxCapacity`).value),
+                maxCubagem: parseFloat(document.getElementById(vehicleType === 'tresQuartos' ? `${vehicleType}Cubage` : `${vehicleType}HardCubage`).value),
+            };
+
+            // Estimamos um número máximo de caminhões que poderiam ser necessários
+            const maxVehicles = Math.ceil(pedidos.length / 2) + 1;
+            const vehicles = Array.from({ length: maxVehicles }, (_, i) => ({ id: `v${i}` }));
+
+            // 3. Criar variáveis de decisão e objetivo
+            clientGroups.forEach(item => {
+                vehicles.forEach(vehicle => {
+                    const varName = `x_${item.id}_${vehicle.id}`;
+                    problem.objective.vars.push({ name: varName, coef: item.totalKg });
+                    problem.binaries.push(varName);
+                });
+            });
+
+            // 4. Criar Restrições
+            // Restrição 1: Cada grupo de cliente vai para no máximo 1 caminhão
+            clientGroups.forEach(item => {
+                problem.subjectTo.push({
+                    name: `item_once_${item.id}`,
+                    vars: vehicles.map(v => ({ name: `x_${item.id}_${v.id}`, coef: 1 })),
+                    bnds: { type: glpk.GLP_UP, ub: 1 }
+                });
+            });
+
+            // Restrições 2 e 3: Capacidade de peso e cubagem de cada caminhão
+            vehicles.forEach(vehicle => {
+                problem.subjectTo.push({
+                    name: `weight_cap_${vehicle.id}`,
+                    vars: clientGroups.map(item => ({ name: `x_${item.id}_${vehicle.id}`, coef: item.totalKg })),
+                    bnds: { type: glpk.GLP_UP, ub: capacity.maxKg }
+                });
+                problem.subjectTo.push({
+                    name: `cubage_cap_${vehicle.id}`,
+                    vars: clientGroups.map(item => ({ name: `x_${item.id}_${vehicle.id}`, coef: item.totalCubagem })),
+                    bnds: { type: glpk.GLP_UP, ub: capacity.maxCubagem }
+                });
+            });
+
+            // 5. Rodar o solver
+            const result = glpk.solve(problem, { msglev: glpk.GLP_MSG_OFF });
+
+            if (result.result.status !== glpk.GLP_OPT) {
+                console.error("Solver falhou para a rota", pedidos[0].Cod_Rota, result);
+                return { loads: [], leftovers: pedidos }; // Se falhar, retorna todos como sobra
+            }
+
+            // 6. Montar as cargas com base na resposta do solver
+            const tempLoads = {};
+            const assignedItemIds = new Set();
+            for (const varName in result.result.vars) {
+                if (result.result.vars[varName] > 0.9) { // Se a variável = 1
+                    const [, itemId, vehicleId] = varName.match(/x_(.+)_(v\d+)/);
+                    if (!tempLoads[vehicleId]) {
+                        tempLoads[vehicleId] = { vehicleType, pedidos: [], totalKg: 0, totalCubagem: 0 };
+                    }
+                    const itemData = clientGroups.find(i => i.id === itemId);
+                    tempLoads[vehicleId].pedidos.push(...itemData.pedidos);
+                    tempLoads[vehicleId].totalKg += itemData.totalKg;
+                    tempLoads[vehicleId].totalCubagem += itemData.totalCubagem;
+                    assignedItemIds.add(itemId);
+                }
+            }
+
+            // 7. Pós-processamento: Validar peso mínimo e separar sobras
+            const finalLoads = [];
+            let leftovers = clientGroups.filter(item => !assignedItemIds.has(item.id)).flatMap(i => i.pedidos);
+            
+            Object.values(tempLoads).forEach(load => {
+                if (load.totalKg >= capacity.minKg) {
+                    finalLoads.push(load);
+                } else {
+                    leftovers.push(...load.pedidos); // Desmonta cargas abaixo do mínimo
+                }
+            });
+
+            return { loads: finalLoads, leftovers };
+        }
+
+        // =======================================================================
+        //          <<< FIM DO NOVO BLOCO DE OTIMIZAÇÃO COM SOLVER >>>
+        // =======================================================================
+
         function renderLoadCard(load, vehicleType, vInfo) {
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
@@ -1713,10 +1600,6 @@
             return `<div id="${load.id}" class="card mb-3 drop-zone-card ${isPriorityLoad ? 'border-primary' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}"><div class="card-header ${headerColorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${progressBar}${createTable(load.pedidos, null, load.id)}</div></div>`;
         }
         
-        function separarCargasFiorino(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'fiorino', buttonElement); }
-        function separarCargasVan(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'van', buttonElement); }
-        function separarCargas34(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'tresQuartos', buttonElement); }
-
         function displayToco(div, grupos) {
             if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga "Toco" encontrada.</div>'; return; }
             
@@ -1756,7 +1639,7 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        // --- As demais funções de UI, Drag-and-Drop, Impressão, Login, etc., permanecem as mesmas ---
+        // --- Funções de UI, Drag-and-Drop, Impressão, Login, etc., permanecem as mesmas ---
         
         function montarCargaEspecial() {
             const resultadoDiv = document.getElementById('resultado-carga-especial');
