@@ -1470,7 +1470,7 @@
             const solver = await glpk();
             const problem = {
                 name: `Rota-${pedidos[0].Cod_Rota}`,
-                direction: glpk.GLP_MAX,
+                direction: solver.GLP_MAX,
                 objective: { name: 'z', vars: [] },
                 subjectTo: [],
                 binaries: []
@@ -1501,7 +1501,7 @@
                 problem.subjectTo.push({
                     name: `item_once_${item.id}`,
                     vars: vehicles.map(v => ({ name: `x_${item.id}_${v.id}`, coef: 1 })),
-                    bnds: { type: glpk.GLP_UP, ub: 1 }
+                    bnds: { type: solver.GLP_UP, ub: 1 }
                 });
             });
 
@@ -1520,9 +1520,9 @@
             });
 
             // 5. Rodar o solver
-            const result = glpk.solve(problem, { msglev: glpk.GLP_MSG_OFF });
+            const result = solver.solve(problem, { msglev: glpk.GLP_MSG_OFF });
 
-            if (result.result.status !== glpk.GLP_OPT) {
+            if (result.result.status !== solver.GLP_OPT) {
                 console.error("Solver falhou para a rota", pedidos[0].Cod_Rota, result);
                 return { loads: [], leftovers: pedidos }; // Se falhar, retorna todos como sobra
             }
