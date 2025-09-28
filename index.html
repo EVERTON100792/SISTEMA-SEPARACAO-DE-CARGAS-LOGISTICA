@@ -694,7 +694,7 @@
 
         const rotaVeiculoMap = {
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
-            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
+            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
             '11361': { type: 'tresQuartos', title: 'Rota 11361' }, '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] }, '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] }, '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] }, '11541': { type: 'tresQuartos', title: 'Rota 11541' }
         };
         
@@ -1366,7 +1366,29 @@
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
 
-        // --- INÍCIO DAS FUNÇÕES DE OTIMIZAÇÃO NOVAS E MELHORADAS ---
+        // --- INÍCIO DAS FUNÇÕES DE OTIMIZAÇÃO E UI AVANÇADA ---
+
+        function imprimirCargaManualIndividual(loadId) {
+            const load = activeLoads[loadId];
+            const cardToPrint = document.getElementById(loadId);
+
+            if (!load || !cardToPrint) {
+                alert(`Erro: Carga com ID ${loadId} não encontrada para impressão.`);
+                return;
+            }
+
+            const title = `Impressão - Carga Manual ${load.numero} (${load.vehicleType})`;
+            const printWindow = createPrintWindow(title);
+            
+            // A classe 'no-print' no botão já cuida de escondê-lo na impressão.
+            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + cardToPrint.outerHTML;
+            printWindow.document.close();
+            printWindow.focus(); 
+            setTimeout(() => { 
+                printWindow.print(); 
+                printWindow.close(); 
+            }, 500);
+        }
 
         function createSolution(itemsParaEmpacotar, vehicleType) {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
@@ -1705,7 +1727,9 @@
             
             const headerColorClass = isOverloaded ? 'bg-danger' : vInfo.colorClass;
 
-            return `<div id="${load.id}" class="card mb-3 drop-zone-card ${isPriorityLoad ? 'border-primary' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}"><div class="card-header ${headerColorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${progressBar}${createTable(load.pedidos, null, load.id)}</div></div>`;
+            const printButton = String(load.id).startsWith('manual-') ? `<button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirCargaManualIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Esta Carga</button>` : '';
+
+            return `<div id="${load.id}" class="card mb-3 drop-zone-card ${isPriorityLoad ? 'border-primary' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}"><div class="card-header ${headerColorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${printButton}${progressBar}${createTable(load.pedidos, null, load.id)}</div></div>`;
         }
         
         function separarCargasFiorino(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'fiorino', buttonElement); }
@@ -2236,7 +2260,6 @@
 
             const newCardHTML = renderLoadCard(newLoad, vehicleType, vehicleInfo[vehicleType]);
             
-            // Lógica para adicionar a nova carga na aba atualmente ativa
             const activeTabPane = document.querySelector('.tab-pane.active');
             const resultContainer = activeTabPane ? activeTabPane.querySelector('[id^="resultado-"]') : null;
 
