@@ -791,7 +791,7 @@
             if (planilhaData.length === 0) { searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>'; return; }
             let pedidoEncontrado = null; let local = 'Não encontrado'; let accordionId = '';
             pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
-            if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = null; } 
+            if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = 'accordionGeral'; } 
             if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosComCFNumericoIsolado.find(p => String(p.Num_Pedido) === searchInput);
                 if (pedidoEncontrado) { local = 'Pedidos Filtrados'; accordionId = 'accordionCF'; }
@@ -826,14 +826,14 @@
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
                                      <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
-                } else if (accordionId !== null) { 
+                } else if (accordionId) { 
                                      buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
         }
 
-        function priorizarPedido(numPedido) { if (!pedidosPrioritarios.includes(numPedido)) { pedidosPrioritarios.push(numPedido); buscarPedido(); } }
+        function priorizarPedido(numPedido) { if (!pedidosPrioritarios.includes(String(numPedido))) { pedidosPrioritarios.push(String(numPedido)); buscarPedido(); } }
 
         function highlightPedido(numPedido) {
             const row = document.getElementById(`pedido-${numPedido}`);
@@ -1568,15 +1568,10 @@
                 // --- INÍCIO DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
                 let initialResult = runMultiStrategyOptimization(packableGroups, vehicleType);
 
-                // ########## CORREÇÃO CRÍTICA ##########
-                // Atribui o tipo de veículo a cada carga gerada. Sem isso, a função de refinamento
-                // não sabe quais limites de capacidade usar.
                 initialResult.loads.forEach(load => {
                     load.vehicleType = vehicleType;
                 });
-                // #####################################
                 
-                // **NOVO: FASE DE REFINAMENTO "PENTE FINO"**
                 console.log(`Solução inicial encontrada com ${initialResult.leftovers.length} grupos sobrando. Iniciando fase de refinamento...`);
                 const { refinedLoads, remainingLeftovers } = refineLoadsWithSimpleFit(initialResult.loads, initialResult.leftovers);
                 console.log(`Refinamento finalizado. ${initialResult.leftovers.length - remainingLeftovers.length} grupos foram encaixados.`);
@@ -1591,7 +1586,6 @@
                     // 1. Tenta montar mais Fiorinos com as sobras
                     const fiorinoLeftoversResult = runMultiStrategyOptimization(leftoverGroups, 'fiorino');
                     if (fiorinoLeftoversResult.loads.length > 0) {
-                        // Atribui o tipo de veículo para as novas cargas de fiorino
                         fiorinoLeftoversResult.loads.forEach(l => l.vehicleType = 'fiorino');
                         primaryLoads.push(...fiorinoLeftoversResult.loads);
                     }
@@ -1602,7 +1596,6 @@
                     const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
                     if (totalLeftoverKg >= vanMin && leftoverGroups.length > 0) {
                         const vanResult = runMultiStrategyOptimization(leftoverGroups, 'van');
-                        // Atribui o tipo de veículo para as novas cargas de van
                         vanResult.loads.forEach(l => l.vehicleType = 'van');
                         secondaryLoads = vanResult.loads;
                         leftoverGroups = vanResult.leftovers;
@@ -1616,7 +1609,6 @@
                         const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
                         if(vehicleForTertiary) {
                             const tresQuartosResult = runMultiStrategyOptimization(leftoverGroups, vehicleForTertiary);
-                                // Atribui o tipo de veículo para as novas cargas 3/4
                             tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
                             tertiaryLoads = tresQuartosResult.loads;
                             leftoverGroups = tresQuartosResult.leftovers;
@@ -1627,9 +1619,9 @@
                 currentLeftoversForPrinting = leftoverGroups.flatMap(group => group.pedidos);
 
                 const allLoads = [
-                    ...primaryLoads, // Já tem o vehicleType
-                    ...secondaryLoads, // Já tem o vehicleType
-                    ...tertiaryLoads // Já tem o vehicleType
+                    ...primaryLoads,
+                    ...secondaryLoads,
+                    ...tertiaryLoads
                 ];
 
                 allLoads.forEach((load, index) => {
@@ -1756,8 +1748,6 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        // --- As demais funções de UI, Drag-and-Drop, Impressão, Login, etc., permanecem as mesmas ---
-        
         function montarCargaEspecial() {
             const resultadoDiv = document.getElementById('resultado-carga-especial');
             const input = document.getElementById('pedidosEspeciaisInput');
@@ -1974,10 +1964,14 @@
             let sourceLoad, targetLoad;
             let sourceIsLeftovers = sourceId === 'leftovers';
             let targetIsLeftovers = targetId === 'leftovers';
+            let sourceIsGeral = sourceId === 'geral';
             let targetIsManualBuilder = targetId === 'manual-builder';
+            let sourceIsManualBuilder = sourceId === 'manual-builder';
 
             if (sourceIsLeftovers) {
                 sourceLoad = { pedidos: currentLeftoversForPrinting };
+            } else if (sourceIsGeral) {
+                sourceLoad = { pedidos: pedidosGeraisAtuais };
             } else {
                 sourceLoad = activeLoads[sourceId];
             }
@@ -2023,6 +2017,8 @@
             
             if (sourceIsLeftovers) {
                 currentLeftoversForPrinting = sourceLoad.pedidos.filter(p => normalizeClientId(p.Cliente) !== clienteId);
+            } else if (sourceIsGeral) {
+                pedidosGeraisAtuais = sourceLoad.pedidos.filter(p => normalizeClientId(p.Cliente) !== clienteId);
             } else {
                 sourceLoad.pedidos = sourceLoad.pedidos.filter(p => normalizeClientId(p.Cliente) !== clienteId);
                 sourceLoad.totalKg -= clientBlockKg;
@@ -2037,27 +2033,36 @@
                 targetLoad.totalCubagem += clientBlockCubagem;
             }
 
-            updateLoadUI(sourceId); 
+            // Bloco de atualização de UI corrigido e melhorado
+            if (sourceIsManualBuilder) {
+                updateManualBuilderUI();
+            } else {
+                updateLoadUI(sourceId);
+            }
             
             if (targetIsManualBuilder) {
-                updateManualBuilderUI(); 
+                updateManualBuilderUI();
             } else {
-                updateLoadUI(targetId); 
+                updateLoadUI(targetId);
             }
         }
 
 
         function updateLoadUI(loadId) {
             if (loadId === 'leftovers' || loadId === 'geral') {
+                 // Esta lógica agora re-renderiza ambas as listas de sobras e pedidos gerais
+                 // para manter a consistência.
                 const leftoversCard = document.querySelector('[data-load-id="leftovers"]');
-                if (!leftoversCard) {
-                     // If leftovers card doesn't exist, we might be re-rendering the whole general list.
-                    const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
-                        const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
-                    }, {});
-                    displayGerais(document.getElementById('resultado-geral'), gruposGerais);
-                    return;
-                };
+                const geraisDiv = document.getElementById('resultado-geral');
+
+                // Atualiza a lista de Pedidos Disponíveis
+                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
+                    const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
+                }, {});
+                if(geraisDiv) displayGerais(geraisDiv, gruposGerais);
+
+                // Atualiza a lista de Sobras Finais
+                if (!leftoversCard) return;
 
                 if (currentLeftoversForPrinting.length === 0) {
                     leftoversCard.innerHTML = `
@@ -2244,6 +2249,24 @@
             
             const startBtn = document.getElementById('start-manual-load-btn');
             if(startBtn) startBtn.style.display = 'inline-block';
+
+            // NOVO: Lógica para mudar de aba e dar feedback
+            alert(`Carga manual ${newLoad.numero} criada com sucesso para ${vehicleInfo[vehicleType].name}!`);
+            
+            const tabId = vehicleType === 'tresQuartos' ? 'tres-quartos-tab' : `${vehicleType}-tab`;
+            const tabElement = document.getElementById(tabId);
+            if(tabElement) {
+                bootstrap.Tab.getOrCreateInstance(tabElement).show();
+            }
+
+            setTimeout(() => {
+                const newCardElement = document.getElementById(newLoad.id);
+                if(newCardElement) {
+                    newCardElement.scrollIntoView({ behavior: 'smooth', block: 'center'});
+                    newCardElement.classList.add('border-info'); // Destaque temporário
+                    setTimeout(() => newCardElement.classList.remove('border-info'), 2000);
+                }
+            }, 300); // Aguarda a animação da aba
         }
 
         function cancelManualLoad() {
