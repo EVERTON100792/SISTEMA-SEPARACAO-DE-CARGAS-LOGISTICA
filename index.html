@@ -16,7 +16,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-    
+
     <script src="https://unpkg.com/javascript-lp-solver/prod/solver.js"></script>
 
     <style>
@@ -1350,101 +1350,88 @@
 
         // --- INÍCIO DAS FUNÇÕES DE OTIMIZAÇÃO COM SOLVER MATEMÁTICO ---
 
-        function solveBinPackingMIP(clientGroups, vehicleType, maxLoads = 10) {
+        function solveBinPackingMIP(clientGroups, vehicleType, maxLoads = 20) {
+            if (typeof solver === 'undefined') {
+                console.error("Biblioteca de otimização (solver) não foi carregada.");
+                alert("ERRO CRÍTICO: Biblioteca de otimização não encontrada. Verifique a conexão com a internet e recarregue a página.");
+                return { loads: [], leftovers: clientGroups };
+            }
+
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const MAX_KG = parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`)?.value || document.getElementById(`${vehicleType}MaxCapacity`).value);
             const MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}HardCubage`)?.value || document.getElementById(`${vehicleType}Cubage`).value);
 
             const model = {
-                optimize: "totalWeight",
+                optimize: "assignedWeight",
                 opType: "max",
                 constraints: {},
                 variables: {},
                 ints: {}
             };
 
-            // Variáveis: x_ij = 1 se o grupo de cliente i for para o caminhão j
+            // Define as variáveis de decisão: x_ij = 1 se grupo i for para o caminhão j.
+            // E as variáveis de uso do caminhão: use_j = 1 se o caminhão j for utilizado.
+            for (let j = 0; j < maxLoads; j++) {
+                model.variables[`use_${j}`] = {
+                    [`min_weight_${j}`]: -MIN_KG,
+                    [`force_use_${j}`]: MAX_KG + 1, // "Big M"
+                };
+                model.ints[`use_${j}`] = 1;
+            }
+
             clientGroups.forEach((group, i) => {
-                model.variables[`g${i}`] = {};
                 for (let j = 0; j < maxLoads; j++) {
                     const varName = `x_${i}_${j}`;
-                    model.variables[`g${i}`][varName] = group.totalKg; // Coeficiente na função objetivo
+                    model.variables[varName] = {
+                        assignedWeight: group.totalKg, // Coeficiente na função objetivo
+                        [`weight_cap_${j}`]: group.totalKg,
+                        [`cubage_cap_${j}`]: group.totalCubagem,
+                        [`group_assign_${i}`]: 1,
+                        [`min_weight_${j}`]: group.totalKg,
+                        [`force_use_${j}`]: -group.totalKg
+                    };
                     model.ints[varName] = 1;
-                }
-            });
 
-            // Restrições de Capacidade (Peso e Cubagem) para cada caminhão
-            for (let j = 0; j < maxLoads; j++) {
-                model.constraints[`weight_${j}`] = { max: MAX_KG };
-                model.constraints[`cubage_${j}`] = { max: MAX_CUBAGE };
-                 clientGroups.forEach((group, i) => {
-                    model.constraints[`weight_${j}`][`x_${i}_${j}`] = group.totalKg;
-                    model.constraints[`cubage_${j}`][`x_${i}_${j}`] = group.totalCubagem;
-                });
-            }
-
-            // Restrição: Cada grupo de cliente pode ir para no máximo um caminhão
-            clientGroups.forEach((group, i) => {
-                model.constraints[`group_assign_${i}`] = { max: 1 };
-                for (let j = 0; j < maxLoads; j++) {
-                    model.constraints[`group_assign_${i}`][`x_${i}_${j}`] = 1;
-                }
-            });
-
-            // Adiciona variáveis para saber se um caminhão é usado, para forçar o peso mínimo
-            for (let j = 0; j < maxLoads; j++) {
-                const useVar = `use_${j}`;
-                model.variables[useVar] = { [useVar]: 0 }; // não contribui para o peso total
-                model.ints[useVar] = 1;
-                
-                // Se o caminhão é usado (use_j = 1), a soma dos pesos deve ser >= MIN_KG
-                model.constraints[`min_weight_${j}`] = { min: 0 };
-                 clientGroups.forEach((group, i) => {
-                    model.constraints[`min_weight_${j}`][`x_${i}_${j}`] = group.totalKg;
-                });
-                model.constraints[`min_weight_${j}`][useVar] = -MIN_KG;
-                
-                // Se um item está no caminhão, o caminhão deve ser marcado como usado
-                 clientGroups.forEach((group, i) => {
-                    model.constraints[`force_use_${i}_${j}`] = { max: 0 };
-                    model.constraints[`force_use_${i}_${j}`][`x_${i}_${j}`] = 1;
-                    model.constraints[`force_use_${i}_${j}`][useVar] = -1;
-                });
-            }
-            
-            // Regras de negócio (Agendamento e Clientes Especiais)
-            const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
-            for (let j = 0; j < maxLoads; j++) {
-                // No máximo um grupo com agendamento por caminhão
-                model.constraints[`schedule_rule_${j}`] = { max: 1 };
-                // No máximo um grupo de cliente especial por caminhão
-                model.constraints[`special_client_rule_${j}`] = { max: 1 };
-
-                clientGroups.forEach((group, i) => {
+                    // Adiciona restrições de regras de negócio
                     if (group.pedidos.some(p => p.Agendamento === 'Sim')) {
-                        model.constraints[`schedule_rule_${j}`][`x_${i}_${j}`] = 1;
+                        model.variables[varName][`schedule_rule_${j}`] = 1;
                     }
                     if (group.isSpecial) {
-                         model.constraints[`special_client_rule_${j}`][`x_${i}_${j}`] = 1;
+                        model.variables[varName][`special_client_rule_${j}`] = 1;
                     }
-                });
-            }
-            
-            // Adiciona os coeficientes da função objetivo
-            model.variables.totalWeight = {};
-            clientGroups.forEach((group, i) => {
-                 for (let j = 0; j < maxLoads; j++) {
-                    model.variables.totalWeight[`x_${i}_${j}`] = group.totalKg;
-                 }
+                }
             });
 
+            // Define as restrições
+            for (let j = 0; j < maxLoads; j++) {
+                model.constraints[`weight_cap_${j}`] = { max: MAX_KG };
+                model.constraints[`cubage_cap_${j}`] = { max: MAX_CUBAGE };
+                model.constraints[`min_weight_${j}`] = { min: 0 };
+                model.constraints[`force_use_${j}`] = { min: 0 };
+                model.constraints[`schedule_rule_${j}`] = { max: 1 };
+                model.constraints[`special_client_rule_${j}`] = { max: 1 };
+            }
+            clientGroups.forEach((group, i) => {
+                model.constraints[`group_assign_${i}`] = { max: 1 };
+            });
 
-            const result = solver.Solve(model);
+            let result;
+            try {
+                result = solver.Solve(model);
+                console.log("Resultado do Solver:", result);
+            } catch (e) {
+                console.error("Erro ao executar o solver:", e);
+                alert("Ocorreu um erro durante a otimização. Verifique o console para mais detalhes (F12).");
+                return { loads: [], leftovers: clientGroups };
+            }
             
             const loads = [];
             const assignedGroupIndices = new Set();
+
             if (result.feasible) {
                 for (let j = 0; j < maxLoads; j++) {
+                    if (result[`use_${j}`] !== 1) continue;
+
                     const currentLoad = { pedidos: [], totalKg: 0, totalCubagem: 0, vehicleType: vehicleType };
                     clientGroups.forEach((group, i) => {
                         if (result[`x_${i}_${j}`] === 1) {
@@ -1454,10 +1441,13 @@
                             assignedGroupIndices.add(i);
                         }
                     });
+
                     if (currentLoad.pedidos.length > 0) {
                         loads.push(currentLoad);
                     }
                 }
+            } else {
+                 console.warn("O solver não encontrou uma solução ótima ('feasible: false'). Isso pode acontecer se não houver combinações possíveis que respeitem todas as regras. O resultado pode estar incompleto.");
             }
 
             const leftovers = clientGroups.filter((_, i) => !assignedGroupIndices.has(i));
