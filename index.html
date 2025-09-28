@@ -694,7 +694,7 @@
 
         const rotaVeiculoMap = {
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
-            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
+            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
             '11361': { type: 'tresQuartos', title: 'Rota 11361' }, '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] }, '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] }, '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] }, '11541': { type: 'tresQuartos', title: 'Rota 11541' }
         };
         
@@ -790,8 +790,28 @@
             if (!searchInput) return;
             if (planilhaData.length === 0) { searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>'; return; }
             let pedidoEncontrado = null; let local = 'Não encontrado'; let accordionId = '';
-            pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
-            if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = 'accordionGeral'; } 
+            
+            // Busca nas listas dinâmicas
+            if (currentLeftoversForPrinting.length > 0) {
+                 pedidoEncontrado = currentLeftoversForPrinting.find(p => String(p.Num_Pedido) === searchInput);
+                 if (pedidoEncontrado) local = 'Sobras Finais (na Mesa de Trabalho)';
+            }
+            if (!pedidoEncontrado) {
+                for (const loadId in activeLoads) {
+                    const load = activeLoads[loadId];
+                    pedidoEncontrado = load.pedidos.find(p => String(p.Num_Pedido) === searchInput);
+                    if (pedidoEncontrado) {
+                        local = `Carga #${load.numero || loadId.split('-')[1]} (${load.vehicleType})`;
+                        break;
+                    }
+                }
+            }
+
+            // Fallback para as listas originais processadas
+            if (!pedidoEncontrado) {
+                pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = 'accordionGeral'; } 
+            }
             if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosComCFNumericoIsolado.find(p => String(p.Num_Pedido) === searchInput);
                 if (pedidoEncontrado) { local = 'Pedidos Filtrados'; accordionId = 'accordionCF'; }
@@ -806,7 +826,7 @@
                 pedidoEncontrado = rota1SemCarga.find(p => String(p.Num_Pedido) === searchInput);
                 if (pedidoEncontrado) { local = 'Pedidos da Rota 1 para Alteração'; }
             }
-            if (!pedidoEncontrado) {
+             if (!pedidoEncontrado) {
                 const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                 if (originalPedido) {
                             pedidoEncontrado = originalPedido;
@@ -820,13 +840,14 @@
                             }
                 }
             }
+
             if (pedidoEncontrado) {
                 let buttons = '';
-                if (local === 'Pedidos Disponíveis para Montagem') {
+                if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
                                      <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
-                } else if (accordionId) { 
+                } else if (accordionId || local.startsWith('Carga')) { 
                                      buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
@@ -836,16 +857,15 @@
         function priorizarPedido(numPedido) { if (!pedidosPrioritarios.includes(String(numPedido))) { pedidosPrioritarios.push(String(numPedido)); buscarPedido(); } }
 
         function highlightPedido(numPedido) {
+            document.querySelectorAll('tr.table-info').forEach(r => r.classList.remove('table-info'));
             const row = document.getElementById(`pedido-${numPedido}`);
             if (row) {
-                row.classList.toggle('table-info');
-                if (row.classList.contains('table-info')) {
-                    const collapseEl = row.closest('.accordion-collapse');
-                    if (collapseEl && !collapseEl.classList.contains('show')) { 
-                        bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); 
-                    }
-                    setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350);
+                row.classList.add('table-info');
+                const collapseEl = row.closest('.accordion-collapse');
+                if (collapseEl && !collapseEl.classList.contains('show')) { 
+                    bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); 
                 }
+                setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350);
             }
         }
         
@@ -1431,7 +1451,6 @@
             return { loads: finalLoads, leftovers };
         }
 
-        // --- NOVA FUNÇÃO DE OTIMIZAÇÃO MULTI-ESTRATÉGIA ---
         function runMultiStrategyOptimization(packableGroups, vehicleType) {
             const strategies = [
                 { name: 'priority-weight-desc',
@@ -1454,7 +1473,6 @@
                 },
                 { name: 'weight-desc', sorter: (a, b) => b.totalKg - a.totalKg },
                 { name: 'weight-asc', sorter: (a, b) => a.totalKg - b.totalKg },
-                // NOVAS ESTRATÉGIAS DE DENSIDADE
                 { name: 'density-desc', sorter: (a, b) => b.density - a.density },
                 { name: 'density-asc', sorter: (a, b) => a.density - b.density }
             ];
@@ -1476,7 +1494,6 @@
             return bestResult;
         }
 
-        // --- NOVA FUNÇÃO DE REFINAMENTO "PENTE FINO" ---
         function refineLoadsWithSimpleFit(initialLoads, initialLeftovers) {
             let refinedLoads = JSON.parse(JSON.stringify(initialLoads));
             let remainingLeftovers = JSON.parse(JSON.stringify(initialLeftovers));
@@ -1486,7 +1503,6 @@
                 
                 for (const load of refinedLoads) {
                     const vehicleType = load.vehicleType;
-                    // CORREÇÃO: VERIFICA SE VEHICLETYPE EXISTE ANTES DE PROSSEGUIR
                     if (!vehicleType) continue; 
                     
                     const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
@@ -1508,7 +1524,6 @@
             return { refinedLoads, remainingLeftovers };
         }
 
-        // --- FUNÇÃO SEPARARCARGASGENERIC ATUALIZADA COM NOVA LÓGICA ---
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
             
@@ -1555,17 +1570,14 @@
                 }, {});
                 const packableGroups = Object.values(clientGroupsMap);
 
-                // **NOVO: CÁLCULO DE DENSIDADE**
                 packableGroups.forEach(group => {
                     if (group.totalCubagem > 0) {
                         group.density = group.totalKg / group.totalCubagem;
                     } else {
-                        // Se não tem volume, é infinitamente denso, prioridade máxima na estratégia de densidade.
                         group.density = Infinity; 
                     }
                 });
 
-                // --- INÍCIO DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
                 let initialResult = runMultiStrategyOptimization(packableGroups, vehicleType);
 
                 initialResult.loads.forEach(load => {
@@ -1578,12 +1590,10 @@
 
                 let primaryLoads = refinedLoads;
                 let leftoverGroups = remainingLeftovers;
-
                 let secondaryLoads = [];
                 let tertiaryLoads = [];
 
                 if (vehicleType === 'fiorino' && leftoverGroups.length > 0) {
-                    // 1. Tenta montar mais Fiorinos com as sobras
                     const fiorinoLeftoversResult = runMultiStrategyOptimization(leftoverGroups, 'fiorino');
                     if (fiorinoLeftoversResult.loads.length > 0) {
                         fiorinoLeftoversResult.loads.forEach(l => l.vehicleType = 'fiorino');
@@ -1591,7 +1601,6 @@
                     }
                     leftoverGroups = fiorinoLeftoversResult.leftovers;
 
-                    // 2. Com o que sobrou, tenta montar uma Van
                     const totalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
                     const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
                     if (totalLeftoverKg >= vanMin && leftoverGroups.length > 0) {
@@ -1602,7 +1611,6 @@
                     }
                 }
                 
-                // 3. Tenta montar um 3/4 com o que sobrou de qualquer processo anterior
                 const totalFinalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
                 const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
                 if (totalFinalLeftoverKg >= tresQuartosMin && leftoverGroups.length > 0) {
@@ -1614,18 +1622,13 @@
                             leftoverGroups = tresQuartosResult.leftovers;
                         }
                 }
-                // --- FIM DA LÓGICA DE OTIMIZAÇÃO EM CASCATA ---
 
                 currentLeftoversForPrinting = leftoverGroups.flatMap(group => group.pedidos);
 
-                const allLoads = [
-                    ...primaryLoads,
-                    ...secondaryLoads,
-                    ...tertiaryLoads
-                ];
+                const allLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads ];
 
                 allLoads.forEach((load, index) => {
-                    load.numero = `${load.vehicleType.charAt(0).toUpperCase()}-${index + 1}`;
+                    load.numero = `${load.vehicleType.charAt(0).toUpperCase()}${index + 1}`;
                     const loadId = `${load.vehicleType}-${Date.now()}-${index}`;
                     load.id = loadId;
                     activeLoads[loadId] = load;
@@ -1992,6 +1995,7 @@
             const clientOrdersToMove = sourceLoad.pedidos.filter(p => normalizeClientId(p.Cliente) === clienteId);
             if (clientOrdersToMove.length === 0) return;
 
+            const orderIdsToMove = new Set(clientOrdersToMove.map(p => p.Num_Pedido));
             const clientBlockKg = clientOrdersToMove.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0);
             const clientBlockCubagem = clientOrdersToMove.reduce((sum, p) => sum + (parseFloat(String(p.Cubagem).replace(',', '.')) || 0), 0);
             
@@ -2016,11 +2020,11 @@
             }
             
             if (sourceIsLeftovers) {
-                currentLeftoversForPrinting = sourceLoad.pedidos.filter(p => normalizeClientId(p.Cliente) !== clienteId);
+                currentLeftoversForPrinting = sourceLoad.pedidos.filter(p => !orderIdsToMove.has(p.Num_Pedido));
             } else if (sourceIsGeral) {
-                pedidosGeraisAtuais = sourceLoad.pedidos.filter(p => normalizeClientId(p.Cliente) !== clienteId);
+                pedidosGeraisAtuais = sourceLoad.pedidos.filter(p => !orderIdsToMove.has(p.Num_Pedido));
             } else {
-                sourceLoad.pedidos = sourceLoad.pedidos.filter(p => normalizeClientId(p.Cliente) !== clienteId);
+                sourceLoad.pedidos = sourceLoad.pedidos.filter(p => !orderIdsToMove.has(p.Num_Pedido));
                 sourceLoad.totalKg -= clientBlockKg;
                 sourceLoad.totalCubagem -= clientBlockCubagem;
             }
@@ -2033,7 +2037,6 @@
                 targetLoad.totalCubagem += clientBlockCubagem;
             }
 
-            // Bloco de atualização de UI corrigido e melhorado
             if (sourceIsManualBuilder) {
                 updateManualBuilderUI();
             } else {
@@ -2050,18 +2053,14 @@
 
         function updateLoadUI(loadId) {
             if (loadId === 'leftovers' || loadId === 'geral') {
-                 // Esta lógica agora re-renderiza ambas as listas de sobras e pedidos gerais
-                 // para manter a consistência.
                 const leftoversCard = document.querySelector('[data-load-id="leftovers"]');
                 const geraisDiv = document.getElementById('resultado-geral');
 
-                // Atualiza a lista de Pedidos Disponíveis
                 const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
                     const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0; return acc;
                 }, {});
                 if(geraisDiv) displayGerais(geraisDiv, gruposGerais);
 
-                // Atualiza a lista de Sobras Finais
                 if (!leftoversCard) return;
 
                 if (currentLeftoversForPrinting.length === 0) {
@@ -2237,10 +2236,13 @@
 
             const newCardHTML = renderLoadCard(newLoad, vehicleType, vehicleInfo[vehicleType]);
             
-            const resultDivId = `resultado-${vehicleType === 'tresQuartos' ? '34' : vehicleType}-geral`;
-            const resultContainer = document.getElementById(resultDivId);
+            // Lógica para adicionar a nova carga na aba atualmente ativa
+            const activeTabPane = document.querySelector('.tab-pane.active');
+            const resultContainer = activeTabPane ? activeTabPane.querySelector('[id^="resultado-"]') : null;
+
             if(resultContainer) {
                resultContainer.insertAdjacentHTML('beforeend', newCardHTML);
+               alert(`Carga manual ${newLoad.numero} criada com sucesso para ${vehicleInfo[vehicleType].name} e adicionada à aba atual!`);
             }
 
             const builderWrapper = document.getElementById('manual-load-builder-wrapper');
@@ -2249,24 +2251,15 @@
             
             const startBtn = document.getElementById('start-manual-load-btn');
             if(startBtn) startBtn.style.display = 'inline-block';
-
-            // NOVO: Lógica para mudar de aba e dar feedback
-            alert(`Carga manual ${newLoad.numero} criada com sucesso para ${vehicleInfo[vehicleType].name}!`);
             
-            const tabId = vehicleType === 'tresQuartos' ? 'tres-quartos-tab' : `${vehicleType}-tab`;
-            const tabElement = document.getElementById(tabId);
-            if(tabElement) {
-                bootstrap.Tab.getOrCreateInstance(tabElement).show();
-            }
-
             setTimeout(() => {
                 const newCardElement = document.getElementById(newLoad.id);
                 if(newCardElement) {
                     newCardElement.scrollIntoView({ behavior: 'smooth', block: 'center'});
-                    newCardElement.classList.add('border-info'); // Destaque temporário
-                    setTimeout(() => newCardElement.classList.remove('border-info'), 2000);
+                    newCardElement.classList.add('border-info');
+                    setTimeout(() => newCardElement.classList.remove('border-info'), 2500);
                 }
-            }, 300); // Aguarda a animação da aba
+            }, 300);
         }
 
         function cancelManualLoad() {
