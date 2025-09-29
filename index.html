@@ -568,6 +568,18 @@
         ]);
 
         const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
+        
+        // --- FUNÇÕES DE LÓGICA DE NEGÓCIO (REINSERIDAS E CENTRALIZADAS) ---
+        function normalizeClientId(id) {
+            if (id === null || typeof id === 'undefined') return '';
+            return String(id).trim().replace(/^0+/, '');
+        }
+
+        function checkAgendamento(pedido) {
+            const normalizedCode = normalizeClientId(pedido.Cliente);
+            pedido.Agendamento = agendamentoClientCodes.has(normalizedCode) ? 'Sim' : 'Não';
+        }
+
         const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
         
         let planilhaData = [];
@@ -759,7 +771,7 @@
                         const row = rawData[i];
                         if (row && row.some(cell => String(cell).trim().toLowerCase() === 'cod_rota')) {
                             headerRowIndex = i;
-                            originalColumnHeaders = row.map(h => h ? String(h).trim() : ''); // Salva os cabeçalhos originais
+                            originalColumnHeaders = row.map(h => h ? String(h).trim() : '');
                             break;
                         }
                     }
@@ -795,8 +807,8 @@
                             } 
                         }); 
                         // Corrigir tipos de dados numéricos
-                        if(pedido.Quilos_Saldo) pedido.Quilos_Saldo = parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                        if(pedido.Cubagem) pedido.Cubagem = parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+                        pedido.Quilos_Saldo = parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                        pedido.Cubagem = parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
                         return pedido; 
                     });
                     planilhaData.forEach(checkAgendamento);
@@ -824,7 +836,6 @@
             if (planilhaData.length === 0) { searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>'; return; }
             let pedidoEncontrado = null; let local = 'Não encontrado'; let accordionId = '';
             
-            // Busca nas listas dinâmicas
             if (currentLeftoversForPrinting.length > 0) {
                  pedidoEncontrado = currentLeftoversForPrinting.find(p => String(p.Num_Pedido) === searchInput);
                  if (pedidoEncontrado) local = 'Sobras Finais (na Mesa de Trabalho)';
@@ -840,7 +851,6 @@
                 }
             }
 
-            // Fallback para as listas originais processadas
             if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
                 if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = 'accordionGeral'; } 
@@ -940,9 +950,6 @@
             pedidosGeraisAtuais = [];
             gruposToco = {};
             pedidosComCFNumericoIsolado = [];
-            // Manter prioridades e bloqueios entre processamentos, a menos que limpe tudo
-            // pedidosPrioritarios = [];
-            // pedidosBloqueados.clear();
             rota1SemCarga = [];
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
@@ -1448,13 +1455,14 @@
         
         // --- FUNÇÕES DE VALIDAÇÃO E CONFIGURAÇÃO ---
         function getVehicleConfig(vehicleType) {
-            return {
+            const configs = {
                 minKg: parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value),
                 softMaxKg: parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value),
                 softMaxCubage: parseFloat(document.getElementById(`${vehicleType}Cubage`).value),
                 hardMaxKg: parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`)?.value || document.getElementById(`${vehicleType}MaxCapacity`).value),
                 hardMaxCubage: parseFloat(document.getElementById(`${vehicleType}HardCubage`)?.value || document.getElementById(`${vehicleType}Cubage`).value),
             };
+            return configs;
         }
 
         function isMoveValid(load, groupToAdd, vehicleType) {
@@ -1463,11 +1471,9 @@
             if ((load.totalKg + groupToAdd.totalKg) > config.hardMaxKg) return false;
             if ((load.totalCubagem + groupToAdd.totalCubagem) > config.hardMaxCubage) return false;
 
-            const groupIsSpecial = groupToAdd.isSpecial;
-            if (groupIsSpecial && load.pedidos.some(p => isSpecialClient(p))) return false;
+            if (groupToAdd.isSpecial && load.pedidos.some(p => isSpecialClient(p))) return false;
 
-            const groupHasScheduled = groupToAdd.pedidos.some(p => p.Agendamento === 'Sim');
-            if (groupHasScheduled && load.pedidos.some(p => p.Agendamento === 'Sim')) return false;
+            if (groupToAdd.pedidos.some(p => p.Agendamento === 'Sim') && load.pedidos.some(p => p.Agendamento === 'Sim')) return false;
 
             return true;
         }
@@ -1576,9 +1582,16 @@
         }
 
         // --- NÍVEL 2: ALGORITMO DE OTIMIZAÇÃO AVANÇADA (SIMULATED ANNEALING) ---
-        function getSolutionEnergy(solution) {
+        function getSolutionEnergy(solution, vehicleType) {
+            const config = getVehicleConfig(vehicleType);
             const leftoverWeight = solution.leftovers.reduce((sum, group) => sum + group.totalKg, 0);
-            const loadPenalty = solution.loads.reduce((sum, load) => sum + (load.totalKg < getVehicleConfig(load.vehicleType).minKg ? 1000 : 0), 0);
+            const loadPenalty = solution.loads.reduce((sum, load) => {
+                // Penaliza fortemente cargas abaixo do peso mínimo
+                if (load.totalKg > 0 && load.totalKg < config.minKg) {
+                    return sum + 1000 + (config.minKg - load.totalKg);
+                }
+                return sum;
+            }, 0);
             return leftoverWeight + loadPenalty;
         }
 
@@ -1595,21 +1608,22 @@
                 let currentTemp = initialTemp;
                 
                 const progressBar = document.getElementById('processing-progress-bar');
-                const progressText = document.getElementById('processing-status-text');
+                const statusText = document.getElementById('processing-status-text');
+                const detailsText = document.getElementById('processing-details-text');
 
                 function doTemperatureStep() {
                     for (let i = 0; i < iterationsPerTemp; i++) {
                         let neighborSolution = JSON.parse(JSON.stringify(currentSolution));
+                        let moveMade = false;
 
                         const moveType = Math.random();
-                        let moveMade = false;
                         if (moveType < 0.7 && neighborSolution.leftovers.length > 0) {
                             const leftoverIndex = Math.floor(Math.random() * neighborSolution.leftovers.length);
                             const groupToPlace = neighborSolution.leftovers[leftoverIndex];
                             
-                            const targetLoadIndex = neighborSolution.loads.length > 0 ? Math.floor(Math.random() * (neighborSolution.loads.length + 1)) -1 : -1;
+                            const targetLoadIndex = neighborSolution.loads.length > 0 ? Math.floor(Math.random() * (neighborSolution.loads.length + 1)) : 0;
 
-                            if (targetLoadIndex >= 0) {
+                            if (targetLoadIndex < neighborSolution.loads.length) {
                                const targetLoad = neighborSolution.loads[targetLoadIndex];
                                if(isMoveValid(targetLoad, groupToPlace, vehicleType)) {
                                     targetLoad.pedidos.push(...groupToPlace.pedidos);
@@ -1643,6 +1657,7 @@
                                     load.pedidos = load.pedidos.filter(p => !idsToRemove.has(p.Num_Pedido));
                                     load.totalKg -= groupToMove.totalKg;
                                     load.totalCubagem -= groupToMove.totalCubagem;
+                                    if(load.pedidos.length === 0) neighborSolution.loads.splice(loadIndex,1);
 
                                     neighborSolution.leftovers.push(groupToMove);
                                     moveMade = true;
@@ -1651,12 +1666,12 @@
                         }
                         
                         if(moveMade){
-                            const currentEnergy = getSolutionEnergy(currentSolution);
-                            const neighborEnergy = getSolutionEnergy(neighborSolution);
+                            const currentEnergy = getSolutionEnergy(currentSolution, vehicleType);
+                            const neighborEnergy = getSolutionEnergy(neighborSolution, vehicleType);
 
                             if (neighborEnergy < currentEnergy || Math.random() < Math.exp((currentEnergy - neighborEnergy) / currentTemp)) {
                                 currentSolution = neighborSolution;
-                                if (getSolutionEnergy(currentSolution) < getSolutionEnergy(bestSolution)) {
+                                if (getSolutionEnergy(currentSolution, vehicleType) < getSolutionEnergy(bestSolution, vehicleType)) {
                                     bestSolution = JSON.parse(JSON.stringify(currentSolution));
                                 }
                             }
@@ -1664,9 +1679,10 @@
                     }
 
                     currentTemp *= coolingRate;
-                    const progress = 100 * (1 - Math.log(currentTemp) / Math.log(initialTemp));
+                    const progress = Math.min(100, 100 * (1 - Math.log(currentTemp) / Math.log(initialTemp)));
                     progressBar.style.width = `${progress}%`;
-                    progressText.textContent = `Otimizando... (Sobra: ${getSolutionEnergy(bestSolution).toFixed(2)} kg)`;
+                    statusText.textContent = `Otimizando... (Nível 2)`;
+                    detailsText.textContent = `Sobra Atual: ${getSolutionEnergy(bestSolution, vehicleType).toFixed(2)} kg`;
 
                     if (currentTemp > 1) {
                         requestAnimationFrame(doTemperatureStep);
@@ -1675,7 +1691,7 @@
                         let finalLoads = [];
                         let finalLeftovers = [...bestSolution.leftovers];
                         bestSolution.loads.forEach(load => {
-                            if (load.totalKg >= config.minKg && load.pedidos.length > 0) {
+                            if (load.pedidos.length > 0 && load.totalKg >= config.minKg) {
                                 finalLoads.push(load);
                             } else if (load.pedidos.length > 0) {
                                 const groups = Object.values(load.pedidos.reduce((acc, p) => { 
@@ -1734,6 +1750,13 @@
                             };
                             
                             if (isMoveValid(tempLoadAfterRemoval, leftoverGroup, vehicleType)) {
+                                const tempLoadAfterAdd = {
+                                    pedidos: [...tempLoadAfterRemoval.pedidos, ...leftoverGroup.pedidos],
+                                    totalKg: tempLoadAfterRemoval.totalKg + leftoverGroup.totalKg,
+                                    totalCubagem: tempLoadAfterRemoval.totalCubagem + leftoverGroup.totalCubagem
+                                };
+
+                                // Verifica se o grupo que saiu cabe nas sobras (trivial) ou em outra carga. Para simplificar, só trocamos.
                                 const idsToRemove = new Set(groupToSwapOut.pedidos.map(p => p.Num_Pedido));
                                 load.pedidos = load.pedidos.filter(p => !idsToRemove.has(p.Num_Pedido));
                                 load.totalKg -= groupToSwapOut.totalKg;
@@ -1759,6 +1782,7 @@
 
             return { refinedLoads: loads, remainingLeftovers: leftovers };
         }
+
 
         // --- FUNÇÃO PRINCIPAL DE MONTAGEM ---
         async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
@@ -1811,7 +1835,7 @@
             
             const modalElement = document.getElementById('processing-modal');
             const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
-
+            
             try {
                 if(optimizationLevel !== '1') modal.show();
 
@@ -1825,6 +1849,7 @@
                         const saResultForPolish = await runSimulatedAnnealing(packableGroups, vehicleType);
                         
                         document.getElementById('processing-status-text').textContent = 'Refinando solução...';
+                        document.getElementById('processing-details-text').textContent = 'Aplicando trocas locais.';
                         document.getElementById('processing-progress-bar').style.width = '100%';
 
                         const polished = refinarCargasComTrocas(saResultForPolish.loads, saResultForPolish.leftovers, vehicleType);
