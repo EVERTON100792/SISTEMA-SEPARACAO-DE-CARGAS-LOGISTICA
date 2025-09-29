@@ -542,7 +542,7 @@
         }
         
         let planilhaData = [];
-        let originalHeaders = [];
+        let originalColumnHeaders = [];
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
         let pedidosComCFNumericoIsolado = [];
@@ -730,7 +730,7 @@
                         const row = rawData[i];
                         if (row && row.some(cell => String(cell).trim().toLowerCase() === 'cod_rota')) {
                             headerRowIndex = i;
-                            originalHeaders = row.map(h => h ? String(h).trim() : ''); // Salva os cabeçalhos originais
+                            originalColumnHeaders = row.map(h => h ? String(h).trim() : ''); // Salva os cabeçalhos originais
                             break;
                         }
                     }
@@ -740,7 +740,7 @@
                     const dataRows = rawData.slice(headerRowIndex + 1);
                     planilhaData = dataRows.map(row => { 
                         const pedido = {}; 
-                        originalHeaders.forEach((header, i) => { 
+                        originalColumnHeaders.forEach((header, i) => { 
                             if (header) { 
                                 if ((header.toLowerCase() === 'predat' || header.toLowerCase() === 'dat_ped')) {
                                     let cellValue = row[i];
@@ -917,7 +917,7 @@
 
         function limparTudo(){
             resetarEstadoGlobal();
-            originalHeaders = []; // Limpa os cabeçalhos também
+            originalColumnHeaders = []; // Limpa os cabeçalhos também
 
             pedidosEspeciaisProcessados.clear();
             pedidosBloqueados.clear();
@@ -1137,21 +1137,27 @@
 
             alert(`${pedidosAtrasados.length} pedidos em atraso serão exportados.`);
 
-            // Garante que os cabeçalhos originais foram capturados
-            if (originalHeaders.length === 0) {
-                alert("Erro: Cabeçalhos da planilha original não foram encontrados. Processe o arquivo novamente.");
-                return;
-            }
+            // Define o cabeçalho EXATO e na ORDEM desejada
+            const header = [
+                'Cliente', 'Nome_Cliente', 'Cidade', 'UF', 'Num_Pedido', 
+                'Quilos_Saldo', 'Predat', 'Dat_Ped', 'Coluna5'
+            ];
             
             const dataToExport = pedidosAtrasados.map(p => {
                 const newP = {...p};
                 if (newP.Predat instanceof Date) { newP.Predat = newP.Predat.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
                 if (newP.Dat_Ped instanceof Date) { newP.Dat_Ped = newP.Dat_Ped.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
-                return newP;
+                
+                // Mapeia o objeto para ter apenas as chaves do cabeçalho
+                let filteredP = {};
+                header.forEach(col => {
+                    filteredP[col] = newP[col];
+                });
+                return filteredP;
             });
 
-            // Cria a planilha usando a ordem original das colunas
-            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: originalHeaders });
+            // Cria a planilha usando a ordem exata das colunas
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: header });
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
             XLSX.writeFile(workbook, "pedidos_atrasados.xlsx");
@@ -2198,9 +2204,9 @@
                 pedidos: [], totalKg: 0, totalCubagem: 0, vehicleType: 'fiorino' 
             };
             
-            const workspaceCardBody = document.getElementById('vehicleTabsContent').parentElement;
-            if (!workspaceCardBody) {
-                alert("Erro: Não foi possível encontrar a Mesa de Trabalho para criar o painel.");
+            const activeTabPane = document.querySelector('.tab-pane.active');
+            if (!activeTabPane) {
+                alert("Erro: Nenhuma aba de trabalho está ativa.");
                 return;
             }
 
@@ -2225,9 +2231,9 @@
                     </div>
                 </div>`;
             
-            workspaceCardBody.appendChild(builderWrapper);
+            activeTabPane.appendChild(builderWrapper);
             
-            const startBtn = document.getElementById('start-manual-load-btn');
+            const startBtn = activeTabPane.querySelector('#start-manual-load-btn');
             if (startBtn) startBtn.style.display = 'none';
             updateManualBuilderUI(); 
         }
@@ -2302,7 +2308,7 @@
             if (builderWrapper) builderWrapper.remove();
             manualLoadInProgress = null;
             
-            const startBtn = document.getElementById('start-manual-load-btn');
+            const startBtn = activeTabPane.querySelector('#start-manual-load-btn');
             if(startBtn) startBtn.style.display = 'inline-block';
             
             setTimeout(() => {
@@ -2326,7 +2332,8 @@
 
              updateLoadUI('leftovers'); 
              
-             const startBtn = document.getElementById('start-manual-load-btn');
+             const activeTabPane = document.querySelector('.tab-pane.active');
+             const startBtn = activeTabPane ? activeTabPane.querySelector('#start-manual-load-btn') : null;
              if(startBtn) startBtn.style.display = 'inline-block';
         }
 
