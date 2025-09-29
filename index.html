@@ -319,7 +319,7 @@
                             <div class="card mb-4" id="drop-zone">
                                 <div class="card-header"><i class="bi bi-file-earmark-arrow-up-fill me-2"></i>1. Processar Planilha</div>
                                 <div class="card-body">
-                                    <div class="row g-3 align-items-center">
+                                    <div class="row g-3">
                                         <div class="col-md-4">
                                             <label for="fileInput" class="form-label fw-bold">Arquivo:</label>
                                             <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv" style="display: none;">
@@ -329,20 +329,34 @@
                                                 <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>
                                             </div>
                                         </div>
-                                        <div class="col-md-5">
-                                            <label class="form-label fw-bold">Faixa de Rotas (Opcional):</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text"><i class="bi bi-signpost-split-fill"></i></span>
-                                                <input type="text" class="form-control" id="rotaInicialInput" placeholder="Rota Inicial">
-                                                <input type="text" class="form-control" id="rotaFinalInput" placeholder="Rota Final">
+                                        <div class="col-md-8">
+                                            <div class="row g-3">
+                                                <div class="col-md-7">
+                                                    <label class="form-label fw-bold">Faixa de Rotas (Opcional):</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i class="bi bi-signpost-split-fill"></i></span>
+                                                        <input type="text" class="form-control" id="rotaInicialInput" placeholder="Rota Inicial">
+                                                        <input type="text" class="form-control" id="rotaFinalInput" placeholder="Rota Final">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-5">
+                                                     <label for="optimizationLevelSelect" class="form-label fw-bold">Nível de Otimização:</label>
+                                                     <select id="optimizationLevelSelect" class="form-select">
+                                                         <option value="1">Nível 1: Heurística Rápida</option>
+                                                         <option value="2" selected>Nível 2: Avançada (Recomendado)</option>
+                                                         <option value="3">Nível 3: Exaustiva (Lento)</option>
+                                                     </select>
+                                                </div>
+                                                <div class="col-md-7">
+                                                     <div class="form-check form-switch mt-2">
+                                                        <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
+                                                        <label class="form-check-label" for="autoProcessCheckbox">Processar automaticamente</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-5 align-self-end">
+                                                    <button class="btn btn-primary w-100 py-2" id="processarBtn" onclick="processar()" disabled><i class="bi bi-gear-fill me-2"></i>Processar Cargas</button>
+                                                </div>
                                             </div>
-                                            <div class="form-check form-switch mt-2">
-                                                <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
-                                                <label class="form-check-label" for="autoProcessCheckbox">Processar automaticamente</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 align-self-end">
-                                            <button class="btn btn-primary w-100 py-2" id="processarBtn" onclick="processar()" disabled><i class="bi bi-gear-fill me-2"></i>Processar Cargas</button>
                                         </div>
                                     </div>
                                     <div id="status" class="mt-3 status-message"></div>
@@ -830,15 +844,15 @@
              if (!pedidoEncontrado) {
                 const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                 if (originalPedido) {
-                            pedidoEncontrado = originalPedido;
-                            if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                                local = 'Bloqueado Manualmente por você.';
-                            } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                                local = 'Alocado na Carga Especial.';
-                            }
-                            else {
-                                local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
-                            }
+                                 pedidoEncontrado = originalPedido;
+                                 if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                                     local = 'Bloqueado Manualmente por você.';
+                                 } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                                     local = 'Alocado na Carga Especial.';
+                                 }
+                                 else {
+                                     local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
+                                 }
                 }
             }
 
@@ -847,7 +861,7 @@
                 if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
                                      buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
@@ -1418,7 +1432,49 @@
             }, 500);
         }
 
-        function createSolution(itemsParaEmpacotar, vehicleType) {
+        // --- NÍVEL 1: ALGORITMO ORIGINAL (HEURÍSTICA RÁPIDA) ---
+        function runHeuristicOptimization(packableGroups, vehicleType) {
+            const strategies = [
+                { name: 'priority-weight-desc',
+                  sorter: (a, b) => {
+                    const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+                    const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+                    if (aHasPrio && !bHasPrio) return -1;
+                    if (!aHasPrio && bHasPrio) return 1;
+                    return b.totalKg - a.totalKg;
+                  }
+                },
+                { name: 'scheduled-weight-desc',
+                  sorter: (a, b) => {
+                    const aHasSched = a.pedidos.some(p => p.Agendamento === 'Sim');
+                    const bHasSched = b.pedidos.some(p => p.Agendamento === 'Sim');
+                    if (aHasSched && !bHasSched) return -1;
+                    if (!aHasSched && bHasSched) return 1;
+                    return b.totalKg - a.totalKg;
+                  }
+                },
+                { name: 'weight-desc', sorter: (a, b) => b.totalKg - a.totalKg },
+                { name: 'weight-asc', sorter: (a, b) => a.totalKg - b.totalKg }
+            ];
+
+            let bestResult = null;
+
+            for (const strategy of strategies) {
+                const sortedGroups = [...packableGroups].sort(strategy.sorter);
+                const result = createSolutionFromHeuristic(sortedGroups, vehicleType);
+                
+                const leftoverWeight = result.leftovers.reduce((sum, g) => sum + g.totalKg, 0);
+
+                if (bestResult === null || leftoverWeight < bestResult.leftoverWeight) {
+                    bestResult = { ...result, leftoverWeight: leftoverWeight, strategy: strategy.name };
+                }
+            }
+            
+            console.log(`Melhor estratégia para ${vehicleType}: ${bestResult.strategy} com ${bestResult.leftoverWeight.toFixed(2)}kg de sobra.`);
+            return bestResult;
+        }
+        
+        function createSolutionFromHeuristic(itemsParaEmpacotar, vehicleType) {
             const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
             const SOFT_MAX_KG = parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
             const SOFT_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
@@ -1501,78 +1557,159 @@
             return { loads: finalLoads, leftovers };
         }
 
-        function runMultiStrategyOptimization(packableGroups, vehicleType) {
-            const strategies = [
-                { name: 'priority-weight-desc',
-                  sorter: (a, b) => {
-                    const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                    const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                    if (aHasPrio && !bHasPrio) return -1;
-                    if (!aHasPrio && bHasPrio) return 1;
-                    return b.totalKg - a.totalKg;
-                  }
-                },
-                { name: 'scheduled-weight-desc',
-                  sorter: (a, b) => {
-                    const aHasSched = a.pedidos.some(p => p.Agendamento === 'Sim');
-                    const bHasSched = b.pedidos.some(p => p.Agendamento === 'Sim');
-                    if (aHasSched && !bHasSched) return -1;
-                    if (!aHasSched && bHasSched) return 1;
-                    return b.totalKg - a.totalKg;
-                  }
-                },
-                { name: 'weight-desc', sorter: (a, b) => b.totalKg - a.totalKg },
-                { name: 'weight-asc', sorter: (a, b) => a.totalKg - b.totalKg },
-                { name: 'density-desc', sorter: (a, b) => b.density - a.density },
-                { name: 'density-asc', sorter: (a, b) => a.density - b.density }
-            ];
-
-            let bestResult = null;
-
-            for (const strategy of strategies) {
-                const sortedGroups = [...packableGroups].sort(strategy.sorter);
-                const result = createSolution(sortedGroups, vehicleType);
-                
-                const leftoverWeight = result.leftovers.reduce((sum, g) => sum + g.totalKg, 0);
-
-                if (bestResult === null || leftoverWeight < bestResult.leftoverWeight) {
-                    bestResult = { ...result, leftoverWeight: leftoverWeight, strategy: strategy.name };
-                }
-            }
-            
-            console.log(`Melhor estratégia para ${vehicleType}: ${bestResult.strategy} com ${bestResult.leftoverWeight.toFixed(2)}kg de sobra.`);
-            return bestResult;
+        // --- NÍVEL 2: ALGORITMO DE OTIMIZAÇÃO AVANÇADA (SIMULATED ANNEALING) ---
+        function getSolutionEnergy(solution) {
+            // A "energia" é o peso total das sobras. Quanto menor, melhor.
+            return solution.leftovers.reduce((sum, group) => sum + group.totalKg, 0);
         }
 
-        function refineLoadsWithSimpleFit(initialLoads, initialLeftovers) {
-            let refinedLoads = JSON.parse(JSON.stringify(initialLoads));
-            let remainingLeftovers = JSON.parse(JSON.stringify(initialLeftovers));
+        function simulatedAnnealingOptimizer(clientGroups, vehicleType) {
+            // Parâmetros do algoritmo. Podem ser ajustados para performance vs. qualidade.
+            const initialTemp = 1000;
+            const coolingRate = 0.995;
+            const iterationsPerTemp = 100;
 
-            for (let i = remainingLeftovers.length - 1; i >= 0; i--) {
-                const leftoverGroup = remainingLeftovers[i];
-                
-                for (const load of refinedLoads) {
-                    const vehicleType = load.vehicleType;
-                    if (!vehicleType) continue; 
-                    
-                    const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
-                    const HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
+            const MIN_KG = parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value);
+            const HARD_MAX_KG = parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`)?.value || document.getElementById(`${vehicleType}MaxCapacity`).value);
+            
+            // 1. Gera uma boa solução inicial (usando a melhor heurística simples)
+            const initialSortedGroups = [...clientGroups].sort((a, b) => b.totalKg - a.totalKg);
+            let bestSolution = createSolutionFromHeuristic(initialSortedGroups, vehicleType);
+            let currentSolution = JSON.parse(JSON.stringify(bestSolution));
+            
+            let currentTemp = initialTemp;
+            while (currentTemp > 1) {
+                for (let i = 0; i < iterationsPerTemp; i++) {
+                    let neighborSolution = JSON.parse(JSON.stringify(currentSolution));
 
-                    const newKg = load.totalKg + leftoverGroup.totalKg;
-                    const newCubage = load.totalCubagem + leftoverGroup.totalCubagem;
-
-                    if (newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
-                        load.pedidos.push(...leftoverGroup.pedidos);
-                        load.totalKg = newKg;
-                        load.totalCubagem = newCubage;
+                    // 2. Gera uma solução "vizinha" fazendo uma pequena mudança aleatória
+                    const moveType = Math.random();
+                    if (moveType < 0.5 && neighborSolution.loads.length > 0) { // Tenta mover um grupo
+                        const loadIndex = Math.floor(Math.random() * neighborSolution.loads.length);
+                        const load = neighborSolution.loads[loadIndex];
+                        if (load.pedidos.length > 0) {
+                            const groupToMove = load.pedidos.splice(Math.floor(Math.random() * load.pedidos.length), 1)[0]; // Simplificação: move 1 pedido/grupo
+                            neighborSolution.leftovers.push(groupToMove); // simplificação para este exemplo
+                        }
+                    } else if (neighborSolution.leftovers.length > 0) { // Tenta encaixar uma sobra
+                        const leftoverIndex = Math.floor(Math.random() * neighborSolution.leftovers.length);
+                        const groupToPlace = neighborSolution.leftovers[leftoverIndex];
                         
-                        remainingLeftovers.splice(i, 1);
-                        break; 
+                        let targetLoadIndex = -1;
+                        if (neighborSolution.loads.length > 0) {
+                           targetLoadIndex = Math.floor(Math.random() * (neighborSolution.loads.length + 1)) - 1;
+                        }
+
+                        if (targetLoadIndex >= 0) { // Tenta adicionar a uma carga existente
+                           const targetLoad = neighborSolution.loads[targetLoadIndex];
+                           if(targetLoad.totalKg + groupToPlace.totalKg <= HARD_MAX_KG) {
+                                targetLoad.pedidos.push(...groupToPlace.pedidos);
+                                targetLoad.totalKg += groupToPlace.totalKg;
+                                targetLoad.totalCubagem += groupToPlace.totalCubagem;
+                                neighborSolution.leftovers.splice(leftoverIndex, 1);
+                           }
+                        } else { // Cria uma nova carga para a sobra
+                           neighborSolution.loads.push(groupToPlace);
+                           neighborSolution.leftovers.splice(leftoverIndex, 1);
+                        }
+                    }
+                    
+                    // 3. Avalia as soluções
+                    const currentEnergy = getSolutionEnergy(currentSolution);
+                    const neighborEnergy = getSolutionEnergy(neighborSolution);
+
+                    // 4. Decide se aceita a nova solução
+                    if (neighborEnergy < currentEnergy || Math.random() < Math.exp((currentEnergy - neighborEnergy) / currentTemp)) {
+                        currentSolution = neighborSolution;
+                        if (getSolutionEnergy(currentSolution) < getSolutionEnergy(bestSolution)) {
+                            bestSolution = currentSolution;
+                        }
                     }
                 }
+                currentTemp *= coolingRate; // Resfria
             }
-            return { refinedLoads, remainingLeftovers };
+            
+            // Limpa cargas que ficaram abaixo do mínimo
+            let finalLoads = [];
+            bestSolution.loads.forEach(load => {
+                 if (load.totalKg >= MIN_KG) {
+                    finalLoads.push(load);
+                 } else {
+                    bestSolution.leftovers.push(...(load.pedidos || [load]));
+                 }
+            });
+            bestSolution.loads = finalLoads;
+
+            return bestSolution;
         }
+
+        // --- NÍVEL 3: ALGORITMO DE POLIMENTO (BUSCA LOCAL COM TROCAS) ---
+        function refinarCargasComTrocas(initialLoads, initialLeftovers, vehicleType) {
+            let loads = JSON.parse(JSON.stringify(initialLoads));
+            let leftovers = JSON.parse(JSON.stringify(initialLeftovers));
+            let improvementMade;
+
+            if (leftovers.length === 0) {
+                return { refinedLoads: loads, remainingLeftovers: leftovers };
+            }
+            
+            const HARD_MAX_KG = parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`)?.value || document.getElementById(`${vehicleType}MaxCapacity`).value);
+            const HARD_MAX_CUBAGE = parseFloat(document.getElementById(`${vehicleType}HardCubage`)?.value || document.getElementById(`${vehicleType}Cubage`).value);
+
+            do {
+                improvementMade = false;
+                for (let i = 0; i < leftovers.length; i++) {
+                    const leftoverGroup = leftovers[i];
+
+                    for (let j = 0; j < loads.length; j++) {
+                        const load = loads[j];
+
+                        const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, pedido) => {
+                             const clienteId = normalizeClientId(pedido.Cliente);
+                             if (!acc[clienteId]) {
+                                 acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: false }; // isSpecial não importa aqui
+                             }
+                             acc[clienteId].pedidos.push(pedido);
+                             acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
+                             acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+                             return acc;
+                        }, {}));
+
+                        for (let k = 0; k < clientGroupsInLoad.length; k++) {
+                            const groupToSwapOut = clientGroupsInLoad[k];
+
+                            const loadKgAfterRemoval = load.totalKg - groupToSwapOut.totalKg;
+                            const loadCubageAfterRemoval = load.totalCubagem - groupToSwapOut.totalCubagem;
+
+                            if (loadKgAfterRemoval + leftoverGroup.totalKg <= HARD_MAX_KG &&
+                                loadCubageAfterRemoval + leftoverGroup.totalCubagem <= HARD_MAX_CUBAGE) {
+                                
+                                const idsToRemove = new Set(groupToSwapOut.pedidos.map(p => p.Num_Pedido));
+                                load.pedidos = load.pedidos.filter(p => !idsToRemove.has(p.Num_Pedido));
+                                load.totalKg = loadKgAfterRemoval;
+                                load.totalCubagem = loadCubageAfterRemoval;
+
+                                load.pedidos.push(...leftoverGroup.pedidos);
+                                load.totalKg += leftoverGroup.totalKg;
+                                load.totalCubagem += leftoverGroup.totalCubagem;
+
+                                leftovers.splice(i, 1); 
+                                leftovers.push(groupToSwapOut);
+
+                                console.log(`POLIMENTO: Encaixou grupo de ${leftoverGroup.totalKg.toFixed(2)}kg trocando por um de ${groupToSwapOut.totalKg.toFixed(2)}kg.`);
+                                improvementMade = true;
+                                break;
+                            }
+                        }
+                        if (improvementMade) break;
+                    }
+                    if (improvementMade) break;
+                }
+            } while (improvementMade && leftovers.length > 0);
+
+            return { refinedLoads: loads, remainingLeftovers: leftovers };
+        }
+
 
         function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
@@ -1628,15 +1765,33 @@
                     }
                 });
 
-                let initialResult = runMultiStrategyOptimization(packableGroups, vehicleType);
+                // --- NOVA LÓGICA DE SELEÇÃO DE ALGORITMO ---
+                const optimizationLevel = document.getElementById('optimizationLevelSelect').value;
+                let optimizationResult;
 
-                initialResult.loads.forEach(load => {
+                switch (optimizationLevel) {
+                    case '1':
+                        console.log(`Executando Nível 1: Heurística Rápida para ${vehicleType}...`);
+                        optimizationResult = runHeuristicOptimization(packableGroups, vehicleType);
+                        break;
+                    case '3':
+                        console.log(`Executando Nível 3: Otimização Exaustiva (SA + Polimento) para ${vehicleType}...`);
+                        const saResultForPolish = simulatedAnnealingOptimizer(packableGroups, vehicleType);
+                        const polished = refinarCargasComTrocas(saResultForPolish.loads, saResultForPolish.leftovers, vehicleType);
+                        optimizationResult = { loads: polished.refinedLoads, leftovers: polished.remainingLeftovers };
+                        break;
+                    case '2':
+                    default:
+                        console.log(`Executando Nível 2: Otimização Avançada (SA) para ${vehicleType}...`);
+                        optimizationResult = simulatedAnnealingOptimizer(packableGroups, vehicleType);
+                        break;
+                }
+                
+                optimizationResult.loads.forEach(load => {
                     load.vehicleType = vehicleType;
                 });
                 
-                console.log(`Solução inicial encontrada com ${initialResult.leftovers.length} grupos sobrando. Iniciando fase de refinamento...`);
-                const { refinedLoads, remainingLeftovers } = refineLoadsWithSimpleFit(initialResult.loads, initialResult.leftovers);
-                console.log(`Refinamento finalizado. ${initialResult.leftovers.length - remainingLeftovers.length} grupos foram encaixados.`);
+                const { refinedLoads, remainingLeftovers } = refineLoadsWithSimpleFit(optimizationResult.loads, optimizationResult.leftovers);
 
                 let primaryLoads = refinedLoads;
                 let leftoverGroups = remainingLeftovers;
@@ -1644,7 +1799,7 @@
                 let tertiaryLoads = [];
 
                 if (vehicleType === 'fiorino' && leftoverGroups.length > 0) {
-                    const fiorinoLeftoversResult = runMultiStrategyOptimization(leftoverGroups, 'fiorino');
+                    const fiorinoLeftoversResult = runHeuristicOptimization(leftoverGroups, 'fiorino'); // Usar heurística rápida para sobras
                     if (fiorinoLeftoversResult.loads.length > 0) {
                         fiorinoLeftoversResult.loads.forEach(l => l.vehicleType = 'fiorino');
                         primaryLoads.push(...fiorinoLeftoversResult.loads);
@@ -1654,7 +1809,7 @@
                     const totalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
                     const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
                     if (totalLeftoverKg >= vanMin && leftoverGroups.length > 0) {
-                        const vanResult = runMultiStrategyOptimization(leftoverGroups, 'van');
+                        const vanResult = runHeuristicOptimization(leftoverGroups, 'van');
                         vanResult.loads.forEach(l => l.vehicleType = 'van');
                         secondaryLoads = vanResult.loads;
                         leftoverGroups = vanResult.leftovers;
@@ -1666,7 +1821,7 @@
                 if (totalFinalLeftoverKg >= tresQuartosMin && leftoverGroups.length > 0) {
                         const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
                         if(vehicleForTertiary) {
-                            const tresQuartosResult = runMultiStrategyOptimization(leftoverGroups, vehicleForTertiary);
+                            const tresQuartosResult = runHeuristicOptimization(leftoverGroups, vehicleForTertiary);
                             tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
                             tertiaryLoads = tresQuartosResult.loads;
                             leftoverGroups = tresQuartosResult.leftovers;
@@ -1721,6 +1876,36 @@
             }, 50);
         }
         
+        function refineLoadsWithSimpleFit(initialLoads, initialLeftovers) {
+            let refinedLoads = JSON.parse(JSON.stringify(initialLoads));
+            let remainingLeftovers = JSON.parse(JSON.stringify(initialLeftovers));
+
+            for (let i = remainingLeftovers.length - 1; i >= 0; i--) {
+                const leftoverGroup = remainingLeftovers[i];
+                
+                for (const load of refinedLoads) {
+                    const vehicleType = load.vehicleType;
+                    if (!vehicleType) continue; 
+                    
+                    const HARD_MAX_KG = document.getElementById(`${vehicleType}HardMaxCapacity`) ? parseFloat(document.getElementById(`${vehicleType}HardMaxCapacity`).value) : parseFloat(document.getElementById(`${vehicleType}MaxCapacity`).value);
+                    const HARD_MAX_CUBAGE = document.getElementById(`${vehicleType}HardCubage`) ? parseFloat(document.getElementById(`${vehicleType}HardCubage`).value) : parseFloat(document.getElementById(`${vehicleType}Cubage`).value);
+
+                    const newKg = load.totalKg + leftoverGroup.totalKg;
+                    const newCubage = load.totalCubagem + leftoverGroup.totalCubagem;
+
+                    if (newKg <= HARD_MAX_KG && newCubage <= HARD_MAX_CUBAGE) {
+                        load.pedidos.push(...leftoverGroup.pedidos);
+                        load.totalKg = newKg;
+                        load.totalCubagem = newCubage;
+                        
+                        remainingLeftovers.splice(i, 1);
+                        break; 
+                    }
+                }
+            }
+            return { refinedLoads, remainingLeftovers };
+        }
+
         function renderLoadCard(load, vehicleType, vInfo) {
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
