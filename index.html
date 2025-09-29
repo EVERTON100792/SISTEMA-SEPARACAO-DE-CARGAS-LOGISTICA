@@ -16,7 +16,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-
+    
     <style>
         :root {
             --dark-bg: #1a1d21;
@@ -204,14 +204,20 @@
             box-shadow: 0 0 15px rgba(54, 119, 245, 0.5);
         }
 
-        /* --- AJUSTE DE ROLAGEM (ALTERADO) --- */
-        /* Remove a rolagem interna do painel Mesa de Trabalho e do painel Pedidos Disponíveis. */
         .workspace-tab-pane, #pedidos-disponiveis-card .card-body {
             max-height: none;
             overflow-y: visible;
         }
 
         .status-message { min-height: 24px; }
+
+        /* ESTILOS DO PAINEL DE RESUMO */
+        #operation-summary .card {
+            border-left-width: 4px;
+        }
+        #operation-summary .display-4 {
+            font-weight: 700;
+        }
 
         /* --- ESTILOS DE IMPRESSÃO (Mantidos) --- */
         @media print {
@@ -306,7 +312,38 @@
                     </div>
                 </div>
             </div>
-
+            
+            <div id="operation-summary" class="mb-4 no-print" style="display: none;">
+                <h3 class="mb-3">Resumo da Operação</h3>
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card border-start border-danger border-4 h-100">
+                            <div class="card-body">
+                                <p class="card-title text-danger text-uppercase fw-bold">Pedidos Atrasados</p>
+                                <p class="display-4" id="summary-atrasados">0</p>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card border-start border-primary border-4 h-100">
+                            <div class="card-body">
+                                <p class="card-title text-primary text-uppercase fw-bold">Total a Carregar</p>
+                                <p class="display-4" id="summary-total-kg">0 <small class="text-body-secondary fs-4">kg</small></p>
+                                <span id="summary-total-cargas">0</span> cargas estimadas
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <p class="card-title">Projeção de Cargas por Veículo</p>
+                                <div id="summary-veiculos" class="row">
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="accordion mb-4 no-print" id="controls-accordion">
                 <div class="accordion-item" style="background-color: var(--dark-surface); border: 1px solid var(--dark-border); border-radius: 0.75rem;">
                     <h2 class="accordion-header">
@@ -420,7 +457,6 @@
             </div>
 
             <div id="resultado-carga-especial" class="mb-4"></div>
-            <div id="card-resumo-geral-container" class="mb-4" style="display: none;"></div>
 
             <div class="row">
                 <div class="col-lg-8 mb-4">
@@ -554,6 +590,7 @@
         let currentLeftoversForPrinting = [];
         let activeLoads = {};
         let manualLoadInProgress = null;
+        let statusChartInstance = null; // Para o gráfico
 
 
         const defaultConfigs = {
@@ -933,8 +970,7 @@
                 if(el) el.innerHTML = '';
             });
 
-            document.getElementById('card-resumo-geral-container').innerHTML = '';
-            document.getElementById('card-resumo-geral-container').style.display = 'none';
+            document.getElementById('operation-summary').style.display = 'none';
 
             document.getElementById('pedidosEspeciaisInput').value = '';
             document.getElementById('bloquearPedidoInput').value = '';
@@ -1005,7 +1041,7 @@
 
                     const clientesComBloqueio = new Set();
                     pedidos.forEach(p => {
-                        if (String(p['BLOQ.']).trim()) { // Verifica se a coluna BLOQ. tem qualquer valor
+                        if (String(p['BLOQ.']).trim()) { 
                             clientesComBloqueio.add(normalizeClientId(p.Cliente));
                         }
                     });
@@ -1088,18 +1124,9 @@
                     }, {});
                     displayGerais(resultadoGeralDiv, gruposGerais);
 
-                    const stats = {
-                        totalPlanilha: planilhaData.length,
-                        pesoTotal: planilhaData.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0),
-                        pedidosEspeciais: pedidosEspeciaisProcessados.size,
-                        pedidosBloqueados: pedidosManualmenteBloqueados.length,
-                        pedidosToco: tocoPedidoIds.size,
-                        pedidos34Auto: tresQuartosLoads.reduce((sum, load) => sum + load.pedidos.length, 0),
-                        pedidosFiltrados: pedidosComCFNumericoIsolado.length + rota1SemCarga.length,
-                        pedidosDisponiveis: pedidosGeraisAtuais.length,
-                        pesoDisponivel: pedidosGeraisAtuais.reduce((sum, p) => sum + (parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0), 0),
-                    };
-                    displayResumoGeral(stats);
+                    // CALCULAR E EXIBIR O NOVO PAINEL DE RESUMO
+                    const projectionStats = calculateProjectionStats(pedidos, tresQuartosLoads, gruposToco);
+                    displayProjectionDashboard(projectionStats);
                     
                     statusDiv.innerHTML = `<p class="text-success">Processamento concluído com sucesso!</p>`;
                 } catch (error) { 
@@ -1138,26 +1165,27 @@
             alert(`${pedidosAtrasados.length} pedidos em atraso serão exportados.`);
 
             // Define o cabeçalho EXATO e na ORDEM desejada
-            const header = [
-                'Cliente', 'Nome_Cliente', 'Cidade', 'UF', 'Num_Pedido', 
-                'Quilos_Saldo', 'Predat', 'Dat_Ped', 'Coluna5'
+            const colunasParaExportar = [
+                'Cliente',
+                'Nome_Cliente',
+                'Cidade',
+                'UF',
+                'Num_Pedido',
+                'Quilos_Saldo',
+                'Predat',
+                'Dat_Ped',
+                'Coluna5'
             ];
             
             const dataToExport = pedidosAtrasados.map(p => {
                 const newP = {...p};
                 if (newP.Predat instanceof Date) { newP.Predat = newP.Predat.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
                 if (newP.Dat_Ped instanceof Date) { newP.Dat_Ped = newP.Dat_Ped.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
-                
-                // Mapeia o objeto para ter apenas as chaves do cabeçalho
-                let filteredP = {};
-                header.forEach(col => {
-                    filteredP[col] = newP[col];
-                });
-                return filteredP;
+                return newP;
             });
 
             // Cria a planilha usando a ordem exata das colunas
-            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: header });
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: colunasParaExportar });
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
             XLSX.writeFile(workbook, "pedidos_atrasados.xlsx");
@@ -1614,8 +1642,8 @@
                     const clienteId = normalizeClientId(pedido.Cliente);
                     if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) }; }
                     acc[clienteId].pedidos.push(pedido);
-                    acc[clienteId].totalKg += parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
-                    acc[clienteId].totalCubagem += parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+                    acc[clienteId].totalKg += parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                    acc[clienteId].totalCubagem += parseFloat(String(p.Cubagem).replace(',', '.')) || 0;
                     return acc;
                 }, {});
                 const packableGroups = Object.values(clientGroupsMap);
@@ -1943,45 +1971,94 @@
             }
         }
 
-        function displayResumoGeral(stats) {
-            const container = document.getElementById('card-resumo-geral-container');
-            const nf = (num) => num.toLocaleString('pt-BR');
+        function displayProjectionDashboard(stats) {
+            const container = document.getElementById('operation-summary');
+            if (!container) return;
+
+            // Formatação dos números
             const kf = (num) => num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-            const html = `
-            <div class="card">
-                <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo do Processamento</div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <h6 class="text-white-50">TOTAIS DA PLANILHA</h6>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Pedidos no Arquivo <span class="badge bg-primary rounded-pill">${nf(stats.totalPlanilha)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Peso Total no Arquivo <span class="badge bg-primary rounded-pill">${kf(stats.pesoTotal)} kg</span></li>
-                            </ul>
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="text-white-50">PEDIDOS PRÉ-PROCESSADOS</h6>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Carga Especial<span class="badge bg-info rounded-pill">${nf(stats.pedidosEspeciais)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas Toco (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosToco)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas 3/4 Auto (pedidos)<span class="badge bg-warning rounded-pill">${nf(stats.pedidos34Auto)}</span></li>
-                            </ul>
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="text-white-50">DISPONÍVEL PARA MONTAGEM</h6>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Filtrados (CF Num./Rota 1)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosFiltrados)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center"><strong>Pedidos Disponíveis</strong><span class="badge bg-success rounded-pill"><strong>${nf(stats.pedidosDisponiveis)}</strong></span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center"><strong>Peso Disponível</strong><span class="badge bg-success rounded-pill"><strong>${kf(stats.pesoDisponivel)} kg</strong></span></li>
-                            </ul>
-                        </div>
+            // Atualiza os cards
+            document.getElementById('summary-atrasados').textContent = stats.atrasados.count;
+            document.getElementById('summary-total-kg').innerHTML = `${kf(stats.total.kg)} <small class="text-body-secondary fs-4">kg</small>`;
+            document.getElementById('summary-total-cargas').textContent = `~ ${stats.total.count} cargas estimadas`;
+
+            // Atualiza a projeção por veículo
+            const veiculosContainer = document.getElementById('summary-veiculos');
+            veiculosContainer.innerHTML = `
+                <div class="col-6 mb-2">
+                    <div class="d-flex justify-content-between">
+                        <span><i class="bi bi-box-seam-fill me-2 text-success"></i>Fiorino</span>
+                        <span class="fw-bold">${kf(stats.fiorino.kg)} kg (~${stats.fiorino.count} cargas)</span>
                     </div>
                 </div>
-            </div>`;
-            container.innerHTML = html;
+                <div class="col-6 mb-2">
+                    <div class="d-flex justify-content-between">
+                        <span><i class="bi bi-truck-front-fill me-2 text-primary"></i>Van</span>
+                        <span class="fw-bold">${kf(stats.van.kg)} kg (~${stats.van.count} cargas)</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="d-flex justify-content-between">
+                        <span><i class="bi bi-truck-flatbed me-2 text-warning"></i>3/4</span>
+                        <span class="fw-bold">${kf(stats.tresQuartos.kg)} kg (${stats.tresQuartos.count} cargas)</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="d-flex justify-content-between">
+                        <span><i class="bi bi-inboxes-fill me-2 text-secondary"></i>Toco</span>
+                        <span class="fw-bold">${kf(stats.toco.kg)} kg (${stats.toco.count} cargas)</span>
+                    </div>
+                </div>
+            `;
+
             container.style.display = 'block';
+        }
+        
+        function calculateProjectionStats(pedidos, tresQuartosLoads, gruposToco) {
+            // 1. Toco
+            const tocoCount = Object.keys(gruposToco).length;
+            const tocoKg = Object.values(gruposToco).reduce((sum, group) => sum + group.totalKg, 0);
+
+            // 2. 3/4
+            const tresQuartosCount = tresQuartosLoads.length;
+            const tresQuartosKg = tresQuartosLoads.reduce((sum, load) => sum + load.totalKg, 0);
+            
+            // 3. Fiorino & Van (Projeção baseada nos pedidos restantes)
+            let fiorinoPotentialKg = 0;
+            let vanPotentialKg = 0;
+            pedidosGeraisAtuais.forEach(p => {
+                const peso = parseFloat(String(p.Quilos_Saldo).replace(',', '.')) || 0;
+                const routeInfo = rotaVeiculoMap[p.Cod_Rota];
+                if (routeInfo) {
+                    if (routeInfo.type === 'fiorino') {
+                        fiorinoPotentialKg += peso;
+                    } else if (routeInfo.type === 'van') {
+                        vanPotentialKg += peso;
+                    }
+                }
+            });
+            
+            const fiorinoPrefCapacity = parseFloat(document.getElementById('fiorinoMaxCapacity').value) || 500;
+            const vanPrefCapacity = parseFloat(document.getElementById('vanMaxCapacity').value) || 1560;
+            const fiorinoProjectedCount = fiorinoPrefCapacity > 0 ? Math.ceil(fiorinoPotentialKg / fiorinoPrefCapacity) : 0;
+            const vanProjectedCount = vanPrefCapacity > 0 ? Math.ceil(vanPotentialKg / vanPrefCapacity) : 0;
+
+            // 4. Atrasados
+            const overdueCount = planilhaData.filter(p => isOverdue(p.Predat) && !String(p['BLOQ.']).trim()).length;
+
+            // 5. Totais
+            const totalKg = tocoKg + tresQuartosKg + fiorinoPotentialKg + vanPotentialKg;
+            const totalCargas = tocoCount + tresQuartosCount + fiorinoProjectedCount + vanProjectedCount;
+
+            return {
+                toco: { count: tocoCount, kg: tocoKg },
+                tresQuartos: { count: tresQuartosCount, kg: tresQuartosKg },
+                fiorino: { count: fiorinoProjectedCount, kg: fiorinoPotentialKg },
+                van: { count: vanProjectedCount, kg: vanPotentialKg },
+                atrasados: { count: overdueCount },
+                total: { count: totalCargas, kg: totalKg }
+            };
         }
         
         function dragStart(event, pedidoId, clienteId, sourceId) {
