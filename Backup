@@ -542,7 +542,6 @@
         }
         
         let planilhaData = [];
-        let originalColumnHeaders = [];
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
         let pedidosComCFNumericoIsolado = [];
@@ -725,12 +724,12 @@
                     const worksheet = workbook.Sheets[firstSheetName];
                     const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                     
-                    let headerRowIndex = -1;
+                    let headerRowIndex = -1, headers = [];
                     for (let i = 0; i < rawData.length; i++) {
                         const row = rawData[i];
                         if (row && row.some(cell => String(cell).trim().toLowerCase() === 'cod_rota')) {
                             headerRowIndex = i;
-                            originalColumnHeaders = row.map(h => h ? String(h).trim() : ''); // Salva os cabeçalhos originais
+                            headers = row.map(h => h ? String(h).trim() : '');
                             break;
                         }
                     }
@@ -740,7 +739,7 @@
                     const dataRows = rawData.slice(headerRowIndex + 1);
                     planilhaData = dataRows.map(row => { 
                         const pedido = {}; 
-                        originalColumnHeaders.forEach((header, i) => { 
+                        headers.forEach((header, i) => { 
                             if (header) { 
                                 if ((header.toLowerCase() === 'predat' || header.toLowerCase() === 'dat_ped')) {
                                     let cellValue = row[i];
@@ -917,7 +916,6 @@
 
         function limparTudo(){
             resetarEstadoGlobal();
-            originalColumnHeaders = []; // Limpa os cabeçalhos também
 
             pedidosEspeciaisProcessados.clear();
             pedidosBloqueados.clear();
@@ -1005,7 +1003,7 @@
 
                     const clientesComBloqueio = new Set();
                     pedidos.forEach(p => {
-                        if (String(p['BLOQ.']).trim()) { // Verifica se a coluna BLOQ. tem qualquer valor
+                        if (String(p['BLOQ.']) === 'C' || String(p['BLOQ.']) === 'V') {
                             clientesComBloqueio.add(normalizeClientId(p.Cliente));
                         }
                     });
@@ -1122,41 +1120,15 @@
         }
 
         function exportarPedidosAtrasados() {
-            if (pedidosGeraisAtuais.length === 0) {
-                alert("Por favor, processe a planilha primeiro para definir as rotas.");
-                return;
-            }
-
-            // Filtra pedidos atrasados E que não estão bloqueados
-            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => isOverdue(p.Predat) && !String(p['BLOQ.']).trim());
-
-            if (pedidosAtrasados.length === 0) {
-                alert("Nenhum pedido em atraso (e não bloqueado) foi encontrado nos resultados processados.");
-                return;
-            }
-
-            alert(`${pedidosAtrasados.length} pedidos em atraso serão exportados.`);
-
-            // Define o cabeçalho EXATO e na ORDEM desejada
-            const header = [
-                'Cliente', 'Nome_Cliente', 'Cidade', 'UF', 'Num_Pedido', 
-                'Quilos_Saldo', 'Predat', 'Dat_Ped', 'Coluna5'
-            ];
-            
+            if (pedidosGeraisAtuais.length === 0) { alert("Por favor, processe a planilha primeiro para definir as rotas."); return; }
+            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => isOverdue(p.Predat));
+            if (pedidosAtrasados.length === 0) { alert("Nenhum pedido em atraso encontrado nos resultados processados."); return; }
+            const header = [ "Empresa", "Cod_Rota", "Den_Rota", "Cliente", "Nome_Cliente", "AGENDAS/PALLET", "Nome_Repres", "Cod_Supervisor", "Nome_Supervisor", "Cod_Regional", "Nome_Regional", "Num_Pedido", "Quilos_Saldo", "OBS", "Predat", "Cidade", "UF", "Dat_Ped", "BLOQ.", "Coluna4", "Coluna5", "CF", "Descricao_CF", "Cubagem", "PED. ATRASO 3D.", "PED. ATRASO 3D.2", "PED. ATRASO 4D.", "PED. ATRASO 4D.2", "PED. ATRASO 6D.", "PED. ATRASO 6D.2" ];
             const dataToExport = pedidosAtrasados.map(p => {
                 const newP = {...p};
                 if (newP.Predat instanceof Date) { newP.Predat = newP.Predat.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
-                if (newP.Dat_Ped instanceof Date) { newP.Dat_Ped = newP.Dat_Ped.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
-                
-                // Mapeia o objeto para ter apenas as chaves do cabeçalho
-                let filteredP = {};
-                header.forEach(col => {
-                    filteredP[col] = newP[col];
-                });
-                return filteredP;
+                return newP;
             });
-
-            // Cria a planilha usando a ordem exata das colunas
             const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: header });
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos Atrasados");
@@ -2104,13 +2076,11 @@
 
 
         function updateLoadUI(loadId) {
-            const activeTabPane = document.querySelector('.tab-pane.active');
-            if (!activeTabPane && (loadId === 'leftovers' || loadId === 'geral')) {
-                console.error("Nenhuma aba ativa encontrada para atualizar a UI.");
-                return;
-            }
-            
+            // CORREÇÃO: Busca o 'leftovers' card dentro da aba ativa para evitar o bug de atualizar o card errado.
             if (loadId === 'leftovers' || loadId === 'geral') {
+                const activeTabPane = document.querySelector('.tab-pane.active');
+                if (!activeTabPane) return; 
+
                 const leftoversCard = activeTabPane.querySelector('[data-load-id="leftovers"]');
                 const geraisDiv = document.getElementById('resultado-geral');
 
@@ -2204,9 +2174,9 @@
                 pedidos: [], totalKg: 0, totalCubagem: 0, vehicleType: 'fiorino' 
             };
             
-            const activeTabPane = document.querySelector('.tab-pane.active');
-            if (!activeTabPane) {
-                alert("Erro: Nenhuma aba de trabalho está ativa.");
+            const workspaceCardBody = document.getElementById('vehicleTabsContent').parentElement;
+            if (!workspaceCardBody) {
+                alert("Erro: Não foi possível encontrar a Mesa de Trabalho para criar o painel.");
                 return;
             }
 
@@ -2231,9 +2201,9 @@
                     </div>
                 </div>`;
             
-            activeTabPane.appendChild(builderWrapper);
+            workspaceCardBody.appendChild(builderWrapper);
             
-            const startBtn = activeTabPane.querySelector('#start-manual-load-btn');
+            const startBtn = document.getElementById('start-manual-load-btn');
             if (startBtn) startBtn.style.display = 'none';
             updateManualBuilderUI(); 
         }
@@ -2308,7 +2278,7 @@
             if (builderWrapper) builderWrapper.remove();
             manualLoadInProgress = null;
             
-            const startBtn = activeTabPane.querySelector('#start-manual-load-btn');
+            const startBtn = document.getElementById('start-manual-load-btn');
             if(startBtn) startBtn.style.display = 'inline-block';
             
             setTimeout(() => {
@@ -2332,8 +2302,7 @@
 
              updateLoadUI('leftovers'); 
              
-             const activeTabPane = document.querySelector('.tab-pane.active');
-             const startBtn = activeTabPane ? activeTabPane.querySelector('#start-manual-load-btn') : null;
+             const startBtn = document.getElementById('start-manual-load-btn');
              if(startBtn) startBtn.style.display = 'inline-block';
         }
 
