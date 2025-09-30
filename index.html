@@ -33,7 +33,6 @@
             font-family: 'Inter', sans-serif;
         }
 
-        /* --- TELA DE LOGIN REFORMULADA --- */
         #login-container {
             position: fixed;
             top: 0;
@@ -106,7 +105,6 @@
         
         #auth-message { min-height: 24px; }
 
-        /* --- DASHBOARD REFORMULADO --- */
         #dashboard-content {
             animation: fadeIn 0.6s ease-in-out;
         }
@@ -204,7 +202,6 @@
             box-shadow: 0 0 15px rgba(54, 119, 245, 0.5);
         }
 
-        /* --- AJUSTE DE ROLAGEM (ALTERADO) --- */
         .workspace-tab-pane, #pedidos-disponiveis-card .card-body {
             max-height: none;
             overflow-y: visible;
@@ -216,7 +213,6 @@
              max-width: 400px;
         }
 
-        /* --- ESTILOS DE IMPRESSÃO (Mantidos) --- */
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             #login-container, #dashboard-content .no-print { display: none !important; }
@@ -805,7 +801,6 @@
                                 }
                             } 
                         }); 
-                        // Corrigir tipos de dados numéricos
                         pedido.Quilos_Saldo = parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
                         pedido.Cubagem = parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
                         return pedido; 
@@ -1593,7 +1588,7 @@
             return leftoverWeight + loadPenalty;
         }
 
-        function runSimulatedAnnealing(packableGroups, vehicleType) {
+        function runSimulatedAnnealing(packableGroups, vehicleType, uiText) {
              return new Promise(resolve => {
                 const initialTemp = 1000;
                 const coolingRate = 0.993;
@@ -1678,7 +1673,7 @@
                     currentTemp *= coolingRate;
                     const progress = Math.min(100, 100 * (1 - Math.log(currentTemp) / Math.log(initialTemp)));
                     progressBar.style.width = `${progress}%`;
-                    statusText.textContent = `Otimizando... (Nível 2)`;
+                    statusText.textContent = uiText;
                     detailsText.textContent = `Sobra Atual: ${bestSolution.leftovers.reduce((s,g) => s + g.totalKg, 0).toFixed(2)} kg`;
 
                     if (currentTemp > 1) {
@@ -1700,7 +1695,7 @@
                                 finalLeftovers.push(...groups);
                             }
                         });
-                        console.log(`Nível 2: Otimização para ${vehicleType} finalizada com ${finalLeftovers.reduce((s, g) => s + g.totalKg, 0).toFixed(2)}kg de sobra.`);
+                        console.log(`Otimização para ${vehicleType} finalizada com ${finalLeftovers.reduce((s, g) => s + g.totalKg, 0).toFixed(2)}kg de sobra.`);
                         resolve({ loads: finalLoads, leftovers: finalLeftovers });
                     }
                 }
@@ -1719,9 +1714,9 @@
             if (leftovers.length === 0) {
                 return { refinedLoads: loads, remainingLeftovers: leftovers };
             }
-
+            
             let attempts = 0;
-            const maxAttempts = leftovers.length * loads.length * 2; // Heurística para evitar loops infinitos
+            const maxAttempts = (leftovers.length * loads.length) || 1; 
 
             do {
                 improvementMade = false;
@@ -1745,7 +1740,7 @@
                             const groupToSwapOut = clientGroupsInLoad[k];
                             
                             const tempLoadAfterRemoval = {
-                                pedidos: load.pedidos.filter(p => groupToSwapOut.pedidos.find(gp => gp.Num_Pedido === p.Num_Pedido) === undefined),
+                                pedidos: load.pedidos.filter(p => !groupToSwapOut.pedidos.some(gp => gp.Num_Pedido === p.Num_Pedido)),
                                 totalKg: load.totalKg - groupToSwapOut.totalKg,
                                 totalCubagem: load.totalCubagem - groupToSwapOut.totalCubagem,
                             };
@@ -1833,7 +1828,12 @@
             const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
             
             try {
-                if(optimizationLevel !== '1') modal.show();
+                if(optimizationLevel !== '1') {
+                    document.getElementById('processing-progress-bar').style.width = '0%';
+                    modal.show();
+                } else {
+                     resultadoDiv.insertAdjacentHTML('beforeend', '<div id="spinner-temp-container" class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Analisando estratégias e montando cargas...</span></div>');
+                }
 
                 switch (optimizationLevel) {
                     case '1':
@@ -1842,10 +1842,10 @@
                         break;
                     case '3':
                         console.log(`Executando Nível 3: Otimização Exaustiva (SA + Polimento) para ${vehicleType}...`);
-                        const saResultForPolish = await runSimulatedAnnealing(packableGroups, vehicleType);
+                        const saResultForPolish = await runSimulatedAnnealing(packableGroups, vehicleType, 'Otimizando... (Nível 3 - Fase 1/2)');
                         
-                        document.getElementById('processing-status-text').textContent = 'Refinando solução...';
-                        document.getElementById('processing-details-text').textContent = 'Aplicando trocas locais.';
+                        document.getElementById('processing-status-text').textContent = 'Otimizando... (Nível 3 - Fase 2/2)';
+                        document.getElementById('processing-details-text').textContent = 'Aplicando polimento com trocas locais.';
                         document.getElementById('processing-progress-bar').style.width = '100%';
 
                         const polished = refinarCargasComTrocas(saResultForPolish.loads, saResultForPolish.leftovers, vehicleType);
@@ -1854,11 +1854,16 @@
                     case '2':
                     default:
                         console.log(`Executando Nível 2: Otimização Avançada (SA) para ${vehicleType}...`);
-                        optimizationResult = await runSimulatedAnnealing(packableGroups, vehicleType);
+                        optimizationResult = await runSimulatedAnnealing(packableGroups, vehicleType, 'Otimizando... (Nível 2)');
                         break;
                 }
             } finally {
-                if(optimizationLevel !== '1') modal.hide();
+                if(optimizationLevel !== '1') {
+                    modal.hide();
+                } else {
+                    const spinner = document.getElementById('spinner-temp-container');
+                    if (spinner) spinner.remove();
+                }
             }
 
             optimizationResult.loads.forEach(load => { load.vehicleType = vehicleType; });
