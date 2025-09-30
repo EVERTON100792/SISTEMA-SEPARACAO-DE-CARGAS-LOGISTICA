@@ -1163,7 +1163,8 @@
                 return;
             }
 
-            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => isOverdue(p.Predat) && !String(p['BLOQ.']).trim());
+            // Nova linha:
+            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => isOverdue(p.Predat) && !String(p['BLOQ.']).trim() && !String(p.Coluna5 || '').toUpperCase().includes('TRANSF. TODESCH'));
 
             if (pedidosAtrasados.length === 0) {
                 alert("Nenhum pedido em atraso (e não bloqueado) foi encontrado nos resultados processados.");
