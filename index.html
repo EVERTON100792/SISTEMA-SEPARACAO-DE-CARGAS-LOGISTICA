@@ -205,7 +205,6 @@
         }
 
         /* --- AJUSTE DE ROLAGEM (ALTERADO) --- */
-        /* Remove a rolagem interna do painel Mesa de Trabalho e do painel Pedidos Disponíveis. */
         .workspace-tab-pane, #pedidos-disponiveis-card .card-body {
             max-height: none;
             overflow-y: visible;
@@ -1564,7 +1563,7 @@
                 
                 if (load.pedidos.length > 0 && (load.totalKg >= config.minKg || (hasPriority && allowPriorityOverride))) {
                     finalLoads.push(load);
-                } else {
+                } else if (load.pedidos.length > 0) {
                     const clientGroupsInFailedLoad = Object.values(load.pedidos.reduce((acc, p) => {
                         const clienteId = normalizeClientId(p.Cliente);
                         if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) }; }
@@ -1586,7 +1585,6 @@
             const config = getVehicleConfig(vehicleType);
             const leftoverWeight = solution.leftovers.reduce((sum, group) => sum + group.totalKg, 0);
             const loadPenalty = solution.loads.reduce((sum, load) => {
-                // Penaliza fortemente cargas abaixo do peso mínimo
                 if (load.totalKg > 0 && load.totalKg < config.minKg) {
                     return sum + 1000 + (config.minKg - load.totalKg);
                 }
@@ -1620,7 +1618,6 @@
                         if (moveType < 0.7 && neighborSolution.leftovers.length > 0) {
                             const leftoverIndex = Math.floor(Math.random() * neighborSolution.leftovers.length);
                             const groupToPlace = neighborSolution.leftovers[leftoverIndex];
-                            
                             const targetLoadIndex = neighborSolution.loads.length > 0 ? Math.floor(Math.random() * (neighborSolution.loads.length + 1)) : 0;
 
                             if (targetLoadIndex < neighborSolution.loads.length) {
@@ -1632,7 +1629,7 @@
                                     neighborSolution.leftovers.splice(leftoverIndex, 1);
                                     moveMade = true;
                                }
-                            } else { 
+                            } else if (isMoveValid({pedidos:[], totalKg:0, totalCubagem:0}, groupToPlace, vehicleType)) { 
                                neighborSolution.loads.push(groupToPlace);
                                neighborSolution.leftovers.splice(leftoverIndex, 1);
                                moveMade = true;
@@ -1682,7 +1679,7 @@
                     const progress = Math.min(100, 100 * (1 - Math.log(currentTemp) / Math.log(initialTemp)));
                     progressBar.style.width = `${progress}%`;
                     statusText.textContent = `Otimizando... (Nível 2)`;
-                    detailsText.textContent = `Sobra Atual: ${getSolutionEnergy(bestSolution, vehicleType).toFixed(2)} kg`;
+                    detailsText.textContent = `Sobra Atual: ${bestSolution.leftovers.reduce((s,g) => s + g.totalKg, 0).toFixed(2)} kg`;
 
                     if (currentTemp > 1) {
                         requestAnimationFrame(doTemperatureStep);
@@ -1723,8 +1720,12 @@
                 return { refinedLoads: loads, remainingLeftovers: leftovers };
             }
 
+            let attempts = 0;
+            const maxAttempts = leftovers.length * loads.length * 2; // Heurística para evitar loops infinitos
+
             do {
                 improvementMade = false;
+                attempts++;
                 for (let i = 0; i < leftovers.length; i++) {
                     const leftoverGroup = leftovers[i];
 
@@ -1742,21 +1743,14 @@
 
                         for (let k = 0; k < clientGroupsInLoad.length; k++) {
                             const groupToSwapOut = clientGroupsInLoad[k];
-
+                            
                             const tempLoadAfterRemoval = {
-                                pedidos: load.pedidos.filter(p => !groupToSwapOut.pedidos.includes(p)),
+                                pedidos: load.pedidos.filter(p => groupToSwapOut.pedidos.find(gp => gp.Num_Pedido === p.Num_Pedido) === undefined),
                                 totalKg: load.totalKg - groupToSwapOut.totalKg,
                                 totalCubagem: load.totalCubagem - groupToSwapOut.totalCubagem,
                             };
                             
                             if (isMoveValid(tempLoadAfterRemoval, leftoverGroup, vehicleType)) {
-                                const tempLoadAfterAdd = {
-                                    pedidos: [...tempLoadAfterRemoval.pedidos, ...leftoverGroup.pedidos],
-                                    totalKg: tempLoadAfterRemoval.totalKg + leftoverGroup.totalKg,
-                                    totalCubagem: tempLoadAfterRemoval.totalCubagem + leftoverGroup.totalCubagem
-                                };
-
-                                // Verifica se o grupo que saiu cabe nas sobras (trivial) ou em outra carga. Para simplificar, só trocamos.
                                 const idsToRemove = new Set(groupToSwapOut.pedidos.map(p => p.Num_Pedido));
                                 load.pedidos = load.pedidos.filter(p => !idsToRemove.has(p.Num_Pedido));
                                 load.totalKg -= groupToSwapOut.totalKg;
@@ -1778,7 +1772,9 @@
                     }
                     if (improvementMade) break;
                 }
-            } while (improvementMade && leftovers.length > 0);
+            } while (improvementMade && leftovers.length > 0 && attempts < maxAttempts);
+
+            if(attempts >= maxAttempts) console.warn("Polimento (Nível 3) interrompido para evitar loop infinito.");
 
             return { refinedLoads: loads, remainingLeftovers: leftovers };
         }
