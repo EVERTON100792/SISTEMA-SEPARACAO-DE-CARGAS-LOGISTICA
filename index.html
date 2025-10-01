@@ -1023,10 +1023,10 @@
                     displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueados);
                     
                     pedidosDisponiveis = pedidosDisponiveis.filter(p => !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)));
+                    let pedidosParaProcessamento = planilhaData.filter(p => p.Num_Pedido && !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)));
 
                     const col5ValuesForRota1 = ['TBL 08', 'TBL TODESCHINI'];
                     rota1SemCarga = pedidosDisponiveis.filter(p => {
-                        // A variável 'pedidosParaProcessamento' foi removida daqui para evitar erro de referência.
                         const codRota = String(p.Cod_Rota || '').trim();
                         const cfIsNumeric = isNumeric(p.CF);
                         const col5 = String(p.Coluna5 || '').trim();
@@ -1043,6 +1043,7 @@
                     // Otimização: Identificar clientes com bloqueio uma única vez
                     const clientesComBloqueio = new Set();
                     pedidos.forEach(p => {
+                    pedidosParaProcessamento.forEach(p => {
                         if (String(p['BLOQ.']).trim()) { 
                             clientesComBloqueio.add(normalizeClientId(p.Cliente));
                         }
@@ -1050,7 +1051,6 @@
 
                     const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                     // Otimização: Identificar pedidos 'Toco' e seus CFs repetidos
-                    let pedidosParaProcessamento = planilhaData.filter(p => p.Num_Pedido && !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)));
                     const pedidosTocoBase = pedidosParaProcessamento.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                     const cfCounts = {};
                     pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
@@ -1074,11 +1074,19 @@
                     pedidos.forEach(p => {
                         if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
                         if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
+                            pedidosComCFNumericoIsolado.push(p);
                     // --- Otimização Principal: Loop Único de Processamento ---
                     const rotaMin = document.getElementById('rotaInicialInput').value ? parseInt(document.getElementById('rotaInicialInput').value, 10) : 0;
                     const rotaMax = document.getElementById('rotaFinalInput').value ? parseInt(document.getElementById('rotaFinalInput').value, 10) : 99999;
                     const col5ValuesForRota1 = ['TBL 08', 'TBL TODESCHINI'];
                     let pedidosParaAnalise3_4 = [];
+
+                    // Limpa as listas antes de preenchê-las novamente
+                    pedidosManualmenteBloqueados = [];
+                    rota1SemCarga = [];
+                    gruposToco = {};
+                    tocoPedidoIds.clear();
+                    pedidosComCFNumericoIsolado = [];
 
                     pedidosParaProcessamento.forEach(p => {
                         const numPedidoStr = String(p.Num_Pedido);
@@ -1088,11 +1096,17 @@
                             pedidosManualmenteBloqueados.push(p);
                             return;
                         }
+                        if (['21', '23', '17'].includes(String(p.Coluna4))) return;
+                        const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
+                        if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return;
+                        if (isNumeric(p.CF)) {
 
                         // 2. Pedidos Toco
                         if (pedidosTocoIds.has(p.Num_Pedido)) {
                             const cf = p.CF;
-                            if (!gruposToco[cf]) { gruposToco[cf] = { pedidos: [], totalKg: 0, totalCubagem: 0 }; }
+                            if (!gruposToco[cf]) { 
+                                gruposToco[cf] = { pedidos: [], totalKg: 0, totalCubagem: 0 }; 
+                            }
                             gruposToco[cf].pedidos.push(p);
                             gruposToco[cf].totalKg += p.Quilos_Saldo;
                             gruposToco[cf].totalCubagem += p.Cubagem;
@@ -1101,7 +1115,8 @@
                         }
 
                         // 3. Rota 1 para alteração
-                        if (String(p.Cod_Rota || '').trim() === '1' && !isNumeric(p.CF) && col5ValuesForRota1.includes(String(p.Coluna5 || '').trim())) {
+                        const codRotaStr = String(p.Cod_Rota || '').trim();
+                        if (codRotaStr === '1' && !isNumeric(p.CF) && col5ValuesForRota1.includes(String(p.Coluna5 || '').trim())) {
                             rota1SemCarga.push(p);
                             return;
                         }
@@ -1109,17 +1124,13 @@
                         // 4. Filtros Gerais (CF Numérico, Bloqueio por regra, etc.)
                         if (String(p.Coluna4) == '500' || ['21', '23', '17'].includes(String(p.Coluna4)) || isNumeric(p.CF) || clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
                             pedidosComCFNumericoIsolado.push(p);
-                            return;
-                        }
-                        if (['21', '23', '17'].includes(String(p.Coluna4))) return;
-
-                        // 5. Filtro de Faixa de Rotas
-                        const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
-                        if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return;
-                        if (isNumeric(p.CF)) {
-                            pedidosComCFNumericoIsolado.push(p);
                         } else {
                             pedidosParaProcessamento.push(p);
+                            return;
+                        }
+
+                        // 5. Filtro de Faixa de Rotas
+                        const rotaAtualNum = parseInt(codRotaStr, 10);
                         if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) {
                             // Ignora se estiver fora da faixa
                             return;
@@ -1142,6 +1153,7 @@
                     const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
                     const LARGE_ORDER_KG = 1700;
                     const largeOrdersByRoute = pedidosParaProcessamento.reduce((acc, p) => {
+                    const LARGE_ORDER_KG = 1700;                    
                     const largeOrdersByRoute = pedidosParaAnalise3_4.reduce((acc, p) => {
                         const peso = p.Quilos_Saldo;
                         if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } return acc;
@@ -1169,9 +1181,6 @@
                                 if (newLoad.totalKg + orderKg <= MAX_KG_3_4) { 
                                     newLoad.pedidos.push(order); 
                                     newLoad.totalKg += orderKg; 
-                                if (newLoad.totalKg + orderKg <= MAX_KG_3_4) {
-                                    newLoad.pedidos.push(order);
-                                    newLoad.totalKg += orderKg;
                                     newLoad.totalCubagem += order.Cubagem;
                                 }
                             }
