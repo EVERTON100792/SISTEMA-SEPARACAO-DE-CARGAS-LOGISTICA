@@ -1023,10 +1023,10 @@
                     displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueados);
                     
                     pedidosDisponiveis = pedidosDisponiveis.filter(p => !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)));
-                    let pedidosParaProcessamento = planilhaData.filter(p => p.Num_Pedido && !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)));
 
                     const col5ValuesForRota1 = ['TBL 08', 'TBL TODESCHINI'];
                     rota1SemCarga = pedidosDisponiveis.filter(p => {
+                        // A variável 'pedidosParaProcessamento' foi removida daqui para evitar erro de referência.
                         const codRota = String(p.Cod_Rota || '').trim();
                         const cfIsNumeric = isNumeric(p.CF);
                         const col5 = String(p.Coluna5 || '').trim();
@@ -1043,7 +1043,6 @@
                     // Otimização: Identificar clientes com bloqueio uma única vez
                     const clientesComBloqueio = new Set();
                     pedidos.forEach(p => {
-                    pedidosParaProcessamento.forEach(p => {
                         if (String(p['BLOQ.']).trim()) { 
                             clientesComBloqueio.add(normalizeClientId(p.Cliente));
                         }
@@ -1051,6 +1050,7 @@
 
                     const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                     // Otimização: Identificar pedidos 'Toco' e seus CFs repetidos
+                    let pedidosParaProcessamento = planilhaData.filter(p => p.Num_Pedido && !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)));
                     const pedidosTocoBase = pedidosParaProcessamento.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                     const cfCounts = {};
                     pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
