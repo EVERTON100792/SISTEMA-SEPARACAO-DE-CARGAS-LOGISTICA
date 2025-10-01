@@ -1793,7 +1793,7 @@
             return { refinedLoads: loads, remainingLeftovers: leftovers };
         }
 
-        // --- FUNÇÃO DE ROTEAMENTO CORRIGIDA ---
+        // --- FUNÇÃO DE ROTEAMENTO CORRIGIDA E ROBUSTA ---
         async function getCoordinates(cityName) {
             if (!cityName || typeof cityName !== 'string' || cityName.trim() === '') {
                 console.warn("Nome da cidade inválido ou vazio fornecido para geocodificação.");
@@ -1806,14 +1806,10 @@
 
             const fullSearchText = `${trimmedCityName}, PR, Brazil`;
 
-            const BBOX = {
-                min_lon: -55.0,
-                min_lat: -27.0,
-                max_lon: -48.0,
-                max_lat: -22.0
-            };
+            const BBOX = { min_lon: -55.0, min_lat: -27.0, max_lon: -48.0, max_lat: -22.5 };
+            const FOCUS_POINT = { lon: -51.2, lat: -24.7 }; // Ponto central do Paraná
 
-            const apiUrl = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(fullSearchText)}&boundary.rect.min_lon=${BBOX.min_lon}&boundary.rect.min_lat=${BBOX.min_lat}&boundary.rect.max_lon=${BBOX.max_lon}&boundary.rect.max_lat=${BBOX.max_lat}&boundary.country=BRA&sources=openstreetmap`;
+            const apiUrl = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(fullSearchText)}&focus.point.lon=${FOCUS_POINT.lon}&focus.point.lat=${FOCUS_POINT.lat}&boundary.rect.min_lon=${BBOX.min_lon}&boundary.rect.min_lat=${BBOX.min_lat}&boundary.rect.max_lon=${BBOX.max_lon}&boundary.rect.max_lat=${BBOX.max_lat}&boundary.country=BRA&sources=openstreetmap`;
 
             try {
                 const response = await fetch(apiUrl);
@@ -1822,18 +1818,37 @@
                 }
                 const data = await response.json();
 
-                let bestFeature = null;
                 if (data.features && data.features.length > 0) {
-                    bestFeature = data.features.find(f => f.properties.region && f.properties.region.toUpperCase() === 'PARANÁ') || data.features[0];
-                }
+                    let bestFeature = null;
 
-                if (bestFeature) {
-                    const coords = bestFeature.geometry.coordinates; // [lon, lat]
-                    geocodeCache[trimmedCityName] = coords;
-                    return coords;
+                    // 1. Tenta encontrar a melhor correspondência que a API diz ser do Paraná
+                    bestFeature = data.features.find(f =>
+                        f.properties.region && f.properties.region.toUpperCase().includes('PARANÁ')
+                    );
+                    
+                    // 2. Se não encontrou, procura o PRIMEIRO resultado que esteja DENTRO do nosso BBOX
+                    if (!bestFeature) {
+                        console.warn(`Não foi encontrada uma correspondência de região 'Paraná' para '${cityName}'. Verificando coordenadas de todos os resultados...`);
+                        bestFeature = data.features.find(f => {
+                            const coords = f.geometry.coordinates;
+                            return (coords[0] >= BBOX.min_lon && coords[0] <= BBOX.max_lon &&
+                                    coords[1] >= BBOX.min_lat && coords[1] <= BBOX.max_lat);
+                        });
+                    }
+
+                    if (bestFeature) {
+                        const coords = bestFeature.geometry.coordinates;
+                        console.log(`Geocodificação para '${cityName}': Encontrado '${bestFeature.properties.label}' em [${coords}].`);
+                        geocodeCache[trimmedCityName] = coords;
+                        return coords;
+                    } else {
+                        // Se nenhum resultado estiver dentro da nossa área, a busca falha.
+                        console.error(`ERRO DE GEOCODIFICAÇÃO: Nenhum resultado encontrado para '${cityName}' dentro do BBOX definido. API retornou:`, data.features.map(f => f.properties.label));
+                        return null;
+                    }
                 }
                 
-                throw new Error(`'${trimmedCityName}' não encontrada pela API de geocodificação dentro da área definida.`);
+                throw new Error(`'${trimmedCityName}' não foi encontrada pela API de geocodificação.`);
 
             } catch (error) {
                 console.error(`Falha ao geocodificar '${cityName}':`, error);
@@ -2022,13 +2037,13 @@
                         const successfulCoords = (await Promise.all(cityCoordsPromises)).filter(coord => coord !== null);
 
                         if (successfulCoords.length === 0) {
-                            console.error(`Não foi possível geocodificar nenhuma cidade para a carga ${load.numero}: ${uniqueCities.join(', ')}`);
+                            console.error(`Não foi possível geocodificar nenhuma cidade para a carga: ${uniqueCities.join(', ')}`);
                             load.distance = -2; // Código de erro: Falha na geocodificação
                             return;
                         }
                         
                         if (successfulCoords.length < uniqueCities.length) {
-                             console.warn(`Apenas ${successfulCoords.length} de ${uniqueCities.length} cidades foram geocodificadas para a carga ${load.numero}. A distância pode ser imprecisa.`);
+                             console.warn(`Apenas ${successfulCoords.length} de ${uniqueCities.length} cidades foram geocodificadas para esta carga. A distância pode ser imprecisa.`);
                         }
 
                         const calculatedDistance = await calculateRouteDistance(successfulCoords);
@@ -2129,7 +2144,6 @@
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">CARGA COM PRIORIDADE</span>' : '';
             const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
 
-            // --- TRECHO MODIFICADO PARA INCLUIR DISTÂNCIA E ERROS ---
             let distanceHtml = '';
             if (load.distance !== undefined && vehicleType === 'fiorino') {
                 if (load.distance === -1) {
@@ -2146,7 +2160,6 @@
                     distanceHtml = `<span class="ms-3 border-start border-light ps-3 d-none d-md-inline"><strong>Distância:</strong> ${load.distance.toFixed(1)} km ${rankBadge}</span>`;
                 }
             }
-            // --- FIM DO TRECHO MODIFICADO ---
 
             const config = getVehicleConfig(vehicleType);
             const maxKg = config.hardMaxKg;
