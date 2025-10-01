@@ -481,7 +481,7 @@
                     <div class="card" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                            <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis</h2>
-                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
+                            <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
                         </div>
                        <div class="card-body">
                            <p class="card-subtitle mb-3 text-body-secondary small">Pedidos sem CF numérico, agrupados por rota.</p>
@@ -558,7 +558,6 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13ZnNpdHZvc2h3aXBtdmdjZG1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTY3OTIsImV4cCI6MjA3NDMzMjc5Mn0.DvXQ_HMMnJZyQh17C6N426r1X9AeYjIMpXVbTRspFq0';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        // A chave de API foi corrigida para o valor original e funcional
         const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImQ4NjhkYzVlMDc5MTRiYmNiY2JhNmFjZTcxMmNiNTM3IiwiaCI6Im11cm11cjY0In0=';
         const SELMI_COORDS = [-51.3698, -23.3033]; // Coordenadas do Pastificio Selmi em Rolândia, PR [longitude, latitude]
         const geocodeCache = {};
@@ -872,15 +871,15 @@
              if (!pedidoEncontrado) {
                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                  if (originalPedido) {
-                                     pedidoEncontrado = originalPedido;
-                                     if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                                         local = 'Bloqueado Manualmente por você.';
-                                     } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                                         local = 'Alocado na Carga Especial.';
-                                     }
-                                     else {
-                                         local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
-                                     }
+                                         pedidoEncontrado = originalPedido;
+                                         if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                                             local = 'Bloqueado Manualmente por você.';
+                                         } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                                             local = 'Alocado na Carga Especial.';
+                                         }
+                                         else {
+                                             local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
+                                         }
                  }
             }
 
@@ -889,7 +888,7 @@
                 if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                            <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                             <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
                                          buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
@@ -984,8 +983,8 @@
             atualizarListaBloqueados();
 
             dropZoneText.innerHTML = `<i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                         <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                         <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+                                       <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
+                                       <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
             
             planilhaData = [];
             processarBtn.disabled = true;
@@ -1854,55 +1853,81 @@
             }
         }
 
+        // <<<<<<<<<< CÓDIGO CORRIGIDO ESTÁ AQUI >>>>>>>>>>
         async function calculateRouteDistance(cityCoordinates) {
             if (!cityCoordinates || cityCoordinates.length === 0) return 0;
 
-            // Transforma as coordenadas da cidade no formato "jobs" exigido pela API de Otimização.
-            const jobs = cityCoordinates.map((coord, index) => ({
-                id: index + 1,
-                location: coord
-            }));
-
-            // Define um veículo que começa e termina no depósito (Pastifício Selmi).
-            const vehicles = [{
-                id: 1,
-                profile: 'driving-car',
-                start: SELMI_COORDS,
-                end: SELMI_COORDS
-            }];
-
-            try {
-                const response = await fetch('https://api.openrouteservice.org/v2/optimization', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': ORS_API_KEY,
-                        'Content-Type': 'application/json; charset=utf-8'
-                    },
-                    body: JSON.stringify({ jobs, vehicles })
-                });
-
-                if (!response.ok) {
-                    const errorBody = await response.text();
-                    console.error("Erro da API de Otimização:", errorBody);
-                    throw new Error(`Erro de rede ou da API de Otimização: ${response.status} ${response.statusText}`);
+            // Se houver apenas uma cidade, use a API de Direções (mais simples e rápida)
+            if (cityCoordinates.length === 1) {
+                try {
+                    const response = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': ORS_API_KEY,
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
+                        body: JSON.stringify({ coordinates: [SELMI_COORDS, cityCoordinates[0], SELMI_COORDS] }) // Rota: Depósito -> Cidade -> Depósito
+                    });
+                    if (!response.ok) throw new Error('Falha na API de Direções');
+                    const data = await response.json();
+                    if (data.routes && data.routes[0]) {
+                        return data.routes[0].summary.distance / 1000; // Distância em km
+                    }
+                    return -2; // Código de erro: Resposta inesperada
+                } catch (error) {
+                    console.error('Erro ao calcular rota simples:', error);
+                    return -1; // Código de erro: Falha de API
                 }
+            }
 
-                const data = await response.json();
+            // Para múltiplas cidades, use a API de Matriz para encontrar uma boa rota
+            const locations = [SELMI_COORDS, ...cityCoordinates];
+            try {
+                const matrixResponse = await fetch(`https://api.openrouteservice.org/v2/matrix/driving-car`, {
+                    method: 'POST',
+                    headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ locations, metrics: ["distance"] })
+                });
+                if (!matrixResponse.ok) throw new Error('Falha na API de Matriz');
+                const matrixData = await matrixResponse.json();
+                const distances = matrixData.distances;
 
-                // A distância total da rota otimizada está em summary.distance
-                if (data.summary && data.summary.distance !== undefined) {
-                    const distanceMeters = data.summary.distance;
-                    return distanceMeters / 1000; // Converte para km
+                // Algoritmo do Vizinho Mais Próximo (uma heurística simples para o caixeiro viajante)
+                let totalDistance = 0;
+                let currentLocation = 0; // Começa no depósito (índice 0)
+                let unvisited = new Set(Array.from({ length: cityCoordinates.length }, (_, i) => i + 1));
+                
+                while (unvisited.size > 0) {
+                    let nearestDistance = Infinity;
+                    let nearestLocation = -1;
+
+                    unvisited.forEach(locationIndex => {
+                        if (distances[currentLocation][locationIndex] < nearestDistance) {
+                            nearestDistance = distances[currentLocation][locationIndex];
+                            nearestLocation = locationIndex;
+                        }
+                    });
+
+                    if (nearestLocation !== -1) {
+                        totalDistance += nearestDistance;
+                        currentLocation = nearestLocation;
+                        unvisited.delete(nearestLocation);
+                    } else {
+                        break; // Não encontrou um próximo, encerra
+                    }
                 }
                 
-                console.warn("API de otimização não retornou um sumário de rota para as coordenadas:", cityCoordinates, data);
-                return 0;
+                // Adiciona a distância de volta para o depósito
+                totalDistance += distances[currentLocation][0];
+
+                return totalDistance / 1000; // Converte para km
 
             } catch (error) {
-                console.error('Erro ao calcular rota otimizada:', error);
-                return -1; // Retorna -1 para indicar um erro de API/rede
+                console.error('Erro ao calcular rota com matriz:', error);
+                return -1; // Retorna -1 para indicar erro de API
             }
         }
+        // <<<<<<<<<< FIM DO CÓDIGO CORRIGIDO >>>>>>>>>>
 
 
         // --- FUNÇÃO PRINCIPAL DE MONTAGEM (ATUALIZADA) ---
@@ -2100,7 +2125,7 @@
             
             const generatedLoads = allLoads.filter(l => l.pedidos.length > 0);
             if(generatedLoads.length === 0){
-                   html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
+                  html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
             } else {
                 generatedLoads.forEach(load => {
                     html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType]);
