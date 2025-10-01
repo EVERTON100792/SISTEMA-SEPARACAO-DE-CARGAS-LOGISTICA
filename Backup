@@ -348,9 +348,9 @@
                                                 </div>
                                                 <div class="col-md-7">
                                                      <div class="form-check form-switch mt-2">
-                                                        <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
-                                                        <label class="form-check-label" for="autoProcessCheckbox">Processar automaticamente</label>
-                                                    </div>
+                                                         <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
+                                                         <label class="form-check-label" for="autoProcessCheckbox">Processar automaticamente</label>
+                                                     </div>
                                                 </div>
                                                 <div class="col-md-5 align-self-end">
                                                     <button class="btn btn-primary w-100 py-2" id="processarBtn" onclick="processar()" disabled><i class="bi bi-gear-fill me-2"></i>Processar Cargas</button>
@@ -418,12 +418,12 @@
                                      <div class="card h-100">
                                          <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>4. Carga Especial</h2></div>
                                           <div class="card-body d-flex flex-column">
-                                            <div class="flex-grow-1">
-                                                <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
-                                                <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
-                                            </div>
-                                            <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaEspecial()"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
-                                        </div>
+                                              <div class="flex-grow-1">
+                                                  <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
+                                                  <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
+                                              </div>
+                                              <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaEspecial()"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
+                                          </div>
                                     </div>
                                 </div>
                             </div>
@@ -481,7 +481,7 @@
                     <div class="card" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                            <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis</h2>
-                            <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
+                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
                         </div>
                        <div class="card-body">
                            <p class="card-subtitle mb-3 text-body-secondary small">Pedidos sem CF numérico, agrupados por rota.</p>
@@ -557,6 +557,12 @@
         const SUPABASE_URL = 'https://mwfsitvoshwipmvgcdmc.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13ZnNpdHZvc2h3aXBtdmdjZG1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTY3OTIsImV4cCI6MjA3NDMzMjc5Mn0.DvXQ_HMMnJZyQh17C6N426r1X9AeYjIMpXVbTRspFq0';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // --- INÍCIO DA CONFIGURAÇÃO DA API DE ROTEAMENTO ---
+        const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImQ4NjhkYzVlMDc5MTRiYmNiY2JhNmFjZTcxMmNiNTM3IiwiaCI6Im11cm11cjY0In0=';
+        const SELMI_COORDS = [-51.3698, -23.3033]; // Coordenadas do Pastificio Selmi em Rolândia, PR [longitude, latitude]
+        const geocodeCache = {};
+        // --- FIM DA CONFIGURAÇÃO DA API DE ROTEAMENTO ---
 
         const agendamentoClientCodes = new Set([
             '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '44192', '144457', '145014', '145237', '145322', '146644', '146988', '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196084', '196118', '196405', '196446', '196784', '197168', '197249', '197983', '198187', '198438', '198747', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218578', '218580', '218640', '218820', '218845', '219539', '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
@@ -731,7 +737,7 @@
 
         const rotaVeiculoMap = {
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
-            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
+            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
             '11361': { type: 'tresQuartos', title: 'Rota 11361' }, '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] }, '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] }, '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] }, '11541': { type: 'tresQuartos', title: 'Rota 11541' }
         };
         
@@ -864,18 +870,18 @@
                 if (pedidoEncontrado) { local = 'Pedidos da Rota 1 para Alteração'; }
             }
              if (!pedidoEncontrado) {
-                const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
-                if (originalPedido) {
-                                 pedidoEncontrado = originalPedido;
-                                 if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                                     local = 'Bloqueado Manualmente por você.';
-                                 } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                                     local = 'Alocado na Carga Especial.';
-                                 }
-                                 else {
-                                     local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
-                                 }
-                }
+                 const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
+                 if (originalPedido) {
+                                     pedidoEncontrado = originalPedido;
+                                     if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                                         local = 'Bloqueado Manualmente por você.';
+                                     } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                                         local = 'Alocado na Carga Especial.';
+                                     }
+                                     else {
+                                         local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
+                                     }
+                 }
             }
 
             if (pedidoEncontrado) {
@@ -883,9 +889,9 @@
                 if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                            <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
-                                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                         buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -978,8 +984,8 @@
             atualizarListaBloqueados();
 
             dropZoneText.innerHTML = `<i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                       <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                       <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+                                         <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
+                                         <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
             
             planilhaData = [];
             processarBtn.disabled = true;
@@ -1024,12 +1030,10 @@
                     
                     pedidosDisponiveis = pedidosDisponiveis.filter(p => !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)));
 
-                    const col5ValuesForRota1 = ['TBL 08', 'TBL TODESCHINI'];
                     rota1SemCarga = pedidosDisponiveis.filter(p => {
                         const codRota = String(p.Cod_Rota || '').trim();
                         const cfIsNumeric = isNumeric(p.CF);
-                        const col5 = String(p.Coluna5 || '').trim();
-                        return codRota === '1' && !cfIsNumeric && col5ValuesForRota1.includes(col5);
+                        return codRota === '1' && !cfIsNumeric;
                     });
                     const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
                     displayRota1(resultadoRota1Div, rota1SemCarga);
@@ -1329,9 +1333,9 @@
                 else if (pesoPercentual > 75) progressColor = 'bg-warning';
 
                 const progressBar = `
-                    <div class="progress mt-2" role="progressbar" style="height: 10px;">
-                      <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
-                    </div>`;
+                            <div class="progress mt-2" role="progressbar" style="height: 10px;">
+                                <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
+                            </div>`;
 
                 html += `<div id="${loadId}" class="card mb-3 drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="tresQuartos"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${progressBar}${createTable(load.pedidos, null, loadId)}</div></div>`;
             });
@@ -1588,7 +1592,6 @@
             return leftoverWeight + loadPenalty;
         }
         
-        // **NOVO** Helper para calcular o que é exibido no modal de progresso
         function calculateDisplaySobras(solution, vehicleType) {
             const config = getVehicleConfig(vehicleType);
             let totalSobras = 0;
@@ -1638,9 +1641,9 @@
                                     moveMade = true;
                                }
                             } else if (isMoveValid({pedidos:[], totalKg:0, totalCubagem:0}, groupToPlace, vehicleType)) { 
-                               neighborSolution.loads.push(groupToPlace);
-                               neighborSolution.leftovers.splice(leftoverIndex, 1);
-                               moveMade = true;
+                                neighborSolution.loads.push(groupToPlace);
+                                neighborSolution.leftovers.splice(leftoverIndex, 1);
+                                moveMade = true;
                             }
                         } else if (neighborSolution.loads.length > 0) {
                             const loadIndex = Math.floor(Math.random() * neighborSolution.loads.length);
@@ -1788,8 +1791,99 @@
             return { refinedLoads: loads, remainingLeftovers: leftovers };
         }
 
+        // --- FUNÇÃO DE ROTEAMENTO CORRIGIDA E ROBUSTA ---
+        async function getCoordinates(cityName) {
+            if (!cityName || typeof cityName !== 'string' || cityName.trim() === '') {
+                console.warn("Nome da cidade inválido ou vazio fornecido para geocodificação.");
+                return null;
+            }
+            const trimmedCityName = cityName.trim().toUpperCase();
+            if (geocodeCache[trimmedCityName]) {
+                return geocodeCache[trimmedCityName];
+            }
 
-        // --- FUNÇÃO PRINCIPAL DE MONTAGEM ---
+            const fullSearchText = `${trimmedCityName}, PR, Brazil`;
+
+            const BBOX = { min_lon: -55.0, min_lat: -27.0, max_lon: -48.0, max_lat: -22.5 };
+            const FOCUS_POINT = { lon: -51.2, lat: -24.7 }; // Ponto central do Paraná
+
+            const apiUrl = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(fullSearchText)}&focus.point.lon=${FOCUS_POINT.lon}&focus.point.lat=${FOCUS_POINT.lat}&boundary.rect.min_lon=${BBOX.min_lon}&boundary.rect.min_lat=${BBOX.min_lat}&boundary.rect.max_lon=${BBOX.max_lon}&boundary.rect.max_lat=${BBOX.max_lat}&boundary.country=BRA&sources=openstreetmap`;
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`Erro de rede ou da API: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+
+                if (data.features && data.features.length > 0) {
+                    let bestFeature = null;
+
+                    // 1. Tenta encontrar a melhor correspondência que a API diz ser do Paraná
+                    bestFeature = data.features.find(f =>
+                        f.properties.region && f.properties.region.toUpperCase().includes('PARANÁ')
+                    );
+                    
+                    // 2. Se não encontrou, procura o PRIMEIRO resultado que esteja DENTRO do nosso BBOX
+                    if (!bestFeature) {
+                        console.warn(`Não foi encontrada uma correspondência de região 'Paraná' para '${cityName}'. Verificando coordenadas de todos os resultados...`);
+                        bestFeature = data.features.find(f => {
+                            const coords = f.geometry.coordinates;
+                            return (coords[0] >= BBOX.min_lon && coords[0] <= BBOX.max_lon &&
+                                    coords[1] >= BBOX.min_lat && coords[1] <= BBOX.max_lat);
+                        });
+                    }
+
+                    if (bestFeature) {
+                        const coords = bestFeature.geometry.coordinates;
+                        console.log(`Geocodificação para '${cityName}': Encontrado '${bestFeature.properties.label}' em [${coords}].`);
+                        geocodeCache[trimmedCityName] = coords;
+                        return coords;
+                    } else {
+                        // Se nenhum resultado estiver dentro da nossa área, a busca falha.
+                        console.error(`ERRO DE GEOCODIFICAÇÃO: Nenhum resultado encontrado para '${cityName}' dentro do BBOX definido. API retornou:`, data.features.map(f => f.properties.label));
+                        return null;
+                    }
+                }
+                
+                throw new Error(`'${trimmedCityName}' não foi encontrada pela API de geocodificação.`);
+
+            } catch (error) {
+                console.error(`Falha ao geocodificar '${cityName}':`, error);
+                return null;
+            }
+        }
+
+        async function calculateRouteDistance(cityCoordinates) {
+            if (!cityCoordinates || cityCoordinates.length === 0) return 0;
+            const allCoords = [SELMI_COORDS, ...cityCoordinates, SELMI_COORDS];
+            try {
+                const response = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': ORS_API_KEY,
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    body: JSON.stringify({ "coordinates": allCoords })
+                });
+                if (!response.ok) {
+                    throw new Error(`Erro de rede ou da API de Rota: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                if (data.routes && data.routes.length > 0) {
+                    const distanceMeters = data.routes[0].summary.distance;
+                    return distanceMeters / 1000; // Convert to km
+                }
+                console.warn("API de roteamento não retornou rotas para as coordenadas:", cityCoordinates);
+                return 0;
+            } catch (error) {
+                console.error('Erro ao calcular rota:', error);
+                return -1; // Retorna -1 para indicar um erro de API/rede
+            }
+        }
+
+
+        // --- FUNÇÃO PRINCIPAL DE MONTAGEM (ATUALIZADA) ---
         async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
             
@@ -1846,7 +1940,7 @@
                     document.getElementById('processing-progress-bar').style.width = '0%';
                     modal.show();
                 } else {
-                     resultadoDiv.insertAdjacentHTML('beforeend', '<div id="spinner-temp-container" class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Analisando estratégias e montando cargas...</span></div>');
+                        resultadoDiv.insertAdjacentHTML('beforeend', '<div id="spinner-temp-container" class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Analisando estratégias e montando cargas...</span></div>');
                 }
 
                 switch (optimizationLevel) {
@@ -1922,6 +2016,51 @@
 
             const allLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads ];
 
+            // --- CÁLCULO DE DISTÂNCIA COM TRATAMENTO DE ERRO MELHORADO ---
+            const fiorinoLoads = allLoads.filter(l => l.vehicleType === 'fiorino');
+            if (fiorinoLoads.length > 0) {
+                const distanceStatusDiv = document.createElement('div');
+                distanceStatusDiv.id = 'distance-calc-status';
+                distanceStatusDiv.className = 'alert alert-info';
+                distanceStatusDiv.innerHTML = '<div class="spinner-border spinner-border-sm me-2" role="status"></div>Calculando distâncias das rotas de Fiorino...';
+                resultadoDiv.appendChild(distanceStatusDiv);
+
+                const distancePromises = fiorinoLoads.map(async (load) => {
+                    load.distance = 0; // Valor padrão
+                    try {
+                        const uniqueCities = [...new Set(load.pedidos.map(p => p.Cidade))].filter(c => c && c.trim() !== '');
+                        if (uniqueCities.length === 0) return;
+
+                        const cityCoordsPromises = uniqueCities.map(city => getCoordinates(city));
+                        const successfulCoords = (await Promise.all(cityCoordsPromises)).filter(coord => coord !== null);
+
+                        if (successfulCoords.length === 0) {
+                            console.error(`Não foi possível geocodificar nenhuma cidade para a carga: ${uniqueCities.join(', ')}`);
+                            load.distance = -2; // Código de erro: Falha na geocodificação
+                            return;
+                        }
+                        
+                        if (successfulCoords.length < uniqueCities.length) {
+                             console.warn(`Apenas ${successfulCoords.length} de ${uniqueCities.length} cidades foram geocodificadas para esta carga. A distância pode ser imprecisa.`);
+                        }
+
+                        const calculatedDistance = await calculateRouteDistance(successfulCoords);
+                        load.distance = (calculatedDistance === -1) ? -1 : calculatedDistance;
+
+                    } catch (e) {
+                        console.error("Falha geral ao processar distância para a carga:", load, e);
+                        load.distance = -1; // Código de erro: Falha de API/Rede
+                    }
+                });
+
+                await Promise.all(distancePromises);
+
+                fiorinoLoads.sort((a, b) => (b.distance || 0) - (a.distance || 0));
+                fiorinoLoads.forEach((load, index) => { load.rank = index + 1; });
+                
+                distanceStatusDiv.remove();
+            }
+
             allLoads.forEach((load, index) => {
                 load.numero = `${load.vehicleType.charAt(0).toUpperCase()}${index + 1}`;
                 const loadId = `${load.vehicleType}-${Date.now()}-${index}`;
@@ -1939,7 +2078,7 @@
             
             const generatedLoads = allLoads.filter(l => l.pedidos.length > 0);
             if(generatedLoads.length === 0){
-                    html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
+                   html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
             } else {
                 generatedLoads.forEach(load => {
                     html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType]);
@@ -1952,15 +2091,15 @@
                 const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
 
                 html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
-                             <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                             <div class="card mb-3">
-                                 <div class="card-header bg-danger text-white d-flex align-items-center">
-                                     Pedidos Restantes
-                                     <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                 <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                 <div class="card mb-3">
+                                     <div class="card-header bg-danger text-white d-flex align-items-center">
+                                         Pedidos Restantes
+                                         <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                     </div>
+                                     <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                                  </div>
-                                 <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                             </div>
-                         </div>`;
+                             </div>`;
             }
             resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
         }
@@ -2003,6 +2142,23 @@
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">CARGA COM PRIORIDADE</span>' : '';
             const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
 
+            let distanceHtml = '';
+            if (load.distance !== undefined && vehicleType === 'fiorino') {
+                if (load.distance === -1) {
+                    distanceHtml = `<span class="ms-3 border-start border-light ps-3 text-danger fw-bold">Erro de API/Rede</span>`;
+                } else if (load.distance === -2) {
+                    distanceHtml = `<span class="ms-3 border-start border-light ps-3 text-warning fw-bold">Cidades não encontradas</span>`;
+                } else {
+                    let rankBadge = '';
+                    if (load.rank === 1) {
+                        rankBadge = '<span class="badge bg-light text-dark ms-2"><i class="bi bi-trophy-fill text-warning"></i> Rota Mais Longa</span>';
+                    } else if (load.rank) {
+                        rankBadge = `<span class="badge bg-light text-dark ms-2">${load.rank}ª Rota</span>`;
+                    }
+                    distanceHtml = `<span class="ms-3 border-start border-light ps-3 d-none d-md-inline"><strong>Distância:</strong> ${load.distance.toFixed(1)} km ${rankBadge}</span>`;
+                }
+            }
+
             const config = getVehicleConfig(vehicleType);
             const maxKg = config.hardMaxKg;
 
@@ -2022,7 +2178,7 @@
             
             const printButton = String(load.id).startsWith('manual-') ? `<button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirCargaManualIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Esta Carga</button>` : '';
 
-            return `<div id="${load.id}" class="card mb-3 drop-zone-card ${isPriorityLoad ? 'border-primary' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}"><div class="card-header ${headerColorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${printButton}${progressBar}${createTable(load.pedidos, null, load.id)}</div></div>`;
+            return `<div id="${load.id}" class="card mb-3 drop-zone-card ${isPriorityLoad ? 'border-primary' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}"><div class="card-header ${headerColorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge} ${distanceHtml}</div><div class="card-body">${printButton}${progressBar}${createTable(load.pedidos, null, load.id)}</div></div>`;
         }
         
         function separarCargasFiorino(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'fiorino', buttonElement); }
