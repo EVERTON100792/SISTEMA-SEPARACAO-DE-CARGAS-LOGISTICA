@@ -348,8 +348,8 @@
                                                 </div>
                                                 <div class="col-md-7">
                                                      <div class="form-check form-switch mt-2">
-                                                        <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
-                                                        <label class="form-check-label" for="autoProcessCheckbox">Processar automaticamente</label>
+                                                         <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
+                                                         <label class="form-check-label" for="autoProcessCheckbox">Processar automaticamente</label>
                                                      </div>
                                                 </div>
                                                 <div class="col-md-5 align-self-end">
@@ -373,7 +373,7 @@
                                          <div class="col-md-3"></div>
                                          <div class="col-md-3"><label for="fiorinoHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="fiorinoHardMaxCapacity" value="560" step="10"></div>
                                          <div class="col-md-3"><label for="fiorinoHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="fiorinoHardCubage" value="1.7" step="0.1"></div>
-                                      </div>
+                                     </div>
                                     <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
                                          <div class="col-md-12"><strong class="text-primary">Van</strong></div>
                                          <div class="col-md-3"><label for="vanMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="vanMinCapacity" value="1100" step="10"></div>
@@ -383,21 +383,21 @@
                                          <div class="col-md-3"></div>
                                          <div class="col-md-3"><label for="vanHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="vanHardMaxCapacity" value="1600" step="10"></div>
                                          <div class="col-md-3"><label for="vanHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="vanHardCubage" value="5.6" step="0.1"></div>
-                                      </div>
+                                     </div>
                                     <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
                                          <div class="col-md-12"><strong class="text-warning">3/4</strong></div>
                                          <div class="col-md-3"><label for="tresQuartosMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMinCapacity" value="2300" step="10"></div>
                                          <div class="col-md-3"><label for="tresQuartosMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMaxCapacity" value="4100" step="10"></div>
                                          <div class="col-md-3"><label for="tresQuartosCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tresQuartosCubage" value="15.0" step="0.1"></div>
                                          <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetTresQuartos">Reset</button></div>
-                                      </div>
+                                     </div>
                                     <div class="row g-3">
                                          <div class="col-md-12"><strong>Toco</strong></div>
                                          <div class="col-md-3"><label for="tocoMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tocoMinCapacity" value="5000" step="10"></div>
                                          <div class="col-md-3"><label for="tocoMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tocoMaxCapacity" value="8500" step="10"></div>
                                          <div class="col-md-3"><label for="tocoCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tocoCubage" value="30.0" step="0.1"></div>
                                          <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetToco">Reset</button></div>
-                                      </div>
+                                     </div>
                                     <div class="mt-4 d-flex justify-content-end"><button class="btn btn-success me-2" id="saveConfig"><i class="bi bi-check-circle-fill me-2"></i>Salvar Tudo</button><button class="btn btn-danger" id="resetAllConfigs"><i class="bi bi-arrow-clockwise me-2"></i>Resetar Tudo</button></div>
                                     <div id="configStatus" class="mt-2 status-message text-end"></div>
                                 </div>
@@ -872,15 +872,15 @@
              if (!pedidoEncontrado) {
                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                  if (originalPedido) {
-                                  pedidoEncontrado = originalPedido;
-                                  if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                                       local = 'Bloqueado Manualmente por você.';
-                                  } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                                       local = 'Alocado na Carga Especial.';
-                                  }
-                                  else {
-                                       local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
-                                  }
+                                     pedidoEncontrado = originalPedido;
+                                     if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                                         local = 'Bloqueado Manualmente por você.';
+                                     } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                                         local = 'Alocado na Carga Especial.';
+                                     }
+                                     else {
+                                         local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
+                                     }
                  }
             }
 
@@ -889,9 +889,9 @@
                 if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
-                                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                         buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -984,8 +984,8 @@
             atualizarListaBloqueados();
 
             dropZoneText.innerHTML = `<i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                      <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                      <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+                                         <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
+                                         <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
             
             planilhaData = [];
             processarBtn.disabled = true;
@@ -1335,9 +1335,9 @@
                 else if (pesoPercentual > 75) progressColor = 'bg-warning';
 
                 const progressBar = `
-                    <div class="progress mt-2" role="progressbar" style="height: 10px;">
-                      <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
-                    </div>`;
+                        <div class="progress mt-2" role="progressbar" style="height: 10px;">
+                          <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
+                        </div>`;
 
                 html += `<div id="${loadId}" class="card mb-3 drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="tresQuartos"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${progressBar}${createTable(load.pedidos, null, loadId)}</div></div>`;
             });
@@ -1653,10 +1653,10 @@
                             
                             if (load.pedidos.length > 0) {
                                 const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, p) => {
-                                      const cId = normalizeClientId(p.Cliente);
-                                      if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
-                                      acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
-                                      return acc;
+                                     const cId = normalizeClientId(p.Cliente);
+                                     if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                                     acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                                     return acc;
                                 }, {}));
 
                                 if(clientGroupsInLoad.length > 0) {
@@ -1793,7 +1793,7 @@
             return { refinedLoads: loads, remainingLeftovers: leftovers };
         }
 
-        // --- NOVAS FUNÇÕES DE ROTEAMENTO (COM MELHORIAS) ---
+        // --- FUNÇÃO DE ROTEAMENTO CORRIGIDA ---
         async function getCoordinates(cityName) {
             if (!cityName || typeof cityName !== 'string' || cityName.trim() === '') {
                 console.warn("Nome da cidade inválido ou vazio fornecido para geocodificação.");
@@ -1803,8 +1803,20 @@
             if (geocodeCache[trimmedCityName]) {
                 return geocodeCache[trimmedCityName];
             }
+
+            const fullSearchText = `${trimmedCityName}, PR, Brazil`;
+
+            const BBOX = {
+                min_lon: -55.0,
+                min_lat: -27.0,
+                max_lon: -48.0,
+                max_lat: -22.0
+            };
+
+            const apiUrl = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(fullSearchText)}&boundary.rect.min_lon=${BBOX.min_lon}&boundary.rect.min_lat=${BBOX.min_lat}&boundary.rect.max_lon=${BBOX.max_lon}&boundary.rect.max_lat=${BBOX.max_lat}&boundary.country=BRA&sources=openstreetmap`;
+
             try {
-                const response = await fetch(`https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(trimmedCityName)}&boundary.country=BRA&sources=openstreetmap`);
+                const response = await fetch(apiUrl);
                 if (!response.ok) {
                     throw new Error(`Erro de rede ou da API: ${response.status} ${response.statusText}`);
                 }
@@ -1821,7 +1833,7 @@
                     return coords;
                 }
                 
-                throw new Error(`'${trimmedCityName}' não encontrada pela API de geocodificação.`);
+                throw new Error(`'${trimmedCityName}' não encontrada pela API de geocodificação dentro da área definida.`);
 
             } catch (error) {
                 console.error(`Falha ao geocodificar '${cityName}':`, error);
@@ -2066,15 +2078,15 @@
                 const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
 
                 html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
-                             <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                             <div class="card mb-3">
-                                 <div class="card-header bg-danger text-white d-flex align-items-center">
-                                     Pedidos Restantes
-                                     <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                 <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                 <div class="card mb-3">
+                                     <div class="card-header bg-danger text-white d-flex align-items-center">
+                                         Pedidos Restantes
+                                         <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                     </div>
+                                     <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                                  </div>
-                                 <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                             </div>
-                         </div>`;
+                             </div>`;
             }
             resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
         }
