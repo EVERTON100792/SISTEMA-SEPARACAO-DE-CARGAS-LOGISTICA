@@ -1587,19 +1587,6 @@
             }, 0);
             return leftoverWeight + loadPenalty;
         }
-        
-        // **NOVO** Helper para calcular o que é exibido no modal de progresso
-        function calculateDisplaySobras(solution, vehicleType) {
-            const config = getVehicleConfig(vehicleType);
-            let totalSobras = 0;
-            totalSobras += solution.leftovers.reduce((sum, group) => sum + group.totalKg, 0);
-            solution.loads.forEach(load => {
-                if (load.totalKg > 0 && load.totalKg < config.minKg) {
-                    totalSobras += load.totalKg;
-                }
-            });
-            return totalSobras;
-        }
 
         function runSimulatedAnnealing(packableGroups, vehicleType, uiText) {
              return new Promise(resolve => {
@@ -1687,8 +1674,7 @@
                     const progress = Math.min(100, 100 * (1 - Math.log(currentTemp) / Math.log(initialTemp)));
                     progressBar.style.width = `${progress}%`;
                     statusText.textContent = uiText;
-                    const displaySobras = calculateDisplaySobras(bestSolution, vehicleType);
-                    detailsText.textContent = `Sobra Atual: ${displaySobras.toFixed(2)} kg`;
+                    detailsText.textContent = `Sobra Atual: ${bestSolution.leftovers.reduce((s,g) => s + g.totalKg, 0).toFixed(2)} kg`;
 
                     if (currentTemp > 1) {
                         requestAnimationFrame(doTemperatureStep);
