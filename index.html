@@ -1023,7 +1023,6 @@
                     displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueados);
                     
                     pedidosDisponiveis = pedidosDisponiveis.filter(p => !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)));
-                    let pedidosParaProcessamento = planilhaData.filter(p => p.Num_Pedido && !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)));
 
                     const col5ValuesForRota1 = ['TBL 08', 'TBL TODESCHINI'];
                     rota1SemCarga = pedidosDisponiveis.filter(p => {
@@ -1040,18 +1039,14 @@
                     const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
                     const pedidos = pedidosParaProcessamentoGeral.filter(p => String(p.Coluna4) != '500');
 
-                    // Otimização: Identificar clientes com bloqueio uma única vez
                     const clientesComBloqueio = new Set();
                     pedidos.forEach(p => {
-                    pedidosParaProcessamento.forEach(p => {
                         if (String(p['BLOQ.']).trim()) { 
                             clientesComBloqueio.add(normalizeClientId(p.Cliente));
                         }
                     });
 
                     const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
-                    // Otimização: Identificar pedidos 'Toco' e seus CFs repetidos
-                    const pedidosTocoBase = pedidosParaProcessamento.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                     const cfCounts = {};
                     pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
                     const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
@@ -1066,7 +1061,6 @@
                     }, {});
                     displayToco(resultadoTocoDiv, gruposToco);
                     tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
-                    const pedidosTocoIds = new Set(pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF))).map(p => p.Num_Pedido));
 
                     const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
                     let pedidosParaProcessamento = [];
@@ -1075,106 +1069,40 @@
                         if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
                         if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
                             pedidosComCFNumericoIsolado.push(p);
-                    // --- Otimização Principal: Loop Único de Processamento ---
-                    const rotaMin = document.getElementById('rotaInicialInput').value ? parseInt(document.getElementById('rotaInicialInput').value, 10) : 0;
-                    const rotaMax = document.getElementById('rotaFinalInput').value ? parseInt(document.getElementById('rotaFinalInput').value, 10) : 99999;
-                    const col5ValuesForRota1 = ['TBL 08', 'TBL TODESCHINI'];
-                    let pedidosParaAnalise3_4 = [];
-
-                    // Limpa as listas antes de preenchê-las novamente
-                    pedidosManualmenteBloqueados = [];
-                    rota1SemCarga = [];
-                    gruposToco = {};
-                    tocoPedidoIds.clear();
-                    pedidosComCFNumericoIsolado = [];
-
-                    pedidosParaProcessamento.forEach(p => {
-                        const numPedidoStr = String(p.Num_Pedido);
-
-                        // 1. Bloqueio Manual
-                        if (pedidosBloqueados.has(numPedidoStr)) {
-                            pedidosManualmenteBloqueados.push(p);
                             return;
                         }
                         if (['21', '23', '17'].includes(String(p.Coluna4))) return;
                         const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
                         if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return;
                         if (isNumeric(p.CF)) {
-
-                        // 2. Pedidos Toco
-                        if (pedidosTocoIds.has(p.Num_Pedido)) {
-                            const cf = p.CF;
-                            if (!gruposToco[cf]) { 
-                                gruposToco[cf] = { pedidos: [], totalKg: 0, totalCubagem: 0 }; 
-                            }
-                            gruposToco[cf].pedidos.push(p);
-                            gruposToco[cf].totalKg += p.Quilos_Saldo;
-                            gruposToco[cf].totalCubagem += p.Cubagem;
-                            tocoPedidoIds.add(numPedidoStr);
-                            return;
-                        }
-
-                        // 3. Rota 1 para alteração
-                        const codRotaStr = String(p.Cod_Rota || '').trim();
-                        if (codRotaStr === '1' && !isNumeric(p.CF) && col5ValuesForRota1.includes(String(p.Coluna5 || '').trim())) {
-                            rota1SemCarga.push(p);
-                            return;
-                        }
-
-                        // 4. Filtros Gerais (CF Numérico, Bloqueio por regra, etc.)
-                        if (String(p.Coluna4) == '500' || ['21', '23', '17'].includes(String(p.Coluna4)) || isNumeric(p.CF) || clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
                             pedidosComCFNumericoIsolado.push(p);
                         } else {
                             pedidosParaProcessamento.push(p);
-                            return;
                         }
-
-                        // 5. Filtro de Faixa de Rotas
-                        const rotaAtualNum = parseInt(codRotaStr, 10);
-                        if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) {
-                            // Ignora se estiver fora da faixa
-                            return;
-                        }
-
-                        // 6. Pedido válido para análise de 3/4 e montagem geral
-                        pedidosParaAnalise3_4.push(p);
                     });
                     
-
-                    // Exibição dos resultados dos filtros
-                    displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueados);
-                    displayToco(resultadoTocoDiv, gruposToco);
-                    displayRota1(resultadoRota1Div, rota1SemCarga);
                     displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
 
-                    // --- Lógica de montagem de cargas 3/4 (inalterada, mas agora opera em uma lista pré-filtrada) ---
                     let tresQuartosLoads = [];
                     const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
                     const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
                     const LARGE_ORDER_KG = 1700;
                     const largeOrdersByRoute = pedidosParaProcessamento.reduce((acc, p) => {
-                    const LARGE_ORDER_KG = 1700;                    
-                    const largeOrdersByRoute = pedidosParaAnalise3_4.reduce((acc, p) => {
                         const peso = p.Quilos_Saldo;
                         if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } return acc;
                     }, {});
                     const pedidosEmCargas3_4 = new Set();
-
                     Object.keys(largeOrdersByRoute).forEach(rota => {
                         const largeOrders = largeOrdersByRoute[rota];
                         if (largeOrders.length === 1) {
                             const largeOrder = largeOrders[0]; if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
                             let newLoad = { 
                                 pedidos: [largeOrder], 
-                            let newLoad = {
-                                pedidos: [largeOrder],
                                 totalKg: largeOrder.Quilos_Saldo,
                                 totalCubagem: largeOrder.Cubagem,
                                 rota: rota 
-                                rota: rota
                             };
                             const otherOrdersInRoute = pedidosParaProcessamento.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => b.Quilos_Saldo - a.Quilos_Saldo);
-                            const otherOrdersInRoute = pedidosParaAnalise3_4.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => b.Quilos_Saldo - a.Quilos_Saldo);
                             for (const order of otherOrdersInRoute) {
                                 if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue;
                                 const orderKg = order.Quilos_Saldo;
@@ -1187,13 +1115,10 @@
                             if (newLoad.totalKg >= MIN_KG_3_4) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); }
                         }
                     });
-
                     tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
                     displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
 
                     pedidosGeraisAtuais = pedidosParaProcessamento.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
-                    // Pedidos restantes para montagem manual
-                    pedidosGeraisAtuais = pedidosParaAnalise3_4.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
                     const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
                         const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
                     }, {});
@@ -1206,7 +1131,6 @@
                         pedidosBloqueados: pedidosManualmenteBloqueados.length,
                         pedidosToco: tocoPedidoIds.size,
                         pedidos34Auto: tresQuartosLoads.reduce((sum, load) => sum + load.pedidos.length, 0),
-                        pedidos34Auto: pedidosEmCargas3_4.size,
                         pedidosFiltrados: pedidosComCFNumericoIsolado.length + rota1SemCarga.length,
                         pedidosDisponiveis: pedidosGeraisAtuais.length,
                         pesoDisponivel: pedidosGeraisAtuais.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
@@ -1272,21 +1196,6 @@
             let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped table-hover"><thead><tr>';
             colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
-            
-            // Otimização: Usar DocumentFragment para evitar repaints
-            const fragment = document.createDocumentFragment();
-            const table = document.createElement('table');
-            table.className = 'table table-sm table-bordered table-striped table-hover';
-            
-            const thead = table.createTHead();
-            const headerRow = thead.insertRow();
-            colunasExibir.forEach(c => {
-                const th = document.createElement('th');
-                th.textContent = c.replace('_', ' ');
-                headerRow.appendChild(th);
-            });
-
-            const tbody = table.createTBody();
             pedidos.forEach(p => {
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
@@ -1297,28 +1206,14 @@
                                    onclick="highlightClientRows(event)"
                                    draggable="true"
                                    ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
-                const row = tbody.insertRow();
-                row.id = `pedido-${p.Num_Pedido}`;
-                if (isPriorityRow) row.classList.add('table-primary');
-                row.dataset.clienteId = clienteIdNormalizado;
-                row.dataset.pedidoId = p.Num_Pedido;
-                row.onclick = highlightClientRows;
-                row.draggable = true;
-                row.ondragstart = (event) => dragStart(event, p.Num_Pedido, clienteIdNormalizado, sourceId);
-
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
-                    const cell = row.insertCell();
-                    let cellContent = p[c] ?? ''; // Otimização: Nullish coalescing
-
                     if (c === 'Num_Pedido') {
                         const isPriority = pedidosPrioritarios.includes(String(p.Num_Pedido));
                         const priorityBadge = isPriority ? ' <span class="badge bg-primary">Prioridade</span>' : '';
                         table += `<td>${cellContent}${priorityBadge}</td>`;
-                        cell.innerHTML = `${cellContent}${priorityBadge}`;
                     } else if (c === 'Agendamento' && cellContent === 'Sim') {
                         table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
-                        cell.innerHTML = `<span class="badge bg-warning text-dark">${cellContent}</span>`;
                     } else if (c === 'Predat' || c === 'Dat_Ped') {
                         let formattedDate = '';
                         const dateObj = cellContent instanceof Date ? cellContent : new Date(cellContent);
@@ -1331,31 +1226,20 @@
                         
                         if (c === 'Predat' && isOverdue(p.Predat)) {
                             table += `<td><span class="text-danger fw-bold">${formattedDate}</span></td>`;
-                            cell.innerHTML = `<span class="text-danger fw-bold">${formattedDate}</span>`;
                         } else {
                             table += `<td>${formattedDate}</td>`;
-                            cell.textContent = formattedDate;
                         }
                     } else if (c === 'Quilos_Saldo' || c === 'Cubagem') {
                         table += `<td>${(cellContent || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>`;
-                        cell.textContent = (cellContent || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                     }
                     else {
                         table += `<td>${cellContent}</td>`;
-                        cell.textContent = cellContent;
                     }
                 });
                 table += '</tr>';
             });
             table += '</tbody></table></div>';
             return table;
-
-            const div = document.createElement('div');
-            div.className = 'table-responsive';
-            div.appendChild(table);
-            
-            // Retorna o elemento DOM em vez de uma string HTML
-            return div;
         }
 
         function displayGerais(div, grupos) {
@@ -1396,18 +1280,8 @@
                 const veiculo = rotaVeiculoMap[rota]?.type || 'N/D';
                 const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
                 accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota} (${veiculoNome})</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
-                const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());                
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota} (${veiculoNome})</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body"></div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
-            accordionHtml += '</div>'; 
-            div.innerHTML = accordionHtml;
-
-            // Otimização: Adiciona as tabelas dinamicamente para evitar um innerHTML massivo
-            Object.keys(grupos).sort().forEach((rota, index) => {
-                const body = div.querySelector(`#collapseGeral${index} .accordion-body`);
-                body.appendChild(createTable(grupos[rota].pedidos, null, 'geral'));
-            });
         }
         
         function displayPedidosBloqueados(div, pedidos) {
@@ -1420,7 +1294,6 @@
             let html = `<div class="alert alert-danger"><strong>Total Bloqueado:</strong> ${pedidos.length} pedidos / ${totalKgFormatado} kg</div>`;
             html += createTable(pedidos);
             div.innerHTML = html;
-            div.appendChild(createTable(pedidos));
         }
 
         function displayPedidosCFNumerico(div, pedidos) {
@@ -1433,16 +1306,8 @@
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos)}</div></div></div>`;
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body"></div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
-            accordionHtml += '</div>'; 
-            div.innerHTML = accordionHtml;
-
-            Object.keys(grupos).sort().forEach((rota, index) => {
-                const body = div.querySelector(`#collapseCF${index} .accordion-body`);
-                body.appendChild(createTable(grupos[rota].pedidos));
-            });
         }
 
         function displayTresQuartos(div, loads) {
@@ -1469,12 +1334,8 @@
                     </div>`;
 
                 html += `<div id="${loadId}" class="card mb-3 drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="tresQuartos"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${progressBar}${createTable(load.pedidos, null, loadId)}</div></div>`;
-                html += `<div id="${loadId}" class="card mb-3 drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="tresQuartos"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${progressBar}</div></div>`;
             });
             div.innerHTML = html;
-            loads.forEach(load => {
-                div.querySelector(`#${load.id} .card-body`).appendChild(createTable(load.pedidos, null, load.id));
-            });
         }
         
         function displayRota1(div, pedidos) {
@@ -1491,9 +1352,7 @@
                 </div>
                 ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'CF', 'Coluna5'])}
             `;
-                </div>`;
             div.innerHTML = html;
-            div.appendChild(createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'CF', 'Coluna5']));
         }
 
         function imprimirGeneric(divId, title) {
@@ -1527,8 +1386,6 @@
             const totalKgFormatado = currentLeftoversForPrinting.reduce((sum, p) => sum + p.Quilos_Saldo, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const printWindow = createPrintWindow(title);
             let contentToPrint = `<h3>${title} - Total: ${totalKgFormatado} kg</h3>` + createTable(currentLeftoversForPrinting);
-            const printWindow = createPrintWindow(title);            
-            let contentToPrint = `<h3>${title} - Total: ${totalKgFormatado} kg</h3>` + createTable(currentLeftoversForPrinting).innerHTML;
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus(); 
@@ -1561,8 +1418,6 @@
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const printWindow = createPrintWindow('Imprimir Carga Toco CF: ' + cf);
             let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos);
-            const printWindow = createPrintWindow('Imprimir Carga Toco CF: ' + cf);            
-            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos).innerHTML;
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus(); 
@@ -1751,8 +1606,6 @@
                 const initialTemp = 1000;
                 const coolingRate = 0.993;
                 const iterationsPerTemp = 200;
-                const coolingRate = 0.99; // Otimização: Esfriamento um pouco mais rápido
-                const iterationsPerTemp = 150; // Otimização: Menos iterações por temperatura
 
                 const initialSortedGroups = [...packableGroups].sort((a, b) => b.totalKg - a.totalKg);
                 let bestSolution = createSolutionFromHeuristic(initialSortedGroups, vehicleType);
@@ -2106,31 +1959,10 @@
                                      <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
                                  </div>
                                  <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                 </div><div class="card-body"></div>
                              </div>
                          </div>`;
             }
             resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
-            const container = document.createElement('div');
-            container.className = 'resultado-container';
-            container.innerHTML = html;
-            resultadoDiv.innerHTML = ''; // Limpa antes de adicionar
-            resultadoDiv.appendChild(container);
-            
-            // Otimização: Adiciona tabelas após a estrutura principal estar no DOM
-            allLoads.filter(l => l.pedidos.length > 0).forEach(load => {
-                const cardBody = resultadoDiv.querySelector(`#${load.id} .card-body`);
-                if (cardBody) {
-                    const tableElement = createTable(load.pedidos, null, load.id);
-                    cardBody.appendChild(tableElement);
-                }
-            });
-            if (currentLeftoversForPrinting.length > 0) {
-                const leftoversBody = resultadoDiv.querySelector(`#leftovers-card-${divId} .card-body`);
-                if (leftoversBody) {
-                    leftoversBody.appendChild(createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers'));
-                }
-            }
         }
         
         function refineLoadsWithSimpleFit(initialLoads, initialLeftovers) {
@@ -2191,7 +2023,6 @@
             const printButton = String(load.id).startsWith('manual-') ? `<button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirCargaManualIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Esta Carga</button>` : '';
 
             return `<div id="${load.id}" class="card mb-3 drop-zone-card ${isPriorityLoad ? 'border-primary' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}"><div class="card-header ${headerColorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${printButton}${progressBar}${createTable(load.pedidos, null, load.id)}</div></div>`;
-            return `<div id="${load.id}" class="card mb-3 drop-zone-card ${isPriorityLoad ? 'border-primary' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}"><div class="card-header ${headerColorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${printButton}${progressBar}</div></div>`;
         }
         
         function separarCargasFiorino(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'fiorino', buttonElement); }
@@ -2233,17 +2064,8 @@
                 const headerColorClass = isOverloaded ? 'bg-danger' : '';
 
                 accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length}</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>${progressBar}${createTable(pedidos, null, loadId)}</div></div></div>`;
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length}</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>${progressBar}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
-            accordionHtml += '</div>'; 
-            div.innerHTML = accordionHtml;
-
-            // Otimização: Adiciona tabelas dinamicamente
-            Object.keys(grupos).sort().forEach((cf, index) => {
-                const body = div.querySelector(`#collapseToco${index} .accordion-body`);
-                body.appendChild(createTable(grupos[cf].pedidos, null, `toco-${cf}`));
-            });
         }
 
         function montarCargaEspecial() {
@@ -2331,13 +2153,6 @@
                     </div>
                     ${renderLoadCard(load, veiculoEscolhido.tipo, vehicleInfo[veiculoEscolhido.tipo])}
                 `;
-
-                const cardContainer = document.createElement('div');
-                cardContainer.innerHTML = renderLoadCard(load, veiculoEscolhido.tipo, vehicleInfo[veiculoEscolhido.tipo]);
-                const cardBody = cardContainer.querySelector('.card-body');
-                cardBody.appendChild(createTable(load.pedidos, null, load.id));
-
-                resultadoDiv.appendChild(cardContainer);
             } else {
                 pedidosEspeciaisProcessados.clear();
                 resultadoDiv.innerHTML = `
@@ -2586,10 +2401,7 @@
                                 <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
                             </div>
                             <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                            </div><div class="card-body"></div>
                         </div>`;
-                    const cardBody = leftoversCard.querySelector('.card-body');
-                    cardBody.appendChild(createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers'));
                 }
                 return;
             }
@@ -2610,11 +2422,6 @@
             
             if(load.vehicleType !== 'toco') {
                 cardElement.outerHTML = renderLoadCard(load, load.vehicleType, vInfo);
-                const newCard = document.createElement('div');
-                newCard.innerHTML = renderLoadCard(load, load.vehicleType, vInfo);
-                const cardBody = newCard.querySelector('.card-body');
-                cardBody.appendChild(createTable(load.pedidos, null, load.id));
-                cardElement.outerHTML = newCard.innerHTML;
             } else {
                 const accordionBody = cardElement;
                 const progressBarContainer = accordionBody.querySelector('.progress');
@@ -2629,14 +2436,10 @@
                 
                 progressBarContainer.querySelector('.progress-bar').style.width = `${Math.min(pesoPercentual, 100)}%`;
                 progressBarContainer.querySelector('.progress-bar').className = `progress-bar ${progressColor}`;
-                
-                const newTable = createTable(load.pedidos, null, loadId);
                 if(tableContainer) {
                     tableContainer.outerHTML = createTable(load.pedidos, null, loadId);
-                    tableContainer.replaceWith(newTable);
                 } else {
                     accordionBody.insertAdjacentHTML('beforeend', createTable(load.pedidos, null, loadId));
-                    accordionBody.appendChild(newTable);
                 }
 
                 const weightBadge = headerButton.querySelector('.badge.bg-info, .badge.bg-danger');
@@ -2703,7 +2506,6 @@
             const dropText = document.getElementById('manual-drop-text');
             if (manualLoadInProgress.pedidos.length > 0) {
                 tableContainer.innerHTML = createTable(manualLoadInProgress.pedidos, null, 'manual-builder');
-                tableContainer.innerHTML = createTable(manualLoadInProgress.pedidos, null, 'manual-builder').innerHTML;
                 dropText.style.display = 'none';
             } else {
                 tableContainer.innerHTML = '';
@@ -2747,17 +2549,12 @@
             };
 
             const newCardHTML = renderLoadCard(newLoad, vehicleType, vehicleInfo[vehicleType]);
-            const newCardContainer = document.createElement('div');
-            newCardContainer.innerHTML = renderLoadCard(newLoad, vehicleType, vehicleInfo[vehicleType]);
-            const cardBody = newCardContainer.querySelector('.card-body');
-            cardBody.appendChild(createTable(newLoad.pedidos, null, newLoad.id));
             
             const activeTabPane = document.querySelector('.tab-pane.active');
             const resultContainer = activeTabPane ? activeTabPane.querySelector('[id^="resultado-"]') : null;
 
             if(resultContainer) {
                resultContainer.insertAdjacentHTML('beforeend', newCardHTML);
-               resultContainer.insertAdjacentHTML('beforeend', newCardContainer.innerHTML);
                alert(`Carga manual ${newLoad.numero} criada com sucesso para ${vehicleInfo[vehicleType].name} e adicionada à aba atual!`);
             }
 
