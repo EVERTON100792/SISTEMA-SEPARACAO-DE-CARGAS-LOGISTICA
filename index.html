@@ -737,7 +737,7 @@
 
         const rotaVeiculoMap = {
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
-            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
+            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
             '11361': { type: 'tresQuartos', title: 'Rota 11361' }, '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] }, '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] }, '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] }, '11541': { type: 'tresQuartos', title: 'Rota 11541' }
         };
         
@@ -889,7 +889,7 @@
                 if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                            <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
                                          buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
@@ -1030,12 +1030,10 @@
                     
                     pedidosDisponiveis = pedidosDisponiveis.filter(p => !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)));
 
-                    const col5ValuesForRota1 = ['TBL 08', 'TBL TODESCHINI'];
                     rota1SemCarga = pedidosDisponiveis.filter(p => {
                         const codRota = String(p.Cod_Rota || '').trim();
                         const cfIsNumeric = isNumeric(p.CF);
-                        const col5 = String(p.Coluna5 || '').trim();
-                        return codRota === '1' && !cfIsNumeric && col5ValuesForRota1.includes(col5);
+                        return codRota === '1' && !cfIsNumeric;
                     });
                     const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
                     displayRota1(resultadoRota1Div, rota1SemCarga);
@@ -1335,9 +1333,9 @@
                 else if (pesoPercentual > 75) progressColor = 'bg-warning';
 
                 const progressBar = `
-                        <div class="progress mt-2" role="progressbar" style="height: 10px;">
-                          <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
-                        </div>`;
+                            <div class="progress mt-2" role="progressbar" style="height: 10px;">
+                                <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
+                            </div>`;
 
                 html += `<div id="${loadId}" class="card mb-3 drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="tresQuartos"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${progressBar}${createTable(load.pedidos, null, loadId)}</div></div>`;
             });
@@ -1643,9 +1641,9 @@
                                     moveMade = true;
                                }
                             } else if (isMoveValid({pedidos:[], totalKg:0, totalCubagem:0}, groupToPlace, vehicleType)) { 
-                               neighborSolution.loads.push(groupToPlace);
-                               neighborSolution.leftovers.splice(leftoverIndex, 1);
-                               moveMade = true;
+                                neighborSolution.loads.push(groupToPlace);
+                                neighborSolution.leftovers.splice(leftoverIndex, 1);
+                                moveMade = true;
                             }
                         } else if (neighborSolution.loads.length > 0) {
                             const loadIndex = Math.floor(Math.random() * neighborSolution.loads.length);
@@ -2080,7 +2078,7 @@
             
             const generatedLoads = allLoads.filter(l => l.pedidos.length > 0);
             if(generatedLoads.length === 0){
-                    html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
+                   html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
             } else {
                 generatedLoads.forEach(load => {
                     html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType]);
