@@ -1029,10 +1029,12 @@
                     
                     pedidosDisponiveis = pedidosDisponiveis.filter(p => !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)));
 
+                    // LÓGICA DO FILTRO DA ROTA 1 ALTERADA AQUI
                     rota1SemCarga = pedidosDisponiveis.filter(p => {
                         const codRota = String(p.Cod_Rota || '').trim();
                         const cfIsNumeric = isNumeric(p.CF);
-                        return codRota === '1' && !cfIsNumeric;
+                        const naoETabelaTransfer = !String(p.Coluna5 || '').toUpperCase().includes('TABELA TRANSFER');
+                        return codRota === '1' && !cfIsNumeric && naoETabelaTransfer;
                     });
                     const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
                     displayRota1(resultadoRota1Div, rota1SemCarga);
@@ -1853,7 +1855,6 @@
             }
         }
 
-        // <<<<<<<<<< CÓDIGO CORRIGIDO ESTÁ AQUI >>>>>>>>>>
         async function calculateRouteDistance(cityCoordinates) {
             if (!cityCoordinates || cityCoordinates.length === 0) return 0;
 
@@ -1927,8 +1928,6 @@
                 return -1; // Retorna -1 para indicar erro de API
             }
         }
-        // <<<<<<<<<< FIM DO CÓDIGO CORRIGIDO >>>>>>>>>>
-
 
         // --- FUNÇÃO PRINCIPAL DE MONTAGEM (ATUALIZADA) ---
         async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
