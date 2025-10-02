@@ -1855,80 +1855,94 @@
             }
         }
 
-        async function calculateRouteDistance(cityCoordinates) {
-            if (!cityCoordinates || cityCoordinates.length === 0) return 0;
+        // SUBSTITUA a sua função antiga por esta versão completa e aprimorada
+async function calculateRouteDistance(cityCoordinates) {
+    if (!cityCoordinates || cityCoordinates.length === 0) return 0;
 
-            // Se houver apenas uma cidade, use a API de Direções (mais simples e rápida)
-            if (cityCoordinates.length === 1) {
-                try {
-                    const response = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': ORS_API_KEY,
-                            'Content-Type': 'application/json; charset=utf-8'
-                        },
-                        body: JSON.stringify({ coordinates: [SELMI_COORDS, cityCoordinates[0], SELMI_COORDS] }) // Rota: Depósito -> Cidade -> Depósito
-                    });
-                    if (!response.ok) throw new Error('Falha na API de Direções');
-                    const data = await response.json();
-                    if (data.routes && data.routes[0]) {
-                        return data.routes[0].summary.distance / 1000; // Distância em km
-                    }
-                    return -2; // Código de erro: Resposta inesperada
-                } catch (error) {
-                    console.error('Erro ao calcular rota simples:', error);
-                    return -1; // Código de erro: Falha de API
-                }
+    // --- Lógica para rota com apenas UMA parada (ida e volta) ---
+    // Esta parte continua a mesma, pois já é ótima.
+    if (cityCoordinates.length === 1) {
+        try {
+            const response = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car`, {
+                method: 'POST',
+                headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json; charset=utf-8' },
+                body: JSON.stringify({ coordinates: [SELMI_COORDS, cityCoordinates[0], SELMI_COORDS] })
+            });
+            if (!response.ok) throw new Error('Falha na API de Direções Simples');
+            const data = await response.json();
+            if (data.routes && data.routes[0]) {
+                return data.routes[0].summary.distance / 1000; // Distância em km
+            }
+            return -2;
+        } catch (error) {
+            console.error('Erro ao calcular rota simples:', error);
+            return -1;
+        }
+    }
+
+    // --- NOVA LÓGICA OTIMIZADA para MÚLTIPLAS paradas ---
+    const locations = [SELMI_COORDS, ...cityCoordinates];
+    
+    try {
+        // 1. Obter a matriz de distâncias (como antes)
+        const matrixResponse = await fetch(`https://api.openrouteservice.org/v2/matrix/driving-car`, {
+            method: 'POST',
+            headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ locations, metrics: ["distance"] })
+        });
+        if (!matrixResponse.ok) throw new Error('Falha na API de Matriz');
+        const matrixData = await matrixResponse.json();
+        const distances = matrixData.distances;
+
+        // 2. Gerar todas as ordens de visita possíveis (permutações)
+        const cityIndices = Array.from({ length: cityCoordinates.length }, (_, i) => i + 1);
+        const permutations = getPermutations(cityIndices);
+        
+        let bestDistance = Infinity;
+
+        // 3. Calcular a distância total para cada permutação e encontrar a menor
+        for (const p of permutations) {
+            let currentDistance = 0;
+            // Distância do depósito (0) para a primeira cidade da rota
+            currentDistance += distances[0][p[0]];
+
+            // Distância entre as cidades na ordem da permutação
+            for (let i = 0; i < p.length - 1; i++) {
+                currentDistance += distances[p[i]][p[i + 1]];
             }
 
-            // Para múltiplas cidades, use a API de Matriz para encontrar uma boa rota
-            const locations = [SELMI_COORDS, ...cityCoordinates];
-            try {
-                const matrixResponse = await fetch(`https://api.openrouteservice.org/v2/matrix/driving-car`, {
-                    method: 'POST',
-                    headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ locations, metrics: ["distance"] })
-                });
-                if (!matrixResponse.ok) throw new Error('Falha na API de Matriz');
-                const matrixData = await matrixResponse.json();
-                const distances = matrixData.distances;
+            // Distância da última cidade de volta para o depósito (0)
+            currentDistance += distances[p[p.length - 1]][0];
 
-                // Algoritmo do Vizinho Mais Próximo (uma heurística simples para o caixeiro viajante)
-                let totalDistance = 0;
-                let currentLocation = 0; // Começa no depósito (índice 0)
-                let unvisited = new Set(Array.from({ length: cityCoordinates.length }, (_, i) => i + 1));
-                
-                while (unvisited.size > 0) {
-                    let nearestDistance = Infinity;
-                    let nearestLocation = -1;
-
-                    unvisited.forEach(locationIndex => {
-                        if (distances[currentLocation][locationIndex] < nearestDistance) {
-                            nearestDistance = distances[currentLocation][locationIndex];
-                            nearestLocation = locationIndex;
-                        }
-                    });
-
-                    if (nearestLocation !== -1) {
-                        totalDistance += nearestDistance;
-                        currentLocation = nearestLocation;
-                        unvisited.delete(nearestLocation);
-                    } else {
-                        break; // Não encontrou um próximo, encerra
-                    }
-                }
-                
-                // Adiciona a distância de volta para o depósito
-                totalDistance += distances[currentLocation][0];
-
-                return totalDistance / 1000; // Converte para km
-
-            } catch (error) {
-                console.error('Erro ao calcular rota com matriz:', error);
-                return -1; // Retorna -1 para indicar erro de API
+            if (currentDistance < bestDistance) {
+                bestDistance = currentDistance;
             }
         }
+        
+        return bestDistance / 1000; // Converte para km
 
+    } catch (error) {
+        console.error('Erro ao calcular rota otimizada com matriz:', error);
+        return -1; // Retorna -1 para indicar erro de API
+    }
+}
+
+// 2. Adicione esta função auxiliar em qualquer lugar dentro da tag <script>
+// Ela é necessária para a nova lógica funcionar.
+function getPermutations(array) {
+    if (array.length === 0) return [[]];
+    const firstEl = array[0];
+    const rest = array.slice(1);
+    const permsWithoutFirst = getPermutations(rest);
+    const allPermutations = [];
+    permsWithoutFirst.forEach(perm => {
+        for (let i = 0; i <= perm.length; i++) {
+            const permWithFirst = [...perm.slice(0, i), firstEl, ...perm.slice(i)];
+            allPermutations.push(permWithFirst);
+        }
+    });
+    return allPermutations;
+}
         // --- FUNÇÃO PRINCIPAL DE MONTAGEM (ATUALIZADA) ---
         async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             const resultadoDiv = document.getElementById(divId);
