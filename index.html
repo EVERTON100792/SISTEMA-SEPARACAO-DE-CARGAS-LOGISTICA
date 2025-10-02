@@ -1794,51 +1794,47 @@
 
         // --- FUNÇÃO DE ROTEAMENTO CORRIGIDA E ROBUSTA ---
         // SUBSTITUA A SUA FUNÇÃO ANTIGA POR ESTA VERSÃO MUITO MAIS PRECISA
+// GARANTA QUE SUA FUNÇÃO ESTEJA EXATAMENTE ASSIM
 async function getCoordinates(cityName) {
+    // Verificação inicial para dados nulos ou inválidos
     if (!cityName || typeof cityName !== 'string' || cityName.trim() === '') {
-        console.warn("Nome da cidade inválido ou vazio fornecido para geocodificação.");
+        console.warn("Nome da cidade inválido, vazio ou com apenas espaços. Pulando geocodificação.");
         return null;
     }
-    const trimmedCityName = cityName.trim().toUpperCase();
+    
+    // --- LINHA MAIS IMPORTANTE ---
+    // Aqui nós limpamos os espaços extras e convertemos para maiúsculas
+    const trimmedCityName = cityName.trim().toUpperCase(); 
+    
     if (geocodeCache[trimmedCityName]) {
         return geocodeCache[trimmedCityName];
     }
 
     const fullSearchText = `${trimmedCityName}, PR, Brazil`;
     
-    // --- MELHORIAS CRUCIAIS AQUI ---
-    // 1. Adicionamos 'layers=locality' para focar a busca apenas em cidades/vilas.
-    // 2. Aumentamos o 'size' para termos mais resultados para escolher o melhor.
     const apiUrl = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(fullSearchText)}&layers=locality&sources=openstreetmap&size=5&boundary.country=BRA`;
 
-    // Adicionando um log para depuração. Verifique o console do navegador (F12).
-    console.log(`Geocodificando para '${trimmedCityName}' usando a URL:`, apiUrl);
+    console.log(`Geocodificando para '${trimmedCityName}'...`);
 
     try {
         const response = await fetch(apiUrl);
         if (!response.ok) {
+            // Se ainda der erro aqui, o problema é com o nome da cidade em si (ex: "CIDADE INVALIDA")
             throw new Error(`Erro de rede ou da API: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();
 
         if (data.features && data.features.length > 0) {
-            
-            // --- NOVA LÓGICA DE SELEÇÃO INTELIGENTE ---
-            // Em vez de pegar o primeiro resultado, vamos analisar e escolher o melhor.
             let bestFeature = null;
 
-            // Damos prioridade máxima para resultados que estão no Paraná
             const featuresInParana = data.features.filter(f => 
                 f.properties.region && f.properties.region.toUpperCase().includes('PARANÁ')
             );
 
             if (featuresInParana.length > 0) {
-                // Se encontramos cidades no Paraná, pegamos a de maior confiança (confidence score)
                 featuresInParana.sort((a, b) => (b.properties.confidence || 0) - (a.properties.confidence || 0));
                 bestFeature = featuresInParana[0];
             } else {
-                // Se NENHUM resultado veio como "Paraná", como um fallback, pegamos o de maior confiança geral.
-                // Isso é menos ideal, mas evita falha total.
                 console.warn(`Nenhum resultado para '${trimmedCityName}' foi explicitamente identificado no Paraná. Usando o melhor resultado geral.`);
                 data.features.sort((a, b) => (b.properties.confidence || 0) - (a.properties.confidence || 0));
                 bestFeature = data.features[0];
@@ -1846,8 +1842,7 @@ async function getCoordinates(cityName) {
 
             const coords = bestFeature.geometry.coordinates;
             const foundLabel = bestFeature.properties.label;
-
-            // Log crucial para vermos o que foi encontrado
+            
             console.log(`✅ Para '${trimmedCityName}', foi encontrado: '${foundLabel}' nas coordenadas [${coords}].`);
             
             geocodeCache[trimmedCityName] = coords;
@@ -1857,7 +1852,8 @@ async function getCoordinates(cityName) {
         throw new Error(`'${trimmedCityName}' não foi encontrada pela API de geocodificação.`);
 
     } catch (error) {
-        console.error(`❌ Falha ao geocodificar '${cityName}':`, error);
+        // O erro 400 estava acontecendo ANTES, na chamada fetch. Agora não deve mais.
+        console.error(`❌ Falha ao geocodificar '${trimmedCityName}' (após limpeza):`, error);
         return null;
     }
 }
