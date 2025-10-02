@@ -1811,7 +1811,7 @@
             const BBOX = { min_lon: -55.0, min_lat: -27.0, max_lon: -48.0, max_lat: -22.5 };
             const FOCUS_POINT = { lon: -51.2, lat: -24.7 }; // Ponto central do Paraná
 
-            const apiUrl = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(fullSearchText)}&layers=locality,county&focus.point.lon=${FOCUS_POINT.lon}&focus.point.lat=${FOCUS_POINT.lat}&boundary.rect.min_lon=${BBOX.min_lon}&boundary.rect.min_lat=${BBOX.min_lat}&boundary.rect.max_lon=${BBOX.max_lon}&boundary.rect.max_lat=${BBOX.max_lat}&boundary.country=BRA&sources=openstreetmap`;
+            const apiUrl = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(fullSearchText)}&layers=locality,county&focus.point.lon=${FOCUS_POINT.lon}&focus.point.lat=${FOCUS_POINT.lat}&boundary.rect.min_lon=${BBOX.min_lon}&boundary.rect.min_lat=${BBOX.min_lat}&boundary.rect.max_lon=${BBOX.max_lon}&boundary.rect.max_lat=${BBOX.max_lat}&boundary.country=BRA`;
 
             try {
                 const response = await fetch(apiUrl);
