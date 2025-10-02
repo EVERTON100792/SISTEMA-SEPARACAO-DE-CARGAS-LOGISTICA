@@ -1795,41 +1795,38 @@
         // --- FUNÇÃO DE ROTEAMENTO CORRIGIDA E ROBUSTA ---
         // SUBSTITUA A SUA FUNÇÃO ANTIGA POR ESTA VERSÃO MUITO MAIS PRECISA
 // GARANTA QUE SUA FUNÇÃO ESTEJA EXATAMENTE ASSIM
+// SUBSTITUA getCoordinates POR ESTA VERSÃO CORRIGIDA
 async function getCoordinates(cityName) {
-    // Verificação inicial para dados nulos ou inválidos
     if (!cityName || typeof cityName !== 'string' || cityName.trim() === '') {
         console.warn("Nome da cidade inválido, vazio ou com apenas espaços. Pulando geocodificação.");
         return null;
     }
-    
-    // --- LINHA MAIS IMPORTANTE ---
-    // Aqui nós limpamos os espaços extras e convertemos para maiúsculas
     const trimmedCityName = cityName.trim().toUpperCase(); 
-    
     if (geocodeCache[trimmedCityName]) {
         return geocodeCache[trimmedCityName];
     }
 
-    const fullSearchText = `${trimmedCityName}, PR, Brazil`;
-    
-    const apiUrl = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(fullSearchText)}&layers=locality&sources=openstreetmap&size=5&boundary.country=BRA`;
+    // A URL agora NÃO CONTÉM mais o 'api_key'
+    const apiUrl = `https://api.openrouteservice.org/geocode/search?text=${encodeURIComponent(`${trimmedCityName}, PR, Brazil`)}&layers=locality&sources=openstreetmap&size=5&boundary.country=BRA`;
 
     console.log(`Geocodificando para '${trimmedCityName}'...`);
 
     try {
-        const response = await fetch(apiUrl);
+        // A chave da API é enviada aqui, no cabeçalho 'Authorization'
+        const response = await fetch(apiUrl, {
+            headers: {
+                'Authorization': ORS_API_KEY
+            }
+        });
+
         if (!response.ok) {
-            // Se ainda der erro aqui, o problema é com o nome da cidade em si (ex: "CIDADE INVALIDA")
             throw new Error(`Erro de rede ou da API: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();
 
         if (data.features && data.features.length > 0) {
             let bestFeature = null;
-
-            const featuresInParana = data.features.filter(f => 
-                f.properties.region && f.properties.region.toUpperCase().includes('PARANÁ')
-            );
+            const featuresInParana = data.features.filter(f => f.properties.region && f.properties.region.toUpperCase().includes('PARANÁ'));
 
             if (featuresInParana.length > 0) {
                 featuresInParana.sort((a, b) => (b.properties.confidence || 0) - (a.properties.confidence || 0));
@@ -1842,18 +1839,15 @@ async function getCoordinates(cityName) {
 
             const coords = bestFeature.geometry.coordinates;
             const foundLabel = bestFeature.properties.label;
-            
             console.log(`✅ Para '${trimmedCityName}', foi encontrado: '${foundLabel}' nas coordenadas [${coords}].`);
-            
             geocodeCache[trimmedCityName] = coords;
             return coords;
         }
         
-        throw new Error(`'${trimmedCityName}' não foi encontrada pela API de geocodificação.`);
+        throw new Error(`'${trimmedCityName}' não foi encontrada pela API.`);
 
     } catch (error) {
-        // O erro 400 estava acontecendo ANTES, na chamada fetch. Agora não deve mais.
-        console.error(`❌ Falha ao geocodificar '${trimmedCityName}' (após limpeza):`, error);
+        console.error(`❌ Falha ao geocodificar '${trimmedCityName}':`, error);
         return null;
     }
 }
