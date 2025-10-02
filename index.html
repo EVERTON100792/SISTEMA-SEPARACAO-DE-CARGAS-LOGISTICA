@@ -445,13 +445,13 @@
                                 <div class="col-md-6">
                                     <div class="card h-100">
                                         <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>6. Venda Antecipada</h2></div>
-                                        <div class="card-body d-flex flex-column">
-                                            <div class="flex-grow-1">
-                                                <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
-                                                <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui para montar uma carga separada..."></textarea>
-                                            </div>
-                                            <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaVendaAntecipada()"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
-                                        </div>
+                                         <div class="card-body d-flex flex-column">
+                                             <div class="flex-grow-1">
+                                                 <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
+                                                 <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui para montar uma carga separada..."></textarea>
+                                             </div>
+                                             <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaVendaAntecipada()"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
+                                         </div>
                                     </div>
                                 </div>
                             </div>
@@ -922,7 +922,7 @@
                 if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
                                      buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
@@ -1728,10 +1728,10 @@
                             
                             if (load.pedidos.length > 0) {
                                 const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, p) => {
-                                     const cId = normalizeClientId(p.Cliente);
-                                     if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
-                                     acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
-                                     return acc;
+                                      const cId = normalizeClientId(p.Cliente);
+                                      if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                                      acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                                      return acc;
                                 }, {}));
 
                                 if(clientGroupsInLoad.length > 0) {
@@ -1822,12 +1822,12 @@
                         const load = loads[j];
 
                         const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, pedido) => {
-                             const clienteId = normalizeClientId(pedido.Cliente);
-                             if (!acc[clienteId]) acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
-                             acc[clienteId].pedidos.push(pedido);
-                             acc[clienteId].totalKg += pedido.Quilos_Saldo;
-                             acc[clienteId].totalCubagem += pedido.Cubagem;
-                             return acc;
+                           const clienteId = normalizeClientId(pedido.Cliente);
+                           if (!acc[clienteId]) acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
+                           acc[clienteId].pedidos.push(pedido);
+                           acc[clienteId].totalKg += pedido.Quilos_Saldo;
+                           acc[clienteId].totalCubagem += pedido.Cubagem;
+                           return acc;
                         }, {}));
 
                         for (let k = 0; k < clientGroupsInLoad.length; k++) {
@@ -2984,9 +2984,12 @@
             setFormProcessing(loginForm, false);
         });
 
+        // =========================================================================
+        // ======================= INÍCIO DO CÓDIGO ALTERADO =======================
+        // =========================================================================
         signupForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            setFormProcessing(signupForm, true);
+            setFormProcessing(signupForm, true); // Desabilita o botão para evitar cliques múltiplos
             authMessage.textContent = '';
             
             const email = document.getElementById('signup-email').value;
@@ -3003,19 +3006,19 @@
                 } else {
                     authMessage.textContent = 'Erro ao criar conta: ' + error.message;
                 }
+                // Reabilita o botão apenas se houver erro, para que o usuário possa tentar novamente.
+                setFormProcessing(signupForm, false); 
             } else {
+                // MENSAGEM CORRIGIDA E LÓGICA AJUSTADA
                 authMessage.className = 'text-success';
-                authMessage.textContent = 'Conta criada com sucesso! Redirecionando...';
-                setTimeout(() => {
-                    switchForms(false); 
-                    authMessage.textContent = '';
-                    document.getElementById('email').value = email;
-                    document.getElementById('password').focus();
-                }, 2000);
+                authMessage.textContent = 'Cadastro realizado! Um link de confirmação foi enviado para o seu e-mail. Por favor, clique nele para ativar sua conta e ter acesso ao painel.';
+                signupForm.reset(); // Limpa o formulário
+                // O botão permanecerá desabilitado para indicar que a ação foi concluída com sucesso.
             }
-            
-            setFormProcessing(signupForm, false);
         });
+        // =========================================================================
+        // ======================== FIM DO CÓDIGO ALTERADO =========================
+        // =========================================================================
         
         logoutButton.addEventListener('click', async () => {
             await supabaseClient.auth.signOut();
