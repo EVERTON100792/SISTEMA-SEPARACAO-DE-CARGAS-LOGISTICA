@@ -1793,68 +1793,74 @@
         }
 
         // --- FUNÇÃO DE ROTEAMENTO CORRIGIDA E ROBUSTA ---
-        async function getCoordinates(cityName) {
-            if (!cityName || typeof cityName !== 'string' || cityName.trim() === '') {
-                console.warn("Nome da cidade inválido ou vazio fornecido para geocodificação.");
-                return null;
-            }
-            const trimmedCityName = cityName.trim().toUpperCase();
-            if (geocodeCache[trimmedCityName]) {
-                return geocodeCache[trimmedCityName];
-            }
+        // SUBSTITUA A SUA FUNÇÃO ANTIGA POR ESTA VERSÃO MUITO MAIS PRECISA
+async function getCoordinates(cityName) {
+    if (!cityName || typeof cityName !== 'string' || cityName.trim() === '') {
+        console.warn("Nome da cidade inválido ou vazio fornecido para geocodificação.");
+        return null;
+    }
+    const trimmedCityName = cityName.trim().toUpperCase();
+    if (geocodeCache[trimmedCityName]) {
+        return geocodeCache[trimmedCityName];
+    }
 
-            const fullSearchText = `${trimmedCityName}, PR, Brazil`;
+    const fullSearchText = `${trimmedCityName}, PR, Brazil`;
+    
+    // --- MELHORIAS CRUCIAIS AQUI ---
+    // 1. Adicionamos 'layers=locality' para focar a busca apenas em cidades/vilas.
+    // 2. Aumentamos o 'size' para termos mais resultados para escolher o melhor.
+    const apiUrl = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(fullSearchText)}&layers=locality&sources=openstreetmap&size=5&boundary.country=BRA`;
 
-            const BBOX = { min_lon: -55.0, min_lat: -27.0, max_lon: -48.0, max_lat: -22.5 };
-            const FOCUS_POINT = { lon: -51.2, lat: -24.7 }; // Ponto central do Paraná
+    // Adicionando um log para depuração. Verifique o console do navegador (F12).
+    console.log(`Geocodificando para '${trimmedCityName}' usando a URL:`, apiUrl);
 
-            const apiUrl = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(fullSearchText)}&focus.point.lon=${FOCUS_POINT.lon}&focus.point.lat=${FOCUS_POINT.lat}&boundary.rect.min_lon=${BBOX.min_lon}&boundary.rect.min_lat=${BBOX.min_lat}&boundary.rect.max_lon=${BBOX.max_lon}&boundary.rect.max_lat=${BBOX.max_lat}&boundary.country=BRA&sources=openstreetmap`;
-
-            try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    throw new Error(`Erro de rede ou da API: ${response.status} ${response.statusText}`);
-                }
-                const data = await response.json();
-
-                if (data.features && data.features.length > 0) {
-                    let bestFeature = null;
-
-                    // 1. Tenta encontrar a melhor correspondência que a API diz ser do Paraná
-                    bestFeature = data.features.find(f =>
-                        f.properties.region && f.properties.region.toUpperCase().includes('PARANÁ')
-                    );
-                    
-                    // 2. Se não encontrou, procura o PRIMEIRO resultado que esteja DENTRO do nosso BBOX
-                    if (!bestFeature) {
-                        console.warn(`Não foi encontrada uma correspondência de região 'Paraná' para '${cityName}'. Verificando coordenadas de todos os resultados...`);
-                        bestFeature = data.features.find(f => {
-                            const coords = f.geometry.coordinates;
-                            return (coords[0] >= BBOX.min_lon && coords[0] <= BBOX.max_lon &&
-                                    coords[1] >= BBOX.min_lat && coords[1] <= BBOX.max_lat);
-                        });
-                    }
-
-                    if (bestFeature) {
-                        const coords = bestFeature.geometry.coordinates;
-                        console.log(`Geocodificação para '${cityName}': Encontrado '${bestFeature.properties.label}' em [${coords}].`);
-                        geocodeCache[trimmedCityName] = coords;
-                        return coords;
-                    } else {
-                        // Se nenhum resultado estiver dentro da nossa área, a busca falha.
-                        console.error(`ERRO DE GEOCODIFICAÇÃO: Nenhum resultado encontrado para '${cityName}' dentro do BBOX definido. API retornou:`, data.features.map(f => f.properties.label));
-                        return null;
-                    }
-                }
-                
-                throw new Error(`'${trimmedCityName}' não foi encontrada pela API de geocodificação.`);
-
-            } catch (error) {
-                console.error(`Falha ao geocodificar '${cityName}':`, error);
-                return null;
-            }
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            throw new Error(`Erro de rede ou da API: ${response.status} ${response.statusText}`);
         }
+        const data = await response.json();
 
+        if (data.features && data.features.length > 0) {
+            
+            // --- NOVA LÓGICA DE SELEÇÃO INTELIGENTE ---
+            // Em vez de pegar o primeiro resultado, vamos analisar e escolher o melhor.
+            let bestFeature = null;
+
+            // Damos prioridade máxima para resultados que estão no Paraná
+            const featuresInParana = data.features.filter(f => 
+                f.properties.region && f.properties.region.toUpperCase().includes('PARANÁ')
+            );
+
+            if (featuresInParana.length > 0) {
+                // Se encontramos cidades no Paraná, pegamos a de maior confiança (confidence score)
+                featuresInParana.sort((a, b) => (b.properties.confidence || 0) - (a.properties.confidence || 0));
+                bestFeature = featuresInParana[0];
+            } else {
+                // Se NENHUM resultado veio como "Paraná", como um fallback, pegamos o de maior confiança geral.
+                // Isso é menos ideal, mas evita falha total.
+                console.warn(`Nenhum resultado para '${trimmedCityName}' foi explicitamente identificado no Paraná. Usando o melhor resultado geral.`);
+                data.features.sort((a, b) => (b.properties.confidence || 0) - (a.properties.confidence || 0));
+                bestFeature = data.features[0];
+            }
+
+            const coords = bestFeature.geometry.coordinates;
+            const foundLabel = bestFeature.properties.label;
+
+            // Log crucial para vermos o que foi encontrado
+            console.log(`✅ Para '${trimmedCityName}', foi encontrado: '${foundLabel}' nas coordenadas [${coords}].`);
+            
+            geocodeCache[trimmedCityName] = coords;
+            return coords;
+        }
+        
+        throw new Error(`'${trimmedCityName}' não foi encontrada pela API de geocodificação.`);
+
+    } catch (error) {
+        console.error(`❌ Falha ao geocodificar '${cityName}':`, error);
+        return null;
+    }
+}
         // SUBSTITUA a sua função antiga por esta versão completa e aprimorada
 async function calculateRouteDistance(cityCoordinates) {
     if (!cityCoordinates || cityCoordinates.length === 0) return 0;
