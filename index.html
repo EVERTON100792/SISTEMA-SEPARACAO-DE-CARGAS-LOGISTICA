@@ -293,17 +293,17 @@
     <div id="dashboard-content" style="display: none;">
         <div class="container mt-4 mb-4">
              <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
-                 <div class="d-flex align-items-center mb-2 mb-md-0">
-                     <i class="bi bi-truck-front-fill display-4 me-3 text-primary"></i>
-                     <h1 class="mb-0 h3">Dashboard de Separação de Cargas</h1>
-                 </div>
-                 <div class="d-flex align-items-center no-print">
-                     <div id="user-info" class="me-3 text-body-secondary small text-nowrap"></div>
-                     <div class="btn-group">
-                         <button class="btn btn-outline-secondary" id="limparResultadosBtn"><i class="bi bi-eraser-fill me-1"></i>Limpar Tudo</button>
-                         <button class="btn btn-outline-danger" id="logout-button"><i class="bi bi-box-arrow-right me-1"></i>Sair</button>
-                     </div>
-                 </div>
+                <div class="d-flex align-items-center mb-2 mb-md-0">
+                    <i class="bi bi-truck-front-fill display-4 me-3 text-primary"></i>
+                    <h1 class="mb-0 h3">Dashboard de Separação de Cargas</h1>
+                </div>
+                <div class="d-flex align-items-center no-print">
+                    <div id="user-info" class="me-3 text-body-secondary small text-nowrap"></div>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-secondary" id="limparResultadosBtn"><i class="bi bi-eraser-fill me-1"></i>Limpar Tudo</button>
+                        <button class="btn btn-outline-danger" id="logout-button"><i class="bi bi-box-arrow-right me-1"></i>Sair</button>
+                    </div>
+                </div>
             </div>
 
             <div class="accordion mb-4 no-print" id="controls-accordion">
@@ -869,19 +869,19 @@
                 if (pedidoEncontrado) { local = 'Pedidos da Rota 1 para Alteração'; }
             }
              if (!pedidoEncontrado) {
-                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
-                  if (originalPedido) {
-                                       pedidoEncontrado = originalPedido;
-                                       if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                                           local = 'Bloqueado Manualmente por você.';
-                                       } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                                           local = 'Alocado na Carga Especial.';
-                                       }
-                                       else {
-                                           local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
-                                       }
-                  }
-             }
+                 const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
+                 if (originalPedido) {
+                                         pedidoEncontrado = originalPedido;
+                                         if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                                             local = 'Bloqueado Manualmente por você.';
+                                         } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                                             local = 'Alocado na Carga Especial.';
+                                         }
+                                         else {
+                                             local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
+                                         }
+                 }
+            }
 
             if (pedidoEncontrado) {
                 let buttons = '';
@@ -890,7 +890,7 @@
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
                                              <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
-                                       buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                         buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -983,8 +983,8 @@
             atualizarListaBloqueados();
 
             dropZoneText.innerHTML = `<i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                      <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                      <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+                                       <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
+                                       <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
             
             planilhaData = [];
             processarBtn.disabled = true;
@@ -1334,9 +1334,9 @@
                 else if (pesoPercentual > 75) progressColor = 'bg-warning';
 
                 const progressBar = `
-                                <div class="progress mt-2" role="progressbar" style="height: 10px;">
-                                    <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
-                                </div>`;
+                            <div class="progress mt-2" role="progressbar" style="height: 10px;">
+                                <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
+                            </div>`;
 
                 html += `<div id="${loadId}" class="card mb-3 drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="tresQuartos"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${progressBar}${createTable(load.pedidos, null, loadId)}</div></div>`;
             });
@@ -1746,12 +1746,12 @@
                         const load = loads[j];
 
                         const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, pedido) => {
-                           const clienteId = normalizeClientId(pedido.Cliente);
-                           if (!acc[clienteId]) acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
-                           acc[clienteId].pedidos.push(pedido);
-                           acc[clienteId].totalKg += pedido.Quilos_Saldo;
-                           acc[clienteId].totalCubagem += pedido.Cubagem;
-                           return acc;
+                             const clienteId = normalizeClientId(pedido.Cliente);
+                             if (!acc[clienteId]) acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
+                             acc[clienteId].pedidos.push(pedido);
+                             acc[clienteId].totalKg += pedido.Quilos_Saldo;
+                             acc[clienteId].totalCubagem += pedido.Cubagem;
+                             return acc;
                         }, {}));
 
                         for (let k = 0; k < clientGroupsInLoad.length; k++) {
@@ -1793,9 +1793,6 @@
         }
 
         // --- FUNÇÃO DE ROTEAMENTO CORRIGIDA E ROBUSTA ---
-        
-        // ▼▼▼▼▼ CÓDIGO ALTERADO ▼▼▼▼▼
-        // Adicionamos o parâmetro &layers=locality,county para focar a busca em cidades/municípios.
         async function getCoordinates(cityName) {
             if (!cityName || typeof cityName !== 'string' || cityName.trim() === '') {
                 console.warn("Nome da cidade inválido ou vazio fornecido para geocodificação.");
@@ -1811,7 +1808,7 @@
             const BBOX = { min_lon: -55.0, min_lat: -27.0, max_lon: -48.0, max_lat: -22.5 };
             const FOCUS_POINT = { lon: -51.2, lat: -24.7 }; // Ponto central do Paraná
 
-            const apiUrl = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(fullSearchText)}&layers=locality,county&focus.point.lon=${FOCUS_POINT.lon}&focus.point.lat=${FOCUS_POINT.lat}&boundary.rect.min_lon=${BBOX.min_lon}&boundary.rect.min_lat=${BBOX.min_lat}&boundary.rect.max_lon=${BBOX.max_lon}&boundary.rect.max_lat=${BBOX.max_lat}&boundary.country=BRA`;
+            const apiUrl = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(fullSearchText)}&focus.point.lon=${FOCUS_POINT.lon}&focus.point.lat=${FOCUS_POINT.lat}&boundary.rect.min_lon=${BBOX.min_lon}&boundary.rect.min_lat=${BBOX.min_lat}&boundary.rect.max_lon=${BBOX.max_lon}&boundary.rect.max_lat=${BBOX.max_lat}&boundary.country=BRA&sources=openstreetmap`;
 
             try {
                 const response = await fetch(apiUrl);
@@ -1821,13 +1818,33 @@
                 const data = await response.json();
 
                 if (data.features && data.features.length > 0) {
-                    // Com o filtro 'layers', o primeiro resultado geralmente é o correto.
-                    const bestFeature = data.features[0]; 
+                    let bestFeature = null;
+
+                    // 1. Tenta encontrar a melhor correspondência que a API diz ser do Paraná
+                    bestFeature = data.features.find(f =>
+                        f.properties.region && f.properties.region.toUpperCase().includes('PARANÁ')
+                    );
                     
-                    const coords = bestFeature.geometry.coordinates;
-                    console.log(`Geocodificação para '${cityName}': Encontrado '${bestFeature.properties.label}' em [${coords}].`);
-                    geocodeCache[trimmedCityName] = coords;
-                    return coords;
+                    // 2. Se não encontrou, procura o PRIMEIRO resultado que esteja DENTRO do nosso BBOX
+                    if (!bestFeature) {
+                        console.warn(`Não foi encontrada uma correspondência de região 'Paraná' para '${cityName}'. Verificando coordenadas de todos os resultados...`);
+                        bestFeature = data.features.find(f => {
+                            const coords = f.geometry.coordinates;
+                            return (coords[0] >= BBOX.min_lon && coords[0] <= BBOX.max_lon &&
+                                    coords[1] >= BBOX.min_lat && coords[1] <= BBOX.max_lat);
+                        });
+                    }
+
+                    if (bestFeature) {
+                        const coords = bestFeature.geometry.coordinates;
+                        console.log(`Geocodificação para '${cityName}': Encontrado '${bestFeature.properties.label}' em [${coords}].`);
+                        geocodeCache[trimmedCityName] = coords;
+                        return coords;
+                    } else {
+                        // Se nenhum resultado estiver dentro da nossa área, a busca falha.
+                        console.error(`ERRO DE GEOCODIFICAÇÃO: Nenhum resultado encontrado para '${cityName}' dentro do BBOX definido. API retornou:`, data.features.map(f => f.properties.label));
+                        return null;
+                    }
                 }
                 
                 throw new Error(`'${trimmedCityName}' não foi encontrada pela API de geocodificação.`);
@@ -1837,79 +1854,80 @@
                 return null;
             }
         }
-        
-        // A função de cálculo de distância foi substituída por esta versão otimizada.
-        async function calculateRouteDistance(cityCoordinates) {
-            // Caso base: sem coordenadas, a distância é zero.
-            if (!cityCoordinates || cityCoordinates.length === 0) {
-                return 0;
-            }
 
-            // Caso para uma única cidade: uma simples rota de ida e volta é a mais eficiente.
-            // Usamos o endpoint 'directions' que é mais rápido para isso.
+        async function calculateRouteDistance(cityCoordinates) {
+            if (!cityCoordinates || cityCoordinates.length === 0) return 0;
+
+            // Se houver apenas uma cidade, use a API de Direções (mais simples e rápida)
             if (cityCoordinates.length === 1) {
                 try {
                     const response = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car`, {
                         method: 'POST',
-                        headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ coordinates: [SELMI_COORDS, cityCoordinates[0], SELMI_COORDS] })
+                        headers: {
+                            'Authorization': ORS_API_KEY,
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
+                        body: JSON.stringify({ coordinates: [SELMI_COORDS, cityCoordinates[0], SELMI_COORDS] }) // Rota: Depósito -> Cidade -> Depósito
                     });
-                    if (!response.ok) throw new Error(`API de Direções falhou com status: ${response.status}`);
+                    if (!response.ok) throw new Error('Falha na API de Direções');
                     const data = await response.json();
                     if (data.routes && data.routes[0]) {
                         return data.routes[0].summary.distance / 1000; // Distância em km
                     }
-                    throw new Error('Resposta da API de Direções em formato inesperado.');
+                    return -2; // Código de erro: Resposta inesperada
                 } catch (error) {
                     console.error('Erro ao calcular rota simples:', error);
                     return -1; // Código de erro: Falha de API
                 }
             }
 
-            // Caso para múltiplas cidades: usamos o endpoint de OTIMIZAÇÃO.
-            const jobs = cityCoordinates.map((coords, index) => ({
-                id: index + 1,
-                location: coords
-            }));
-
-            const vehicle = {
-                id: 1,
-                profile: 'driving-car',
-                start: SELMI_COORDS, // Ponto de partida
-                end: SELMI_COORDS // Ponto de chegada (retorno)
-            };
-
+            // Para múltiplas cidades, use a API de Matriz para encontrar uma boa rota
+            const locations = [SELMI_COORDS, ...cityCoordinates];
             try {
-                // A URL aqui foi corrigida, removendo o '/v2'
-                const response = await fetch(`https://api.openrouteservice.org/optimization`, {
+                const matrixResponse = await fetch(`https://api.openrouteservice.org/v2/matrix/driving-car`, {
                     method: 'POST',
                     headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ jobs: jobs, vehicles: [vehicle] })
+                    body: JSON.stringify({ locations, metrics: ["distance"] })
                 });
+                if (!matrixResponse.ok) throw new Error('Falha na API de Matriz');
+                const matrixData = await matrixResponse.json();
+                const distances = matrixData.distances;
 
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    console.error("Erro da API de Otimização:", errorBody);
-                    throw new Error(`API de Otimização falhou com status ${response.status}: ${errorBody.error?.message || 'Erro desconhecido'}`);
+                // Algoritmo do Vizinho Mais Próximo (uma heurística simples para o caixeiro viajante)
+                let totalDistance = 0;
+                let currentLocation = 0; // Começa no depósito (índice 0)
+                let unvisited = new Set(Array.from({ length: cityCoordinates.length }, (_, i) => i + 1));
+                
+                while (unvisited.size > 0) {
+                    let nearestDistance = Infinity;
+                    let nearestLocation = -1;
+
+                    unvisited.forEach(locationIndex => {
+                        if (distances[currentLocation][locationIndex] < nearestDistance) {
+                            nearestDistance = distances[currentLocation][locationIndex];
+                            nearestLocation = locationIndex;
+                        }
+                    });
+
+                    if (nearestLocation !== -1) {
+                        totalDistance += nearestDistance;
+                        currentLocation = nearestLocation;
+                        unvisited.delete(nearestLocation);
+                    } else {
+                        break; // Não encontrou um próximo, encerra
+                    }
                 }
+                
+                // Adiciona a distância de volta para o depósito
+                totalDistance += distances[currentLocation][0];
 
-                const data = await response.json();
-
-                if (data.summary && typeof data.summary.distance !== 'undefined') {
-                    return data.summary.distance / 1000; // Distância em km
-                } else if (data.unassigned && data.unassigned.length > 0) {
-                    console.error("Otimização falhou: Pontos não puderam ser atribuídos à rota.", data.unassigned);
-                    return -3; // Código de erro: Falha na otimização
-                }
-                throw new Error('Resposta da API de Otimização em formato inesperado.');
+                return totalDistance / 1000; // Converte para km
 
             } catch (error) {
-                console.error('Erro ao calcular rota otimizada:', error);
-                return -1; // Código de erro: Falha de API
+                console.error('Erro ao calcular rota com matriz:', error);
+                return -1; // Retorna -1 para indicar erro de API
             }
         }
-        // ▲▲▲▲▲ FIM DO CÓDIGO ALTERADO ▲▲▲▲▲
-
 
         // --- FUNÇÃO PRINCIPAL DE MONTAGEM (ATUALIZADA) ---
         async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
@@ -2071,9 +2089,9 @@
                         if (successfulCoords.length < uniqueCities.length) {
                              console.warn(`Apenas ${successfulCoords.length} de ${uniqueCities.length} cidades foram geocodificadas para esta carga. A distância pode ser imprecisa.`);
                         }
-                        
+
                         const calculatedDistance = await calculateRouteDistance(successfulCoords);
-                        load.distance = calculatedDistance;
+                        load.distance = (calculatedDistance === -1) ? -1 : calculatedDistance;
 
                     } catch (e) {
                         console.error("Falha geral ao processar distância para a carga:", load, e);
@@ -2106,7 +2124,7 @@
             
             const generatedLoads = allLoads.filter(l => l.pedidos.length > 0);
             if(generatedLoads.length === 0){
-                 html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
+                  html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
             } else {
                 generatedLoads.forEach(load => {
                     html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType]);
@@ -2119,15 +2137,15 @@
                 const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
 
                 html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
-                                  <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                  <div class="card mb-3">
-                                      <div class="card-header bg-danger text-white d-flex align-items-center">
-                                          Pedidos Restantes
-                                          <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
-                                      </div>
-                                      <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                  </div>
-                              </div>`;
+                                 <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                 <div class="card mb-3">
+                                     <div class="card-header bg-danger text-white d-flex align-items-center">
+                                         Pedidos Restantes
+                                         <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                     </div>
+                                     <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                 </div>
+                             </div>`;
             }
             resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
         }
@@ -2176,8 +2194,6 @@
                     distanceHtml = `<span class="ms-3 border-start border-light ps-3 text-danger fw-bold">Erro de API/Rede</span>`;
                 } else if (load.distance === -2) {
                     distanceHtml = `<span class="ms-3 border-start border-light ps-3 text-warning fw-bold">Cidades não encontradas</span>`;
-                } else if (load.distance === -3) {
-                    distanceHtml = `<span class="ms-3 border-start border-light ps-3 text-danger fw-bold">Falha na Otimização</span>`;
                 } else {
                     let rankBadge = '';
                     if (load.rank === 1) {
