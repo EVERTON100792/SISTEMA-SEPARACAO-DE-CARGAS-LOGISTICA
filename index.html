@@ -1105,11 +1105,18 @@
                         !pedidosVendaAntecipadaProcessados.has(String(p.Num_Pedido))
                     );
 
+                    // ***** INÍCIO DA ALTERAÇÃO *****
                     rota1SemCarga = pedidosDisponiveis.filter(p => {
                         const codRota = String(p.Cod_Rota || '').trim();
-                        const cfIsNumeric = isNumeric(p.CF);
-                        return codRota === '1' && !cfIsNumeric;
+                        if (codRota !== '1') {
+                            return false; // Ignora se não for Rota 1
+                        }
+                        const coluna5Value = String(p.Coluna5 || '').trim().toUpperCase();
+                        const filtroTabelas = ['TBL TODESCHINI', 'TBL 08 PROMO BOLINHO'];
+                        return filtroTabelas.includes(coluna5Value);
                     });
+                    // ***** FIM DA ALTERAÇÃO *****
+
                     const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
                     displayRota1(resultadoRota1Div, rota1SemCarga);
 
