@@ -196,6 +196,11 @@
             background-color: #49491c !important;
         }
         
+        /* NOVO ESTILO PARA DESTAQUE DE PEDIDOS "SEM CORTE" */
+        tr.sem-corte-highlight > td {
+            background-color: #554800 !important; /* Um tom de amarelo escuro */
+        }
+        
         .drop-zone-card.drag-over {
             border-color: var(--dark-primary);
             border-width: 2px;
@@ -445,13 +450,13 @@
                                 <div class="col-md-6">
                                     <div class="card h-100">
                                         <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>6. Venda Antecipada</h2></div>
-                                        <div class="card-body d-flex flex-column">
-                                            <div class="flex-grow-1">
-                                                <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
-                                                <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui para montar uma carga separada..."></textarea>
-                                            </div>
-                                            <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaVendaAntecipada()"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
-                                        </div>
+                                         <div class="card-body d-flex flex-column">
+                                             <div class="flex-grow-1">
+                                                 <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
+                                                 <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui para montar uma carga separada..."></textarea>
+                                             </div>
+                                             <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaVendaAntecipada()"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
+                                         </div>
                                     </div>
                                 </div>
                             </div>
@@ -903,17 +908,17 @@
              if (!pedidoEncontrado) {
                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                  if (originalPedido) {
-                                  pedidoEncontrado = originalPedido;
-                                  if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                                       local = 'Bloqueado Manualmente por você.';
-                                  } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                                       local = 'Alocado na Carga Especial.';
-                                  } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
-                                       local = 'Alocado na Carga de Venda Antecipada.';
-                                  }
-                                  else {
-                                       local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
-                                  }
+                                       pedidoEncontrado = originalPedido;
+                                       if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                                           local = 'Bloqueado Manualmente por você.';
+                                       } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                                           local = 'Alocado na Carga Especial.';
+                                       } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
+                                           local = 'Alocado na Carga de Venda Antecipada.';
+                                       }
+                                       else {
+                                           local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
+                                       }
                  }
             }
 
@@ -1055,8 +1060,8 @@
             atualizarListaSemCorte(); // Atualizar lista "sem corte"
 
             dropZoneText.innerHTML = `<i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                      <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                      <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+                                     <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
+                                     <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
             
             planilhaData = [];
             processarBtn.disabled = true;
@@ -1276,23 +1281,34 @@
             colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
             pedidos.forEach(p => {
+                // MODIFICAÇÃO INÍCIO
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
+                const isSemCorteRow = pedidosSemCorte.has(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
-                table += `<tr id="pedido-${p.Num_Pedido}" 
-                                class="${isPriorityRow ? 'table-primary' : ''}" 
+                
+                let rowClasses = [];
+                if (isPriorityRow) rowClasses.push('table-primary');
+                if (isSemCorteRow) rowClasses.push('sem-corte-highlight');
+                
+                table += `<tr id="pedido-${p.Num_Pedido}"
+                                class="${rowClasses.join(' ')}" 
                                 data-cliente-id="${clienteIdNormalizado}" 
                                 data-pedido-id="${p.Num_Pedido}"
                                 onclick="highlightClientRows(event)"
                                 draggable="true"
                                 ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
+                // MODIFICAÇÃO FIM
+
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
+                    // MODIFICAÇÃO INÍCIO
                     if (c === 'Num_Pedido') {
                         const isPriority = pedidosPrioritarios.includes(String(p.Num_Pedido));
-                        const isSemCorte = pedidosSemCorte.has(String(p.Num_Pedido)); // NOVO: Checagem Sem Corte
-                        const priorityBadge = isPriority ? ' <span class="badge bg-primary">Prioridade</span>' : '';
-                        const semCorteBadge = isSemCorte ? ' <span class="badge bg-transparent" title="Pedido Sem Corte"><i class="bi bi-scissors text-warning"></i></span>' : ''; // NOVO: Badge Sem Corte
+                        const isSemCorte = pedidosSemCorte.has(String(p.Num_Pedido));
+                        const priorityBadge = isPriority ? ' <span class="badge bg-primary ms-1">Prioridade</span>' : '';
+                        const semCorteBadge = isSemCorte ? ' <span class="badge bg-warning text-dark ms-1" title="Este pedido não pode ter cortes."><i class="bi bi-scissors me-1"></i>SEM CORTE</span>' : '';
                         table += `<td>${cellContent}${priorityBadge}${semCorteBadge}</td>`;
+                    // MODIFICAÇÃO FIM
                     } else if (c === 'Agendamento' && cellContent === 'Sim') {
                         table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
                     } else if (c === 'Predat' || c === 'Dat_Ped') {
