@@ -196,6 +196,11 @@
             background-color: #49491c !important;
         }
         
+        /* NOVO ESTILO PARA DESTAQUE DE PEDIDOS "SEM CORTE" */
+        tr.sem-corte-highlight > td {
+            background-color: #554800 !important; /* Um tom de amarelo escuro */
+        }
+        
         .drop-zone-card.drag-over {
             border-color: var(--dark-primary);
             border-width: 2px;
@@ -903,17 +908,17 @@
              if (!pedidoEncontrado) {
                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                  if (originalPedido) {
-                                  pedidoEncontrado = originalPedido;
-                                  if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                                       local = 'Bloqueado Manualmente por você.';
-                                  } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                                       local = 'Alocado na Carga Especial.';
-                                  } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
-                                       local = 'Alocado na Carga de Venda Antecipada.';
-                                  }
-                                  else {
-                                       local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
-                                  }
+                                       pedidoEncontrado = originalPedido;
+                                       if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                                           local = 'Bloqueado Manualmente por você.';
+                                       } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                                           local = 'Alocado na Carga Especial.';
+                                       } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
+                                           local = 'Alocado na Carga de Venda Antecipada.';
+                                       }
+                                       else {
+                                           local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
+                                       }
                  }
             }
 
@@ -922,7 +927,7 @@
                 if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
                                      buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
@@ -1055,8 +1060,8 @@
             atualizarListaSemCorte(); // Atualizar lista "sem corte"
 
             dropZoneText.innerHTML = `<i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                      <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                      <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+                                     <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
+                                     <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
             
             planilhaData = [];
             processarBtn.disabled = true;
@@ -1276,23 +1281,34 @@
             colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
             pedidos.forEach(p => {
+                // MODIFICAÇÃO INÍCIO
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
+                const isSemCorteRow = pedidosSemCorte.has(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
-                table += `<tr id="pedido-${p.Num_Pedido}" 
-                                class="${isPriorityRow ? 'table-primary' : ''}" 
+                
+                let rowClasses = [];
+                if (isPriorityRow) rowClasses.push('table-primary');
+                if (isSemCorteRow) rowClasses.push('sem-corte-highlight');
+                
+                table += `<tr id="pedido-${p.Num_Pedido}"
+                                class="${rowClasses.join(' ')}" 
                                 data-cliente-id="${clienteIdNormalizado}" 
                                 data-pedido-id="${p.Num_Pedido}"
                                 onclick="highlightClientRows(event)"
                                 draggable="true"
                                 ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
+                // MODIFICAÇÃO FIM
+
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
+                    // MODIFICAÇÃO INÍCIO
                     if (c === 'Num_Pedido') {
                         const isPriority = pedidosPrioritarios.includes(String(p.Num_Pedido));
-                        const isSemCorte = pedidosSemCorte.has(String(p.Num_Pedido)); // NOVO: Checagem Sem Corte
-                        const priorityBadge = isPriority ? ' <span class="badge bg-primary">Prioridade</span>' : '';
-                        const semCorteBadge = isSemCorte ? ' <span class="badge bg-transparent" title="Pedido Sem Corte"><i class="bi bi-scissors text-warning"></i></span>' : ''; // NOVO: Badge Sem Corte
+                        const isSemCorte = pedidosSemCorte.has(String(p.Num_Pedido));
+                        const priorityBadge = isPriority ? ' <span class="badge bg-primary ms-1">Prioridade</span>' : '';
+                        const semCorteBadge = isSemCorte ? ' <span class="badge bg-warning text-dark ms-1" title="Este pedido não pode ter cortes."><i class="bi bi-scissors me-1"></i>SEM CORTE</span>' : '';
                         table += `<td>${cellContent}${priorityBadge}${semCorteBadge}</td>`;
+                    // MODIFICAÇÃO FIM
                     } else if (c === 'Agendamento' && cellContent === 'Sim') {
                         table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
                     } else if (c === 'Predat' || c === 'Dat_Ped') {
@@ -1728,10 +1744,10 @@
                             
                             if (load.pedidos.length > 0) {
                                 const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, p) => {
-                                      const cId = normalizeClientId(p.Cliente);
-                                      if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
-                                      acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
-                                      return acc;
+                                     const cId = normalizeClientId(p.Cliente);
+                                     if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                                     acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                                     return acc;
                                 }, {}));
 
                                 if(clientGroupsInLoad.length > 0) {
@@ -1822,12 +1838,12 @@
                         const load = loads[j];
 
                         const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, pedido) => {
-                           const clienteId = normalizeClientId(pedido.Cliente);
-                           if (!acc[clienteId]) acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
-                           acc[clienteId].pedidos.push(pedido);
-                           acc[clienteId].totalKg += pedido.Quilos_Saldo;
-                           acc[clienteId].totalCubagem += pedido.Cubagem;
-                           return acc;
+                             const clienteId = normalizeClientId(pedido.Cliente);
+                             if (!acc[clienteId]) acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
+                             acc[clienteId].pedidos.push(pedido);
+                             acc[clienteId].totalKg += pedido.Quilos_Saldo;
+                             acc[clienteId].totalCubagem += pedido.Cubagem;
+                             return acc;
                         }, {}));
 
                         for (let k = 0; k < clientGroupsInLoad.length; k++) {
@@ -2984,12 +3000,9 @@
             setFormProcessing(loginForm, false);
         });
 
-        // =========================================================================
-        // ======================= INÍCIO DO CÓDIGO ALTERADO =======================
-        // =========================================================================
         signupForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            setFormProcessing(signupForm, true); // Desabilita o botão para evitar cliques múltiplos
+            setFormProcessing(signupForm, true);
             authMessage.textContent = '';
             
             const email = document.getElementById('signup-email').value;
@@ -3006,19 +3019,19 @@
                 } else {
                     authMessage.textContent = 'Erro ao criar conta: ' + error.message;
                 }
-                // Reabilita o botão apenas se houver erro, para que o usuário possa tentar novamente.
-                setFormProcessing(signupForm, false); 
             } else {
-                // MENSAGEM CORRIGIDA E LÓGICA AJUSTADA
                 authMessage.className = 'text-success';
-                authMessage.textContent = 'Cadastro realizado! Um link de confirmação foi enviado para o seu e-mail. Por favor, clique nele para ativar sua conta e ter acesso ao painel.';
-                signupForm.reset(); // Limpa o formulário
-                // O botão permanecerá desabilitado para indicar que a ação foi concluída com sucesso.
+                authMessage.textContent = 'Conta criada com sucesso! Redirecionando...';
+                setTimeout(() => {
+                    switchForms(false); 
+                    authMessage.textContent = '';
+                    document.getElementById('email').value = email;
+                    document.getElementById('password').focus();
+                }, 2000);
             }
+            
+            setFormProcessing(signupForm, false);
         });
-        // =========================================================================
-        // ======================== FIM DO CÓDIGO ALTERADO =========================
-        // =========================================================================
         
         logoutButton.addEventListener('click', async () => {
             await supabaseClient.auth.signOut();
