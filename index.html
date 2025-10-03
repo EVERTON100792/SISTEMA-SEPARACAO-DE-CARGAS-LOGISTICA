@@ -240,7 +240,7 @@
         <div id="particles-js"></div>
         <div class="card p-4 shadow-lg login-card">
             <div class="text-center mb-4 icon-container">
-                 <i class="bi bi-truck-front-fill display-3 text-primary"></i>
+                   <i class="bi bi-truck-front-fill display-3 text-primary"></i>
             </div>
 
             <div id="auth-message" class="text-center mb-3"></div>
@@ -270,7 +270,7 @@
             </div>
 
             <div id="signup-form-container" class="form-container hidden">
-                 <div class="text-center mb-4">
+                   <div class="text-center mb-4">
                     <h4 class="mb-1">Crie sua Conta</h4>
                     <p class="text-body-secondary small">Rápido e fácil</p>
                 </div>
@@ -288,7 +288,7 @@
                         <div class="spinner-border spinner-border-sm" role="status" style="display: none;"></div>
                     </button>
                 </form>
-                 <p class="text-center small mt-3 mb-0">
+                   <p class="text-center small mt-3 mb-0">
                     Já tem uma conta? <a href="#" class="auth-toggle-link" id="toggle-to-login">Faça login</a>
                 </p>
             </div>
@@ -344,18 +344,18 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-md-5">
-                                                     <label for="optimizationLevelSelect" class="form-label fw-bold">Nível de Otimização:</label>
-                                                     <select id="optimizationLevelSelect" class="form-select">
-                                                         <option value="1">Nível 1: Heurística Rápida</option>
-                                                         <option value="2" selected>Nível 2: Avançada (Recomendado)</option>
-                                                         <option value="3">Nível 3: Exaustiva (Lento)</option>
-                                                     </select>
+                                                      <label for="optimizationLevelSelect" class="form-label fw-bold">Nível de Otimização:</label>
+                                                      <select id="optimizationLevelSelect" class="form-select">
+                                                          <option value="1">Nível 1: Heurística Rápida</option>
+                                                          <option value="2" selected>Nível 2: Avançada (Recomendado)</option>
+                                                          <option value="3">Nível 3: Exaustiva (Lento)</option>
+                                                      </select>
                                                 </div>
                                                 <div class="col-md-7">
-                                                     <div class="form-check form-switch mt-2">
-                                                         <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
-                                                         <label class="form-check-label" for="autoProcessCheckbox">Processar automaticamente</label>
-                                                     </div>
+                                                      <div class="form-check form-switch mt-2">
+                                                          <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
+                                                          <label class="form-check-label" for="autoProcessCheckbox">Processar automaticamente</label>
+                                                      </div>
                                                 </div>
                                                 <div class="col-md-5 align-self-end">
                                                     <button class="btn btn-primary w-100 py-2" id="processarBtn" onclick="processar()" disabled><i class="bi bi-gear-fill me-2"></i>Processar Cargas</button>
@@ -421,13 +421,13 @@
                                 </div>
                                 <div class="col-md-6">
                                      <div class="card h-100">
-                                         <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>4. Carga Especial</h2></div>
+                                          <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>4. Carga Especial</h2></div>
                                           <div class="card-body d-flex flex-column">
-                                              <div class="flex-grow-1">
-                                                  <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
-                                                  <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
-                                              </div>
-                                              <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaEspecial()"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
+                                                <div class="flex-grow-1">
+                                                    <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
+                                                    <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
+                                                </div>
+                                                <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaEspecial()"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
                                           </div>
                                     </div>
                                 </div>
@@ -449,14 +449,14 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="card h-100">
-                                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>6. Venda Antecipada</h2></div>
-                                         <div class="card-body d-flex flex-column">
-                                             <div class="flex-grow-1">
-                                                 <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
-                                                 <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui para montar uma carga separada..."></textarea>
-                                             </div>
-                                             <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaVendaAntecipada()"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
-                                         </div>
+                                          <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>6. Venda Antecipada</h2></div>
+                                           <div class="card-body d-flex flex-column">
+                                               <div class="flex-grow-1">
+                                                   <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
+                                                   <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui para montar uma carga separada..."></textarea>
+                                               </div>
+                                               <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaVendaAntecipada()"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
+                                          </div>
                                     </div>
                                 </div>
                             </div>
@@ -625,8 +625,8 @@
         let pedidosPrioritarios = [];
         let pedidosBloqueados = new Set();
         let pedidosEspeciaisProcessados = new Set();
-        let pedidosSemCorte = new Set(); // NOVO: Para pedidos "Sem Corte"
-        let pedidosVendaAntecipadaProcessados = new Set(); // NOVO: Para Venda Antecipada
+        let pedidosSemCorte = new Set();
+        let pedidosVendaAntecipadaProcessados = new Set();
         let rota1SemCarga = [];
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
@@ -873,8 +873,8 @@
             let pedidoEncontrado = null; let local = 'Não encontrado'; let accordionId = '';
             
             if (currentLeftoversForPrinting.length > 0) {
-                 pedidoEncontrado = currentLeftoversForPrinting.find(p => String(p.Num_Pedido) === searchInput);
-                 if (pedidoEncontrado) local = 'Sobras Finais (na Mesa de Trabalho)';
+                   pedidoEncontrado = currentLeftoversForPrinting.find(p => String(p.Num_Pedido) === searchInput);
+                   if (pedidoEncontrado) local = 'Sobras Finais (na Mesa de Trabalho)';
             }
             if (!pedidoEncontrado) {
                 for (const loadId in activeLoads) {
@@ -906,8 +906,8 @@
                 if (pedidoEncontrado) { local = 'Pedidos da Rota 1 para Alteração'; }
             }
              if (!pedidoEncontrado) {
-                 const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
-                 if (originalPedido) {
+                   const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
+                   if (originalPedido) {
                                        pedidoEncontrado = originalPedido;
                                        if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
                                            local = 'Bloqueado Manualmente por você.';
@@ -919,7 +919,7 @@
                                        else {
                                            local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
                                        }
-                 }
+                   }
             }
 
             if (pedidoEncontrado) {
@@ -927,9 +927,9 @@
                 if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                         <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
-                                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                           buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -1060,8 +1060,8 @@
             atualizarListaSemCorte(); // Atualizar lista "sem corte"
 
             dropZoneText.innerHTML = `<i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                     <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                     <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+                                      <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
+                                      <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
             
             planilhaData = [];
             processarBtn.disabled = true;
@@ -1213,12 +1213,16 @@
                         pesoTotal: planilhaData.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
                         pedidosEspeciais: pedidosEspeciaisProcessados.size,
                         pedidosBloqueados: pedidosManualmenteBloqueados.length,
-                        pedidosToco: tocoPedidoIds.size,
-                        pedidos34Auto: tresQuartosLoads.reduce((sum, load) => sum + load.pedidos.length, 0),
+                        numCargasToco: Object.keys(gruposToco).length,
+                        pesoCargasToco: Object.values(gruposToco).reduce((sum, group) => sum + group.totalKg, 0),
+                        numCargas34Auto: tresQuartosLoads.length,
+                        pesoCargas34Auto: tresQuartosLoads.reduce((sum, load) => sum + load.totalKg, 0),
                         pedidosFiltrados: pedidosComCFNumericoIsolado.length + rota1SemCarga.length,
                         pedidosDisponiveis: pedidosGeraisAtuais.length,
                         pesoDisponivel: pedidosGeraisAtuais.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
                     };
+                    stats.pesoTotalVarejoMontado = stats.pesoCargas34Auto;
+
                     displayResumoGeral(stats);
                     
                     statusDiv.innerHTML = `<p class="text-success">Processamento concluído com sucesso!</p>`;
@@ -1281,7 +1285,6 @@
             colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
             pedidos.forEach(p => {
-                // MODIFICAÇÃO INÍCIO
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const isSemCorteRow = pedidosSemCorte.has(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
@@ -1297,18 +1300,15 @@
                                 onclick="highlightClientRows(event)"
                                 draggable="true"
                                 ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
-                // MODIFICAÇÃO FIM
 
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
-                    // MODIFICAÇÃO INÍCIO
                     if (c === 'Num_Pedido') {
                         const isPriority = pedidosPrioritarios.includes(String(p.Num_Pedido));
                         const isSemCorte = pedidosSemCorte.has(String(p.Num_Pedido));
                         const priorityBadge = isPriority ? ' <span class="badge bg-primary ms-1">Prioridade</span>' : '';
                         const semCorteBadge = isSemCorte ? ' <span class="badge bg-warning text-dark ms-1" title="Este pedido não pode ter cortes."><i class="bi bi-scissors me-1"></i>SEM CORTE</span>' : '';
                         table += `<td>${cellContent}${priorityBadge}${semCorteBadge}</td>`;
-                    // MODIFICAÇÃO FIM
                     } else if (c === 'Agendamento' && cellContent === 'Sim') {
                         table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
                     } else if (c === 'Predat' || c === 'Dat_Ped') {
@@ -1727,11 +1727,11 @@
                             if (targetLoadIndex < neighborSolution.loads.length) {
                                const targetLoad = neighborSolution.loads[targetLoadIndex];
                                if(isMoveValid(targetLoad, groupToPlace, vehicleType)) {
-                                    targetLoad.pedidos.push(...groupToPlace.pedidos);
-                                    targetLoad.totalKg += groupToPlace.totalKg;
-                                    targetLoad.totalCubagem += groupToPlace.totalCubagem;
-                                    neighborSolution.leftovers.splice(leftoverIndex, 1);
-                                    moveMade = true;
+                                   targetLoad.pedidos.push(...groupToPlace.pedidos);
+                                   targetLoad.totalKg += groupToPlace.totalKg;
+                                   targetLoad.totalCubagem += groupToPlace.totalCubagem;
+                                   neighborSolution.leftovers.splice(leftoverIndex, 1);
+                                   moveMade = true;
                                }
                             } else if (isMoveValid({pedidos:[], totalKg:0, totalCubagem:0}, groupToPlace, vehicleType)) { 
                                 neighborSolution.loads.push(groupToPlace);
@@ -1744,10 +1744,10 @@
                             
                             if (load.pedidos.length > 0) {
                                 const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, p) => {
-                                     const cId = normalizeClientId(p.Cliente);
-                                     if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
-                                     acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
-                                     return acc;
+                                      const cId = normalizeClientId(p.Cliente);
+                                      if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                                      acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                                      return acc;
                                 }, {}));
 
                                 if(clientGroupsInLoad.length > 0) {
@@ -1838,12 +1838,12 @@
                         const load = loads[j];
 
                         const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, pedido) => {
-                             const clienteId = normalizeClientId(pedido.Cliente);
-                             if (!acc[clienteId]) acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
-                             acc[clienteId].pedidos.push(pedido);
-                             acc[clienteId].totalKg += pedido.Quilos_Saldo;
-                             acc[clienteId].totalCubagem += pedido.Cubagem;
-                             return acc;
+                           const clienteId = normalizeClientId(pedido.Cliente);
+                           if (!acc[clienteId]) acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) };
+                           acc[clienteId].pedidos.push(pedido);
+                           acc[clienteId].totalKg += pedido.Quilos_Saldo;
+                           acc[clienteId].totalCubagem += pedido.Cubagem;
+                           return acc;
                         }, {}));
 
                         for (let k = 0; k < clientGroupsInLoad.length; k++) {
@@ -2134,7 +2134,7 @@
                         }
                         
                         if (successfulCoords.length < uniqueCities.length) {
-                             console.warn(`Apenas ${successfulCoords.length} de ${uniqueCities.length} cidades foram geocodificadas para esta carga. A distância pode ser imprecisa.`);
+                               console.warn(`Apenas ${successfulCoords.length} de ${uniqueCities.length} cidades foram geocodificadas para esta carga. A distância pode ser imprecisa.`);
                         }
 
                         const calculatedDistance = await calculateRouteDistance(successfulCoords);
@@ -2184,17 +2184,18 @@
                 const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
 
                 html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
-                                 <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                 <div class="card mb-3">
-                                     <div class="card-header bg-danger text-white d-flex align-items-center">
-                                         Pedidos Restantes
-                                         <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                     <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                     <div class="card mb-3">
+                                         <div class="card-header bg-danger text-white d-flex align-items-center">
+                                             Pedidos Restantes
+                                             <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                         </div>
+                                         <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                                      </div>
-                                     <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                 </div>
-                             </div>`;
+                               </div>`;
             }
             resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
+            updateResumoMontagem();
         }
         
         function refineLoadsWithSimpleFit(initialLoads, initialLeftovers) {
@@ -2544,29 +2545,37 @@
             <div class="card">
                 <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo do Processamento</div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <h6 class="text-white-50">TOTAIS DA PLANILHA</h6>
+                    <div class="row g-4">
+                        <div class="col-lg-6 col-xl-3">
+                            <h6 class="text-primary-emphasis"><i class="bi bi-truck me-2"></i>Cargas Montadas</h6>
                             <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Pedidos no Arquivo <span class="badge bg-primary rounded-pill">${nf(stats.totalPlanilha)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Peso Total no Arquivo <span class="badge bg-primary rounded-pill">${kf(stats.pesoTotal)} kg</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">Fiorino <span class="badge bg-light text-dark rounded-pill"><span id="resumo-num-fiorinos">--</span> / <span id="resumo-peso-fiorinos">-- kg</span></span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">Van <span class="badge bg-light text-dark rounded-pill"><span id="resumo-num-vans">--</span> / <span id="resumo-peso-vans">-- kg</span></span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">3/4 (Auto) <span class="badge bg-warning text-dark rounded-pill">${nf(stats.numCargas34Auto)} / <span id="resumo-peso-34-auto" data-value="${stats.pesoCargas34Auto}">${kf(stats.pesoCargas34Auto)} kg</span></span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">Toco <span class="badge bg-secondary rounded-pill">${nf(stats.numCargasToco)} / ${kf(stats.pesoCargasToco)} kg</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 border-top pt-2 fw-bold text-success">Total Varejo Montado<span id="resumo-total-varejo" class="badge bg-success rounded-pill">${kf(stats.pesoTotalVarejoMontado)} kg</span></li>
                             </ul>
                         </div>
-                        <div class="col-md-4">
-                            <h6 class="text-white-50">PEDIDOS PRÉ-PROCESSADOS</h6>
+                        <div class="col-lg-6 col-xl-3">
+                            <h6 class="text-success-emphasis"><i class="bi bi-box-seam me-2"></i>Disponível p/ Montagem</h6>
                             <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Carga Especial<span class="badge bg-info rounded-pill">${nf(stats.pedidosEspeciais)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas Toco (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosToco)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas 3/4 Auto (pedidos)<span class="badge bg-warning rounded-pill">${nf(stats.pedidos34Auto)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">Pedidos Disponíveis <span class="badge bg-success rounded-pill">${nf(stats.pedidosDisponiveis)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">Peso Disponível <span class="badge bg-success rounded-pill">${kf(stats.pesoDisponivel)} kg</span></li>
                             </ul>
                         </div>
-                        <div class="col-md-4">
-                            <h6 class="text-white-50">DISPONÍVEL PARA MONTAGEM</h6>
+                        <div class="col-lg-6 col-xl-3">
+                            <h6 class="text-danger-emphasis"><i class="bi bi-slash-circle me-2"></i>Exceções e Filtros</h6>
                             <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Filtrados (CF Num./Rota 1)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosFiltrados)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center"><strong>Pedidos Disponíveis</strong><span class="badge bg-success rounded-pill"><strong>${nf(stats.pedidosDisponiveis)}</strong></span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center"><strong>Peso Disponível</strong><span class="badge bg-success rounded-pill"><strong>${kf(stats.pesoDisponivel)} kg</strong></span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">Carga Especial<span class="badge bg-info rounded-pill">${nf(stats.pedidosEspeciais)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">Filtrados (CF/Regra)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosFiltrados)}</span></li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-6 col-xl-3">
+                            <h6 class="text-info-emphasis"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Totais da Planilha</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">Pedidos no Arquivo <span class="badge bg-primary rounded-pill">${nf(stats.totalPlanilha)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">Peso Total no Arquivo <span class="badge bg-primary rounded-pill">${kf(stats.pesoTotal)} kg</span></li>
                             </ul>
                         </div>
                     </div>
@@ -2574,6 +2583,44 @@
             </div>`;
             container.innerHTML = html;
             container.style.display = 'block';
+        }
+
+        function updateResumoMontagem() {
+            const resumoContainer = document.getElementById('card-resumo-geral-container');
+            if (!resumoContainer || resumoContainer.style.display === 'none') {
+                return;
+            }
+
+            const kf = (num) => num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            let totalVarejoKg = 0;
+            
+            // Filtra cargas que não são manuais ou de venda antecipada/especial para o resumo dinâmico
+            const isVarejoLoad = (load) => load && !load.id.startsWith('manual-') && !load.id.startsWith('venda-') && !load.id.startsWith('carga-');
+
+            // Calcula estatísticas para Fiorino
+            const fiorinoLoads = Object.values(activeLoads).filter(l => l.vehicleType === 'fiorino' && isVarejoLoad(l));
+            const numFiorinos = fiorinoLoads.length;
+            const pesoFiorinos = fiorinoLoads.reduce((sum, l) => sum + l.totalKg, 0);
+            document.getElementById('resumo-num-fiorinos').textContent = numFiorinos;
+            document.getElementById('resumo-peso-fiorinos').textContent = `${kf(pesoFiorinos)} kg`;
+            totalVarejoKg += pesoFiorinos;
+
+            // Calcula estatísticas para Van
+            const vanLoads = Object.values(activeLoads).filter(l => l.vehicleType === 'van' && isVarejoLoad(l));
+            const numVans = vanLoads.length;
+            const pesoVans = vanLoads.reduce((sum, l) => sum + l.totalKg, 0);
+            document.getElementById('resumo-num-vans').textContent = numVans;
+            document.getElementById('resumo-peso-vans').textContent = `${kf(pesoVans)} kg`;
+            totalVarejoKg += pesoVans;
+
+            // Adiciona o peso das cargas 3/4 (auto e manual da aba)
+            const tresQuartosLoads = Object.values(activeLoads).filter(l => l.vehicleType === 'tresQuartos' && isVarejoLoad(l));
+            const peso34 = tresQuartosLoads.reduce((sum, l) => sum + l.totalKg, 0);
+            totalVarejoKg += peso34;
+
+
+            // Atualiza o total de varejo
+            document.getElementById('resumo-total-varejo').textContent = `${kf(totalVarejoKg)} kg`;
         }
         
         function dragStart(event, pedidoId, clienteId, sourceId) {
