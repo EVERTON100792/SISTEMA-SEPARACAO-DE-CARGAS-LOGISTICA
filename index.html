@@ -924,7 +924,7 @@
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
                                          <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
-                                         buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -1055,8 +1055,8 @@
             atualizarListaSemCorte(); // Atualizar lista "sem corte"
 
             dropZoneText.innerHTML = `<i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                         <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                         <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+                                     <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
+                                     <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
             
             planilhaData = [];
             processarBtn.disabled = true;
@@ -1108,13 +1108,24 @@
                     // ***** INÍCIO DA ALTERAÇÃO CORRIGIDA *****
                     rota1SemCarga = pedidosDisponiveis.filter(p => {
                         const codRota = String(p.Cod_Rota || '').trim();
-                        if (codRota !== '1') {
-                            return false; // Ignora se não for Rota 1
-                        }
+                        const cfValue = p.CF;
                         const coluna5Value = String(p.Coluna5 || '').trim().toUpperCase();
-                        const filtroTabelas = ['TBL TODESCHINI', 'TBL 08 PROMO BOLINHO'];
-                        // CORREÇÃO: Verifica se o valor da coluna CONTÉM algum dos termos do filtro, em vez de correspondência exata.
-                        return filtroTabelas.some(termo => coluna5Value.includes(termo));
+
+                        // Requisito 1: Apenas pedidos da Rota 1.
+                        if (codRota !== '1') {
+                            return false;
+                        }
+
+                        // Requisito 2: O campo CF não pode ser numérico.
+                        if (isNumeric(cfValue)) {
+                            return false;
+                        }
+
+                        // Requisito 3: A Coluna5 deve conter uma das descrições.
+                        const filtroDescricoes = ['TBL 08', 'TBL TODESCHINI', 'PROMO BOLINHO'];
+                        const atendeFiltroDescricao = filtroDescricoes.some(termo => coluna5Value.includes(termo));
+
+                        return atendeFiltroDescricao;
                     });
                     // ***** FIM DA ALTERAÇÃO CORRIGIDA *****
 
@@ -1418,9 +1429,9 @@
                 else if (pesoPercentual > 75) progressColor = 'bg-warning';
 
                 const progressBar = `
-                                        <div class="progress mt-2" role="progressbar" style="height: 10px;">
-                                            <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
-                                        </div>`;
+                                            <div class="progress mt-2" role="progressbar" style="height: 10px;">
+                                                <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
+                                            </div>`;
 
                 html += `<div id="${loadId}" class="card mb-3 drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="tresQuartos"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${progressBar}${createTable(load.pedidos, null, loadId)}</div></div>`;
             });
@@ -1736,10 +1747,10 @@
                             
                             if (load.pedidos.length > 0) {
                                 const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, p) => {
-                                     const cId = normalizeClientId(p.Cliente);
-                                     if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
-                                     acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
-                                     return acc;
+                                      const cId = normalizeClientId(p.Cliente);
+                                      if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                                      acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                                      return acc;
                                 }, {}));
 
                                 if(clientGroupsInLoad.length > 0) {
