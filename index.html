@@ -210,7 +210,25 @@
                     <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
                     <label class="form-check-label" for="autoProcessCheckbox">Processar ao selecionar</label>
                 </div>
-                <div class="d-grid mt-2">
+
+                <div id="filtro-rota-container" class="mt-3" style="display: none;">
+                    <label class="form-label small fw-bold">2. Filtrar Rotas (Opcional):</label>
+                    <div class="mb-2">
+                        <label for="rotaInicioSelect" class="form-label small">Rota de Início:</label>
+                        <select id="rotaInicioSelect" class="form-select form-select-sm">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label for="rotaFimSelect" class="form-label small">Rota de Fim:</label>
+                        <select id="rotaFimSelect" class="form-select form-select-sm">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="limparFiltroDeRota()">Limpar Filtro</button>
+                </div>
+
+                <div class="d-grid mt-3">
                     <button class="btn btn-primary" id="processarBtn" onclick="processar()" disabled>
                         <i class="bi bi-gear-fill me-2"></i>Processar Cargas
                     </button>
@@ -750,6 +768,8 @@
                     planilhaData.forEach(checkAgendamento);
                     statusDiv.innerHTML = `<p class="text-success">Planilha "${file.name}" carregada.</p>`;
                     processarBtn.disabled = false;
+                    
+                    popularFiltrosDeRota();
 
                     if (document.getElementById('autoProcessCheckbox').checked) {
                         processar();
@@ -762,6 +782,36 @@
             };
             reader.readAsArrayBuffer(file);
         }
+        
+        function popularFiltrosDeRota() {
+            const container = document.getElementById('filtro-rota-container');
+            const rotaInicioSelect = document.getElementById('rotaInicioSelect');
+            const rotaFimSelect = document.getElementById('rotaFimSelect');
+
+            rotaInicioSelect.innerHTML = '<option value="">Selecione...</option>';
+            rotaFimSelect.innerHTML = '<option value="">Selecione...</option>';
+
+            if (planilhaData.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            const rotas = [...new Set(planilhaData.map(p => String(p.Cod_Rota || ''))) ].filter(Boolean);
+            rotas.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+            rotas.forEach(rota => {
+                rotaInicioSelect.innerHTML += `<option value="${rota}">${rota}</option>`;
+                rotaFimSelect.innerHTML += `<option value="${rota}">${rota}</option>`;
+            });
+
+            container.style.display = 'block';
+        }
+
+        function limparFiltroDeRota() {
+            document.getElementById('rotaInicioSelect').selectedIndex = 0;
+            document.getElementById('rotaFimSelect').selectedIndex = 0;
+        }
+
 
         function buscarPedido() {
             const searchInput = document.getElementById('pedidoSearchInput').value.trim();
@@ -951,6 +1001,7 @@
 
             document.getElementById('card-resumo-geral-container').innerHTML = '';
             document.getElementById('card-resumo-geral-container').style.display = 'none';
+            document.getElementById('filtro-rota-container').style.display = 'none';
 
             document.getElementById('pedidosEspeciaisInput').value = '';
             document.getElementById('bloquearPedidoInput').value = '';
@@ -959,6 +1010,7 @@
             document.getElementById('vendaAntecipadaInput').value = '';
             atualizarListaBloqueados();
             atualizarListaSemCorte();
+            limparFiltroDeRota();
             
             fileInput.value = '';
             planilhaData = [];
@@ -982,6 +1034,20 @@
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
                     
                     resetarEstadoGlobal();
+
+                    // Aplicar filtro de rota
+                    const rotaInicio = document.getElementById('rotaInicioSelect').value;
+                    const rotaFim = document.getElementById('rotaFimSelect').value;
+                    let dadosParaProcessar = [...planilhaData];
+
+                    if (rotaInicio && rotaFim) {
+                        dadosParaProcessar = planilhaData.filter(p => {
+                            const rotaPedido = String(p.Cod_Rota || '');
+                            return rotaPedido.localeCompare(rotaInicio, undefined, { numeric: true }) >= 0 &&
+                                   rotaPedido.localeCompare(rotaFim, undefined, { numeric: true }) <= 0;
+                        });
+                        statusDiv.innerHTML = `<p class="text-info">Processando ${dadosParaProcessar.length} pedidos entre as rotas ${rotaInicio} e ${rotaFim}...</p>`;
+                    }
                     
                     ['resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 'resultado-toco', 'resultado-tres-quartos', 'resultado-cf-numerico', 'resultado-rota1', 'resultado-bloqueados'].forEach(id => {
                         const el = document.getElementById(id);
@@ -989,7 +1055,7 @@
                     });
                     
                     let pedidosDisponiveis = [];
-                    planilhaData.filter(p => p.Num_Pedido).forEach(p => {
+                    dadosParaProcessar.filter(p => p.Num_Pedido).forEach(p => {
                         if (pedidosBloqueados.has(String(p.Num_Pedido))) {
                             pedidosManualmenteBloqueadosAtuais.push(p);
                         } else {
@@ -1106,8 +1172,8 @@
                     displayGerais(resultadoGeralDiv, gruposGerais);
 
                     const stats = {
-                        totalPlanilha: planilhaData.length,
-                        pesoTotal: planilhaData.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
+                        totalPlanilha: dadosParaProcessar.length,
+                        pesoTotal: dadosParaProcessar.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
                         pedidosEspeciais: pedidosEspeciaisProcessados.size,
                         pedidosBloqueados: pedidosManualmenteBloqueadosAtuais.length,
                         pedidosToco: tocoPedidoIds.size,
