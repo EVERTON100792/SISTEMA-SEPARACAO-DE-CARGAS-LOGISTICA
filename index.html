@@ -132,11 +132,6 @@
             box-shadow: 0 0 15px rgba(54, 119, 245, 0.5);
         }
 
-        .workspace-tab-pane, #pedidos-disponiveis-card .card-body {
-            max-height: none;
-            overflow-y: visible;
-        }
-
         .status-message { min-height: 24px; }
         
         #processing-modal .modal-dialog {
@@ -290,9 +285,9 @@
                                                   <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
                                                   <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
                                               </div>
-                                              <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaEspecial()"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
+                                              <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaPredefinida('pedidosEspeciaisInput', 'resultado-carga-especial', pedidosEspeciaisProcessados, 'Especial')"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
                                           </div>
-                                    </div>
+                                     </div>
                                 </div>
                             </div>
                             <div class="row mt-4">
@@ -313,13 +308,13 @@
                                 <div class="col-md-6">
                                     <div class="card h-100">
                                         <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>6. Venda Antecipada</h2></div>
-                                        <div class="card-body d-flex flex-column">
-                                            <div class="flex-grow-1">
-                                                <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
-                                                <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui para montar uma carga separada..."></textarea>
-                                            </div>
-                                            <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaVendaAntecipada()"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
-                                        </div>
+                                         <div class="card-body d-flex flex-column">
+                                             <div class="flex-grow-1">
+                                                 <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
+                                                 <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui para montar uma carga separada..."></textarea>
+                                             </div>
+                                             <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaPredefinida('vendaAntecipadaInput', 'resultado-venda-antecipada', pedidosVendaAntecipadaProcessados, 'Venda Antecipada')"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
+                                         </div>
                                     </div>
                                 </div>
                             </div>
@@ -340,10 +335,10 @@
                         </div>
                         <div class="card-body p-0">
                              <ul class="nav nav-tabs nav-fill px-3 pt-2" id="vehicleTabs" role="tablist">
-                                <li class="nav-item" role="presentation"><button class="nav-link active" id="fiorino-tab" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane" type="button" role="tab"><i class="bi bi-box-seam-fill me-2"></i>Fiorino</button></li>
-                                <li class="nav-item" role="presentation"><button class="nav-link" id="van-tab" data-bs-toggle="tab" data-bs-target="#van-tab-pane" type="button" role="tab"><i class="bi bi-truck-front-fill me-2"></i>Van</button></li>
-                                <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4</button></li>
-                            </ul>
+                                 <li class="nav-item" role="presentation"><button class="nav-link active" id="fiorino-tab" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane" type="button" role="tab"><i class="bi bi-box-seam-fill me-2"></i>Fiorino</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="van-tab" data-bs-toggle="tab" data-bs-target="#van-tab-pane" type="button" role="tab"><i class="bi bi-truck-front-fill me-2"></i>Van</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4</button></li>
+                             </ul>
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active p-3 workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
@@ -444,7 +439,30 @@
 
         const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
         
-        // --- FUNÇÕES DE LÓGICA DE NEGÓCIO (REINSERIDAS E CENTRALIZADAS) ---
+        // --- HELPER FUNCTIONS ---
+        function deepClone(obj) {
+            if (obj === null || typeof obj !== 'object') {
+                return obj;
+            }
+            if (obj instanceof Date) {
+                return new Date(obj.getTime());
+            }
+            if (Array.isArray(obj)) {
+                const arrCopy = [];
+                for (let i = 0; i < obj.length; i++) {
+                    arrCopy[i] = deepClone(obj[i]);
+                }
+                return arrCopy;
+            }
+            const objCopy = {};
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    objCopy[key] = deepClone(obj[key]);
+                }
+            }
+            return objCopy;
+        }
+
         function normalizeClientId(id) {
             if (id === null || typeof id === 'undefined') return '';
             return String(id).trim().replace(/^0+/, '');
@@ -457,11 +475,13 @@
 
         const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
         
+        // --- GLOBAL STATE VARIABLES ---
         let planilhaData = [];
         let originalColumnHeaders = [];
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
         let pedidosComCFNumericoIsolado = [];
+        let pedidosManualmenteBloqueadosAtuais = [];
         let pedidosPrioritarios = [];
         let pedidosBloqueados = new Set();
         let pedidosEspeciaisProcessados = new Set();
@@ -701,7 +721,10 @@
                     }
                 }
             }
-
+            if (!pedidoEncontrado) {
+                pedidoEncontrado = pedidosManualmenteBloqueadosAtuais.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Bloqueado Manualmente'; }
+            }
             if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
                 if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = 'accordionGeral'; } 
@@ -723,18 +746,18 @@
              if (!pedidoEncontrado) {
                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                  if (originalPedido) {
-                                         pedidoEncontrado = originalPedido;
-                                         if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                                             local = 'Bloqueado Manualmente por você.';
-                                         } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                                             local = 'Alocado na Carga Especial.';
-                                         } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
-                                             local = 'Alocado na Carga de Venda Antecipada.';
-                                         }
-                                         else {
-                                             local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
-                                         }
-               }
+                                     pedidoEncontrado = originalPedido;
+                                     if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                                         local = 'Bloqueado Manualmente por você.';
+                                     } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                                         local = 'Alocado na Carga Especial.';
+                                     } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
+                                         local = 'Alocado na Carga de Venda Antecipada.';
+                                     }
+                                     else {
+                                         local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
+                                     }
+                }
             }
 
             if (pedidoEncontrado) {
@@ -744,7 +767,7 @@
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
                                      <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
-                                         buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                        buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -835,6 +858,8 @@
             gruposToco = {};
             pedidosComCFNumericoIsolado = [];
             rota1SemCarga = [];
+            pedidosManualmenteBloqueadosAtuais = [];
+            pedidosPrioritarios = [];
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
             activeLoads = {};
@@ -846,7 +871,6 @@
 
             pedidosEspeciaisProcessados.clear();
             pedidosBloqueados.clear();
-            pedidosPrioritarios = [];
             pedidosSemCorte.clear();
             pedidosVendaAntecipadaProcessados.clear();
             
@@ -905,17 +929,17 @@
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
                     });
-
-                    let pedidosManualmenteBloqueados = [];
+                    
+                    pedidosManualmenteBloqueadosAtuais = [];
                     let pedidosDisponiveis = [];
                     planilhaData.filter(p => p.Num_Pedido).forEach(p => {
                         if (pedidosBloqueados.has(String(p.Num_Pedido))) {
-                            pedidosManualmenteBloqueados.push(p);
+                            pedidosManualmenteBloqueadosAtuais.push(p);
                         } else {
                             pedidosDisponiveis.push(p);
                         }
                     });
-                    displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueados);
+                    displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueadosAtuais);
                     
                     pedidosDisponiveis = pedidosDisponiveis.filter(p => 
                         !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)) &&
@@ -1035,7 +1059,7 @@
                         totalPlanilha: planilhaData.length,
                         pesoTotal: planilhaData.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
                         pedidosEspeciais: pedidosEspeciaisProcessados.size,
-                        pedidosBloqueados: pedidosManualmenteBloqueados.length,
+                        pedidosBloqueados: pedidosManualmenteBloqueadosAtuais.length,
                         pedidosToco: tocoPedidoIds.size,
                         pedidos34Auto: tresQuartosLoads.reduce((sum, load) => sum + load.pedidos.length, 0),
                         pedidosFiltrados: pedidosComCFNumericoIsolado.length + rota1SemCarga.length,
@@ -1107,12 +1131,12 @@
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
                 table += `<tr id="pedido-${p.Num_Pedido}" 
-                                 class="${isPriorityRow ? 'table-primary' : ''}" 
-                                 data-cliente-id="${clienteIdNormalizado}" 
-                                 data-pedido-id="${p.Num_Pedido}"
-                                 onclick="highlightClientRows(event)"
-                                 draggable="true"
-                                 ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
+                                  class="${isPriorityRow ? 'table-primary' : ''}" 
+                                  data-cliente-id="${clienteIdNormalizado}" 
+                                  data-pedido-id="${p.Num_Pedido}"
+                                  onclick="highlightClientRows(event)"
+                                  draggable="true"
+                                  ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') {
@@ -1214,7 +1238,7 @@
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -1238,9 +1262,9 @@
                 else if (pesoPercentual > 75) progressColor = 'bg-warning';
 
                 const progressBar = `
-                                         <div class="progress mt-2" role="progressbar" style="height: 10px;">
-                                             <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
-                                         </div>`;
+                                     <div class="progress mt-2" role="progressbar" style="height: 10px;">
+                                         <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
+                                     </div>`;
 
                 html += `<div id="${loadId}" class="card mb-3 drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="tresQuartos"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${progressBar}${createTable(load.pedidos, null, loadId)}</div></div>`;
             });
@@ -1512,7 +1536,7 @@
 
                 const initialSortedGroups = [...packableGroups].sort((a, b) => b.totalKg - a.totalKg);
                 let bestSolution = createSolutionFromHeuristic(initialSortedGroups, vehicleType);
-                let currentSolution = JSON.parse(JSON.stringify(bestSolution));
+                let currentSolution = deepClone(bestSolution);
                 
                 let currentTemp = initialTemp;
                 
@@ -1522,7 +1546,7 @@
 
                 function doTemperatureStep() {
                     for (let i = 0; i < iterationsPerTemp; i++) {
-                        let neighborSolution = JSON.parse(JSON.stringify(currentSolution));
+                        let neighborSolution = deepClone(currentSolution);
                         let moveMade = false;
 
                         const moveType = Math.random();
@@ -1551,10 +1575,10 @@
                             
                             if (load.pedidos.length > 0) {
                                 const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, p) => {
-                                      const cId = normalizeClientId(p.Cliente);
-                                      if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
-                                      acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
-                                      return acc;
+                                     const cId = normalizeClientId(p.Cliente);
+                                     if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                                     acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                                     return acc;
                                 }, {}));
 
                                 if(clientGroupsInLoad.length > 0) {
@@ -1580,7 +1604,7 @@
                             if (neighborEnergy < currentEnergy || Math.random() < Math.exp((currentEnergy - neighborEnergy) / currentTemp)) {
                                 currentSolution = neighborSolution;
                                 if (getSolutionEnergy(currentSolution, vehicleType) < getSolutionEnergy(bestSolution, vehicleType)) {
-                                    bestSolution = JSON.parse(JSON.stringify(currentSolution));
+                                    bestSolution = deepClone(currentSolution);
                                 }
                             }
                         }
@@ -1622,8 +1646,8 @@
         }
 
         function refinarCargasComTrocas(initialLoads, initialLeftovers, vehicleType) {
-            let loads = JSON.parse(JSON.stringify(initialLoads));
-            let leftovers = JSON.parse(JSON.stringify(initialLeftovers));
+            let loads = deepClone(initialLoads);
+            let leftovers = deepClone(initialLeftovers);
             let improvementMade;
 
             if (leftovers.length === 0) {
@@ -1690,6 +1714,9 @@
         }
 
         async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
+            const allRouteButtons = document.querySelectorAll('#botoes-fiorino button, #botoes-van button, #botoes-34 button');
+            allRouteButtons.forEach(btn => btn.disabled = true);
+
             const resultadoDiv = document.getElementById(divId);
             
             const autoGeneratedContent = resultadoDiv.querySelector('.resultado-container');
@@ -1771,6 +1798,7 @@
                         break;
                 }
             } finally {
+                allRouteButtons.forEach(btn => btn.disabled = false);
                 if(optimizationLevel !== '1') {
                     modal.hide();
                 } else {
@@ -1865,8 +1893,8 @@
         }
         
         function refineLoadsWithSimpleFit(initialLoads, initialLeftovers) {
-            let refinedLoads = JSON.parse(JSON.stringify(initialLoads));
-            let remainingLeftovers = JSON.parse(JSON.stringify(initialLeftovers));
+            let refinedLoads = deepClone(initialLoads);
+            let remainingLeftovers = deepClone(initialLeftovers);
 
             for (let i = remainingLeftovers.length - 1; i >= 0; i--) {
                 const leftoverGroup = remainingLeftovers[i];
@@ -1967,9 +1995,9 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        function montarCargaEspecial() {
-            const resultadoDiv = document.getElementById('resultado-carga-especial');
-            const input = document.getElementById('pedidosEspeciaisInput');
+        function montarCargaPredefinida(inputId, resultadoId, processedSet, nomeCarga) {
+            const resultadoDiv = document.getElementById(resultadoId);
+            const input = document.getElementById(inputId);
             resultadoDiv.innerHTML = '';
 
             if (planilhaData.length === 0) {
@@ -1977,12 +2005,10 @@
                 return;
             }
 
-            const numerosPedidos = input.value.split('\n')
-                .map(n => n.trim())
-                .filter(n => n !== '');
+            const numerosPedidos = input.value.split('\n').map(n => n.trim()).filter(Boolean);
 
             if (numerosPedidos.length === 0) {
-                resultadoDiv.innerHTML = '<div class="alert alert-warning">Nenhum número de pedido foi inserido.</div>';
+                resultadoDiv.innerHTML = `<div class="alert alert-warning">Nenhum número de pedido foi inserido para a ${nomeCarga}.</div>`;
                 return;
             }
 
@@ -2022,16 +2048,16 @@
             }
             
             if (veiculoEscolhido) {
-                pedidosEspeciaisProcessados.clear();
-                pedidosSelecionados.forEach(p => pedidosEspeciaisProcessados.add(String(p.Num_Pedido)));
+                processedSet.clear();
+                pedidosSelecionados.forEach(p => processedSet.add(String(p.Num_Pedido)));
 
-                const loadId = 'carga-especial-1';
+                const loadId = `${nomeCarga.toLowerCase().replace(' ', '-')}-1`;
                 const load = {
                     id: loadId,
                     pedidos: pedidosSelecionados,
                     totalKg: totalKg,
                     totalCubagem: totalCubagem,
-                    numero: 'Especial',
+                    numero: nomeCarga,
                     vehicleType: veiculoEscolhido.tipo
                 };
                 activeLoads[loadId] = load;
@@ -2045,15 +2071,15 @@
                 resultadoDiv.innerHTML = `
                     <div class="alert alert-success d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>Carga Especial montada com sucesso!</strong> Estes ${pedidosSelecionados.length} pedidos foram agrupados em um(a) <strong>${veiculoEscolhido.nome}</strong>.
+                            <strong>Carga ${nomeCarga} montada com sucesso!</strong> Estes ${pedidosSelecionados.length} pedidos foram agrupados em um(a) <strong>${veiculoEscolhido.nome}</strong>.
                             <br>Eles serão removidos da análise geral quando você clicar em "Processar Cargas".
                         </div>
-                        <button class="btn btn-light btn-sm no-print" onclick="imprimirCargaEspecial()"><i class="bi bi-printer-fill me-1"></i> Imprimir Carga</button>
+                        <button class="btn btn-light btn-sm no-print" onclick="imprimirGeneric('${resultadoId}', 'Carga ${nomeCarga}')"><i class="bi bi-printer-fill me-1"></i> Imprimir Carga</button>
                     </div>
                     ${renderLoadCard(load, veiculoEscolhido.tipo, vehicleInfo[veiculoEscolhido.tipo])}
                 `;
             } else {
-                pedidosEspeciaisProcessados.clear();
+                processedSet.clear();
                 resultadoDiv.innerHTML = `
                     <div class="alert alert-danger">
                         <strong>Não foi possível montar a carga.</strong> O total dos pedidos selecionados excede a capacidade de todos os veículos disponíveis.
@@ -2065,106 +2091,7 @@
                 `;
             }
         }
-
-        function imprimirCargaEspecial() {
-            const resultadoDiv = document.getElementById('resultado-carga-especial');
-            const cardToPrint = resultadoDiv.querySelector('.card');
-
-            if (!cardToPrint) {
-                alert("Nenhuma Carga Especial para imprimir.");
-                return;
-            }
-
-            const title = 'Carga Especial';
-            const printWindow = createPrintWindow(title);
-            
-            let contentToPrint = `<h3>${title}</h3>` + cardToPrint.outerHTML;
-            
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
-        }
         
-        function montarCargaVendaAntecipada() {
-            const resultadoDiv = document.getElementById('resultado-venda-antecipada');
-            const input = document.getElementById('vendaAntecipadaInput');
-            resultadoDiv.innerHTML = '';
-
-            if (planilhaData.length === 0) {
-                resultadoDiv.innerHTML = '<div class="alert alert-warning">Por favor, carregue a planilha primeiro.</div>';
-                return;
-            }
-
-            const numerosPedidos = input.value.split('\n').map(n => n.trim()).filter(Boolean);
-            if (numerosPedidos.length === 0) {
-                resultadoDiv.innerHTML = '<div class="alert alert-warning">Nenhum número de pedido foi inserido.</div>';
-                return;
-            }
-
-            const pedidosSelecionados = [];
-            const pedidosNaoEncontrados = [];
-            numerosPedidos.forEach(num => {
-                const pedidoEncontrado = planilhaData.find(p => String(p.Num_Pedido) === num);
-                if (pedidoEncontrado) {
-                    pedidosSelecionados.push(pedidoEncontrado);
-                } else {
-                    pedidosNaoEncontrados.push(num);
-                }
-            });
-
-            if (pedidosNaoEncontrados.length > 0) {
-                resultadoDiv.innerHTML = `<div class="alert alert-danger">Os seguintes pedidos não foram encontrados na planilha: ${pedidosNaoEncontrados.join(', ')}.</div>`;
-                return;
-            }
-
-            const totalKg = pedidosSelecionados.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
-            const totalCubagem = pedidosSelecionados.reduce((sum, p) => sum + p.Cubagem, 0);
-
-            const veiculos = [
-                { tipo: 'fiorino', nome: 'Fiorino', maxKg: parseFloat(document.getElementById('fiorinoHardMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('fiorinoHardCubage').value) },
-                { tipo: 'van', nome: 'Van', maxKg: parseFloat(document.getElementById('vanHardMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('vanHardCubage').value) },
-                { tipo: 'tresQuartos', nome: '3/4', maxKg: parseFloat(document.getElementById('tresQuartosMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('tresQuartosCubage').value) },
-            ];
-
-            let veiculoEscolhido = null;
-            for (const veiculo of veiculos) {
-                if (totalKg <= veiculo.maxKg && totalCubagem <= veiculo.maxCubagem) {
-                    veiculoEscolhido = veiculo;
-                    break;
-                }
-            }
-
-            if (veiculoEscolhido) {
-                pedidosVendaAntecipadaProcessados.clear();
-                pedidosSelecionados.forEach(p => pedidosVendaAntecipadaProcessados.add(String(p.Num_Pedido)));
-
-                const loadId = 'venda-antecipada-1';
-                const load = { id: loadId, pedidos: pedidosSelecionados, totalKg, totalCubagem, numero: 'Venda Antecipada', vehicleType: veiculoEscolhido.tipo };
-                activeLoads[loadId] = load;
-                
-                const vehicleInfoMap = {
-                    fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
-                    van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
-                    tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
-                };
-                
-                resultadoDiv.innerHTML = `
-                    <div class="alert alert-success d-flex justify-content-between align-items-center">
-                        <div><strong>Carga de Venda Antecipada montada!</strong> Foi agrupada em um(a) <strong>${veiculoEscolhido.nome}</strong>.</div>
-                        <button class="btn btn-light btn-sm no-print" onclick="imprimirGeneric('resultado-venda-antecipada', 'Carga de Venda Antecipada')"><i class="bi bi-printer-fill me-1"></i> Imprimir</button>
-                    </div>
-                    ${renderLoadCard(load, veiculoEscolhido.tipo, vehicleInfoMap[veiculoEscolhido.tipo])}
-                `;
-            } else {
-                pedidosVendaAntecipadaProcessados.clear();
-                resultadoDiv.innerHTML = `<div class="alert alert-danger"><strong>Não foi possível montar a carga.</strong> Excede a capacidade de todos os veículos. (Peso: ${totalKg.toFixed(2)} kg, Cubagem: ${totalCubagem.toFixed(2)} m³)</div>`;
-            }
-        }
-
         function highlightClientRows(event) {
             const clickedRow = event.target.closest('tr');
             if (!clickedRow || !clickedRow.dataset.clienteId) return;
@@ -2267,6 +2194,8 @@
                 sourceLoad = { pedidos: currentLeftoversForPrinting };
             } else if (sourceIsGeral) {
                 sourceLoad = { pedidos: pedidosGeraisAtuais };
+            } else if (sourceIsManualBuilder) {
+                sourceLoad = manualLoadInProgress;
             } else {
                 sourceLoad = activeLoads[sourceId];
             }
@@ -2291,7 +2220,7 @@
             const clientBlockKg = clientOrdersToMove.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
             const clientBlockCubagem = clientOrdersToMove.reduce((sum, p) => sum + p.Cubagem, 0);
             
-            if (!targetIsLeftovers) {
+            if (!targetIsLeftovers && !targetIsManualBuilder) {
                 const targetVehicleType = targetLoad.vehicleType;
                 if (targetVehicleType) { 
                     const config = getVehicleConfig(targetVehicleType);
@@ -2336,20 +2265,17 @@
 
         function updateLoadUI(loadId) {
             const activeTabPane = document.querySelector('.tab-pane.active');
-            if (!activeTabPane && (loadId === 'leftovers' || loadId === 'geral')) {
-                console.error("Nenhuma aba ativa encontrada para atualizar a UI.");
-                return;
-            }
             
             if (loadId === 'leftovers' || loadId === 'geral') {
-                const leftoversCard = activeTabPane.querySelector('[data-load-id="leftovers"]');
                 const geraisDiv = document.getElementById('resultado-geral');
-
-                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
-                    const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
-                }, {});
-                if(geraisDiv) displayGerais(geraisDiv, gruposGerais);
-
+                if (geraisDiv) {
+                    const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
+                        const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
+                    }, {});
+                    displayGerais(geraisDiv, gruposGerais);
+                }
+                
+                const leftoversCard = activeTabPane ? activeTabPane.querySelector('[data-load-id="leftovers"]') : null;
                 if (!leftoversCard) return;
 
                 if (currentLeftoversForPrinting.length === 0) {
@@ -2525,7 +2451,7 @@
             const newCardHTML = renderLoadCard(newLoad, vehicleType, vehicleInfo[vehicleType]);
             
             const activeTabPane = document.querySelector('.tab-pane.active');
-            const resultContainer = activeTabPane ? activeTabPane.querySelector('[id^="resultado-"]') : null;
+            const resultContainer = activeTabPane ? activeTabPane.querySelector('.resultado-container') : null;
 
             if(resultContainer) {
                resultContainer.insertAdjacentHTML('beforeend', newCardHTML);
@@ -2536,7 +2462,7 @@
             if (builderWrapper) builderWrapper.remove();
             manualLoadInProgress = null;
             
-            const startBtn = activeTabPane.querySelector('#start-manual-load-btn');
+            const startBtn = activeTabPane ? activeTabPane.querySelector('#start-manual-load-btn') : null;
             if(startBtn) startBtn.style.display = 'inline-block';
             
             setTimeout(() => {
