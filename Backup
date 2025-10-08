@@ -13,10 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-
     <style>
         :root {
             --dark-bg: #1a1d21;
@@ -31,89 +28,72 @@
         body {
             background-color: var(--dark-bg);
             font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
         }
-
-        #login-container {
+        
+        #sidebar {
+            width: 290px;
+            min-height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease;
-            overflow: hidden;
+            z-index: 100;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.3);
+            background-color: var(--dark-surface);
         }
 
-        #particles-js {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background-color: #1a1a1a;
+        #main-content {
+            margin-left: 290px;
+            width: calc(100% - 290px);
+            animation: fadeIn 0.6s ease-in-out;
         }
 
-        .login-card {
-            width: 100%;
-            max-width: 420px;
-            background-color: rgba(36, 40, 47, 0.75);
-            backdrop-filter: blur(12px) saturate(150%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            animation: fadeIn 0.8s ease-out;
+        #sidebar .nav-link {
+            transition: background-color 0.2s ease-in-out;
+            color: var(--dark-text-secondary);
         }
 
-        .login-card .form-control {
-            background-color: rgba(26, 29, 33, 0.8);
-            border-color: var(--dark-border);
-            color: var(--dark-text-primary);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .login-card .form-control:focus {
-            background-color: rgba(26, 29, 33, 1);
-            border-color: var(--dark-primary);
-            box-shadow: 0 0 0 0.25rem rgba(54, 119, 245, 0.25);
-        }
-
-        .form-container {
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-        }
-        .form-container.hidden { display: none; }
-        .form-exit { animation: slideOut 0.3s forwards ease-in-out; }
-        .form-enter { animation: slideIn 0.3s forwards ease-in-out; }
-
-        .icon-container { animation: float 3s infinite ease-in-out; }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes slideOut {
-            from { opacity: 1; transform: translateX(0); }
-            to { opacity: 0; transform: translateX(-30px); }
+        #sidebar .nav-link:hover, #sidebar .nav-link.active {
+            background-color: var(--dark-primary);
+            color: white;
         }
         
-        #auth-message { min-height: 24px; }
+        #sidebar .nav-link .bi {
+            color: var(--dark-text-secondary);
+        }
 
-        #dashboard-content {
-            animation: fadeIn 0.6s ease-in-out;
+        #sidebar .nav-link:hover .bi, #sidebar .nav-link.active .bi {
+             color: white;
+        }
+
+        @media (max-width: 992px) {
+            .d-flex {
+                flex-direction: column;
+            }
+            #sidebar {
+                position: relative;
+                width: 100%;
+                min-height: auto;
+                margin-bottom: 1rem;
+                box-shadow: none;
+                border-bottom: 1px solid var(--dark-border);
+            }
+            #main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
         }
         
         .card {
             background-color: var(--dark-surface);
             border: 1px solid var(--dark-border);
             border-radius: 0.75rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             transition: border-color 0.2s ease-in-out;
         }
         
@@ -130,6 +110,10 @@
         .btn-primary { background-color: var(--dark-primary); border-color: var(--dark-primary); }
         .btn-primary:hover { background-color: var(--dark-primary-hover); border-color: var(--dark-primary-hover); }
 
+        .modal-content {
+            background-color: var(--dark-surface);
+        }
+
         .accordion-button {
             background-color: #343a40;
             color: var(--dark-text-primary);
@@ -139,10 +123,6 @@
             background-color: var(--dark-primary);
             color: white;
             box-shadow: inset 0 -1px 0 rgba(0,0,0,.125);
-        }
-        
-        #controls-accordion .accordion-button {
-            background-color: var(--dark-surface);
         }
 
         .accordion-body { background-color: var(--dark-surface); }
@@ -178,20 +158,7 @@
              border-top: none;
              border-radius: 0 0 0.5rem 0.5rem;
         }
-
-        #drop-zone-text {
-            border: 2px dashed var(--dark-border);
-            background-color: #2b3035;
-            transition: border-color .15s ease-in-out, background-color .15s ease-in-out;
-        }
-        #drop-zone-text:hover {
-            background-color: #343a40;
-        }
-        #drop-zone.border-primary #drop-zone-text {
-            border-color: var(--dark-primary);
-            box-shadow: 0 0 10px rgba(54, 119, 245, 0.3);
-        }
-
+        
         tr.client-highlight > td {
             background-color: #49491c !important;
         }
@@ -202,11 +169,6 @@
             box-shadow: 0 0 15px rgba(54, 119, 245, 0.5);
         }
 
-        .workspace-tab-pane, #pedidos-disponiveis-card .card-body {
-            max-height: none;
-            overflow-y: visible;
-        }
-
         .status-message { min-height: 24px; }
         
         #processing-modal .modal-dialog {
@@ -215,9 +177,10 @@
 
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            #login-container, #dashboard-content .no-print { display: none !important; }
-            .container, .card, .accordion-item, .accordion-body, .card-header { background-color: #fff !important; color: #000 !important; border: none !important; box-shadow: none !important; }
-            .d-flex.align-items-center.mb-3, .card.p-3.mb-4.shadow-sm, button, .status-message, .card-subtitle, .accordion-button.collapsed, .accordion-collapse.collapse, .nav-tabs, .tab-content, #controls-accordion { display: none !important; }
+            #main-content { margin-left: 0 !important; width: 100% !important; }
+            .no-print, #sidebar { display: none !important; }
+            .container, .card, .accordion-item, .accordion-body, .card-header, .modal-content { background-color: #fff !important; color: #000 !important; border: none !important; box-shadow: none !important; }
+            button, .status-message, .card-subtitle, .accordion-button.collapsed, .accordion-collapse.collapse, .nav-tabs, .tab-content { display: none !important; }
             .table-responsive { overflow: visible !important; }
             table, th, td { border: 1px solid #dee2e6 !important; color: #000 !important; }
             h1, h2, h3, h4, h5 { color: #000 !important; margin-top: 1rem; margin-bottom: 0.5rem; }
@@ -231,240 +194,89 @@
     </style>
 </head>
 <body>
-    <div id="login-container">
-        <div id="particles-js"></div>
-        <div class="card p-4 shadow-lg login-card">
-            <div class="text-center mb-4 icon-container">
-                 <i class="bi bi-truck-front-fill display-3 text-primary"></i>
-            </div>
-
-            <div id="auth-message" class="text-center mb-3"></div>
-            
-            <div id="login-form-container" class="form-container">
-                <div class="text-center mb-4">
-                    <h4 class="mb-1">Bem-vindo de volta!</h4>
-                    <p class="text-body-secondary small">Acesse o dashboard para continuar</p>
-                </div>
-                <form id="login-form">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" required autocomplete="email">
-                    </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Senha</label>
-                        <input type="password" class="form-control" id="password" required autocomplete="current-password">
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100 py-2 mt-2">
-                        <span class="button-text">Entrar</span>
-                        <div class="spinner-border spinner-border-sm" role="status" style="display: none;"></div>
-                    </button>
-                </form>
-                <p class="text-center small mt-3 mb-0">
-                    Não tem uma conta? <a href="#" class="auth-toggle-link" id="toggle-to-signup">Cadastre-se</a>
-                </p>
-            </div>
-
-            <div id="signup-form-container" class="form-container hidden">
-                 <div class="text-center mb-4">
-                    <h4 class="mb-1">Crie sua Conta</h4>
-                    <p class="text-body-secondary small">Rápido e fácil</p>
-                </div>
-                <form id="signup-form">
-                    <div class="mb-3">
-                        <label for="signup-email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="signup-email" required autocomplete="email">
-                    </div>
-                    <div class="mb-3">
-                        <label for="signup-password" class="form-label">Senha (mínimo 6 caracteres)</label>
-                        <input type="password" class="form-control" id="signup-password" required autocomplete="new-password">
-                    </div>
-                    <button type="submit" class="btn btn-success w-100 py-2 mt-2">
-                        <span class="button-text">Criar Conta</span>
-                        <div class="spinner-border spinner-border-sm" role="status" style="display: none;"></div>
-                    </button>
-                </form>
-                 <p class="text-center small mt-3 mb-0">
-                    Já tem uma conta? <a href="#" class="auth-toggle-link" id="toggle-to-login">Faça login</a>
-                </p>
-            </div>
-        </div>
-    </div>
     
-    <div id="dashboard-content" style="display: none;">
-        <div class="container mt-4 mb-4">
-             <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
-                <div class="d-flex align-items-center mb-2 mb-md-0">
-                    <i class="bi bi-truck-front-fill display-4 me-3 text-primary"></i>
-                    <h1 class="mb-0 h3">Dashboard de Separação de Cargas</h1>
+    <div class="d-flex">
+        <nav id="sidebar" class="d-flex flex-column p-3 text-white no-print">
+            <div class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                <i class="bi bi-truck-front-fill me-2 fs-4 text-primary"></i>
+                <span class="fs-5">Otimizador de Cargas</span>
+            </div>
+            <hr>
+            
+            <div id="sidebar-controls">
+                <label for="fileInput" class="form-label small fw-bold">1. Selecione a planilha:</label>
+                <input class="form-control form-control-sm" type="file" id="fileInput" accept=".xlsx, .xls, .csv">
+                <div class="form-check form-switch mt-2 small">
+                    <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
+                    <label class="form-check-label" for="autoProcessCheckbox">Processar ao selecionar</label>
                 </div>
-                <div class="d-flex align-items-center no-print">
-                    <div id="user-info" class="me-3 text-body-secondary small text-nowrap"></div>
-                    <div class="btn-group">
-                        <button class="btn btn-outline-secondary" id="limparResultadosBtn"><i class="bi bi-eraser-fill me-1"></i>Limpar Tudo</button>
-                        <button class="btn btn-outline-danger" id="logout-button"><i class="bi bi-box-arrow-right me-1"></i>Sair</button>
+
+                <div id="filtro-rota-container" class="mt-3" style="display: none;">
+                    <label class="form-label small fw-bold">2. Filtrar Rotas (Opcional):</label>
+                    <div class="mb-2">
+                        <label for="rotaInicioSelect" class="form-label small">Rota de Início:</label>
+                        <select id="rotaInicioSelect" class="form-select form-select-sm">
+                            <option value="">Selecione...</option>
+                        </select>
                     </div>
+                    <div class="mb-2">
+                        <label for="rotaFimSelect" class="form-label small">Rota de Fim:</label>
+                        <select id="rotaFimSelect" class="form-select form-select-sm">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="limparFiltroDeRota()">Limpar Filtro</button>
                 </div>
+
+                <div class="d-grid mt-3">
+                    <button class="btn btn-primary" id="processarBtn" onclick="processar()" disabled>
+                        <i class="bi bi-gear-fill me-2"></i>Processar Cargas
+                    </button>
+                </div>
+                 <div id="status" class="mt-2 status-message small"></div>
             </div>
 
-            <div class="accordion mb-4 no-print" id="controls-accordion">
-                <div class="accordion-item" style="background-color: var(--dark-surface); border: 1px solid var(--dark-border); border-radius: 0.75rem;">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseControls">
-                            <i class="bi bi-gear-wide-connected me-2"></i> Painel de Controles e Configurações (Clique para expandir)
-                        </button>
-                    </h2>
-                    <div id="collapseControls" class="accordion-collapse collapse" data-bs-parent="#controls-accordion">
-                        <div class="accordion-body">
-                            <div class="card mb-4" id="drop-zone">
-                                <div class="card-header"><i class="bi bi-file-earmark-arrow-up-fill me-2"></i>1. Processar Planilha</div>
-                                <div class="card-body">
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label for="fileInput" class="form-label fw-bold">Arquivo:</label>
-                                            <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv" style="display: none;">
-                                            <div id="drop-zone-text" class="text-center p-4 rounded-3" role="button" onclick="document.getElementById('fileInput').click()">
-                                                <i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                                <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                                <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-8">
-                                            <div class="row g-3">
-                                                <div class="col-md-7">
-                                                    <label class="form-label fw-bold">Faixa de Rotas (Opcional):</label>
-                                                    <div class="input-group">
-                                                        <span class="input-group-text"><i class="bi bi-signpost-split-fill"></i></span>
-                                                        <input type="text" class="form-control" id="rotaInicialInput" placeholder="Rota Inicial">
-                                                        <input type="text" class="form-control" id="rotaFinalInput" placeholder="Rota Final">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-5">
-                                                     <label for="optimizationLevelSelect" class="form-label fw-bold">Nível de Otimização:</label>
-                                                     <select id="optimizationLevelSelect" class="form-select">
-                                                         <option value="1">Nível 1: Heurística Rápida</option>
-                                                         <option value="2" selected>Nível 2: Avançada (Recomendado)</option>
-                                                         <option value="3">Nível 3: Exaustiva (Lento)</option>
-                                                     </select>
-                                                </div>
-                                                <div class="col-md-7">
-                                                     <div class="form-check form-switch mt-2">
-                                                         <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
-                                                         <label class="form-check-label" for="autoProcessCheckbox">Processar automaticamente</label>
-                                                     </div>
-                                                </div>
-                                                <div class="col-md-5 align-self-end">
-                                                    <button class="btn btn-primary w-100 py-2" id="processarBtn" onclick="processar()" disabled><i class="bi bi-gear-fill me-2"></i>Processar Cargas</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div id="status" class="mt-3 status-message"></div>
-                                </div>
-                            </div>
-                            <div class="card mb-4">
-                                <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-sliders me-2"></i>2. Configurações de Veículos</h2></div>
-                                <div class="card-body">
-                                     <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
-                                         <div class="col-md-12"><strong class="text-success">Fiorino</strong></div>
-                                         <div class="col-md-3"><label for="fiorinoMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="fiorinoMinCapacity" value="300" step="10"></div>
-                                         <div class="col-md-3"><label for="fiorinoMaxCapacity" class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control config-input" id="fiorinoMaxCapacity" value="500" step="10"></div>
-                                         <div class="col-md-3"><label for="fiorinoCubage" class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control config-input" id="fiorinoCubage" value="1.5" step="0.1"></div>
-                                         <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetFiorino">Reset</button></div>
-                                         <div class="col-md-3"></div>
-                                         <div class="col-md-3"><label for="fiorinoHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="fiorinoHardMaxCapacity" value="560" step="10"></div>
-                                         <div class="col-md-3"><label for="fiorinoHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="fiorinoHardCubage" value="1.7" step="0.1"></div>
-                                     </div>
-                                    <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
-                                         <div class="col-md-12"><strong class="text-primary">Van</strong></div>
-                                         <div class="col-md-3"><label for="vanMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="vanMinCapacity" value="1100" step="10"></div>
-                                         <div class="col-md-3"><label for="vanMaxCapacity" class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control config-input" id="vanMaxCapacity" value="1560" step="10"></div>
-                                         <div class="col-md-3"><label for="vanCubage" class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control config-input" id="vanCubage" value="5.0" step="0.1"></div>
-                                         <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetVan">Reset</button></div>
-                                         <div class="col-md-3"></div>
-                                         <div class="col-md-3"><label for="vanHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="vanHardMaxCapacity" value="1600" step="10"></div>
-                                         <div class="col-md-3"><label for="vanHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="vanHardCubage" value="5.6" step="0.1"></div>
-                                     </div>
-                                    <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
-                                         <div class="col-md-12"><strong class="text-warning">3/4</strong></div>
-                                         <div class="col-md-3"><label for="tresQuartosMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMinCapacity" value="2300" step="10"></div>
-                                         <div class="col-md-3"><label for="tresQuartosMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMaxCapacity" value="4100" step="10"></div>
-                                         <div class="col-md-3"><label for="tresQuartosCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tresQuartosCubage" value="15.0" step="0.1"></div>
-                                         <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetTresQuartos">Reset</button></div>
-                                     </div>
-                                    <div class="row g-3">
-                                         <div class="col-md-12"><strong>Toco</strong></div>
-                                         <div class="col-md-3"><label for="tocoMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tocoMinCapacity" value="5000" step="10"></div>
-                                         <div class="col-md-3"><label for="tocoMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tocoMaxCapacity" value="8500" step="10"></div>
-                                         <div class="col-md-3"><label for="tocoCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tocoCubage" value="30.0" step="0.1"></div>
-                                         <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetToco">Reset</button></div>
-                                     </div>
-                                    <div class="mt-4 d-flex justify-content-end"><button class="btn btn-success me-2" id="saveConfig"><i class="bi bi-check-circle-fill me-2"></i>Salvar Tudo</button><button class="btn btn-danger" id="resetAllConfigs"><i class="bi bi-arrow-clockwise me-2"></i>Resetar Tudo</button></div>
-                                    <div id="configStatus" class="mt-2 status-message text-end"></div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-4 mb-md-0">
-                                    <div class="card h-100">
-                                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-slash-circle-fill me-2"></i>3. Bloqueio Manual</h2></div>
-                                        <div class="card-body d-flex flex-column">
-                                            <label for="bloquearPedidoInput" class="form-label">Número do Pedido a Bloquear:</label>
-                                            <div class="input-group mb-3"><input type="text" class="form-control" id="bloquearPedidoInput" placeholder="Digite o número..."><button class="btn btn-outline-danger" type="button" onclick="bloquearPedido()">Bloquear</button></div>
-                                            <label class="form-label mt-2">Pedidos Bloqueados:</label>
-                                            <div id="lista-pedidos-bloqueados" class="p-2 border rounded border-secondary flex-grow-1" style="background-color: var(--dark-bg);"><span class="text-muted">Nenhum.</span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                     <div class="card h-100">
-                                         <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>4. Carga Especial</h2></div>
-                                          <div class="card-body d-flex flex-column">
-                                              <div class="flex-grow-1">
-                                                  <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
-                                                  <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
-                                              </div>
-                                              <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaEspecial()"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
-                                          </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row mt-4">
-                                <div class="col-md-6 mb-4 mb-md-0">
-                                    <div class="card h-100">
-                                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-scissors me-2"></i>5. Pedidos Sem Corte</h2></div>
-                                        <div class="card-body d-flex flex-column">
-                                            <label for="semCorteInput" class="form-label">Pedidos a marcar como "Sem Corte":</label>
-                                            <div class="input-group mb-3">
-                                                <textarea class="form-control" id="semCorteInput" rows="3" placeholder="Cole os números aqui, um por linha..."></textarea>
-                                                <button class="btn btn-outline-warning" type="button" onclick="marcarPedidosSemCorte()">Marcar Pedidos</button>
-                                            </div>
-                                            <label class="form-label mt-2">Pedidos Marcados:</label>
-                                            <div id="lista-pedidos-sem-corte" class="p-2 border rounded border-secondary flex-grow-1" style="background-color: var(--dark-bg);"><span class="text-muted">Nenhum.</span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card h-100">
-                                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>6. Venda Antecipada</h2></div>
-                                        <div class="card-body d-flex flex-column">
-                                            <div class="flex-grow-1">
-                                                <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
-                                                <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui para montar uma carga separada..."></textarea>
-                                            </div>
-                                            <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaVendaAntecipada()"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <hr>
+
+            <ul class="nav nav-pills flex-column mb-auto" id="sidebar-nav">
+                <li class="nav-item mb-1">
+                    <a href="#card-resumo-geral-container" class="nav-link rounded-2">
+                        <i class="bi bi-bar-chart-line me-2"></i>Resumo
+                    </a>
+                </li>
+                <li class="mb-1">
+                    <a href="#workspace-card" class="nav-link rounded-2">
+                        <i class="bi bi-tools me-2"></i>Mesa de Trabalho
+                    </a>
+                </li>
+                <li class="mb-1">
+                    <a href="#additional-results" class="nav-link rounded-2">
+                        <i class="bi bi-card-list me-2"></i>Resultados Adicionais
+                    </a>
+                </li>
+            </ul>
+
+            <hr>
+            
+            <div class="d-grid gap-2">
+                 <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#configModal">
+                    <i class="bi bi-sliders me-2"></i>Configurações & Ações
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" id="limparResultadosBtn">
+                    <i class="bi bi-eraser-fill me-1"></i>Limpar Tudo
+                </button>
             </div>
+        </nav>
+
+        <main id="main-content" class="p-4">
+            
+            <h1 class="h3 mb-4">Dashboard de Separação de Cargas</h1>
 
             <div id="resultado-venda-antecipada" class="mb-4"></div>
             <div id="resultado-carga-especial" class="mb-4"></div>
             <div id="card-resumo-geral-container" class="mb-4" style="display: none;"></div>
 
-            <div class="row">
+            <div class="row" id="workspace-card">
                 <div class="col-lg-8 mb-4">
                     <div class="card h-100">
                         <div class="card-header">
@@ -472,10 +284,10 @@
                         </div>
                         <div class="card-body p-0">
                              <ul class="nav nav-tabs nav-fill px-3 pt-2" id="vehicleTabs" role="tablist">
-                                <li class="nav-item" role="presentation"><button class="nav-link active" id="fiorino-tab" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane" type="button" role="tab"><i class="bi bi-box-seam-fill me-2"></i>Fiorino</button></li>
-                                <li class="nav-item" role="presentation"><button class="nav-link" id="van-tab" data-bs-toggle="tab" data-bs-target="#van-tab-pane" type="button" role="tab"><i class="bi bi-truck-front-fill me-2"></i>Van</button></li>
-                                <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4</button></li>
-                            </ul>
+                                 <li class="nav-item" role="presentation"><button class="nav-link active" id="fiorino-tab" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane" type="button" role="tab"><i class="bi bi-box-seam-fill me-2"></i>Fiorino</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="van-tab" data-bs-toggle="tab" data-bs-target="#van-tab-pane" type="button" role="tab"><i class="bi bi-truck-front-fill me-2"></i>Van</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4</button></li>
+                             </ul>
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active p-3 workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
@@ -522,39 +334,174 @@
                 </div>
             </div>
 
-            <hr class="my-4">
-            <h3 class="mb-3">Resultados Adicionais da Análise</h3>
-            
-            <div class="card mb-4 border-danger">
-                <div class="card-header bg-danger-subtle text-danger-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-slash-circle-fill me-2"></i>Pedidos Bloqueados Manualmente</h2></div>
-                <div class="card-body"><div id="resultado-bloqueados"></div></div>
+            <div id="additional-results">
+                <hr class="my-4">
+                <h3 class="mb-3">Resultados Adicionais da Análise</h3>
+                
+                <div class="card mb-4 border-danger">
+                    <div class="card-header bg-danger-subtle text-danger-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-slash-circle-fill me-2"></i>Pedidos Bloqueados Manualmente</h2></div>
+                    <div class="card-body"><div id="resultado-bloqueados"></div></div>
+                </div>
+
+                <div class="card mb-4 border-warning">
+                    <div class="card-header bg-warning-subtle text-warning-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-sign-turn-right-fill me-2"></i>Pedidos da Rota 1 para Alteração</h2></div>
+                    <div class="card-body"><div id="resultado-rota1"></div></div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-lightning-charge-fill me-2"></i>Cargas 3/4 (Formadas Automaticamente)</h2></div>
+                    <div class="card-body"><div id="resultado-tres-quartos"></div></div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-inboxes-fill me-2"></i>Cargas "Toco"</h2></div>
+                    <div class="card-body"><div id="resultado-toco"></div></div>
+                </div>
+                
+                <div class="card mb-4 border-secondary">
+                    <div class="card-header bg-secondary-subtle text-secondary-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (CF Numérico ou Bloqueio por Regra)</h2></div>
+                    <div class="card-body"><div id="resultado-cf-numerico"></div></div>
+                </div>
             </div>
 
-            <div class="card mb-4 border-warning">
-                <div class="card-header bg-warning-subtle text-warning-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-sign-turn-right-fill me-2"></i>Pedidos da Rota 1 para Alteração</h2></div>
-                <div class="card-body"><div id="resultado-rota1"></div></div>
-            </div>
+        </main>
+    </div>
 
-            <div class="card mb-4">
-                <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-lightning-charge-fill me-2"></i>Cargas 3/4 (Formadas Automaticamente)</h2></div>
-                <div class="card-body"><div id="resultado-tres-quartos"></div></div>
-            </div>
+    <div class="modal fade" id="configModal" tabindex="-1" aria-labelledby="configModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="configModalLabel"><i class="bi bi-sliders me-2"></i>Configurações & Ações Manuais</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cpu-fill me-2"></i>Algoritmo de Otimização</h2></div>
+                                <div class="card-body">
+                                    <label for="optimizationLevelSelect" class="form-label">Nível de Otimização:</label>
+                                    <select class="form-select" id="optimizationLevelSelect">
+                                        <option value="1">Nível 1: Rápido (Heurística Simples)</option>
+                                        <option value="2" selected>Nível 2: Avançado (Padrão)</option>
+                                        <option value="3">Nível 3: Exaustivo (Mais Lento)</option>
+                                    </select>
+                                    <div class="form-text mt-2">
+                                        <p class="mb-1"><strong>Nível 1:</strong> Ideal para resultados rápidos. Agrupa por clientes e preenche as cargas.</p>
+                                        <p class="mb-1"><strong>Nível 2:</strong> Usa um algoritmo avançado para testar milhares de combinações, buscando reduzir as sobras.</p>
+                                        <p class="mb-0"><strong>Nível 3:</strong> Executa o Nível 2 e depois tenta encaixar as sobras trocando pedidos entre as cargas.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 mb-4">
+                             <div class="card h-100">
+                                 <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-slash-circle-fill me-2"></i>Bloqueio Manual</h2></div>
+                                 <div class="card-body d-flex flex-column">
+                                     <label for="bloquearPedidoInput" class="form-label">Número do Pedido a Bloquear:</label>
+                                     <div class="input-group mb-3"><input type="text" class="form-control" id="bloquearPedidoInput" placeholder="Digite o número..."><button class="btn btn-outline-danger" type="button" onclick="bloquearPedido()">Bloquear</button></div>
+                                     <label class="form-label mt-2">Pedidos Bloqueados:</label>
+                                     <div id="lista-pedidos-bloqueados" class="p-2 border rounded border-secondary flex-grow-1" style="background-color: var(--dark-bg); min-height: 150px;"><span class="text-muted">Nenhum.</span></div>
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
 
-            <div class="card mb-4">
-                <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-inboxes-fill me-2"></i>Cargas "Toco"</h2></div>
-                <div class="card-body"><div id="resultado-toco"></div></div>
-            </div>
-            
-            <div class="card mb-4 border-secondary">
-                <div class="card-header bg-secondary-subtle text-secondary-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (CF Numérico ou Bloqueio por Regra)</h2></div>
-                <div class="card-body"><div id="resultado-cf-numerico"></div></div>
+                    <div class="card mb-4">
+                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-sliders me-2"></i>Configurações de Veículos</h2></div>
+                        <div class="card-body">
+                             <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
+                                 <div class="col-md-12"><strong class="text-success">Fiorino</strong></div>
+                                 <div class="col-md-3"><label for="fiorinoMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="fiorinoMinCapacity" value="300" step="10"></div>
+                                 <div class="col-md-3"><label for="fiorinoMaxCapacity" class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control config-input" id="fiorinoMaxCapacity" value="500" step="10"></div>
+                                 <div class="col-md-3"><label for="fiorinoCubage" class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control config-input" id="fiorinoCubage" value="1.5" step="0.1"></div>
+                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetFiorino">Reset</button></div>
+                                 <div class="col-md-3"></div>
+                                 <div class="col-md-3"><label for="fiorinoHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="fiorinoHardMaxCapacity" value="560" step="10"></div>
+                                 <div class="col-md-3"><label for="fiorinoHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="fiorinoHardCubage" value="1.7" step="0.1"></div>
+                             </div>
+                            <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
+                                 <div class="col-md-12"><strong class="text-primary">Van</strong></div>
+                                 <div class="col-md-3"><label for="vanMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="vanMinCapacity" value="1100" step="10"></div>
+                                 <div class="col-md-3"><label for="vanMaxCapacity" class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control config-input" id="vanMaxCapacity" value="1560" step="10"></div>
+                                 <div class="col-md-3"><label for="vanCubage" class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control config-input" id="vanCubage" value="5.0" step="0.1"></div>
+                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetVan">Reset</button></div>
+                                 <div class="col-md-3"></div>
+                                 <div class="col-md-3"><label for="vanHardMaxCapacity" class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control config-input" id="vanHardMaxCapacity" value="1600" step="10"></div>
+                                 <div class="col-md-3"><label for="vanHardCubage" class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control config-input" id="vanHardCubage" value="5.6" step="0.1"></div>
+                             </div>
+                            <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
+                                 <div class="col-md-12"><strong class="text-warning">3/4</strong></div>
+                                 <div class="col-md-3"><label for="tresQuartosMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMinCapacity" value="2300" step="10"></div>
+                                 <div class="col-md-3"><label for="tresQuartosMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tresQuartosMaxCapacity" value="4100" step="10"></div>
+                                 <div class="col-md-3"><label for="tresQuartosCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tresQuartosCubage" value="15.0" step="0.1"></div>
+                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetTresQuartos">Reset</button></div>
+                             </div>
+                            <div class="row g-3">
+                                 <div class="col-md-12"><strong>Toco</strong></div>
+                                 <div class="col-md-3"><label for="tocoMinCapacity" class="form-label">Peso Mín (kg)</label><input type="number" class="form-control config-input" id="tocoMinCapacity" value="5000" step="10"></div>
+                                 <div class="col-md-3"><label for="tocoMaxCapacity" class="form-label">Peso Máx (kg)</label><input type="number" class="form-control config-input" id="tocoMaxCapacity" value="8500" step="10"></div>
+                                 <div class="col-md-3"><label for="tocoCubage" class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control config-input" id="tocoCubage" value="30.0" step="0.1"></div>
+                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetToco">Reset</button></div>
+                             </div>
+                            <div class="mt-4 d-flex justify-content-end"><button class="btn btn-success me-2" id="saveConfig"><i class="bi bi-check-circle-fill me-2"></i>Salvar Tudo</button><button class="btn btn-danger" id="resetAllConfigs"><i class="bi bi-arrow-clockwise me-2"></i>Resetar Tudo</button></div>
+                            <div id="configStatus" class="mt-2 status-message text-end"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                         <div class="col-lg-6 mb-4 mb-lg-0">
+                             <div class="card h-100">
+                                 <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-scissors me-2"></i>Pedidos Sem Corte</h2></div>
+                                 <div class="card-body d-flex flex-column">
+                                     <label for="semCorteInput" class="form-label">Pedidos a marcar como "Sem Corte":</label>
+                                     <div class="input-group mb-3">
+                                         <textarea class="form-control" id="semCorteInput" rows="3" placeholder="Cole os números aqui..."></textarea>
+                                         <button class="btn btn-outline-warning" type="button" onclick="marcarPedidosSemCorte()">Marcar</button>
+                                     </div>
+                                     <label class="form-label mt-2">Pedidos Marcados:</label>
+                                     <div id="lista-pedidos-sem-corte" class="p-2 border rounded border-secondary flex-grow-1" style="background-color: var(--dark-bg); min-height: 100px;"><span class="text-muted">Nenhum.</span></div>
+                                 </div>
+                             </div>
+                        </div>
+                         <div class="col-lg-6 mb-4 mb-lg-0">
+                             <div class="card h-100">
+                                 <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>Carga Especial</h2></div>
+                                  <div class="card-body d-flex flex-column">
+                                      <div class="flex-grow-1">
+                                          <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
+                                          <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
+                                      </div>
+                                      <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaPredefinida('pedidosEspeciaisInput', 'resultado-carga-especial', pedidosEspeciaisProcessados, 'Especial')"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
+                                  </div>
+                             </div>
+                         </div>
+                    </div>
+                     <div class="row mt-4">
+                         <div class="col-lg-6">
+                              <div class="card h-100">
+                                  <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>Venda Antecipada</h2></div>
+                                   <div class="card-body d-flex flex-column">
+                                       <div class="flex-grow-1">
+                                           <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
+                                           <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui..."></textarea>
+                                       </div>
+                                       <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaPredefinida('vendaAntecipadaInput', 'resultado-venda-antecipada', pedidosVendaAntecipadaProcessados, 'Venda Antecipada')"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="modal fade no-print" id="processing-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="processingModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-dark-surface">
+            <div class="modal-content">
                 <div class="modal-body text-center p-4">
                     <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
                         <span class="visually-hidden">Loading...</span>
@@ -569,37 +516,36 @@
         </div>
     </div>
 
-
     <script>
-        // INÍCIO DO SCRIPT DE PARTÍCULAS PARA O LOGIN
-        document.addEventListener('DOMContentLoaded', function () {
-            if (document.getElementById('particles-js')) {
-                particlesJS('particles-js', {
-                    "particles": { "number": { "value": 60, "density": { "enable": true, "value_area": 800 } }, "color": { "value": "#4a515a" }, "shape": { "type": "circle" }, "opacity": { "value": 0.5, "random": true, "anim": { "enable": true, "speed": 1, "opacity_min": 0.1, "sync": false } }, "size": { "value": 3, "random": true }, "line_linked": { "enable": true, "distance": 150, "color": "#4a515a", "opacity": 0.4, "width": 1 }, "move": { "enable": true, "speed": 2, "direction": "none", "out_mode": "out" } }, "interactivity": { "detect_on": "canvas", "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true }, "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 1 } } } }, "retina_detect": true
-                });
-            }
-        });
-        // FIM DO SCRIPT DE PARTÍCULAS
-    </script>
-    
-    <script>
-        const SUPABASE_URL = 'https://mwfsitvoshwipmvgcdmc.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13ZnNpdHZvc2h3aXBtdmdjZG1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3NTY3OTIsImV4cCI6MjA3NDMzMjc5Mn0.DvXQ_HMMnJZyQh17C6N426r1X9AeYjIMpXVbTRspFq0';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        // --- INÍCIO DA CONFIGURAÇÃO DA API DE ROTEAMENTO ---
-        const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImQ4NjhkYzVlMDc5MTRiYmNiY2JhNmFjZTcxMmNiNTM3IiwiaCI6Im11cm11cjY0In0=';
-        const SELMI_COORDS = [-51.3698, -23.3033]; // Coordenadas do Pastificio Selmi em Rolândia, PR [longitude, latitude]
-        const geocodeCache = {};
-        // --- FIM DA CONFIGURAÇÃO DA API DE ROTEAMENTO ---
-
         const agendamentoClientCodes = new Set([
             '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '44192', '144457', '145014', '145237', '145322', '146644', '146988', '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196084', '196118', '196405', '196446', '196784', '197168', '197249', '197983', '198187', '198438', '198747', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218578', '218580', '218640', '218820', '218845', '219539', '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
         ]);
 
         const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
         
-        // --- FUNÇÕES DE LÓGICA DE NEGÓCIO (REINSERIDAS E CENTRALIZADAS) ---
+        function deepClone(obj) {
+            if (obj === null || typeof obj !== 'object') {
+                return obj;
+            }
+            if (obj instanceof Date) {
+                return new Date(obj.getTime());
+            }
+            if (Array.isArray(obj)) {
+                const arrCopy = [];
+                for (let i = 0; i < obj.length; i++) {
+                    arrCopy[i] = deepClone(obj[i]);
+                }
+                return arrCopy;
+            }
+            const objCopy = {};
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    objCopy[key] = deepClone(obj[key]);
+                }
+            }
+            return objCopy;
+        }
+
         function normalizeClientId(id) {
             if (id === null || typeof id === 'undefined') return '';
             return String(id).trim().replace(/^0+/, '');
@@ -617,17 +563,17 @@
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
         let pedidosComCFNumericoIsolado = [];
+        let pedidosManualmenteBloqueadosAtuais = [];
         let pedidosPrioritarios = [];
         let pedidosBloqueados = new Set();
         let pedidosEspeciaisProcessados = new Set();
-        let pedidosSemCorte = new Set(); // NOVO: Para pedidos "Sem Corte"
-        let pedidosVendaAntecipadaProcessados = new Set(); // NOVO: Para Venda Antecipada
+        let pedidosSemCorte = new Set();
+        let pedidosVendaAntecipadaProcessados = new Set();
         let rota1SemCarga = [];
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
         let activeLoads = {};
         let manualLoadInProgress = null;
-
 
         const defaultConfigs = {
             fiorinoMinCapacity: 300, fiorinoMaxCapacity: 500, fiorinoCubage: 1.5, fiorinoHardMaxCapacity: 560, fiorinoHardCubage: 1.7,
@@ -636,12 +582,9 @@
             tocoMinCapacity: 5000, tocoMaxCapacity: 8500, tocoCubage: 30.0
         };
         
-        const CONFIG_ID = 'default_config';
-
-        async function saveConfigurations() {
+        function saveConfigurations() {
             const configStatus = document.getElementById('configStatus');
-            configStatus.innerHTML = '<p class="text-info">Salvando configurações no banco de dados...</p>';
-
+            configStatus.innerHTML = '<p class="text-info">Salvando configurações no armazenamento local...</p>';
             try {
                 const configs = {};
                 Object.keys(defaultConfigs).forEach(key => {
@@ -650,53 +593,32 @@
                         configs[key] = parseFloat(element.value);
                     }
                 });
-                
-                configs.id = CONFIG_ID; 
-
-                const { error } = await supabaseClient
-                    .from('configuracoes_veiculos')
-                    .upsert(configs, { onConflict: 'id' });
-
-                if (error) {
-                    throw error;
-                }
-
-                configStatus.innerHTML = '<p class="text-success">Configurações salvas no banco de dados com sucesso!</p>';
+                localStorage.setItem('vehicleConfigs', JSON.stringify(configs));
+                configStatus.innerHTML = '<p class="text-success">Configurações salvas com sucesso!</p>';
                 setTimeout(() => { configStatus.innerHTML = ''; }, 3000);
             } catch (error) {
-                console.error("Erro ao salvar no Supabase:", error);
+                console.error("Erro ao salvar no localStorage:", error);
                 configStatus.innerHTML = `<p class="text-danger">Erro ao salvar as configurações: ${error.message}</p>`;
             }
         }
 
-        async function loadConfigurations() {
+        function loadConfigurations() {
             const configStatus = document.getElementById('configStatus');
-            configStatus.innerHTML = '<p class="text-info">Carregando configurações do banco de dados...</p>';
-
+            configStatus.innerHTML = '<p class="text-info">Carregando configurações...</p>';
             try {
-                const { data, error } = await supabaseClient
-                    .from('configuracoes_veiculos')
-                    .select('*')
-                    .eq('id', CONFIG_ID)
-                    .single();
+                const savedConfigs = localStorage.getItem('vehicleConfigs');
+                const configs = savedConfigs ? JSON.parse(savedConfigs) : defaultConfigs;
 
-                if (error && error.code !== 'PGRST116') { // PGRST116: no rows found
-                    throw error;
-                }
-
-                const configs = data ? data : defaultConfigs;
-                
-                Object.keys(configs).forEach(key => {
+                Object.keys(defaultConfigs).forEach(key => {
                     const element = document.getElementById(key);
                     if (element) {
-                        element.value = configs[key];
+                        element.value = configs[key] !== undefined ? configs[key] : defaultConfigs[key];
                     }
                 });
                 configStatus.innerHTML = '<p class="text-success">Configurações carregadas!</p>';
                 setTimeout(() => { configStatus.innerHTML = ''; }, 2000);
-
             } catch (error) {
-                console.error("Erro ao carregar do Supabase:", error);
+                console.error("Erro ao carregar do localStorage:", error);
                 configStatus.innerHTML = `<p class="text-warning">Não foi possível carregar configurações. Usando valores padrão.</p>`;
                 Object.keys(defaultConfigs).forEach(key => {
                     const element = document.getElementById(key);
@@ -741,9 +663,9 @@
             saveConfigurations();
         }
         
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             try {
-                await loadConfigurations(); 
+                loadConfigurations(); 
             } catch (e) {
                 console.error("Falha crítica ao carregar configurações, listeners ainda serão ativados.", e);
             }
@@ -756,14 +678,20 @@
             document.getElementById('resetAllConfigs').addEventListener('click', resetAll);
             document.getElementById('limparResultadosBtn').addEventListener('click', limparTudo);
 
-            const savedRotaInicial = localStorage.getItem('rotaInicial');
-            const savedRotaFinal = localStorage.getItem('rotaFinal');
-            if (savedRotaInicial) {
-                document.getElementById('rotaInicialInput').value = savedRotaInicial;
-            }
-            if (savedRotaFinal) {
-                document.getElementById('rotaFinalInput').value = savedRotaFinal;
-            }
+            document.querySelectorAll('#sidebar-nav a').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector('#sidebar-nav a.active')?.classList.remove('active');
+                    this.classList.add('active');
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
         });
 
         const rotaVeiculoMap = {
@@ -775,14 +703,9 @@
         const fileInput = document.getElementById('fileInput');
         const processarBtn = document.getElementById('processarBtn');
         const statusDiv = document.getElementById('status');
-        const dropZone = document.getElementById('drop-zone');
-        const dropZoneText = document.getElementById('drop-zone-text');
         const isNumeric = (str) => str && /^\d+$/.test(String(str).trim());
 
         fileInput.addEventListener('change', (event) => { handleFile(event.target.files[0]); });
-        dropZone.addEventListener('dragover', (event) => { event.stopPropagation(); event.preventDefault(); dropZone.classList.add('border-primary'); });
-        dropZone.addEventListener('dragleave', (event) => { event.stopPropagation(); event.preventDefault(); dropZone.classList.remove('border-primary'); });
-        dropZone.addEventListener('drop', (event) => { event.stopPropagation(); event.preventDefault(); dropZone.classList.remove('border-primary'); handleFile(event.dataTransfer.files[0]); });
 
         function handleFile(file) {
             if (!file) return;
@@ -843,21 +766,52 @@
                         return pedido; 
                     });
                     planilhaData.forEach(checkAgendamento);
-                    statusDiv.innerHTML = `<p class="text-success">Planilha "${file.name}" carregada. ${planilhaData.length} linhas prontas para processar.</p>`;
+                    statusDiv.innerHTML = `<p class="text-success">Planilha "${file.name}" carregada.</p>`;
                     processarBtn.disabled = false;
-                    dropZoneText.innerHTML = `<p class="text-success">Arquivo "${file.name}" carregado.</p><button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">Selecionar Outro</button>`;
+                    
+                    popularFiltrosDeRota();
 
                     if (document.getElementById('autoProcessCheckbox').checked) {
                         processar();
                     }
 
                 } catch (error) {
-                    statusDiv.innerHTML = `<p class="text-danger"><strong>Erro ao ler o arquivo:</strong> ${error.message}</p>`;
+                    statusDiv.innerHTML = `<p class="text-danger"><strong>Erro:</strong> ${error.message}</p>`;
                     console.error(error);
                 }
             };
             reader.readAsArrayBuffer(file);
         }
+        
+        function popularFiltrosDeRota() {
+            const container = document.getElementById('filtro-rota-container');
+            const rotaInicioSelect = document.getElementById('rotaInicioSelect');
+            const rotaFimSelect = document.getElementById('rotaFimSelect');
+
+            rotaInicioSelect.innerHTML = '<option value="">Selecione...</option>';
+            rotaFimSelect.innerHTML = '<option value="">Selecione...</option>';
+
+            if (planilhaData.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            const rotas = [...new Set(planilhaData.map(p => String(p.Cod_Rota || ''))) ].filter(Boolean);
+            rotas.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+            rotas.forEach(rota => {
+                rotaInicioSelect.innerHTML += `<option value="${rota}">${rota}</option>`;
+                rotaFimSelect.innerHTML += `<option value="${rota}">${rota}</option>`;
+            });
+
+            container.style.display = 'block';
+        }
+
+        function limparFiltroDeRota() {
+            document.getElementById('rotaInicioSelect').selectedIndex = 0;
+            document.getElementById('rotaFimSelect').selectedIndex = 0;
+        }
+
 
         function buscarPedido() {
             const searchInput = document.getElementById('pedidoSearchInput').value.trim();
@@ -881,7 +835,10 @@
                     }
                 }
             }
-
+            if (!pedidoEncontrado) {
+                pedidoEncontrado = pedidosManualmenteBloqueadosAtuais.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Bloqueado Manualmente'; }
+            }
             if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
                 if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = 'accordionGeral'; } 
@@ -903,18 +860,18 @@
              if (!pedidoEncontrado) {
                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                  if (originalPedido) {
-                                     pedidoEncontrado = originalPedido;
-                                     if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                                         local = 'Bloqueado Manualmente por você.';
-                                     } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                                         local = 'Alocado na Carga Especial.';
-                                     } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
-                                         local = 'Alocado na Carga de Venda Antecipada.';
-                                     }
-                                     else {
-                                         local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
-                                     }
-               }
+                    pedidoEncontrado = originalPedido;
+                    if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                        local = 'Bloqueado Manualmente por você.';
+                    } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                        local = 'Alocado na Carga Especial.';
+                    } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
+                        local = 'Alocado na Carga de Venda Antecipada.';
+                    }
+                    else {
+                        local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
+                    }
+                }
             }
 
             if (pedidoEncontrado) {
@@ -922,9 +879,9 @@
                 if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                         <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
-                                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                    buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
@@ -979,7 +936,6 @@
             atualizarListaBloqueados();
         }
 
-        // --- INÍCIO DAS NOVAS FUNÇÕES: SEM CORTE ---
         function atualizarListaSemCorte() {
             const divLista = document.getElementById('lista-pedidos-sem-corte');
             divLista.innerHTML = '';
@@ -1010,13 +966,14 @@
             pedidosSemCorte.delete(numPedido);
             atualizarListaSemCorte();
         }
-        // --- FIM DAS NOVAS FUNÇÕES: SEM CORTE ---
 
         function resetarEstadoGlobal() {
             pedidosGeraisAtuais = [];
             gruposToco = {};
             pedidosComCFNumericoIsolado = [];
             rota1SemCarga = [];
+            pedidosManualmenteBloqueadosAtuais = [];
+            pedidosPrioritarios = [];
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
             activeLoads = {};
@@ -1028,9 +985,8 @@
 
             pedidosEspeciaisProcessados.clear();
             pedidosBloqueados.clear();
-            pedidosPrioritarios = [];
-            pedidosSemCorte.clear(); // Limpar "sem corte"
-            pedidosVendaAntecipadaProcessados.clear(); // Limpar "venda antecipada"
+            pedidosSemCorte.clear();
+            pedidosVendaAntecipadaProcessados.clear();
             
             const idsParaLimpar = [
                 'resultado-venda-antecipada', 'resultado-carga-especial', 'resultado-bloqueados', 'resultado-geral', 
@@ -1045,29 +1001,25 @@
 
             document.getElementById('card-resumo-geral-container').innerHTML = '';
             document.getElementById('card-resumo-geral-container').style.display = 'none';
+            document.getElementById('filtro-rota-container').style.display = 'none';
 
             document.getElementById('pedidosEspeciaisInput').value = '';
             document.getElementById('bloquearPedidoInput').value = '';
             document.getElementById('pedidoSearchInput').value = '';
-            document.getElementById('semCorteInput').value = ''; // Limpar input "sem corte"
-            document.getElementById('vendaAntecipadaInput').value = ''; // Limpar input "venda antecipada"
+            document.getElementById('semCorteInput').value = '';
+            document.getElementById('vendaAntecipadaInput').value = '';
             atualizarListaBloqueados();
-            atualizarListaSemCorte(); // Atualizar lista "sem corte"
-
-            dropZoneText.innerHTML = `<i class="bi bi-file-earmark-spreadsheet-fill fs-2 text-secondary"></i>
-                                     <p class="text-secondary mt-2">Arraste o arquivo aqui ou</p>
-                                     <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"><i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo</button>`;
+            atualizarListaSemCorte();
+            limparFiltroDeRota();
             
+            fileInput.value = '';
             planilhaData = [];
             processarBtn.disabled = true;
             statusDiv.innerHTML = '';
         }
 
         function processar() {
-            localStorage.setItem('rotaInicial', document.getElementById('rotaInicialInput').value);
-            localStorage.setItem('rotaFinal', document.getElementById('rotaFinalInput').value);
-
-            statusDiv.innerHTML = '<div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div><span class="text-primary">Processando, por favor aguarde...</span></div>';
+            statusDiv.innerHTML = '<div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div><span class="text-primary">Processando...</span></div>';
             processarBtn.disabled = true;
             
             setTimeout(() => {
@@ -1082,59 +1034,58 @@
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
                     
                     resetarEstadoGlobal();
+
+                    // Aplicar filtro de rota
+                    const rotaInicio = document.getElementById('rotaInicioSelect').value;
+                    const rotaFim = document.getElementById('rotaFimSelect').value;
+                    let dadosParaProcessar = [...planilhaData];
+
+                    if (rotaInicio && rotaFim) {
+                        dadosParaProcessar = planilhaData.filter(p => {
+                            const rotaPedido = String(p.Cod_Rota || '');
+                            return rotaPedido.localeCompare(rotaInicio, undefined, { numeric: true }) >= 0 &&
+                                   rotaPedido.localeCompare(rotaFim, undefined, { numeric: true }) <= 0;
+                        });
+                        statusDiv.innerHTML = `<p class="text-info">Processando ${dadosParaProcessar.length} pedidos entre as rotas ${rotaInicio} e ${rotaFim}...</p>`;
+                    }
                     
                     ['resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 'resultado-toco', 'resultado-tres-quartos', 'resultado-cf-numerico', 'resultado-rota1', 'resultado-bloqueados'].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
                     });
-
-                    let pedidosManualmenteBloqueados = [];
+                    
                     let pedidosDisponiveis = [];
-                    planilhaData.filter(p => p.Num_Pedido).forEach(p => {
+                    dadosParaProcessar.filter(p => p.Num_Pedido).forEach(p => {
                         if (pedidosBloqueados.has(String(p.Num_Pedido))) {
-                            pedidosManualmenteBloqueados.push(p);
+                            pedidosManualmenteBloqueadosAtuais.push(p);
                         } else {
                             pedidosDisponiveis.push(p);
                         }
                     });
-                    displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueados);
+                    displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueadosAtuais);
                     
-                    // Excluir cargas especiais E de venda antecipada
                     pedidosDisponiveis = pedidosDisponiveis.filter(p => 
                         !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)) &&
                         !pedidosVendaAntecipadaProcessados.has(String(p.Num_Pedido))
                     );
 
-                    // ***** INÍCIO DA ALTERAÇÃO CORRIGIDA *****
                     rota1SemCarga = pedidosDisponiveis.filter(p => {
                         const codRota = String(p.Cod_Rota || '').trim();
                         const cfValue = p.CF;
                         const coluna5Value = String(p.Coluna5 || '').trim().toUpperCase();
 
-                        // Requisito 1: Apenas pedidos da Rota 1.
-                        if (codRota !== '1') {
-                            return false;
-                        }
-
-                        // Requisito 2: O campo CF não pode ser numérico.
-                        if (isNumeric(cfValue)) {
-                            return false;
-                        }
-
-                        // Requisito 3: A Coluna5 deve conter uma das descrições.
+                        if (codRota !== '1') { return false; }
+                        if (isNumeric(cfValue)) { return false; }
+                        
                         const filtroDescricoes = ['TBL 08', 'TBL TODESCHINI', 'PROMO BOLINHO'];
-                        const atendeFiltroDescricao = filtroDescricoes.some(termo => coluna5Value.includes(termo));
-
-                        return atendeFiltroDescricao;
+                        return filtroDescricoes.some(termo => coluna5Value.includes(termo));
                     });
-                    // ***** FIM DA ALTERAÇÃO CORRIGIDA *****
 
                     const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
                     displayRota1(resultadoRota1Div, rota1SemCarga);
 
                     let pedidosParaProcessamentoGeral = pedidosDisponiveis.filter(p => !rota1PedidoIds.has(p.Num_Pedido));
 
-                    const rotaInicialInput = document.getElementById('rotaInicialInput').value; const rotaFinalInput = document.getElementById('rotaFinalInput').value;
                     const pedidos = pedidosParaProcessamentoGeral.filter(p => String(p.Coluna4) != '500');
 
                     const clientesComBloqueio = new Set();
@@ -1160,7 +1111,6 @@
                     displayToco(resultadoTocoDiv, gruposToco);
                     tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
 
-                    const rotaMin = rotaInicialInput ? parseInt(rotaInicialInput, 10) : 0; const rotaMax = rotaFinalInput ? parseInt(rotaFinalInput, 10) : 99999;
                     let pedidosParaProcessamento = [];
                     
                     pedidos.forEach(p => {
@@ -1170,8 +1120,7 @@
                             return;
                         }
                         if (['21', '23', '17'].includes(String(p.Coluna4))) return;
-                        const rotaAtualNum = parseInt(String(p.Cod_Rota), 10);
-                        if (rotaMin > 0 && rotaMax > 0 && !(rotaAtualNum >= rotaMin && rotaAtualNum <= rotaMax)) return;
+                        
                         if (isNumeric(p.CF)) {
                             pedidosComCFNumericoIsolado.push(p);
                         } else {
@@ -1223,10 +1172,10 @@
                     displayGerais(resultadoGeralDiv, gruposGerais);
 
                     const stats = {
-                        totalPlanilha: planilhaData.length,
-                        pesoTotal: planilhaData.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
+                        totalPlanilha: dadosParaProcessar.length,
+                        pesoTotal: dadosParaProcessar.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
                         pedidosEspeciais: pedidosEspeciaisProcessados.size,
-                        pedidosBloqueados: pedidosManualmenteBloqueados.length,
+                        pedidosBloqueados: pedidosManualmenteBloqueadosAtuais.length,
                         pedidosToco: tocoPedidoIds.size,
                         pedidos34Auto: tresQuartosLoads.reduce((sum, load) => sum + load.pedidos.length, 0),
                         pedidosFiltrados: pedidosComCFNumericoIsolado.length + rota1SemCarga.length,
@@ -1235,7 +1184,7 @@
                     };
                     displayResumoGeral(stats);
                     
-                    statusDiv.innerHTML = `<p class="text-success">Processamento concluído com sucesso!</p>`;
+                    statusDiv.innerHTML = `<p class="text-success">Processamento concluído!</p>`;
                 } catch (error) { 
                     statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; 
                     console.error(error); 
@@ -1257,7 +1206,7 @@
 
         function exportarPedidosAtrasados() {
             if (pedidosGeraisAtuais.length === 0) {
-                alert("Por favor, processe a planilha primeiro para definir as rotas.");
+                alert("Por favor, processe la planilha primeiro para definir as rotas.");
                 return;
             }
 
@@ -1298,19 +1247,19 @@
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
                 table += `<tr id="pedido-${p.Num_Pedido}" 
-                                class="${isPriorityRow ? 'table-primary' : ''}" 
-                                data-cliente-id="${clienteIdNormalizado}" 
-                                data-pedido-id="${p.Num_Pedido}"
-                                onclick="highlightClientRows(event)"
-                                draggable="true"
-                                ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
+                                 class="${isPriorityRow ? 'table-primary' : ''}" 
+                                 data-cliente-id="${clienteIdNormalizado}" 
+                                 data-pedido-id="${p.Num_Pedido}"
+                                 onclick="highlightClientRows(event)"
+                                 draggable="true"
+                                 ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') {
                         const isPriority = pedidosPrioritarios.includes(String(p.Num_Pedido));
-                        const isSemCorte = pedidosSemCorte.has(String(p.Num_Pedido)); // NOVO: Checagem Sem Corte
+                        const isSemCorte = pedidosSemCorte.has(String(p.Num_Pedido));
                         const priorityBadge = isPriority ? ' <span class="badge bg-primary">Prioridade</span>' : '';
-                        const semCorteBadge = isSemCorte ? ' <span class="badge bg-transparent" title="Pedido Sem Corte"><i class="bi bi-scissors text-warning"></i></span>' : ''; // NOVO: Badge Sem Corte
+                        const semCorteBadge = isSemCorte ? ' <span class="badge bg-transparent" title="Pedido Sem Corte"><i class="bi bi-scissors text-warning"></i></span>' : '';
                         table += `<td>${cellContent}${priorityBadge}${semCorteBadge}</td>`;
                     } else if (c === 'Agendamento' && cellContent === 'Sim') {
                         table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
@@ -1405,7 +1354,7 @@
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -1429,9 +1378,9 @@
                 else if (pesoPercentual > 75) progressColor = 'bg-warning';
 
                 const progressBar = `
-                                            <div class="progress mt-2" role="progressbar" style="height: 10px;">
-                                                <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
-                                            </div>`;
+                                         <div class="progress mt-2" role="progressbar" style="height: 10px;">
+                                             <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
+                                         </div>`;
 
                 html += `<div id="${loadId}" class="card mb-3 drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="tresQuartos"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${progressBar}${createTable(load.pedidos, null, loadId)}</div></div>`;
             });
@@ -1524,8 +1473,6 @@
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
 
-        // --- INÍCIO DAS FUNÇÕES DE OTIMIZAÇÃO E UI AVANÇADA ---
-
         function imprimirCargaManualIndividual(loadId) {
             const load = activeLoads[loadId];
             const cardToPrint = document.getElementById(loadId);
@@ -1547,7 +1494,6 @@
             }, 500);
         }
         
-        // --- FUNÇÕES DE VALIDAÇÃO E CONFIGURAÇÃO ---
         function getVehicleConfig(vehicleType) {
             const configs = {
                 minKg: parseFloat(document.getElementById(`${vehicleType}MinCapacity`).value),
@@ -1572,7 +1518,6 @@
             return true;
         }
 
-        // --- NÍVEL 1: ALGORITMO ORIGINAL (HEURÍSTICA RÁPIDA) ---
         function runHeuristicOptimization(packableGroups, vehicleType) {
             const strategies = [
                 { name: 'priority-weight-desc',
@@ -1675,7 +1620,6 @@
             return { loads: finalLoads, leftovers };
         }
 
-        // --- NÍVEL 2: ALGORITMO DE OTIMIZAÇÃO AVANÇADA (SIMULATED ANNEALING) ---
         function getSolutionEnergy(solution, vehicleType) {
             const config = getVehicleConfig(vehicleType);
             const leftoverWeight = solution.leftovers.reduce((sum, group) => sum + group.totalKg, 0);
@@ -1708,7 +1652,7 @@
 
                 const initialSortedGroups = [...packableGroups].sort((a, b) => b.totalKg - a.totalKg);
                 let bestSolution = createSolutionFromHeuristic(initialSortedGroups, vehicleType);
-                let currentSolution = JSON.parse(JSON.stringify(bestSolution));
+                let currentSolution = deepClone(bestSolution);
                 
                 let currentTemp = initialTemp;
                 
@@ -1718,7 +1662,7 @@
 
                 function doTemperatureStep() {
                     for (let i = 0; i < iterationsPerTemp; i++) {
-                        let neighborSolution = JSON.parse(JSON.stringify(currentSolution));
+                        let neighborSolution = deepClone(currentSolution);
                         let moveMade = false;
 
                         const moveType = Math.random();
@@ -1730,11 +1674,11 @@
                             if (targetLoadIndex < neighborSolution.loads.length) {
                                const targetLoad = neighborSolution.loads[targetLoadIndex];
                                if(isMoveValid(targetLoad, groupToPlace, vehicleType)) {
-                                    targetLoad.pedidos.push(...groupToPlace.pedidos);
-                                    targetLoad.totalKg += groupToPlace.totalKg;
-                                    targetLoad.totalCubagem += groupToPlace.totalCubagem;
-                                    neighborSolution.leftovers.splice(leftoverIndex, 1);
-                                    moveMade = true;
+                                  targetLoad.pedidos.push(...groupToPlace.pedidos);
+                                  targetLoad.totalKg += groupToPlace.totalKg;
+                                  targetLoad.totalCubagem += groupToPlace.totalCubagem;
+                                  neighborSolution.leftovers.splice(leftoverIndex, 1);
+                                  moveMade = true;
                                }
                             } else if (isMoveValid({pedidos:[], totalKg:0, totalCubagem:0}, groupToPlace, vehicleType)) { 
                                 neighborSolution.loads.push(groupToPlace);
@@ -1776,7 +1720,7 @@
                             if (neighborEnergy < currentEnergy || Math.random() < Math.exp((currentEnergy - neighborEnergy) / currentTemp)) {
                                 currentSolution = neighborSolution;
                                 if (getSolutionEnergy(currentSolution, vehicleType) < getSolutionEnergy(bestSolution, vehicleType)) {
-                                    bestSolution = JSON.parse(JSON.stringify(currentSolution));
+                                    bestSolution = deepClone(currentSolution);
                                 }
                             }
                         }
@@ -1817,11 +1761,9 @@
             });
         }
 
-
-        // --- NÍVEL 3: ALGORITMO DE POLIMENTO (BUSCA LOCAL COM TROCAS) ---
         function refinarCargasComTrocas(initialLoads, initialLeftovers, vehicleType) {
-            let loads = JSON.parse(JSON.stringify(initialLoads));
-            let leftovers = JSON.parse(JSON.stringify(initialLeftovers));
+            let loads = deepClone(initialLoads);
+            let leftovers = deepClone(initialLeftovers);
             let improvementMade;
 
             if (leftovers.length === 0) {
@@ -1887,100 +1829,10 @@
             return { refinedLoads: loads, remainingLeftovers: leftovers };
         }
 
-        // --- FUNÇÃO DE ROTEAMENTO CORRIGIDA E ROBUSTA ---
-        async function getCoordinates(cityName) {
-            if (!cityName || typeof cityName !== 'string' || cityName.trim() === '') {
-                console.warn("Nome da cidade inválido ou vazio fornecido para geocodificação.");
-                return null;
-            }
-            const trimmedCityName = cityName.trim().toUpperCase();
-            if (geocodeCache[trimmedCityName]) {
-                return geocodeCache[trimmedCityName];
-            }
-
-            const fullSearchText = `${trimmedCityName}, PR, Brazil`;
-
-            const BBOX = { min_lon: -55.0, min_lat: -27.0, max_lon: -48.0, max_lat: -22.5 };
-            const FOCUS_POINT = { lon: -51.2, lat: -24.7 }; // Ponto central do Paraná
-
-            const apiUrl = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(fullSearchText)}&focus.point.lon=${FOCUS_POINT.lon}&focus.point.lat=${FOCUS_POINT.lat}&boundary.rect.min_lon=${BBOX.min_lon}&boundary.rect.min_lat=${BBOX.min_lat}&boundary.rect.max_lon=${BBOX.max_lon}&boundary.rect.max_lat=${BBOX.max_lat}&boundary.country=BRA&sources=openstreetmap`;
-
-            try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    throw new Error(`Erro de rede ou da API: ${response.status} ${response.statusText}`);
-                }
-                const data = await response.json();
-
-                if (data.features && data.features.length > 0) {
-                    let bestFeature = null;
-
-                    // 1. Tenta encontrar a melhor correspondência que a API diz ser do Paraná
-                    bestFeature = data.features.find(f =>
-                        f.properties.region && f.properties.region.toUpperCase().includes('PARANÁ')
-                    );
-                    
-                    // 2. Se não encontrou, procura o PRIMEIRO resultado que esteja DENTRO do nosso BBOX
-                    if (!bestFeature) {
-                        console.warn(`Não foi encontrada uma correspondência de região 'Paraná' para '${cityName}'. Verificando coordenadas de todos os resultados...`);
-                        bestFeature = data.features.find(f => {
-                            const coords = f.geometry.coordinates;
-                            return (coords[0] >= BBOX.min_lon && coords[0] <= BBOX.max_lon &&
-                                    coords[1] >= BBOX.min_lat && coords[1] <= BBOX.max_lat);
-                        });
-                    }
-
-                    if (bestFeature) {
-                        const coords = bestFeature.geometry.coordinates;
-                        console.log(`Geocodificação para '${cityName}': Encontrado '${bestFeature.properties.label}' em [${coords}].`);
-                        geocodeCache[trimmedCityName] = coords;
-                        return coords;
-                    } else {
-                        // Se nenhum resultado estiver dentro da nossa área, a busca falha.
-                        console.error(`ERRO DE GEOCODIFICAÇÃO: Nenhum resultado encontrado para '${cityName}' dentro do BBOX definido. API retornou:`, data.features.map(f => f.properties.label));
-                        return null;
-                    }
-                }
-                
-                throw new Error(`'${trimmedCityName}' não foi encontrada pela API de geocodificação.`);
-
-            } catch (error) {
-                console.error(`Falha ao geocodificar '${cityName}':`, error);
-                return null;
-            }
-        }
-
-        async function calculateRouteDistance(cityCoordinates) {
-            if (!cityCoordinates || cityCoordinates.length === 0) return 0;
-            const allCoords = [SELMI_COORDS, ...cityCoordinates, SELMI_COORDS];
-            try {
-                const response = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': ORS_API_KEY,
-                        'Content-Type': 'application/json; charset=utf-8'
-                    },
-                    body: JSON.stringify({ "coordinates": allCoords })
-                });
-                if (!response.ok) {
-                    throw new Error(`Erro de rede ou da API de Rota: ${response.status} ${response.statusText}`);
-                }
-                const data = await response.json();
-                if (data.routes && data.routes.length > 0) {
-                    const distanceMeters = data.routes[0].summary.distance;
-                    return distanceMeters / 1000; // Convert to km
-                }
-                console.warn("API de roteamento não retornou rotas para as coordenadas:", cityCoordinates);
-                return 0;
-            } catch (error) {
-                console.error('Erro ao calcular rota:', error);
-                return -1; // Retorna -1 para indicar um erro de API/rede
-            }
-        }
-
-
-        // --- FUNÇÃO PRINCIPAL DE MONTAGEM (ATUALIZADA) ---
         async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
+            const allRouteButtons = document.querySelectorAll('#botoes-fiorino button, #botoes-van button, #botoes-34 button');
+            allRouteButtons.forEach(btn => btn.disabled = true);
+
             const resultadoDiv = document.getElementById(divId);
             
             const autoGeneratedContent = resultadoDiv.querySelector('.resultado-container');
@@ -2002,7 +1854,9 @@
             }
 
             if (planilhaData.length === 0) {
-                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; return;
+                resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; 
+                allRouteButtons.forEach(btn => btn.disabled = false);
+                return;
             }
 
             const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
@@ -2036,7 +1890,7 @@
                     document.getElementById('processing-progress-bar').style.width = '0%';
                     modal.show();
                 } else {
-                        resultadoDiv.insertAdjacentHTML('beforeend', '<div id="spinner-temp-container" class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Analisando estratégias e montando cargas...</span></div>');
+                    resultadoDiv.insertAdjacentHTML('beforeend', '<div id="spinner-temp-container" class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Analisando estratégias e montando cargas...</span></div>');
                 }
 
                 switch (optimizationLevel) {
@@ -2062,6 +1916,7 @@
                         break;
                 }
             } finally {
+                allRouteButtons.forEach(btn => btn.disabled = false);
                 if(optimizationLevel !== '1') {
                     modal.hide();
                 } else {
@@ -2099,63 +1954,18 @@
             const totalFinalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
             const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
             if (totalFinalLeftoverKg >= tresQuartosMin && leftoverGroups.length > 0) {
-                    const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
-                    if(vehicleForTertiary) {
-                        const tresQuartosResult = runHeuristicOptimization(leftoverGroups, vehicleForTertiary);
-                        tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
-                        tertiaryLoads = tresQuartosResult.loads;
-                        leftoverGroups = tresQuartosResult.leftovers;
-                    }
+                     const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
+                     if(vehicleForTertiary) {
+                         const tresQuartosResult = runHeuristicOptimization(leftoverGroups, vehicleForTertiary);
+                         tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
+                         tertiaryLoads = tresQuartosResult.loads;
+                         leftoverGroups = tresQuartosResult.leftovers;
+                     }
             }
 
             currentLeftoversForPrinting = leftoverGroups.flatMap(group => group.pedidos);
 
             const allLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads ];
-
-            // --- CÁLCULO DE DISTÂNCIA COM TRATAMENTO DE ERRO MELHORADO ---
-            const fiorinoLoads = allLoads.filter(l => l.vehicleType === 'fiorino');
-            if (fiorinoLoads.length > 0) {
-                const distanceStatusDiv = document.createElement('div');
-                distanceStatusDiv.id = 'distance-calc-status';
-                distanceStatusDiv.className = 'alert alert-info';
-                distanceStatusDiv.innerHTML = '<div class="spinner-border spinner-border-sm me-2" role="status"></div>Calculando distâncias das rotas de Fiorino...';
-                resultadoDiv.appendChild(distanceStatusDiv);
-
-                const distancePromises = fiorinoLoads.map(async (load) => {
-                    load.distance = 0; // Valor padrão
-                    try {
-                        const uniqueCities = [...new Set(load.pedidos.map(p => p.Cidade))].filter(c => c && c.trim() !== '');
-                        if (uniqueCities.length === 0) return;
-
-                        const cityCoordsPromises = uniqueCities.map(city => getCoordinates(city));
-                        const successfulCoords = (await Promise.all(cityCoordsPromises)).filter(coord => coord !== null);
-
-                        if (successfulCoords.length === 0) {
-                            console.error(`Não foi possível geocodificar nenhuma cidade para a carga: ${uniqueCities.join(', ')}`);
-                            load.distance = -2; // Código de erro: Falha na geocodificação
-                            return;
-                        }
-                        
-                        if (successfulCoords.length < uniqueCities.length) {
-                                console.warn(`Apenas ${successfulCoords.length} de ${uniqueCities.length} cidades foram geocodificadas para esta carga. A distância pode ser imprecisa.`);
-                        }
-
-                        const calculatedDistance = await calculateRouteDistance(successfulCoords);
-                        load.distance = (calculatedDistance === -1) ? -1 : calculatedDistance;
-
-                    } catch (e) {
-                        console.error("Falha geral ao processar distância para a carga:", load, e);
-                        load.distance = -1; // Código de erro: Falha de API/Rede
-                    }
-                });
-
-                await Promise.all(distancePromises);
-
-                fiorinoLoads.sort((a, b) => (b.distance || 0) - (a.distance || 0));
-                fiorinoLoads.forEach((load, index) => { load.rank = index + 1; });
-                
-                distanceStatusDiv.remove();
-            }
 
             allLoads.forEach((load, index) => {
                 load.numero = `${load.vehicleType.charAt(0).toUpperCase()}${index + 1}`;
@@ -2201,8 +2011,8 @@
         }
         
         function refineLoadsWithSimpleFit(initialLoads, initialLeftovers) {
-            let refinedLoads = JSON.parse(JSON.stringify(initialLoads));
-            let remainingLeftovers = JSON.parse(JSON.stringify(initialLeftovers));
+            let refinedLoads = deepClone(initialLoads);
+            let remainingLeftovers = deepClone(initialLeftovers);
 
             for (let i = remainingLeftovers.length - 1; i >= 0; i--) {
                 const leftoverGroup = remainingLeftovers[i];
@@ -2238,23 +2048,6 @@
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">CARGA COM PRIORIDADE</span>' : '';
             const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
 
-            let distanceHtml = '';
-            if (load.distance !== undefined && vehicleType === 'fiorino') {
-                if (load.distance === -1) {
-                    distanceHtml = `<span class="ms-3 border-start border-light ps-3 text-danger fw-bold">Erro de API/Rede</span>`;
-                } else if (load.distance === -2) {
-                    distanceHtml = `<span class="ms-3 border-start border-light ps-3 text-warning fw-bold">Cidades não encontradas</span>`;
-                } else {
-                    let rankBadge = '';
-                    if (load.rank === 1) {
-                        rankBadge = '<span class="badge bg-light text-dark ms-2"><i class="bi bi-trophy-fill text-warning"></i> Rota Mais Longa</span>';
-                    } else if (load.rank) {
-                        rankBadge = `<span class="badge bg-light text-dark ms-2">${load.rank}ª Rota</span>`;
-                    }
-                    distanceHtml = `<span class="ms-3 border-start border-light ps-3 d-none d-md-inline"><strong>Distância:</strong> ${load.distance.toFixed(1)} km ${rankBadge}</span>`;
-                }
-            }
-
             const config = getVehicleConfig(vehicleType);
             const maxKg = config.hardMaxKg;
 
@@ -2274,7 +2067,7 @@
             
             const printButton = String(load.id).startsWith('manual-') ? `<button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirCargaManualIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Esta Carga</button>` : '';
 
-            return `<div id="${load.id}" class="card mb-3 drop-zone-card ${isPriorityLoad ? 'border-primary' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}"><div class="card-header ${headerColorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge} ${distanceHtml}</div><div class="card-body">${printButton}${progressBar}${createTable(load.pedidos, null, load.id)}</div></div>`;
+            return `<div id="${load.id}" class="card mb-3 drop-zone-card ${isPriorityLoad ? 'border-primary' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}"><div class="card-header ${headerColorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${printButton}${progressBar}${createTable(load.pedidos, null, load.id)}</div></div>`;
         }
         
         function separarCargasFiorino(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'fiorino', buttonElement); }
@@ -2320,22 +2113,20 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        function montarCargaEspecial() {
-            const resultadoDiv = document.getElementById('resultado-carga-especial');
-            const input = document.getElementById('pedidosEspeciaisInput');
+        function montarCargaPredefinida(inputId, resultadoId, processedSet, nomeCarga) {
+            const resultadoDiv = document.getElementById(resultadoId);
+            const input = document.getElementById(inputId);
             resultadoDiv.innerHTML = '';
 
             if (planilhaData.length === 0) {
-                resultadoDiv.innerHTML = '<div class="alert alert-warning">Por favor, carregue a planilha primeiro.</div>';
+                resultadoDiv.innerHTML = '<div class="alert alert-warning">Por favor, carregue la planilha primeiro.</div>';
                 return;
             }
 
-            const numerosPedidos = input.value.split('\n')
-                .map(n => n.trim())
-                .filter(n => n !== '');
+            const numerosPedidos = input.value.split('\n').map(n => n.trim()).filter(Boolean);
 
             if (numerosPedidos.length === 0) {
-                resultadoDiv.innerHTML = '<div class="alert alert-warning">Nenhum número de pedido foi inserido.</div>';
+                resultadoDiv.innerHTML = `<div class="alert alert-warning">Nenhum número de pedido foi inserido para a ${nomeCarga}.</div>`;
                 return;
             }
 
@@ -2375,16 +2166,16 @@
             }
             
             if (veiculoEscolhido) {
-                pedidosEspeciaisProcessados.clear();
-                pedidosSelecionados.forEach(p => pedidosEspeciaisProcessados.add(String(p.Num_Pedido)));
+                processedSet.clear();
+                pedidosSelecionados.forEach(p => processedSet.add(String(p.Num_Pedido)));
 
-                const loadId = 'carga-especial-1';
+                const loadId = `${nomeCarga.toLowerCase().replace(/\s+/g, '-')}-1`;
                 const load = {
                     id: loadId,
                     pedidos: pedidosSelecionados,
                     totalKg: totalKg,
                     totalCubagem: totalCubagem,
-                    numero: 'Especial',
+                    numero: nomeCarga,
                     vehicleType: veiculoEscolhido.tipo
                 };
                 activeLoads[loadId] = load;
@@ -2398,15 +2189,15 @@
                 resultadoDiv.innerHTML = `
                     <div class="alert alert-success d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>Carga Especial montada com sucesso!</strong> Estes ${pedidosSelecionados.length} pedidos foram agrupados em um(a) <strong>${veiculoEscolhido.nome}</strong>.
+                            <strong>Carga ${nomeCarga} montada com sucesso!</strong> Estes ${pedidosSelecionados.length} pedidos foram agrupados em um(a) <strong>${veiculoEscolhido.nome}</strong>.
                             <br>Eles serão removidos da análise geral quando você clicar em "Processar Cargas".
                         </div>
-                        <button class="btn btn-light btn-sm no-print" onclick="imprimirCargaEspecial()"><i class="bi bi-printer-fill me-1"></i> Imprimir Carga</button>
+                        <button class="btn btn-light btn-sm no-print" onclick="imprimirGeneric('${resultadoId}', 'Carga ${nomeCarga}')"><i class="bi bi-printer-fill me-1"></i> Imprimir Carga</button>
                     </div>
                     ${renderLoadCard(load, veiculoEscolhido.tipo, vehicleInfo[veiculoEscolhido.tipo])}
                 `;
             } else {
-                pedidosEspeciaisProcessados.clear();
+                processedSet.clear();
                 resultadoDiv.innerHTML = `
                     <div class="alert alert-danger">
                         <strong>Não foi possível montar a carga.</strong> O total dos pedidos selecionados excede a capacidade de todos os veículos disponíveis.
@@ -2418,108 +2209,7 @@
                 `;
             }
         }
-
-        function imprimirCargaEspecial() {
-            const resultadoDiv = document.getElementById('resultado-carga-especial');
-            const cardToPrint = resultadoDiv.querySelector('.card');
-
-            if (!cardToPrint) {
-                alert("Nenhuma Carga Especial para imprimir.");
-                return;
-            }
-
-            const title = 'Carga Especial';
-            const printWindow = createPrintWindow(title);
-            
-            let contentToPrint = `<h3>${title}</h3>` + cardToPrint.outerHTML;
-            
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { 
-                printWindow.print(); 
-                printWindow.close(); 
-            }, 500);
-        }
         
-        // --- INÍCIO DA NOVA FUNÇÃO: Venda Antecipada ---
-        function montarCargaVendaAntecipada() {
-            const resultadoDiv = document.getElementById('resultado-venda-antecipada');
-            const input = document.getElementById('vendaAntecipadaInput');
-            resultadoDiv.innerHTML = '';
-
-            if (planilhaData.length === 0) {
-                resultadoDiv.innerHTML = '<div class="alert alert-warning">Por favor, carregue a planilha primeiro.</div>';
-                return;
-            }
-
-            const numerosPedidos = input.value.split('\n').map(n => n.trim()).filter(Boolean);
-            if (numerosPedidos.length === 0) {
-                resultadoDiv.innerHTML = '<div class="alert alert-warning">Nenhum número de pedido foi inserido.</div>';
-                return;
-            }
-
-            const pedidosSelecionados = [];
-            const pedidosNaoEncontrados = [];
-            numerosPedidos.forEach(num => {
-                const pedidoEncontrado = planilhaData.find(p => String(p.Num_Pedido) === num);
-                if (pedidoEncontrado) {
-                    pedidosSelecionados.push(pedidoEncontrado);
-                } else {
-                    pedidosNaoEncontrados.push(num);
-                }
-            });
-
-            if (pedidosNaoEncontrados.length > 0) {
-                resultadoDiv.innerHTML = `<div class="alert alert-danger">Os seguintes pedidos não foram encontrados na planilha: ${pedidosNaoEncontrados.join(', ')}.</div>`;
-                return;
-            }
-
-            const totalKg = pedidosSelecionados.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
-            const totalCubagem = pedidosSelecionados.reduce((sum, p) => sum + p.Cubagem, 0);
-
-            const veiculos = [
-                { tipo: 'fiorino', nome: 'Fiorino', maxKg: parseFloat(document.getElementById('fiorinoHardMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('fiorinoHardCubage').value) },
-                { tipo: 'van', nome: 'Van', maxKg: parseFloat(document.getElementById('vanHardMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('vanHardCubage').value) },
-                { tipo: 'tresQuartos', nome: '3/4', maxKg: parseFloat(document.getElementById('tresQuartosMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('tresQuartosCubage').value) },
-            ];
-
-            let veiculoEscolhido = null;
-            for (const veiculo of veiculos) {
-                if (totalKg <= veiculo.maxKg && totalCubagem <= veiculo.maxCubagem) {
-                    veiculoEscolhido = veiculo;
-                    break;
-                }
-            }
-
-            if (veiculoEscolhido) {
-                pedidosVendaAntecipadaProcessados.clear();
-                pedidosSelecionados.forEach(p => pedidosVendaAntecipadaProcessados.add(String(p.Num_Pedido)));
-
-                const loadId = 'venda-antecipada-1';
-                const load = { id: loadId, pedidos: pedidosSelecionados, totalKg, totalCubagem, numero: 'Venda Antecipada', vehicleType: veiculoEscolhido.tipo };
-                activeLoads[loadId] = load;
-                
-                const vehicleInfoMap = {
-                    fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
-                    van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
-                    tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
-                };
-                
-                resultadoDiv.innerHTML = `
-                    <div class="alert alert-success d-flex justify-content-between align-items-center">
-                        <div><strong>Carga de Venda Antecipada montada!</strong> Foi agrupada em um(a) <strong>${veiculoEscolhido.nome}</strong>.</div>
-                        <button class="btn btn-light btn-sm no-print" onclick="imprimirGeneric('resultado-venda-antecipada', 'Carga de Venda Antecipada')"><i class="bi bi-printer-fill me-1"></i> Imprimir</button>
-                    </div>
-                    ${renderLoadCard(load, veiculoEscolhido.tipo, vehicleInfoMap[veiculoEscolhido.tipo])}
-                `;
-            } else {
-                pedidosVendaAntecipadaProcessados.clear();
-                resultadoDiv.innerHTML = `<div class="alert alert-danger"><strong>Não foi possível montar a carga.</strong> Excede a capacidade de todos os veículos. (Peso: ${totalKg.toFixed(2)} kg, Cubagem: ${totalCubagem.toFixed(2)} m³)</div>`;
-            }
-        }
-        // --- FIM DA NOVA FUNÇÃO ---
-
         function highlightClientRows(event) {
             const clickedRow = event.target.closest('tr');
             if (!clickedRow || !clickedRow.dataset.clienteId) return;
@@ -2622,6 +2312,8 @@
                 sourceLoad = { pedidos: currentLeftoversForPrinting };
             } else if (sourceIsGeral) {
                 sourceLoad = { pedidos: pedidosGeraisAtuais };
+            } else if (sourceIsManualBuilder) {
+                sourceLoad = manualLoadInProgress;
             } else {
                 sourceLoad = activeLoads[sourceId];
             }
@@ -2646,7 +2338,7 @@
             const clientBlockKg = clientOrdersToMove.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
             const clientBlockCubagem = clientOrdersToMove.reduce((sum, p) => sum + p.Cubagem, 0);
             
-            if (!targetIsLeftovers) {
+            if (!targetIsLeftovers && !targetIsManualBuilder) {
                 const targetVehicleType = targetLoad.vehicleType;
                 if (targetVehicleType) { 
                     const config = getVehicleConfig(targetVehicleType);
@@ -2689,23 +2381,19 @@
             }
         }
 
-
         function updateLoadUI(loadId) {
             const activeTabPane = document.querySelector('.tab-pane.active');
-            if (!activeTabPane && (loadId === 'leftovers' || loadId === 'geral')) {
-                console.error("Nenhuma aba ativa encontrada para atualizar a UI.");
-                return;
-            }
             
             if (loadId === 'leftovers' || loadId === 'geral') {
-                const leftoversCard = activeTabPane.querySelector('[data-load-id="leftovers"]');
                 const geraisDiv = document.getElementById('resultado-geral');
-
-                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
-                    const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
-                }, {});
-                if(geraisDiv) displayGerais(geraisDiv, gruposGerais);
-
+                if (geraisDiv) {
+                    const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
+                        const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
+                    }, {});
+                    displayGerais(geraisDiv, gruposGerais);
+                }
+                
+                const leftoversCard = activeTabPane ? activeTabPane.querySelector('[data-load-id="leftovers"]') : null;
                 if (!leftoversCard) return;
 
                 if (currentLeftoversForPrinting.length === 0) {
@@ -2881,7 +2569,7 @@
             const newCardHTML = renderLoadCard(newLoad, vehicleType, vehicleInfo[vehicleType]);
             
             const activeTabPane = document.querySelector('.tab-pane.active');
-            const resultContainer = activeTabPane ? activeTabPane.querySelector('[id^="resultado-"]') : null;
+            const resultContainer = activeTabPane ? activeTabPane.querySelector('.resultado-container') : null;
 
             if(resultContainer) {
                resultContainer.insertAdjacentHTML('beforeend', newCardHTML);
@@ -2892,7 +2580,7 @@
             if (builderWrapper) builderWrapper.remove();
             manualLoadInProgress = null;
             
-            const startBtn = activeTabPane.querySelector('#start-manual-load-btn');
+            const startBtn = activeTabPane ? activeTabPane.querySelector('#start-manual-load-btn') : null;
             if(startBtn) startBtn.style.display = 'inline-block';
             
             setTimeout(() => {
@@ -2920,143 +2608,6 @@
              const startBtn = activeTabPane ? activeTabPane.querySelector('#start-manual-load-btn') : null;
              if(startBtn) startBtn.style.display = 'inline-block';
         }
-
-        // --- FUNÇÕES DE LOGIN, CADASTRO E CONTROLE DE UI ---
-
-        const loginContainer = document.getElementById('login-container');
-        const dashboardContent = document.getElementById('dashboard-content');
-        const userInfoDiv = document.getElementById('user-info');
-        const logoutButton = document.getElementById('logout-button');
-        
-        const loginFormContainer = document.getElementById('login-form-container');
-        const signupFormContainer = document.getElementById('signup-form-container');
-        const loginForm = document.getElementById('login-form');
-        const signupForm = document.getElementById('signup-form');
-        
-        const toggleToSignup = document.getElementById('toggle-to-signup');
-        const toggleToLogin = document.getElementById('toggle-to-login');
-        const authMessage = document.getElementById('auth-message');
-
-        const setFormProcessing = (form, isProcessing) => {
-            const button = form.querySelector('button[type="submit"]');
-            const buttonText = button.querySelector('.button-text');
-            const spinner = button.querySelector('.spinner-border');
-
-            if (isProcessing) {
-                button.disabled = true;
-                buttonText.style.display = 'none';
-                spinner.style.display = 'inline-block';
-            } else {
-                button.disabled = false;
-                buttonText.style.display = 'inline-block';
-                spinner.style.display = 'none';
-            }
-        };
-
-        const switchForms = (showSignup) => {
-            const formToHide = showSignup ? loginFormContainer : signupFormContainer;
-            const formToShow = showSignup ? signupFormContainer : loginFormContainer;
-            
-            formToHide.classList.add('form-exit');
-            
-            setTimeout(() => {
-                formToHide.classList.remove('form-exit');
-                formToHide.classList.add('hidden');
-            
-                formToShow.classList.remove('hidden');
-                formToShow.classList.add('form-enter');
-                
-                setTimeout(() => {
-                    formToShow.classList.remove('form-enter');
-                }, 300);
-            
-            }, 300); 
-        };
-        
-        toggleToSignup.addEventListener('click', (e) => {
-            e.preventDefault();
-            authMessage.textContent = '';
-            switchForms(true);
-        });
-
-        toggleToLogin.addEventListener('click', (e) => {
-            e.preventDefault();
-            authMessage.textContent = '';
-            switchForms(false);
-        });
-
-        loginForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            setFormProcessing(loginForm, true);
-            authMessage.textContent = '';
-
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-            if (error) {
-                authMessage.className = 'text-danger';
-                authMessage.textContent = 'Email ou senha inválidos. Tente novamente.';
-            }
-            
-            setFormProcessing(loginForm, false);
-        });
-
-        signupForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            setFormProcessing(signupForm, true);
-            authMessage.textContent = '';
-            
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-
-            const { error } = await supabaseClient.auth.signUp({ email, password });
-
-            if (error) {
-                authMessage.className = 'text-danger';
-                if (error.message.includes("User already registered")) {
-                    authMessage.textContent = 'Este email já está cadastrado.';
-                } else if (error.message.includes("Password should be at least 6 characters")) {
-                    authMessage.textContent = 'A senha precisa ter no mínimo 6 caracteres.';
-                } else {
-                    authMessage.textContent = 'Erro ao criar conta: ' + error.message;
-                }
-            } else {
-                authMessage.className = 'text-success';
-                authMessage.textContent = 'Conta criada com sucesso! Redirecionando...';
-                setTimeout(() => {
-                    switchForms(false); 
-                    authMessage.textContent = '';
-                    document.getElementById('email').value = email;
-                    document.getElementById('password').focus();
-                }, 2000);
-            }
-            
-            setFormProcessing(signupForm, false);
-        });
-        
-        logoutButton.addEventListener('click', async () => {
-            await supabaseClient.auth.signOut();
-        });
-
-        supabaseClient.auth.onAuthStateChange((_event, session) => {
-            if (session) {
-                loginContainer.style.opacity = '0';
-                setTimeout(() => {
-                    loginContainer.style.display = 'none';
-                    dashboardContent.style.display = 'block';
-                }, 300);
-                
-                userInfoDiv.textContent = `Logado como: ${session.user.email}`;
-            } else {
-                dashboardContent.style.display = 'none';
-                loginContainer.style.display = 'flex';
-                loginContainer.style.opacity = '1';
-                userInfoDiv.textContent = '';
-            }
-        });
-
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
