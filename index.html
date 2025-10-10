@@ -280,7 +280,7 @@
                 <div class="col-lg-8 mb-4">
                     <div class="card h-100">
                         <div class="card-header">
-                            <h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2>
+                            <h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas (Varejo)</h2>
                         </div>
                         <div class="card-body p-0">
                              <ul class="nav nav-tabs nav-fill px-3 pt-2" id="vehicleTabs" role="tablist">
@@ -321,7 +321,7 @@
                 <div class="col-lg-4 mb-4">
                     <div class="card" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                           <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis</h2>
+                           <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis (Varejo)</h2>
                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
                         </div>
                        <div class="card-body">
@@ -364,7 +364,7 @@
                 </div>
                 
                 <div class="card mb-4 border-secondary">
-                    <div class="card-header bg-secondary-subtle text-secondary-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (Bloqueio por Regra de Cliente)</h2></div>
+                    <div class="card-header bg-secondary-subtle text-secondary-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (Bloqueio de Varejo por Regra)</h2></div>
                     <div class="card-body"><div id="resultado-cf-numerico"></div></div>
                 </div>
             </div>
@@ -861,6 +861,12 @@
                     if (pedidoEncontrado) { local = `Cargas "Toco" (CF: ${cf})`; accordionId = 'accordionToco'; break; }
                 }
             }
+             if (!pedidoEncontrado) {
+                for (const cf in gruposPorCFGlobais) {
+                    pedidoEncontrado = gruposPorCFGlobais[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
+                    if (pedidoEncontrado) { local = `Cargas por CF (CF: ${cf})`; accordionId = 'accordionCargasPorCF'; break; }
+                }
+            }
             if (!pedidoEncontrado) {
                 pedidoEncontrado = rota1SemCarga.find(p => String(p.Num_Pedido) === searchInput);
                 if (pedidoEncontrado) { local = 'Pedidos da Rota 1 para Alteração'; }
@@ -1130,14 +1136,10 @@
                     
                     pedidos.forEach(p => {
                         if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
-
-                        if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
-                            pedidosComCFNumericoIsolado.push(p);
-                            return;
-                        }
                         if (['21', '23', '17'].includes(String(p.Coluna4))) return;
                         
                         if (isNumeric(p.CF)) {
+                            // Se tem CF numérico, vai direto para a nova separação, ignorando bloqueios.
                             const cf = String(p.CF).trim();
                             if (!gruposPorCF[cf]) {
                                 gruposPorCF[cf] = { pedidos: [], totalKg: 0, totalCubagem: 0 };
@@ -1146,7 +1148,12 @@
                             gruposPorCF[cf].totalKg += p.Quilos_Saldo;
                             gruposPorCF[cf].totalCubagem += p.Cubagem;
                         } else {
-                            pedidosParaProcessamentoVarejo.push(p);
+                            // Se NÃO tem CF numérico (é varejo), agora sim verifica o bloqueio.
+                            if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
+                                pedidosComCFNumericoIsolado.push(p);
+                            } else {
+                                pedidosParaProcessamentoVarejo.push(p);
+                            }
                         }
                     });
                     
@@ -1319,7 +1326,7 @@
 
         function displayGerais(div, grupos) {
             if (Object.keys(grupos).length === 0) { 
-                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido disponível para montagem.</div>'; 
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido de varejo disponível para montagem.</div>'; 
                 document.getElementById('botoes-fiorino').innerHTML = '<p class="text-muted">Nenhuma rota de Fiorino encontrada.</p>';
                 document.getElementById('botoes-van').innerHTML = '<p class="text-muted">Nenhuma rota de Van encontrada.</p>';
                 document.getElementById('botoes-34').innerHTML = '<p class="text-muted">Nenhuma rota de 3/4 encontrada.</p>';
@@ -1372,7 +1379,7 @@
         }
 
         function displayPedidosCFNumerico(div, pedidos) {
-            if (pedidos.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido filtrado por regra de bloqueio de cliente.</div>'; return; }
+            if (pedidos.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido de varejo filtrado por regra de bloqueio de cliente.</div>'; return; }
             const grupos = pedidos.reduce((acc, p) => {
                 const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
             }, {});
@@ -2417,7 +2424,7 @@
                             </ul>
                         </div>
                         <div class="col-md-4">
-                            <h6 class="text-white-50">PEDIDOS PRÉ-PROCESSADOS</h6>
+                            <h6 class="text-white-50">PEDIDOS PRÉ-PROCESSADOS / AGRUPADOS</h6>
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Carga Especial<span class="badge bg-info rounded-pill">${nf(stats.pedidosEspeciais)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
