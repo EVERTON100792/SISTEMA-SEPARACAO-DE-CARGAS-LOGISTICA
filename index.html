@@ -322,7 +322,7 @@
                     <div class="card" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                            <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis</h2>
-                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
+                            <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
                         </div>
                        <div class="card-body">
                            <p class="card-subtitle mb-3 text-body-secondary small">Pedidos sem CF numérico, agrupados por rota.</p>
@@ -453,44 +453,44 @@
                     
                     <div class="row">
                          <div class="col-lg-6 mb-4 mb-lg-0">
-                             <div class="card h-100">
-                                 <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-scissors me-2"></i>Pedidos Sem Corte</h2></div>
-                                 <div class="card-body d-flex flex-column">
-                                     <label for="semCorteInput" class="form-label">Pedidos a marcar como "Sem Corte":</label>
-                                     <div class="input-group mb-3">
-                                         <textarea class="form-control" id="semCorteInput" rows="3" placeholder="Cole os números aqui..."></textarea>
-                                         <button class="btn btn-outline-warning" type="button" onclick="marcarPedidosSemCorte()">Marcar</button>
-                                     </div>
-                                     <label class="form-label mt-2">Pedidos Marcados:</label>
-                                     <div id="lista-pedidos-sem-corte" class="p-2 border rounded border-secondary flex-grow-1" style="background-color: var(--dark-bg); min-height: 100px;"><span class="text-muted">Nenhum.</span></div>
-                                 </div>
-                             </div>
+                              <div class="card h-100">
+                                  <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-scissors me-2"></i>Pedidos Sem Corte</h2></div>
+                                  <div class="card-body d-flex flex-column">
+                                      <label for="semCorteInput" class="form-label">Pedidos a marcar como "Sem Corte":</label>
+                                      <div class="input-group mb-3">
+                                          <textarea class="form-control" id="semCorteInput" rows="3" placeholder="Cole os números aqui..."></textarea>
+                                          <button class="btn btn-outline-warning" type="button" onclick="marcarPedidosSemCorte()">Marcar</button>
+                                      </div>
+                                      <label class="form-label mt-2">Pedidos Marcados:</label>
+                                      <div id="lista-pedidos-sem-corte" class="p-2 border rounded border-secondary flex-grow-1" style="background-color: var(--dark-bg); min-height: 100px;"><span class="text-muted">Nenhum.</span></div>
+                                  </div>
+                              </div>
                          </div>
                          <div class="col-lg-6 mb-4 mb-lg-0">
-                             <div class="card h-100">
-                                 <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>Carga Especial</h2></div>
-                                  <div class="card-body d-flex flex-column">
-                                      <div class="flex-grow-1">
-                                          <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
-                                          <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
-                                      </div>
-                                      <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaPredefinida('pedidosEspeciaisInput', 'resultado-carga-especial', pedidosEspeciaisProcessados, 'Especial')"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
-                                  </div>
-                             </div>
+                              <div class="card h-100">
+                                  <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>Carga Especial</h2></div>
+                                   <div class="card-body d-flex flex-column">
+                                       <div class="flex-grow-1">
+                                           <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
+                                           <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
+                                       </div>
+                                       <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaPredefinida('pedidosEspeciaisInput', 'resultado-carga-especial', pedidosEspeciaisProcessados, 'Especial')"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
+                                   </div>
+                              </div>
                          </div>
                     </div>
                      <div class="row mt-4">
                          <div class="col-lg-6">
-                              <div class="card h-100">
-                                  <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>Venda Antecipada</h2></div>
-                                  <div class="card-body d-flex flex-column">
-                                      <div class="flex-grow-1">
-                                          <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
-                                          <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui..."></textarea>
-                                      </div>
-                                      <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaPredefinida('vendaAntecipadaInput', 'resultado-venda-antecipada', pedidosVendaAntecipadaProcessados, 'Venda Antecipada')"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
-                                  </div>
-                             </div>
+                               <div class="card h-100">
+                                   <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>Venda Antecipada</h2></div>
+                                   <div class="card-body d-flex flex-column">
+                                       <div class="flex-grow-1">
+                                           <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
+                                           <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui..."></textarea>
+                                       </div>
+                                       <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaPredefinida('vendaAntecipadaInput', 'resultado-venda-antecipada', pedidosVendaAntecipadaProcessados, 'Venda Antecipada')"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
+                                   </div>
+                               </div>
                          </div>
                     </div>
                 </div>
@@ -520,7 +520,7 @@
 
     <script>
         const agendamentoClientCodes = new Set([
-            '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '44192', '144457', '145014', '145237', '145322', '146644', '146988', '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196118', '196405', '196446', '196784', '197168', '197249', '197983', '198187', '198438', '198747', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', '212115', '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218486', '218578', '218580', '218640', '218820', '218845', '219539', '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
+            '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '44192', '144457', '145014', '145237', '145322', '146644', '146988', '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196118', '196405', '196446', '196784', '197168', '197249', '197983', '198187', '198438', '198747', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218486', '218578', '218580', '218640', '218820', '218845', '219539', '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
         ]);
 
         const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
@@ -751,10 +751,10 @@
                                         }
                                     } else if (cellValue instanceof Date) {
                                        if (!isNaN(cellValue.getTime())) {
-                                           pedido[header] = cellValue;
-                                        } else {
+                                          pedido[header] = cellValue;
+                                       } else {
                                             pedido[header] = '';
-                                        }
+                                       }
                                     } else {
                                         pedido[header] = cellValue !== undefined ? cellValue : '';
                                     }
@@ -860,21 +860,21 @@
                 if (pedidoEncontrado) { local = 'Pedidos da Rota 1 para Alteração'; }
             }
              if (!pedidoEncontrado) {
-                 const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
-                 if (originalPedido) {
-                    pedidoEncontrado = originalPedido;
-                    if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                        local = 'Bloqueado Manualmente por você.';
-                    } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                        local = 'Alocado na Carga Especial.';
-                    } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
-                        local = 'Alocado na Carga de Venda Antecipada.';
-                    }
-                    else {
-                        local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
-                    }
-                 }
-            }
+                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
+                  if (originalPedido) {
+                       pedidoEncontrado = originalPedido;
+                       if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                           local = 'Bloqueado Manualmente por você.';
+                       } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                           local = 'Alocado na Carga Especial.';
+                       } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
+                           local = 'Alocado na Carga de Venda Antecipada.';
+                       }
+                       else {
+                           local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
+                       }
+                  }
+             }
 
             if (pedidoEncontrado) {
                 let buttons = '';
@@ -1249,12 +1249,12 @@
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
                 table += `<tr id="pedido-${p.Num_Pedido}" 
-                                        class="${isPriorityRow ? 'table-primary' : ''}" 
-                                        data-cliente-id="${clienteIdNormalizado}" 
-                                        data-pedido-id="${p.Num_Pedido}"
-                                        onclick="highlightClientRows(event)"
-                                        draggable="true"
-                                        ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
+                                         class="${isPriorityRow ? 'table-primary' : ''}" 
+                                         data-cliente-id="${clienteIdNormalizado}" 
+                                         data-pedido-id="${p.Num_Pedido}"
+                                         onclick="highlightClientRows(event)"
+                                         draggable="true"
+                                         ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') {
@@ -1513,7 +1513,17 @@
             if ((load.totalKg + groupToAdd.totalKg) > config.hardMaxKg) return false;
             if ((load.totalCubagem + groupToAdd.totalCubagem) > config.hardMaxCubage) return false;
 
-            if (groupToAdd.isSpecial && load.pedidos.some(p => isSpecialClient(p))) return false;
+            if (groupToAdd.isSpecial) {
+                const specialClientIdsInLoad = new Set(
+                    load.pedidos
+                        .filter(isSpecialClient)
+                        .map(p => normalizeClientId(p.Cliente))
+                );
+                const groupToAddClientId = normalizeClientId(groupToAdd.pedidos[0].Cliente);
+                if (!specialClientIdsInLoad.has(groupToAddClientId) && specialClientIdsInLoad.size >= 2) {
+                    return false;
+                }
+            }
 
             if (groupToAdd.pedidos.some(p => p.Agendamento === 'Sim') && load.pedidos.some(p => p.Agendamento === 'Sim')) return false;
 
@@ -1978,11 +1988,38 @@
                                   }
             }
 
-            currentLeftoversForPrinting = leftoverGroups.flatMap(group => group.pedidos);
+            const allPotentialLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads ];
+            const finalValidLoads = [];
+            let finalLeftoverGroups = [...leftoverGroups];
 
-            const allLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads ];
+            allPotentialLoads.forEach(load => {
+                if (!load.vehicleType) {
+                    console.warn("Carga encontrada sem tipo de veículo, não é possível validar o peso mínimo.", load);
+                    finalValidLoads.push(load);
+                    return;
+                }
+                const config = getVehicleConfig(load.vehicleType);
+                const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+                const allowPriorityOverride = load.vehicleType !== 'tresQuartos';
+            
+                if (load.totalKg >= config.minKg || (hasPriority && allowPriorityOverride)) {
+                    finalValidLoads.push(load);
+                } else {
+                    const clientGroupsInFailedLoad = Object.values(load.pedidos.reduce((acc, p) => {
+                        const clienteId = normalizeClientId(p.Cliente);
+                        if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) }; }
+                        acc[clienteId].pedidos.push(p);
+                        acc[clienteId].totalKg += p.Quilos_Saldo;
+                        acc[clienteId].totalCubagem += p.Cubagem;
+                        return acc;
+                    }, {}));
+                    finalLeftoverGroups.push(...clientGroupsInFailedLoad);
+                }
+            });
 
-            allLoads.forEach((load, index) => {
+            currentLeftoversForPrinting = finalLeftoverGroups.flatMap(group => group.pedidos);
+
+            finalValidLoads.forEach((load, index) => {
                 load.numero = `${load.vehicleType.charAt(0).toUpperCase()}${index + 1}`;
                 const loadId = `${load.vehicleType}-${Date.now()}-${index}`;
                 load.id = loadId;
@@ -1997,7 +2034,7 @@
             
             let html = `<h5 class="mt-3">Cargas para <strong>${title}</strong></h5>`;
             
-            const generatedLoads = allLoads.filter(l => l.pedidos.length > 0);
+            const generatedLoads = finalValidLoads.filter(l => l.pedidos.length > 0);
             if(generatedLoads.length === 0){
                  html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
             } else {
