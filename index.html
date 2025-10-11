@@ -2256,19 +2256,23 @@
                 gruposPorCFGlobais[chaveCondor] = todosOsGrupos[chaveCondor];
             }
 
-
             if (Object.keys(todosOsGrupos).length === 0) {
                 div.innerHTML = '<p class="text-muted">Nenhum grupo de carga encontrado para visualização.</p>';
                 return;
             }
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasPorCF">';
             
+            const specialKeysOrder = [chaveCondor, chaveCarreta];
             const sortedKeys = Object.keys(todosOsGrupos).sort((a,b) => {
-                 if (a === chaveCarreta) return -1;
-                 if (b === chaveCarreta) return 1;
-                 if (a === chaveCondor) return -1;
-                 if (b === chaveCondor) return 1;
-                 return a.localeCompare(b, undefined, {numeric: true})
+                const aIsSpecial = specialKeysOrder.includes(a);
+                const bIsSpecial = specialKeysOrder.includes(b);
+
+                if (aIsSpecial && bIsSpecial) {
+                    return specialKeysOrder.indexOf(a) - specialKeysOrder.indexOf(b);
+                }
+                if (aIsSpecial) return -1;
+                if (bIsSpecial) return 1;
+                return a.localeCompare(b, undefined, {numeric: true});
             });
 
             sortedKeys.forEach((cf, index) => {
@@ -2832,10 +2836,8 @@
             }
 
             pedidos.sort((a, b) => {
-                const clienteA = String(a.Cliente);
-                const clienteB = String(b.Cliente);
-                const pedidoA = String(a.Num_Pedido);
-                const pedidoB = String(b.Num_Pedido);
+                const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
+                const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
                 const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
                 if (clienteCompare !== 0) return clienteCompare;
                 return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
@@ -2883,10 +2885,8 @@
             }
 
             pedidos.sort((a, b) => {
-                const clienteA = String(a.Cliente);
-                const clienteB = String(b.Cliente);
-                const pedidoA = String(a.Num_Pedido);
-                const pedidoB = String(b.Num_Pedido);
+                const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
+                const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
                 const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
                 if (clienteCompare !== 0) return clienteCompare;
                 return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
