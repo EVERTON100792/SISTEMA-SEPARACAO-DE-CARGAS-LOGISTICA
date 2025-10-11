@@ -246,7 +246,7 @@
                 </li>
                 <li class="mb-1">
                     <a href="#workspace-card" class="nav-link rounded-2">
-                        <i class="bi bi-tools me-2"></i>Mesa de Trabalho
+                        <i class="bi bi-tools me-2"></i>Mesas de Trabalho
                     </a>
                 </li>
                 <li class="mb-1">
@@ -284,34 +284,39 @@
                         </div>
                         <div class="card-body p-0">
                              <ul class="nav nav-tabs nav-fill px-3 pt-2" id="vehicleTabs" role="tablist">
-                                 <li class="nav-item" role="presentation"><button class="nav-link active" id="fiorino-tab" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane" type="button" role="tab"><i class="bi bi-box-seam-fill me-2"></i>Fiorino</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" id="van-tab" data-bs-toggle="tab" data-bs-target="#van-tab-pane" type="button" role="tab"><i class="bi bi-truck-front-fill me-2"></i>Van</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link active" id="fiorino-tab" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane" type="button" role="tab"><i class="bi bi-box-seam-fill me-2"></i>Fiorino (Varejo)</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="van-tab" data-bs-toggle="tab" data-bs-target="#van-tab-pane" type="button" role="tab"><i class="bi bi-truck-front-fill me-2"></i>Van (Varejo)</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4 (Varejo)</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="cf-tab" data-bs-toggle="tab" data-bs-target="#cf-tab-pane" type="button" role="tab"><i class="bi bi-diagram-3-fill me-2"></i>Cargas por CF</button></li>
                              </ul>
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active p-3 workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Fiorinos.</p>
-                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-fiorino-geral', 'Cargas de Fiorino')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota de varejo para montar as Fiorinos.</p>
+                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-fiorino-geral', 'Cargas de Fiorino (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-fiorino"><p class="text-muted">Processe um arquivo para ver as rotas disponíveis.</p></div>
                                     <hr class="no-print"><div id="resultado-fiorino-geral" class="mt-3"></div>
                                 </div>
                                 <div class="tab-pane fade p-3 workspace-tab-pane" id="van-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Vans.</p>
-                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota de varejo para montar as Vans.</p>
+                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-van"><p class="text-muted">Processe um arquivo para ver as rotas disponíveis.</p></div>
                                     <hr class="no-print"><div id="resultado-van-geral" class="mt-3"></div>
                                 </div>
                                 <div class="tab-pane fade p-3 workspace-tab-pane" id="tres-quartos-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as cargas 3/4.</p>
-                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-34-geral', 'Cargas de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota de varejo para montar as cargas 3/4.</p>
+                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-34-geral', 'Cargas de 3/4 (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-34"><p class="text-muted">Processe um arquivo para ver as rotas disponíveis.</p></div>
                                     <hr class="no-print"><div id="resultado-34-geral" class="mt-3"></div>
+                                </div>
+                                <div class="tab-pane fade p-3" id="cf-tab-pane" role="tabpanel">
+                                    <p class="card-subtitle text-body-secondary small mb-3">Selecione um grupo de CF para visualizar e imprimir os pedidos que o compõem.</p>
+                                    <div id="resultado-cf-accordion-container"><p class="text-muted">Processe um arquivo para ver os grupos de CF disponíveis.</p></div>
                                 </div>
                             </div>
                         </div>
@@ -321,7 +326,7 @@
                 <div class="col-lg-4 mb-4">
                     <div class="card" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                           <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis</h2>
+                           <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis (Varejo)</h2>
                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
                         </div>
                        <div class="card-body">
@@ -349,17 +354,12 @@
                 </div>
 
                 <div class="card mb-4">
-                    <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-lightning-charge-fill me-2"></i>Cargas 3/4 (Formadas Automaticamente)</h2></div>
-                    <div class="card-body"><div id="resultado-tres-quartos"></div></div>
-                </div>
-
-                <div class="card mb-4">
                     <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-inboxes-fill me-2"></i>Cargas "Toco"</h2></div>
                     <div class="card-body"><div id="resultado-toco"></div></div>
                 </div>
-                
+                                
                 <div class="card mb-4 border-secondary">
-                    <div class="card-header bg-secondary-subtle text-secondary-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (CF Numérico ou Bloqueio por Regra)</h2></div>
+                    <div class="card-header bg-secondary-subtle text-secondary-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (Bloqueio de Varejo por Regra)</h2></div>
                     <div class="card-body"><div id="resultado-cf-numerico"></div></div>
                 </div>
             </div>
@@ -378,7 +378,7 @@
                     <div class="row">
                         <div class="col-lg-6 mb-4">
                             <div class="card h-100">
-                                <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cpu-fill me-2"></i>Algoritmo de Otimização</h2></div>
+                                <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cpu-fill me-2"></i>Algoritmo de Otimização (Varejo)</h2></div>
                                 <div class="card-body">
                                     <label for="optimizationLevelSelect" class="form-label">Nível de Otimização:</label>
                                     <select class="form-select" id="optimizationLevelSelect">
@@ -451,7 +451,7 @@
                         </div>
                     </div>
                     
-                    <div class="row">
+                    <div class="row mt-4">
                          <div class="col-lg-6 mb-4 mb-lg-0">
                               <div class="card h-100">
                                   <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-scissors me-2"></i>Pedidos Sem Corte</h2></div>
@@ -481,7 +481,7 @@
                     </div>
                      <div class="row mt-4">
                          <div class="col-lg-6">
-                               <div class="card h-100">
+                              <div class="card h-100">
                                    <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>Venda Antecipada</h2></div>
                                    <div class="card-body d-flex flex-column">
                                        <div class="flex-grow-1">
@@ -490,7 +490,7 @@
                                        </div>
                                        <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaPredefinida('vendaAntecipadaInput', 'resultado-venda-antecipada', pedidosVendaAntecipadaProcessados, 'Venda Antecipada')"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
                                    </div>
-                               </div>
+                              </div>
                          </div>
                     </div>
                 </div>
@@ -564,6 +564,7 @@
         let originalColumnHeaders = [];
         let pedidosGeraisAtuais = [];
         let gruposToco = {};
+        let gruposPorCFGlobais = {};
         let pedidosComCFNumericoIsolado = [];
         let pedidosManualmenteBloqueadosAtuais = [];
         let pedidosPrioritarios = [];
@@ -751,9 +752,9 @@
                                         }
                                     } else if (cellValue instanceof Date) {
                                        if (!isNaN(cellValue.getTime())) {
-                                          pedido[header] = cellValue;
+                                         pedido[header] = cellValue;
                                        } else {
-                                            pedido[header] = '';
+                                           pedido[header] = '';
                                        }
                                     } else {
                                         pedido[header] = cellValue !== undefined ? cellValue : '';
@@ -843,16 +844,22 @@
             }
             if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
-                if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = 'accordionGeral'; } 
+                if (pedidoEncontrado) { local = 'Pedidos Disponíveis (Varejo)'; accordionId = 'accordionGeral'; } 
             }
             if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosComCFNumericoIsolado.find(p => String(p.Num_Pedido) === searchInput);
-                if (pedidoEncontrado) { local = 'Pedidos Filtrados'; accordionId = 'accordionCF'; }
+                if (pedidoEncontrado) { local = 'Pedidos Filtrados (Bloqueio de Varejo)'; accordionId = 'accordionCF'; }
             }
             if (!pedidoEncontrado) {
                 for (const cf in gruposToco) {
                     pedidoEncontrado = gruposToco[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
                     if (pedidoEncontrado) { local = `Cargas "Toco" (CF: ${cf})`; accordionId = 'accordionToco'; break; }
+                }
+            }
+             if (!pedidoEncontrado) {
+                for (const cf in gruposPorCFGlobais) {
+                    pedidoEncontrado = gruposPorCFGlobais[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
+                    if (pedidoEncontrado) { local = `Cargas por CF (CF: ${cf})`; accordionId = 'accordionCargasPorCF'; break; }
                 }
             }
             if (!pedidoEncontrado) {
@@ -862,17 +869,17 @@
              if (!pedidoEncontrado) {
                   const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                   if (originalPedido) {
-                       pedidoEncontrado = originalPedido;
-                       if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                           local = 'Bloqueado Manualmente por você.';
-                       } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                           local = 'Alocado na Carga Especial.';
-                       } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
-                           local = 'Alocado na Carga de Venda Antecipada.';
-                       }
-                       else {
-                           local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
-                       }
+                         pedidoEncontrado = originalPedido;
+                         if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                             local = 'Bloqueado Manualmente por você.';
+                         } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                             local = 'Alocado na Carga Especial.';
+                         } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
+                             local = 'Alocado na Carga de Venda Antecipada.';
+                         }
+                         else {
+                             local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
+                         }
                   }
              }
 
@@ -881,7 +888,7 @@
                 if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
@@ -972,6 +979,7 @@
         function resetarEstadoGlobal() {
             pedidosGeraisAtuais = [];
             gruposToco = {};
+            gruposPorCFGlobais = {};
             pedidosComCFNumericoIsolado = [];
             rota1SemCarga = [];
             pedidosManualmenteBloqueadosAtuais = [];
@@ -993,8 +1001,8 @@
             const idsParaLimpar = [
                 'resultado-venda-antecipada', 'resultado-carga-especial', 'resultado-bloqueados', 'resultado-geral', 
                 'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral',
-                'resultado-rota1', 'resultado-tres-quartos', 'resultado-toco', 
-                'resultado-cf-numerico', 'search-result'
+                'resultado-rota1', 'resultado-toco', 
+                'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result'
             ];
             idsParaLimpar.forEach(id => {
                 const el = document.getElementById(id);
@@ -1027,17 +1035,16 @@
             setTimeout(() => {
                 const resultadoGeralDiv = document.getElementById('resultado-geral');
                 const resultadoTocoDiv = document.getElementById('resultado-toco');
-                const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
                 const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
                 const resultadoRota1Div = document.getElementById('resultado-rota1');
                 const resultadoBloqueadosDiv = document.getElementById('resultado-bloqueados');
+                const resultadoCfAccordionDiv = document.getElementById('resultado-cf-accordion-container');
                 
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
                     
                     resetarEstadoGlobal();
 
-                    // Aplicar filtro de rota
                     const rotaInicio = document.getElementById('rotaInicioSelect').value;
                     const rotaFim = document.getElementById('rotaFimSelect').value;
                     let dadosParaProcessar = [...planilhaData];
@@ -1051,7 +1058,11 @@
                         statusDiv.innerHTML = `<p class="text-info">Processando ${dadosParaProcessar.length} pedidos entre as rotas ${rotaInicio} e ${rotaFim}...</p>`;
                     }
                     
-                    ['resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 'resultado-toco', 'resultado-tres-quartos', 'resultado-cf-numerico', 'resultado-rota1', 'resultado-bloqueados'].forEach(id => {
+                    [
+                        'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 
+                        'resultado-toco', 'resultado-cf-accordion-container', 'resultado-cf-numerico', 
+                        'resultado-rota1', 'resultado-bloqueados'
+                    ].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
                     });
@@ -1113,73 +1124,50 @@
                     displayToco(resultadoTocoDiv, gruposToco);
                     tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
 
-                    let pedidosParaProcessamento = [];
+                    let pedidosParaProcessamentoVarejo = [];
+                    let gruposPorCF = {};
+                    pedidosComCFNumericoIsolado = [];
                     
                     pedidos.forEach(p => {
                         if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
-                        if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
-                            pedidosComCFNumericoIsolado.push(p);
-                            return;
-                        }
                         if (['21', '23', '17'].includes(String(p.Coluna4))) return;
                         
                         if (isNumeric(p.CF)) {
-                            pedidosComCFNumericoIsolado.push(p);
+                            const cf = String(p.CF).trim();
+                            if (!gruposPorCF[cf]) {
+                                gruposPorCF[cf] = { pedidos: [], totalKg: 0, totalCubagem: 0 };
+                            }
+                            gruposPorCF[cf].pedidos.push(p);
+                            gruposPorCF[cf].totalKg += p.Quilos_Saldo;
+                            gruposPorCF[cf].totalCubagem += p.Cubagem;
                         } else {
-                            pedidosParaProcessamento.push(p);
+                            if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
+                                pedidosComCFNumericoIsolado.push(p);
+                            } else {
+                                pedidosParaProcessamentoVarejo.push(p);
+                            }
                         }
                     });
                     
+                    gruposPorCFGlobais = gruposPorCF;
+                    displayCargasCfAccordion(resultadoCfAccordionDiv, gruposPorCFGlobais);
                     displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
 
-                    let tresQuartosLoads = [];
-                    const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
-                    const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
-                    const LARGE_ORDER_KG = 1700;
-                    const largeOrdersByRoute = pedidosParaProcessamento.reduce((acc, p) => {
-                        const peso = p.Quilos_Saldo;
-                        if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } return acc;
-                    }, {});
-                    const pedidosEmCargas3_4 = new Set();
-                    Object.keys(largeOrdersByRoute).forEach(rota => {
-                        const largeOrders = largeOrdersByRoute[rota];
-                        if (largeOrders.length === 1) {
-                            const largeOrder = largeOrders[0]; if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
-                            let newLoad = { 
-                                pedidos: [largeOrder], 
-                                totalKg: largeOrder.Quilos_Saldo,
-                                totalCubagem: largeOrder.Cubagem,
-                                rota: rota 
-                            };
-                            const otherOrdersInRoute = pedidosParaProcessamento.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => b.Quilos_Saldo - a.Quilos_Saldo);
-                            for (const order of otherOrdersInRoute) {
-                                if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue;
-                                const orderKg = order.Quilos_Saldo;
-                                if (newLoad.totalKg + orderKg <= MAX_KG_3_4) { 
-                                    newLoad.pedidos.push(order); 
-                                    newLoad.totalKg += orderKg; 
-                                    newLoad.totalCubagem += order.Cubagem;
-                                }
-                            }
-                            if (newLoad.totalKg >= MIN_KG_3_4) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); }
-                        }
-                    });
-                    tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
-                    displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
-
-                    pedidosGeraisAtuais = pedidosParaProcessamento.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
+                    pedidosGeraisAtuais = [...pedidosParaProcessamentoVarejo]; 
                     const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
                         const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
                     }, {});
                     displayGerais(resultadoGeralDiv, gruposGerais);
-
+                    
+                    const totalPedidosCF = Object.values(gruposPorCFGlobais).reduce((sum, grupo) => sum + grupo.pedidos.length, 0);
                     const stats = {
                         totalPlanilha: dadosParaProcessar.length,
                         pesoTotal: dadosParaProcessar.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
                         pedidosEspeciais: pedidosEspeciaisProcessados.size,
                         pedidosBloqueados: pedidosManualmenteBloqueadosAtuais.length,
                         pedidosToco: tocoPedidoIds.size,
-                        pedidos34Auto: tresQuartosLoads.reduce((sum, load) => sum + load.pedidos.length, 0),
+                        pedidosCF: totalPedidosCF,
+                        pedidos34Auto: 0,
                         pedidosFiltrados: pedidosComCFNumericoIsolado.length + rota1SemCarga.length,
                         pedidosDisponiveis: pedidosGeraisAtuais.length,
                         pesoDisponivel: pedidosGeraisAtuais.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
@@ -1249,12 +1237,12 @@
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
                 table += `<tr id="pedido-${p.Num_Pedido}" 
-                                         class="${isPriorityRow ? 'table-primary' : ''}" 
-                                         data-cliente-id="${clienteIdNormalizado}" 
-                                         data-pedido-id="${p.Num_Pedido}"
-                                         onclick="highlightClientRows(event)"
-                                         draggable="true"
-                                         ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
+                                     class="${isPriorityRow ? 'table-primary' : ''}" 
+                                     data-cliente-id="${clienteIdNormalizado}" 
+                                     data-pedido-id="${p.Num_Pedido}"
+                                     onclick="highlightClientRows(event)"
+                                     draggable="true"
+                                     ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') {
@@ -1295,7 +1283,7 @@
 
         function displayGerais(div, grupos) {
             if (Object.keys(grupos).length === 0) { 
-                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido disponível para montagem.</div>'; 
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido de varejo disponível para montagem.</div>'; 
                 document.getElementById('botoes-fiorino').innerHTML = '<p class="text-muted">Nenhuma rota de Fiorino encontrada.</p>';
                 document.getElementById('botoes-van').innerHTML = '<p class="text-muted">Nenhuma rota de Van encontrada.</p>';
                 document.getElementById('botoes-34').innerHTML = '<p class="text-muted">Nenhuma rota de 3/4 encontrada.</p>';
@@ -1348,7 +1336,7 @@
         }
 
         function displayPedidosCFNumerico(div, pedidos) {
-            if (pedidos.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido filtrado por CF numérico ou por Regra de Bloqueio.</div>'; return; }
+            if (pedidos.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido de varejo filtrado por regra de bloqueio de cliente.</div>'; return; }
             const grupos = pedidos.reduce((acc, p) => {
                 const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
             }, {});
@@ -1356,37 +1344,13 @@
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
         function displayTresQuartos(div, loads) {
-            if (loads.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga 3/4 formada automaticamente.</div>'; return; }
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2 no-print"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>` : ''}</div>`;
-            
-            const maxKg = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
-
-            loads.forEach(load => {
-                const loadId = `tres-quartos-auto-${load.numero}`;
-                load.id = loadId;
-                load.vehicleType = 'tresQuartos';
-                activeLoads[loadId] = load;
-
-                const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const pesoPercentual = (load.totalKg / maxKg) * 100;
-                let progressColor = 'bg-success';
-                if (pesoPercentual > 95) progressColor = 'bg-danger';
-                else if (pesoPercentual > 75) progressColor = 'bg-warning';
-
-                const progressBar = `
-                                         <div class="progress mt-2" role="progressbar" style="height: 10px;">
-                                             <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
-                                         </div>`;
-
-                html += `<div id="${loadId}" class="card mb-3 drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="tresQuartos"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${progressBar}${createTable(load.pedidos, null, loadId)}</div></div>`;
-            });
-            div.innerHTML = html;
+            if (div) div.innerHTML = '';
         }
         
         function displayRota1(div, pedidos) {
@@ -1465,10 +1429,11 @@
 
         function imprimirTocoIndividual(cf) {
             if (!gruposToco[cf]) { alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`); return; }
-            const grupo = gruposToco[cf]; const pedidos = grupo.pedidos;
+            const grupo = gruposToco[cf];
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const printWindow = createPrintWindow('Imprimir Carga Toco CF: ' + cf);
-            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos);
+            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³</h3>` + createTable(grupo.pedidos);
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus(); 
@@ -1693,9 +1658,9 @@
                                      moveMade = true;
                                  }
                              } else if (isMoveValid({pedidos:[], totalKg:0, totalCubagem:0}, groupToPlace, vehicleType)) { 
-                                  neighborSolution.loads.push(groupToPlace);
-                                  neighborSolution.leftovers.splice(leftoverIndex, 1);
-                                  moveMade = true;
+                                 neighborSolution.loads.push(groupToPlace);
+                                 neighborSolution.leftovers.splice(leftoverIndex, 1);
+                                 moveMade = true;
                              }
                          } else if (neighborSolution.loads.length > 0) {
                              const loadIndex = Math.floor(Math.random() * neighborSolution.loads.length);
@@ -1979,13 +1944,13 @@
             const totalFinalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
             const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
             if (totalFinalLeftoverKg >= tresQuartosMin && leftoverGroups.length > 0) {
-                                  const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
-                                  if(vehicleForTertiary) {
-                                      const tresQuartosResult = runHeuristicOptimization(leftoverGroups, vehicleForTertiary);
-                                      tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
-                                      tertiaryLoads = tresQuartosResult.loads;
-                                      leftoverGroups = tresQuartosResult.leftovers;
-                                  }
+                                 const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
+                                 if(vehicleForTertiary) {
+                                     const tresQuartosResult = runHeuristicOptimization(leftoverGroups, vehicleForTertiary);
+                                     tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
+                                     tertiaryLoads = tresQuartosResult.loads;
+                                     leftoverGroups = tresQuartosResult.leftovers;
+                                 }
             }
 
             const allPotentialLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads ];
@@ -2001,7 +1966,7 @@
                 const config = getVehicleConfig(load.vehicleType);
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
                 const allowPriorityOverride = load.vehicleType !== 'tresQuartos';
-            
+                
                 if (load.totalKg >= config.minKg || (hasPriority && allowPriorityOverride)) {
                     finalValidLoads.push(load);
                 } else {
@@ -2213,6 +2178,59 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
+        function displayCargasCfAccordion(div, grupos) {
+            if (Object.keys(grupos).length === 0) {
+                div.innerHTML = '<p class="text-muted">Nenhum grupo de CF encontrado para visualização.</p>';
+                return;
+            }
+            let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasPorCF">';
+            Object.keys(grupos).sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach((cf, index) => {
+                const grupo = grupos[cf];
+                const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].join(', ');
+                const collapseId = `collapseCF-Mesa-${cf.replace(/\s/g, '')}`;
+
+                accordionHtml += `
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingCargaCFMesa${index}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                                <strong>CF: ${cf}</strong> &nbsp;
+                                <span class="badge bg-secondary ms-2" title="Rotas">${rotas}</span>
+                                <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
+                                <span class="badge bg-light text-dark ms-2"><i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³</span>
+                            </button>
+                        </h2>
+                        <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCargasCF">
+                            <div class="accordion-body">
+                                <button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirCargaCFIndividual('${cf}')">
+                                    <i class="bi bi-printer-fill me-1"></i>Imprimir esta Carga
+                                </button>
+                                ${createTable(grupo.pedidos)}
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            accordionHtml += '</div>';
+            div.innerHTML = accordionHtml;
+        }
+
+        function imprimirCargaCFIndividual(cf) {
+            if (!gruposPorCFGlobais || !gruposPorCFGlobais[cf]) {
+                alert(`Nenhuma carga encontrada para o CF: ${cf}`);
+                return;
+            }
+            const grupo = gruposPorCFGlobais[cf];
+            const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const printWindow = createPrintWindow('Imprimir Carga CF: ' + cf);
+            let contentToPrint = `<h3>Carga CF: ${cf} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³</h3>` + createTable(grupo.pedidos);
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+        }
+
         function montarCargaPredefinida(inputId, resultadoId, processedSet, nomeCarga) {
             const resultadoDiv = document.getElementById(resultadoId);
             const input = document.getElementById(inputId);
@@ -2346,18 +2364,19 @@
                             </ul>
                         </div>
                         <div class="col-md-4">
-                            <h6 class="text-white-50">PEDIDOS PRÉ-PROCESSADOS</h6>
+                            <h6 class="text-white-50">PEDIDOS PRÉ-PROCESSADOS / AGRUPADOS</h6>
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Carga Especial<span class="badge bg-info rounded-pill">${nf(stats.pedidosEspeciais)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas Toco (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosToco)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas por CF (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosCF)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas 3/4 Auto (pedidos)<span class="badge bg-warning rounded-pill">${nf(stats.pedidos34Auto)}</span></li>
                             </ul>
                         </div>
                         <div class="col-md-4">
-                            <h6 class="text-white-50">DISPONÍVEL PARA MONTAGEM</h6>
+                            <h6 class="text-white-50">DISPONÍVEL PARA MONTAGEM (VAREJO)</h6>
                             <ul class="list-group list-group-flush">
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Filtrados (CF Num./Rota 1)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosFiltrados)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Filtrados (Regra/Rota 1)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosFiltrados)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center"><strong>Pedidos Disponíveis</strong><span class="badge bg-success rounded-pill"><strong>${nf(stats.pedidosDisponiveis)}</strong></span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center"><strong>Peso Disponível</strong><span class="badge bg-success rounded-pill"><strong>${kf(stats.pesoDisponivel)} kg</strong></span></li>
                             </ul>
