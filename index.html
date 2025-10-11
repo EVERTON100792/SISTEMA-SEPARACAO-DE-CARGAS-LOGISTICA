@@ -175,6 +175,22 @@
             max-width: 400px;
         }
 
+        /* --- NOVOS ESTILOS PARA O LAYOUT DOS BOTÕES CF --- */
+        #botoes-cf-mesa {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        #botoes-cf-mesa .btn {
+            flex-grow: 1;
+            flex-basis: 300px; /* Cada botão tentará ter no mínimo 300px */
+            margin: 0 !important; /* Remove margens antigas para o 'gap' funcionar bem */
+            text-align: left;
+        }
+        /* --- FIM DOS NOVOS ESTILOS --- */
+
+
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             #main-content { margin-left: 0 !important; width: 100% !important; }
@@ -246,7 +262,7 @@
                 </li>
                 <li class="mb-1">
                     <a href="#workspace-card" class="nav-link rounded-2">
-                        <i class="bi bi-tools me-2"></i>Mesa de Trabalho
+                        <i class="bi bi-tools me-2"></i>Mesas de Trabalho
                     </a>
                 </li>
                 <li class="mb-1">
@@ -284,34 +300,41 @@
                         </div>
                         <div class="card-body p-0">
                              <ul class="nav nav-tabs nav-fill px-3 pt-2" id="vehicleTabs" role="tablist">
-                                 <li class="nav-item" role="presentation"><button class="nav-link active" id="fiorino-tab" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane" type="button" role="tab"><i class="bi bi-box-seam-fill me-2"></i>Fiorino</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" id="van-tab" data-bs-toggle="tab" data-bs-target="#van-tab-pane" type="button" role="tab"><i class="bi bi-truck-front-fill me-2"></i>Van</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link active" id="fiorino-tab" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane" type="button" role="tab"><i class="bi bi-box-seam-fill me-2"></i>Fiorino (Varejo)</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="van-tab" data-bs-toggle="tab" data-bs-target="#van-tab-pane" type="button" role="tab"><i class="bi bi-truck-front-fill me-2"></i>Van (Varejo)</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4 (Varejo)</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="cf-tab" data-bs-toggle="tab" data-bs-target="#cf-tab-pane" type="button" role="tab"><i class="bi bi-diagram-3-fill me-2"></i>Cargas por CF</button></li>
                              </ul>
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active p-3 workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Fiorinos.</p>
-                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-fiorino-geral', 'Cargas de Fiorino')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota de varejo para montar as Fiorinos.</p>
+                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-fiorino-geral', 'Cargas de Fiorino (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-fiorino"><p class="text-muted">Processe um arquivo para ver as rotas disponíveis.</p></div>
                                     <hr class="no-print"><div id="resultado-fiorino-geral" class="mt-3"></div>
                                 </div>
                                 <div class="tab-pane fade p-3 workspace-tab-pane" id="van-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Vans.</p>
-                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota de varejo para montar as Vans.</p>
+                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-van"><p class="text-muted">Processe um arquivo para ver as rotas disponíveis.</p></div>
                                     <hr class="no-print"><div id="resultado-van-geral" class="mt-3"></div>
                                 </div>
                                 <div class="tab-pane fade p-3 workspace-tab-pane" id="tres-quartos-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as cargas 3/4.</p>
-                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-34-geral', 'Cargas de 3/4')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota de varejo para montar as cargas 3/4.</p>
+                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-34-geral', 'Cargas de 3/4 (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-34"><p class="text-muted">Processe um arquivo para ver as rotas disponíveis.</p></div>
                                     <hr class="no-print"><div id="resultado-34-geral" class="mt-3"></div>
+                                </div>
+                                <div class="tab-pane fade p-3" id="cf-tab-pane" role="tabpanel">
+                                    <p class="card-subtitle text-body-secondary small mb-3">Selecione um grupo de CF para visualizar e imprimir os pedidos que o compõem.</p>
+                                    <div id="botoes-cf-mesa" class="mb-3"><p class="text-muted">Processe um arquivo para ver os grupos de CF disponíveis.</p></div>
+                                    <hr>
+                                    <div id="resultado-cf-mesa" class="mt-3"></div>
                                 </div>
                             </div>
                         </div>
@@ -321,7 +344,7 @@
                 <div class="col-lg-4 mb-4">
                     <div class="card" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                           <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis</h2>
+                           <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis (Varejo)</h2>
                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
                         </div>
                        <div class="card-body">
@@ -357,14 +380,9 @@
                     <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-inboxes-fill me-2"></i>Cargas "Toco"</h2></div>
                     <div class="card-body"><div id="resultado-toco"></div></div>
                 </div>
-                
-                <div class="card mb-4">
-                    <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-diagram-3-fill me-2"></i>Cargas por CF (Carreta, Truck, etc.)</h2></div>
-                    <div class="card-body"><div id="resultado-cargas-cf"></div></div>
-                </div>
-                
+                                
                 <div class="card mb-4 border-secondary">
-                    <div class="card-header bg-secondary-subtle text-secondary-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (Bloqueio por Regra de Cliente)</h2></div>
+                    <div class="card-header bg-secondary-subtle text-secondary-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (Bloqueio de Varejo por Regra)</h2></div>
                     <div class="card-body"><div id="resultado-cf-numerico"></div></div>
                 </div>
             </div>
@@ -383,7 +401,7 @@
                     <div class="row">
                         <div class="col-lg-6 mb-4">
                             <div class="card h-100">
-                                <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cpu-fill me-2"></i>Algoritmo de Otimização</h2></div>
+                                <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cpu-fill me-2"></i>Algoritmo de Otimização (Varejo)</h2></div>
                                 <div class="card-body">
                                     <label for="optimizationLevelSelect" class="form-label">Nível de Otimização:</label>
                                     <select class="form-select" id="optimizationLevelSelect">
@@ -849,16 +867,22 @@
             }
             if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
-                if (pedidoEncontrado) { local = 'Pedidos Disponíveis para Montagem'; accordionId = 'accordionGeral'; } 
+                if (pedidoEncontrado) { local = 'Pedidos Disponíveis (Varejo)'; accordionId = 'accordionGeral'; } 
             }
             if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosComCFNumericoIsolado.find(p => String(p.Num_Pedido) === searchInput);
-                if (pedidoEncontrado) { local = 'Pedidos Filtrados'; accordionId = 'accordionCF'; }
+                if (pedidoEncontrado) { local = 'Pedidos Filtrados (Bloqueio de Varejo)'; accordionId = 'accordionCF'; }
             }
             if (!pedidoEncontrado) {
                 for (const cf in gruposToco) {
                     pedidoEncontrado = gruposToco[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
                     if (pedidoEncontrado) { local = `Cargas "Toco" (CF: ${cf})`; accordionId = 'accordionToco'; break; }
+                }
+            }
+             if (!pedidoEncontrado) {
+                for (const cf in gruposPorCFGlobais) {
+                    pedidoEncontrado = gruposPorCFGlobais[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
+                    if (pedidoEncontrado) { local = `Cargas por CF (CF: ${cf})`; accordionId = 'accordionCargasPorCF'; break; }
                 }
             }
             if (!pedidoEncontrado) {
@@ -1001,7 +1025,7 @@
                 'resultado-venda-antecipada', 'resultado-carga-especial', 'resultado-bloqueados', 'resultado-geral', 
                 'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral',
                 'resultado-rota1', 'resultado-tres-quartos', 'resultado-toco', 
-                'resultado-cargas-cf', 'resultado-cf-numerico', 'search-result'
+                'botoes-cf-mesa', 'resultado-cf-mesa', 'resultado-cf-numerico', 'search-result'
             ];
             idsParaLimpar.forEach(id => {
                 const el = document.getElementById(id);
@@ -1038,7 +1062,6 @@
                 const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
                 const resultadoRota1Div = document.getElementById('resultado-rota1');
                 const resultadoBloqueadosDiv = document.getElementById('resultado-bloqueados');
-                const resultadoCargasCfDiv = document.getElementById('resultado-cargas-cf');
                 
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
@@ -1060,7 +1083,7 @@
                     
                     [
                         'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 
-                        'resultado-toco', 'resultado-cargas-cf', 'resultado-tres-quartos', 'resultado-cf-numerico', 
+                        'resultado-toco', 'botoes-cf-mesa', 'resultado-cf-mesa', 'resultado-tres-quartos', 'resultado-cf-numerico', 
                         'resultado-rota1', 'resultado-bloqueados'
                     ].forEach(id => {
                         const el = document.getElementById(id);
@@ -1130,14 +1153,10 @@
                     
                     pedidos.forEach(p => {
                         if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
-
-                        if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
-                            pedidosComCFNumericoIsolado.push(p);
-                            return;
-                        }
                         if (['21', '23', '17'].includes(String(p.Coluna4))) return;
                         
                         if (isNumeric(p.CF)) {
+                            // Se tem CF numérico, vai direto para a nova separação, ignorando bloqueios.
                             const cf = String(p.CF).trim();
                             if (!gruposPorCF[cf]) {
                                 gruposPorCF[cf] = { pedidos: [], totalKg: 0, totalCubagem: 0 };
@@ -1146,12 +1165,17 @@
                             gruposPorCF[cf].totalKg += p.Quilos_Saldo;
                             gruposPorCF[cf].totalCubagem += p.Cubagem;
                         } else {
-                            pedidosParaProcessamentoVarejo.push(p);
+                            // Se NÃO tem CF numérico (é varejo), agora sim verifica o bloqueio.
+                            if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
+                                pedidosComCFNumericoIsolado.push(p);
+                            } else {
+                                pedidosParaProcessamentoVarejo.push(p);
+                            }
                         }
                     });
                     
                     gruposPorCFGlobais = gruposPorCF;
-                    displayCargasPorCF(resultadoCargasCfDiv, gruposPorCFGlobais);
+                    popularMesaDeTrabalhoCF(gruposPorCFGlobais);
                     displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
 
                     let tresQuartosLoads = [];
@@ -1319,7 +1343,7 @@
 
         function displayGerais(div, grupos) {
             if (Object.keys(grupos).length === 0) { 
-                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido disponível para montagem.</div>'; 
+                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido de varejo disponível para montagem.</div>'; 
                 document.getElementById('botoes-fiorino').innerHTML = '<p class="text-muted">Nenhuma rota de Fiorino encontrada.</p>';
                 document.getElementById('botoes-van').innerHTML = '<p class="text-muted">Nenhuma rota de Van encontrada.</p>';
                 document.getElementById('botoes-34').innerHTML = '<p class="text-muted">Nenhuma rota de 3/4 encontrada.</p>';
@@ -1372,7 +1396,7 @@
         }
 
         function displayPedidosCFNumerico(div, pedidos) {
-            if (pedidos.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido filtrado por regra de bloqueio de cliente.</div>'; return; }
+            if (pedidos.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhum pedido de varejo filtrado por regra de bloqueio de cliente.</div>'; return; }
             const grupos = pedidos.reduce((acc, p) => {
                 const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
             }, {});
@@ -1380,7 +1404,7 @@
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -2237,39 +2261,73 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        function displayCargasPorCF(div, grupos) {
+        function popularMesaDeTrabalhoCF(grupos) {
+            const botoesDiv = document.getElementById('botoes-cf-mesa');
             if (Object.keys(grupos).length === 0) {
-                div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga com CF numérico encontrada para agrupamento.</div>';
+                botoesDiv.innerHTML = '<p class="text-muted">Nenhum grupo de CF encontrado para montagem.</p>';
                 return;
             }
-            let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasPorCF">';
-            Object.keys(grupos).sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach((cf, index) => {
+
+            botoesDiv.innerHTML = ''; 
+            Object.keys(grupos).sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach(cf => {
                 const grupo = grupos[cf];
-                const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                accordionHtml += `
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingCargaCF${index}">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCargaCF${index}">
-                                <strong>Carga CF: ${cf}</strong> &nbsp;
-                                <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length} pedidos</span>
-                                <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
-                            </button>
-                        </h2>
-                        <div id="collapseCargaCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCargasPorCF">
-                            <div class="accordion-body">
-                                <button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirCargaCFIndividual('${cf}')">
-                                    <i class="bi bi-printer-fill me-1"></i>Imprimir esta Carga
-                                </button>
-                                ${createTable(grupo.pedidos)}
-                            </div>
-                        </div>
-                    </div>`;
+                const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].join(', ');
+                const totalKg = grupo.totalKg.toLocaleString('pt-BR', {maximumFractionDigits: 2});
+                const totalCubagem = grupo.totalCubagem.toLocaleString('pt-BR', {maximumFractionDigits: 2});
+
+                const button = document.createElement('button');
+                button.className = 'btn btn-outline-secondary';
+                button.onclick = () => visualizarCargaCF(cf, button);
+                button.innerHTML = `
+                    <div class="d-flex w-100 justify-content-between">
+                        <strong class="mb-1">CF: ${cf}</strong>
+                        <small>Rotas: ${rotas}</small>
+                    </div>
+                    <small class="d-block">
+                        <i class="bi bi-database"></i> ${totalKg} kg &nbsp;&nbsp; <i class="bi bi-rulers"></i> ${totalCubagem} m³
+                    </small>`;
+                botoesDiv.appendChild(button);
             });
-            accordionHtml += '</div>';
-            div.innerHTML = accordionHtml;
+        }
+        
+        function visualizarCargaCF(cf, buttonElement) {
+            const resultadoDiv = document.getElementById('resultado-cf-mesa');
+            const grupo = gruposPorCFGlobais[cf];
+
+            if (!grupo) {
+                resultadoDiv.innerHTML = `<div class="alert alert-danger">Erro: Grupo CF ${cf} não encontrado.</div>`;
+                return;
+            }
+
+            if(buttonElement){
+                 const parentContainer = buttonElement.parentElement;
+                 parentContainer.querySelectorAll('button').forEach(btn => {
+                    btn.classList.remove('active', 'btn-secondary');
+                    btn.classList.add('btn-outline-secondary');
+                 });
+                 buttonElement.classList.remove('btn-outline-secondary');
+                 buttonElement.classList.add('btn-secondary', 'active');
+            }
+
+            const html = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Detalhes da Carga CF: ${cf}</h5>
+                    <button class="btn btn-sm btn-info no-print" onclick="imprimirCargaCFMesa('${cf}')">
+                        <i class="bi bi-printer-fill me-1"></i>Imprimir esta Carga
+                    </button>
+                </div>
+                ${createTable(grupo.pedidos)}
+            `;
+            resultadoDiv.innerHTML = html;
+            
+            // --- CÓDIGO PARA ROLAGEM AUTOMÁTICA ---
+            setTimeout(() => {
+                resultadoDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+            // --- FIM DO CÓDIGO DE ROLAGEM ---
         }
 
-        function imprimirCargaCFIndividual(cf) {
+        function imprimirCargaCFMesa(cf) {
             if (!gruposPorCFGlobais || !gruposPorCFGlobais[cf]) {
                 alert(`Nenhuma carga encontrada para o CF: ${cf}`);
                 return;
@@ -2417,7 +2475,7 @@
                             </ul>
                         </div>
                         <div class="col-md-4">
-                            <h6 class="text-white-50">PEDIDOS PRÉ-PROCESSADOS</h6>
+                            <h6 class="text-white-50">PEDIDOS PRÉ-PROCESSADOS / AGRUPADOS</h6>
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Carga Especial<span class="badge bg-info rounded-pill">${nf(stats.pedidosEspeciais)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
