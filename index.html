@@ -175,12 +175,6 @@
             max-width: 400px;
         }
 
-        #botoes-cf-mesa .btn {
-            text-align: left;
-            margin-bottom: 0.5rem;
-            margin-right: 0.5rem;
-        }
-
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             #main-content { margin-left: 0 !important; width: 100% !important; }
@@ -357,11 +351,6 @@
                 <div class="card mb-4 border-warning">
                     <div class="card-header bg-warning-subtle text-warning-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-sign-turn-right-fill me-2"></i>Pedidos da Rota 1 para Alteração</h2></div>
                     <div class="card-body"><div id="resultado-rota1"></div></div>
-                </div>
-
-                <div class="card mb-4">
-                    <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-lightning-charge-fill me-2"></i>Cargas 3/4 (Formadas Automaticamente)</h2></div>
-                    <div class="card-body"><div id="resultado-tres-quartos"></div></div>
                 </div>
 
                 <div class="card mb-4">
@@ -1012,7 +1001,7 @@
             const idsParaLimpar = [
                 'resultado-venda-antecipada', 'resultado-carga-especial', 'resultado-bloqueados', 'resultado-geral', 
                 'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral',
-                'resultado-rota1', 'resultado-tres-quartos', 'resultado-toco', 
+                'resultado-rota1', 'resultado-toco', 
                 'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result'
             ];
             idsParaLimpar.forEach(id => {
@@ -1046,7 +1035,6 @@
             setTimeout(() => {
                 const resultadoGeralDiv = document.getElementById('resultado-geral');
                 const resultadoTocoDiv = document.getElementById('resultado-toco');
-                const resultadoTresQuartosDiv = document.getElementById('resultado-tres-quartos');
                 const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
                 const resultadoRota1Div = document.getElementById('resultado-rota1');
                 const resultadoBloqueadosDiv = document.getElementById('resultado-bloqueados');
@@ -1072,7 +1060,7 @@
                     
                     [
                         'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 
-                        'resultado-toco', 'resultado-cf-accordion-container', 'resultado-tres-quartos', 'resultado-cf-numerico', 
+                        'resultado-toco', 'resultado-cf-accordion-container', 'resultado-cf-numerico', 
                         'resultado-rota1', 'resultado-bloqueados'
                     ].forEach(id => {
                         const el = document.getElementById(id);
@@ -1145,6 +1133,7 @@
                         if (['21', '23', '17'].includes(String(p.Coluna4))) return;
                         
                         if (isNumeric(p.CF)) {
+                            // Se tem CF numérico, vai direto para a nova separação, ignorando bloqueios.
                             const cf = String(p.CF).trim();
                             if (!gruposPorCF[cf]) {
                                 gruposPorCF[cf] = { pedidos: [], totalKg: 0, totalCubagem: 0 };
@@ -1153,6 +1142,7 @@
                             gruposPorCF[cf].totalKg += p.Quilos_Saldo;
                             gruposPorCF[cf].totalCubagem += p.Cubagem;
                         } else {
+                            // Se NÃO tem CF numérico (é varejo), agora sim verifica o bloqueio.
                             if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
                                 pedidosComCFNumericoIsolado.push(p);
                             } else {
@@ -1165,42 +1155,7 @@
                     displayCargasCfAccordion(resultadoCfAccordionDiv, gruposPorCFGlobais);
                     displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
 
-                    let tresQuartosLoads = [];
-                    const MIN_KG_3_4 = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
-                    const MAX_KG_3_4 = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
-                    const LARGE_ORDER_KG = 1700;
-                    const largeOrdersByRoute = pedidosParaProcessamentoVarejo.reduce((acc, p) => {
-                        const peso = p.Quilos_Saldo;
-                        if (peso >= LARGE_ORDER_KG) { const rota = p.Cod_Rota; if (!acc[rota]) acc[rota] = []; acc[rota].push(p); } return acc;
-                    }, {});
-                    const pedidosEmCargas3_4 = new Set();
-                    Object.keys(largeOrdersByRoute).forEach(rota => {
-                        const largeOrders = largeOrdersByRoute[rota];
-                        if (largeOrders.length === 1) {
-                            const largeOrder = largeOrders[0]; if (pedidosEmCargas3_4.has(largeOrder.Num_Pedido)) return;
-                            let newLoad = { 
-                                pedidos: [largeOrder], 
-                                totalKg: largeOrder.Quilos_Saldo,
-                                totalCubagem: largeOrder.Cubagem,
-                                rota: rota 
-                            };
-                            const otherOrdersInRoute = pedidosParaProcessamentoVarejo.filter(p => p.Cod_Rota === rota && p.Num_Pedido !== largeOrder.Num_Pedido).sort((a, b) => b.Quilos_Saldo - a.Quilos_Saldo);
-                            for (const order of otherOrdersInRoute) {
-                                if (pedidosEmCargas3_4.has(order.Num_Pedido)) continue;
-                                const orderKg = order.Quilos_Saldo;
-                                if (newLoad.totalKg + orderKg <= MAX_KG_3_4) { 
-                                    newLoad.pedidos.push(order); 
-                                    newLoad.totalKg += orderKg; 
-                                    newLoad.totalCubagem += order.Cubagem;
-                                }
-                            }
-                            if (newLoad.totalKg >= MIN_KG_3_4) { tresQuartosLoads.push(newLoad); newLoad.pedidos.forEach(p => pedidosEmCargas3_4.add(p.Num_Pedido)); }
-                        }
-                    });
-                    tresQuartosLoads.forEach((load, index) => { load.numero = index + 1; });
-                    displayTresQuartos(resultadoTresQuartosDiv, tresQuartosLoads);
-
-                    pedidosGeraisAtuais = pedidosParaProcessamentoVarejo.filter(p => !pedidosEmCargas3_4.has(p.Num_Pedido));
+                    pedidosGeraisAtuais = [...pedidosParaProcessamentoVarejo]; // Usar a lista de varejo
                     const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
                         const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
                     }, {});
@@ -1214,7 +1169,7 @@
                         pedidosBloqueados: pedidosManualmenteBloqueadosAtuais.length,
                         pedidosToco: tocoPedidoIds.size,
                         pedidosCF: totalPedidosCF,
-                        pedidos34Auto: tresQuartosLoads.reduce((sum, load) => sum + load.pedidos.length, 0),
+                        pedidos34Auto: 0, // Removido
                         pedidosFiltrados: pedidosComCFNumericoIsolado.length + rota1SemCarga.length,
                         pedidosDisponiveis: pedidosGeraisAtuais.length,
                         pesoDisponivel: pedidosGeraisAtuais.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
@@ -1397,31 +1352,9 @@
         }
 
         function displayTresQuartos(div, loads) {
-            if (loads.length === 0) { div.innerHTML = '<div class="alert alert-secondary text-center">Nenhuma carga 3/4 formada automaticamente.</div>'; return; }
-            let html = `<div class="d-flex justify-content-between align-items-center mb-2 no-print"><h4 class="mb-0">Cargas 3/4 (Automático):</h4>${loads.length > 0 ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirGeneric('${div.id}', 'Cargas 3/4 (Automático)')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>` : ''}</div>`;
-            
-            const maxKg = parseFloat(document.getElementById('tresQuartosMaxCapacity').value);
-
-            loads.forEach(load => {
-                const loadId = `tres-quartos-auto-${load.numero}`;
-                load.id = loadId;
-                load.vehicleType = 'tresQuartos';
-                activeLoads[loadId] = load;
-
-                const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const pesoPercentual = (load.totalKg / maxKg) * 100;
-                let progressColor = 'bg-success';
-                if (pesoPercentual > 95) progressColor = 'bg-danger';
-                else if (pesoPercentual > 75) progressColor = 'bg-warning';
-
-                const progressBar = `
-                                       <div class="progress mt-2" role="progressbar" style="height: 10px;">
-                                           <div class="progress-bar ${progressColor}" style="width: ${pesoPercentual}%"></div>
-                                       </div>`;
-
-                html += `<div id="${loadId}" class="card mb-3 drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="tresQuartos"><div class="card-header bg-warning text-dark">Carga 3/4 #${load.numero} (Rota: ${load.rota}) - Total: ${totalKgFormatado} kg</div><div class="card-body">${progressBar}${createTable(load.pedidos, null, loadId)}</div></div>`;
-            });
-            div.innerHTML = html;
+            // Esta função foi desativada conforme solicitado, mas mantida caso seja necessária no futuro.
+            // Limpa qualquer conteúdo que possa ter sido gerado anteriormente.
+            if (div) div.innerHTML = '';
         }
         
         function displayRota1(div, pedidos) {
@@ -2253,17 +2186,17 @@
                 div.innerHTML = '<p class="text-muted">Nenhum grupo de CF encontrado para visualização.</p>';
                 return;
             }
-            let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasCF">';
+            let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasPorCF">';
             Object.keys(grupos).sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach((cf, index) => {
                 const grupo = grupos[cf];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].join(', ');
-                const collapseId = `collapseCF-${cf.replace(/\s/g, '')}`;
+                const collapseId = `collapseCF-Mesa-${cf.replace(/\s/g, '')}`;
 
                 accordionHtml += `
                     <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingCargaCF${index}">
+                        <h2 class="accordion-header" id="headingCargaCFMesa${index}">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
                                 <strong>CF: ${cf}</strong> &nbsp;
                                 <span class="badge bg-secondary ms-2" title="Rotas">${rotas}</span>
@@ -2439,7 +2372,6 @@
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas Toco (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosToco)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas por CF (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosCF)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas 3/4 Auto (pedidos)<span class="badge bg-warning rounded-pill">${nf(stats.pedidos34Auto)}</span></li>
                             </ul>
                         </div>
                         <div class="col-md-4">
