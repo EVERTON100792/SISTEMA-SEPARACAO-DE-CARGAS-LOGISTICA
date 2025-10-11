@@ -1133,7 +1133,6 @@
                         if (['21', '23', '17'].includes(String(p.Coluna4))) return;
                         
                         if (isNumeric(p.CF)) {
-                            // Se tem CF numérico, vai direto para a nova separação, ignorando bloqueios.
                             const cf = String(p.CF).trim();
                             if (!gruposPorCF[cf]) {
                                 gruposPorCF[cf] = { pedidos: [], totalKg: 0, totalCubagem: 0 };
@@ -1142,7 +1141,6 @@
                             gruposPorCF[cf].totalKg += p.Quilos_Saldo;
                             gruposPorCF[cf].totalCubagem += p.Cubagem;
                         } else {
-                            // Se NÃO tem CF numérico (é varejo), agora sim verifica o bloqueio.
                             if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
                                 pedidosComCFNumericoIsolado.push(p);
                             } else {
@@ -1155,7 +1153,7 @@
                     displayCargasCfAccordion(resultadoCfAccordionDiv, gruposPorCFGlobais);
                     displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
 
-                    pedidosGeraisAtuais = [...pedidosParaProcessamentoVarejo]; // Usar a lista de varejo
+                    pedidosGeraisAtuais = [...pedidosParaProcessamentoVarejo]; 
                     const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
                         const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
                     }, {});
@@ -1169,7 +1167,7 @@
                         pedidosBloqueados: pedidosManualmenteBloqueadosAtuais.length,
                         pedidosToco: tocoPedidoIds.size,
                         pedidosCF: totalPedidosCF,
-                        pedidos34Auto: 0, // Removido
+                        pedidos34Auto: 0,
                         pedidosFiltrados: pedidosComCFNumericoIsolado.length + rota1SemCarga.length,
                         pedidosDisponiveis: pedidosGeraisAtuais.length,
                         pesoDisponivel: pedidosGeraisAtuais.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
@@ -1352,8 +1350,6 @@
         }
 
         function displayTresQuartos(div, loads) {
-            // Esta função foi desativada conforme solicitado, mas mantida caso seja necessária no futuro.
-            // Limpa qualquer conteúdo que possa ter sido gerado anteriormente.
             if (div) div.innerHTML = '';
         }
         
@@ -1433,10 +1429,11 @@
 
         function imprimirTocoIndividual(cf) {
             if (!gruposToco[cf]) { alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`); return; }
-            const grupo = gruposToco[cf]; const pedidos = grupo.pedidos;
+            const grupo = gruposToco[cf];
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const printWindow = createPrintWindow('Imprimir Carga Toco CF: ' + cf);
-            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(pedidos);
+            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³</h3>` + createTable(grupo.pedidos);
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus(); 
@@ -2225,8 +2222,9 @@
             }
             const grupo = gruposPorCFGlobais[cf];
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const printWindow = createPrintWindow('Imprimir Carga CF: ' + cf);
-            let contentToPrint = `<h3>Carga CF: ${cf} - Total: ${totalKgFormatado} kg</h3>` + createTable(grupo.pedidos);
+            let contentToPrint = `<h3>Carga CF: ${cf} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³</h3>` + createTable(grupo.pedidos);
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus();
@@ -2372,6 +2370,7 @@
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas Toco (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosToco)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas por CF (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosCF)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas 3/4 Auto (pedidos)<span class="badge bg-warning rounded-pill">${nf(stats.pedidos34Auto)}</span></li>
                             </ul>
                         </div>
                         <div class="col-md-4">
