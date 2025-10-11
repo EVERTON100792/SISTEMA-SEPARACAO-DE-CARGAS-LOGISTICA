@@ -2157,7 +2157,7 @@
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
                 const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
                 if (clienteA < clienteB) return -1; if (clienteA > clienteB) return 1;
-                return pedidoA.localeCompare(pedidoB);
+                return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
             });
 
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -2209,8 +2209,9 @@
                 pedidos.sort((a, b) => {
                     const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
                     const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
-                    if (clienteA < clienteB) return -1; if (clienteA > clienteB) return 1;
-                    return pedidoA.localeCompare(pedidoB);
+                    const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
+                    if (clienteCompare !== 0) return clienteCompare;
+                    return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
                 });
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const isOverloaded = grupo.totalKg > maxKg;
@@ -2241,7 +2242,7 @@
                     totalKg: pedidosCarreta.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
                     totalCubagem: pedidosCarreta.reduce((sum, p) => sum + p.Cubagem, 0)
                 };
-                gruposPorCFGlobais[chaveCarreta] = todosOsGrupos[chaveCarreta]; // Garante que a impressão funcione
+                gruposPorCFGlobais[chaveCarreta] = todosOsGrupos[chaveCarreta];
             }
 
             if (Object.keys(todosOsGrupos).length === 0) {
@@ -2251,13 +2252,24 @@
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasPorCF">';
             
             const sortedKeys = Object.keys(todosOsGrupos).sort((a,b) => {
-                 if (a === chaveCarreta) return -1; // Mantém a carreta no topo
+                 if (a === chaveCarreta) return -1;
                  if (b === chaveCarreta) return 1;
                  return a.localeCompare(b, undefined, {numeric: true})
             });
 
             sortedKeys.forEach((cf, index) => {
                 const grupo = todosOsGrupos[cf];
+                
+                grupo.pedidos.sort((a, b) => {
+                    const clienteA = String(a.Cliente);
+                    const clienteB = String(b.Cliente);
+                    const pedidoA = String(a.Num_Pedido);
+                    const pedidoB = String(b.Num_Pedido);
+                    const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
+                    if (clienteCompare !== 0) return clienteCompare;
+                    return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
+                });
+
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].join(', ');
@@ -2806,6 +2818,17 @@
                 div.innerHTML = '<p class="text-muted">Nenhum pedido de funcionário encontrado no arquivo processado.</p>';
                 return;
             }
+
+            pedidos.sort((a, b) => {
+                const clienteA = String(a.Cliente);
+                const clienteB = String(b.Cliente);
+                const pedidoA = String(a.Num_Pedido);
+                const pedidoB = String(b.Num_Pedido);
+                const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
+                if (clienteCompare !== 0) return clienteCompare;
+                return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
+            });
+
             const totalKg = pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
             const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             
@@ -2846,6 +2869,17 @@
                 div.innerHTML = '<p class="text-muted">Nenhum pedido de transferência encontrado no arquivo processado.</p>';
                 return;
             }
+
+            pedidos.sort((a, b) => {
+                const clienteA = String(a.Cliente);
+                const clienteB = String(b.Cliente);
+                const pedidoA = String(a.Num_Pedido);
+                const pedidoB = String(b.Num_Pedido);
+                const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
+                if (clienteCompare !== 0) return clienteCompare;
+                return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
+            });
+
             const totalKg = pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
             const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
