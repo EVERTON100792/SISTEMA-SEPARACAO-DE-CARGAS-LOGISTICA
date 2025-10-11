@@ -289,6 +289,7 @@
                                  <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4 (Varejo)</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" id="cf-tab" data-bs-toggle="tab" data-bs-target="#cf-tab-pane" type="button" role="tab"><i class="bi bi-diagram-3-fill me-2"></i>Cargas por CF</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" id="funcionarios-tab" data-bs-toggle="tab" data-bs-target="#funcionarios-tab-pane" type="button" role="tab"><i class="bi bi-people-fill me-2"></i>Funcionários</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="transferencias-tab" data-bs-toggle="tab" data-bs-target="#transferencias-tab-pane" type="button" role="tab"><i class="bi bi-arrow-left-right me-2"></i>Transferências</button></li>
                              </ul>
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active p-3 workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
@@ -322,6 +323,11 @@
                                 <div class="tab-pane fade p-3" id="funcionarios-tab-pane" role="tabpanel">
                                     <div id="resultado-funcionarios-tab">
                                          <p class="text-muted">Processe um arquivo para ver os pedidos de funcionários.</p>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade p-3" id="transferencias-tab-pane" role="tabpanel">
+                                    <div id="resultado-transferencias-tab">
+                                         <p class="text-muted">Processe um arquivo para ver os pedidos de transferência.</p>
                                     </div>
                                 </div>
                             </div>
@@ -581,6 +587,7 @@
         let rota1SemCarga = [];
         let pedidosFuncionarios = [];
         let pedidosCarretaSemCF = [];
+        let pedidosTransferencias = [];
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
         let activeLoads = {};
@@ -882,6 +889,10 @@
                 pedidoEncontrado = pedidosCarretaSemCF.find(p => String(p.Num_Pedido) === searchInput);
                 if (pedidoEncontrado) { local = 'Pedidos de Carreta/Truck sem CF'; accordionId = 'accordionCargasPorCF'; }
             }
+            if (!pedidoEncontrado) {
+                pedidoEncontrado = pedidosTransferencias.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Pedidos de Transferência'; accordionId = 'accordionTransferencias'; }
+            }
              if (!pedidoEncontrado) {
                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
                  if (originalPedido) {
@@ -1000,6 +1011,7 @@
             rota1SemCarga = [];
             pedidosFuncionarios = [];
             pedidosCarretaSemCF = [];
+            pedidosTransferencias = [];
             pedidosManualmenteBloqueadosAtuais = [];
             pedidosPrioritarios = [];
             tocoPedidoIds.clear();
@@ -1020,7 +1032,8 @@
                 'resultado-venda-antecipada', 'resultado-carga-especial', 'resultado-bloqueados', 'resultado-geral', 
                 'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral',
                 'resultado-rota1', 'resultado-toco', 
-                'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result', 'resultado-funcionarios-tab'
+                'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result', 
+                'resultado-funcionarios-tab', 'resultado-transferencias-tab'
             ];
             idsParaLimpar.forEach(id => {
                 const el = document.getElementById(id);
@@ -1058,6 +1071,7 @@
                 const resultadoBloqueadosDiv = document.getElementById('resultado-bloqueados');
                 const resultadoCfAccordionDiv = document.getElementById('resultado-cf-accordion-container');
                 const resultadoFuncionariosDiv = document.getElementById('resultado-funcionarios-tab');
+                const resultadoTransferenciasDiv = document.getElementById('resultado-transferencias-tab');
                 
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
@@ -1080,13 +1094,12 @@
                     [
                         'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 
                         'resultado-toco', 'resultado-cf-accordion-container', 'resultado-cf-numerico', 
-                        'resultado-rota1', 'resultado-bloqueados', 'resultado-funcionarios-tab'
+                        'resultado-rota1', 'resultado-bloqueados', 'resultado-funcionarios-tab', 'resultado-transferencias-tab'
                     ].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
                     });
                     
-                    // --- NOVA ETAPA: Separação inicial de Funcionários e Carreta ---
                     const pedidosExcluidos = new Set();
                     dadosParaProcessar.forEach(p => {
                         const coluna5 = String(p.Coluna5 || '').toUpperCase();
@@ -1096,10 +1109,14 @@
                         } else if (coluna5.includes('TBL ESP CARRETA') && !isNumeric(p.CF)) {
                             pedidosCarretaSemCF.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
+                        } else if (coluna5.includes('TRANSF. TODESCH')) {
+                            pedidosTransferencias.push(p);
+                            pedidosExcluidos.add(p.Num_Pedido);
                         }
                     });
                     
                     displayPedidosFuncionarios(resultadoFuncionariosDiv, pedidosFuncionarios);
+                    displayPedidosTransferencias(resultadoTransferenciasDiv, pedidosTransferencias);
                     
                     let dadosFiltrados = dadosParaProcessar.filter(p => !pedidosExcluidos.has(p.Num_Pedido));
                     
@@ -2823,6 +2840,45 @@
             div.innerHTML = accordionHtml;
         }
 
+        function displayPedidosTransferencias(div, pedidos) {
+            if (!div) return;
+            if (pedidos.length === 0) {
+                div.innerHTML = '<p class="text-muted">Nenhum pedido de transferência encontrado no arquivo processado.</p>';
+                return;
+            }
+            const totalKg = pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
+            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const accordionId = 'accordionTransferencias';
+            const collapseId = 'collapseTransferencias';
+            const headerId = 'headingTransferencias';
+            const printAreaId = 'transferencias-print-area';
+
+            let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="${headerId}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                            <strong>Pedidos de Transferência</strong> &nbsp;
+                            <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} Pedidos</span>
+                            <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
+                        </button>
+                    </h2>
+                    <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
+                        <div class="accordion-body" id="${printAreaId}">
+                            <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+                                <p class="text-muted small mb-0">Pedidos com a tag "TRANSF. TODESCH" na Coluna 5, separados automaticamente.</p>
+                                <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Transferência')">
+                                    <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
+                                </button>
+                            </div>
+                            ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Coluna5', 'BLOQ.'])}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            div.innerHTML = accordionHtml;
+        }
 
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
