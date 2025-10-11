@@ -287,7 +287,7 @@
                                  <li class="nav-item" role="presentation"><button class="nav-link active" id="fiorino-tab" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane" type="button" role="tab"><i class="bi bi-box-seam-fill me-2"></i>Fiorino (Varejo)</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" id="van-tab" data-bs-toggle="tab" data-bs-target="#van-tab-pane" type="button" role="tab"><i class="bi bi-truck-front-fill me-2"></i>Van (Varejo)</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4 (Varejo)</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" id="cf-tab" data-bs-toggle="tab" data-bs-target="#cf-tab-pane" type="button" role="tab"><i class="bi bi-diagram-3-fill me-2"></i>Cargas por CF</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="cf-tab" data-bs-toggle="tab" data-bs-target="#cf-tab-pane" type="button" role="tab"><i class="bi bi-truck me-2"></i>CARGAS TRUCK E CARRETA</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" id="funcionarios-tab" data-bs-toggle="tab" data-bs-target="#funcionarios-tab-pane" type="button" role="tab"><i class="bi bi-people-fill me-2"></i>Funcionários</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" id="transferencias-tab" data-bs-toggle="tab" data-bs-target="#transferencias-tab-pane" type="button" role="tab"><i class="bi bi-arrow-left-right me-2"></i>Transferências</button></li>
                              </ul>
@@ -317,8 +317,8 @@
                                     <hr class="no-print"><div id="resultado-34-geral" class="mt-3"></div>
                                 </div>
                                 <div class="tab-pane fade p-3" id="cf-tab-pane" role="tabpanel">
-                                    <p class="card-subtitle text-body-secondary small mb-3">Selecione um grupo de CF para visualizar e imprimir os pedidos que o compõem.</p>
-                                    <div id="resultado-cf-accordion-container"><p class="text-muted">Processe um arquivo para ver os grupos de CF disponíveis.</p></div>
+                                    <p class="card-subtitle text-body-secondary small mb-3">Pedidos agrupados por CF, Condor ou Carreta sem CF.</p>
+                                    <div id="resultado-cf-accordion-container"><p class="text-muted">Processe um arquivo para ver os grupos de cargas.</p></div>
                                 </div>
                                 <div class="tab-pane fade p-3" id="funcionarios-tab-pane" role="tabpanel">
                                     <div id="resultado-funcionarios-tab">
@@ -588,6 +588,7 @@
         let pedidosFuncionarios = [];
         let pedidosCarretaSemCF = [];
         let pedidosTransferencias = [];
+        let pedidosCondorTruck = [];
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
         let activeLoads = {};
@@ -874,7 +875,7 @@
              if (!pedidoEncontrado) {
                 for (const cf in gruposPorCFGlobais) {
                     pedidoEncontrado = gruposPorCFGlobais[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
-                    if (pedidoEncontrado) { local = `Cargas por CF (CF: ${cf})`; accordionId = 'accordionCargasPorCF'; break; }
+                    if (pedidoEncontrado) { local = `Cargas Truck e Carreta (${cf})`; accordionId = 'accordionCargasPorCF'; break; }
                 }
             }
             if (!pedidoEncontrado) {
@@ -886,10 +887,6 @@
                 if (pedidoEncontrado) { local = 'Pedidos de Funcionários'; accordionId = 'accordionFuncionarios';}
             }
              if (!pedidoEncontrado) {
-                pedidoEncontrado = pedidosCarretaSemCF.find(p => String(p.Num_Pedido) === searchInput);
-                if (pedidoEncontrado) { local = 'Pedidos de Carreta/Truck sem CF'; accordionId = 'accordionCargasPorCF'; }
-            }
-            if (!pedidoEncontrado) {
                 pedidoEncontrado = pedidosTransferencias.find(p => String(p.Num_Pedido) === searchInput);
                 if (pedidoEncontrado) { local = 'Pedidos de Transferência'; accordionId = 'accordionTransferencias'; }
             }
@@ -916,7 +913,7 @@
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
                                      <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
-                } else if (accordionId || local.startsWith('Carga') || local === 'Pedidos de Carreta/Truck sem CF') { 
+                } else if (accordionId || local.startsWith('Carga')) { 
                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
@@ -1012,6 +1009,7 @@
             pedidosFuncionarios = [];
             pedidosCarretaSemCF = [];
             pedidosTransferencias = [];
+            pedidosCondorTruck = [];
             pedidosManualmenteBloqueadosAtuais = [];
             pedidosPrioritarios = [];
             tocoPedidoIds.clear();
@@ -1112,6 +1110,9 @@
                         } else if (coluna5.includes('TRANSF. TODESCH')) {
                             pedidosTransferencias.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
+                        } else if (coluna5.includes('CONDOR(TRUCK)') || coluna5.includes('CONDOR TOD TRUC')) {
+                            pedidosCondorTruck.push(p);
+                            pedidosExcluidos.add(p.Num_Pedido);
                         }
                     });
                     
@@ -1203,7 +1204,7 @@
                     });
                     
                     gruposPorCFGlobais = gruposPorCF;
-                    displayCargasCfAccordion(resultadoCfAccordionDiv, gruposPorCFGlobais, pedidosCarretaSemCF);
+                    displayCargasCfAccordion(resultadoCfAccordionDiv, gruposPorCFGlobais, pedidosCarretaSemCF, pedidosCondorTruck);
                     displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
 
                     pedidosGeraisAtuais = [...pedidosParaProcessamentoVarejo]; 
@@ -2156,7 +2157,8 @@
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
                 const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
-                if (clienteA < clienteB) return -1; if (clienteA > clienteB) return 1;
+                const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
+                if (clienteCompare !== 0) return clienteCompare;
                 return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
             });
 
@@ -2232,9 +2234,10 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        function displayCargasCfAccordion(div, grupos, pedidosCarreta) {
+        function displayCargasCfAccordion(div, grupos, pedidosCarreta, pedidosCondor) {
             let todosOsGrupos = {...grupos};
             const chaveCarreta = "Pedidos de Carreta/Truck sem CF";
+            const chaveCondor = "Pedidos Condor (Truck)";
 
             if (pedidosCarreta && pedidosCarreta.length > 0) {
                 todosOsGrupos[chaveCarreta] = {
@@ -2244,9 +2247,18 @@
                 };
                 gruposPorCFGlobais[chaveCarreta] = todosOsGrupos[chaveCarreta];
             }
+            if (pedidosCondor && pedidosCondor.length > 0) {
+                todosOsGrupos[chaveCondor] = {
+                    pedidos: pedidosCondor,
+                    totalKg: pedidosCondor.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
+                    totalCubagem: pedidosCondor.reduce((sum, p) => sum + p.Cubagem, 0)
+                };
+                gruposPorCFGlobais[chaveCondor] = todosOsGrupos[chaveCondor];
+            }
+
 
             if (Object.keys(todosOsGrupos).length === 0) {
-                div.innerHTML = '<p class="text-muted">Nenhum grupo de CF encontrado para visualização.</p>';
+                div.innerHTML = '<p class="text-muted">Nenhum grupo de carga encontrado para visualização.</p>';
                 return;
             }
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasPorCF">';
@@ -2254,6 +2266,8 @@
             const sortedKeys = Object.keys(todosOsGrupos).sort((a,b) => {
                  if (a === chaveCarreta) return -1;
                  if (b === chaveCarreta) return 1;
+                 if (a === chaveCondor) return -1;
+                 if (b === chaveCondor) return 1;
                  return a.localeCompare(b, undefined, {numeric: true})
             });
 
@@ -2261,10 +2275,8 @@
                 const grupo = todosOsGrupos[cf];
                 
                 grupo.pedidos.sort((a, b) => {
-                    const clienteA = String(a.Cliente);
-                    const clienteB = String(b.Cliente);
-                    const pedidoA = String(a.Num_Pedido);
-                    const pedidoB = String(b.Num_Pedido);
+                    const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
+                    const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
                     const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
                     if (clienteCompare !== 0) return clienteCompare;
                     return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
@@ -2273,7 +2285,7 @@
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].join(', ');
-                const collapseId = `collapseCF-Mesa-${String(cf).replace(/\s|\//g, '')}`;
+                const collapseId = `collapseCF-Mesa-${String(cf).replace(/\s|\(|\)|\//g, '')}`;
 
                 accordionHtml += `
                     <div class="accordion-item">
@@ -2301,7 +2313,7 @@
 
         function imprimirCargaCFIndividual(cf) {
             if (!gruposPorCFGlobais || !gruposPorCFGlobais[cf]) {
-                alert(`Nenhuma carga encontrada para o CF: ${cf}`);
+                alert(`Nenhuma carga encontrada para: ${cf}`);
                 return;
             }
             const grupo = gruposPorCFGlobais[cf];
@@ -2453,7 +2465,7 @@
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Carga Especial<span class="badge bg-info rounded-pill">${nf(stats.pedidosEspeciais)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas Toco (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosToco)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas por CF (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosCF)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas Truck/Carreta (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosCF)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas 3/4 Auto (pedidos)<span class="badge bg-warning rounded-pill">${nf(stats.pedidos34Auto)}</span></li>
                             </ul>
                         </div>
