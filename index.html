@@ -275,8 +275,6 @@
             <div id="resultado-venda-antecipada" class="mb-4"></div>
             <div id="resultado-carga-especial" class="mb-4"></div>
             <div id="card-resumo-geral-container" class="mb-4" style="display: none;"></div>
-            
-            <div id="resultado-funcionarios-container" class="mb-4"></div>
 
             <div class="row" id="workspace-card">
                 <div class="col-lg-8 mb-4">
@@ -290,6 +288,7 @@
                                  <li class="nav-item" role="presentation"><button class="nav-link" id="van-tab" data-bs-toggle="tab" data-bs-target="#van-tab-pane" type="button" role="tab"><i class="bi bi-truck-front-fill me-2"></i>Van (Varejo)</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4 (Varejo)</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" id="cf-tab" data-bs-toggle="tab" data-bs-target="#cf-tab-pane" type="button" role="tab"><i class="bi bi-diagram-3-fill me-2"></i>Cargas por CF</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="funcionarios-tab" data-bs-toggle="tab" data-bs-target="#funcionarios-tab-pane" type="button" role="tab"><i class="bi bi-people-fill me-2"></i>Funcionários</button></li>
                              </ul>
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active p-3 workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
@@ -319,6 +318,11 @@
                                 <div class="tab-pane fade p-3" id="cf-tab-pane" role="tabpanel">
                                     <p class="card-subtitle text-body-secondary small mb-3">Selecione um grupo de CF para visualizar e imprimir os pedidos que o compõem.</p>
                                     <div id="resultado-cf-accordion-container"><p class="text-muted">Processe um arquivo para ver os grupos de CF disponíveis.</p></div>
+                                </div>
+                                <div class="tab-pane fade p-3" id="funcionarios-tab-pane" role="tabpanel">
+                                    <div id="resultado-funcionarios-tab">
+                                         <p class="text-muted">Processe um arquivo para ver os pedidos de funcionários.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1016,7 +1020,7 @@
                 'resultado-venda-antecipada', 'resultado-carga-especial', 'resultado-bloqueados', 'resultado-geral', 
                 'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral',
                 'resultado-rota1', 'resultado-toco', 
-                'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result', 'resultado-funcionarios-container'
+                'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result', 'resultado-funcionarios-tab'
             ];
             idsParaLimpar.forEach(id => {
                 const el = document.getElementById(id);
@@ -1053,7 +1057,7 @@
                 const resultadoRota1Div = document.getElementById('resultado-rota1');
                 const resultadoBloqueadosDiv = document.getElementById('resultado-bloqueados');
                 const resultadoCfAccordionDiv = document.getElementById('resultado-cf-accordion-container');
-                const resultadoFuncionariosDiv = document.getElementById('resultado-funcionarios-container');
+                const resultadoFuncionariosDiv = document.getElementById('resultado-funcionarios-tab');
                 
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
@@ -1076,7 +1080,7 @@
                     [
                         'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 
                         'resultado-toco', 'resultado-cf-accordion-container', 'resultado-cf-numerico', 
-                        'resultado-rota1', 'resultado-bloqueados', 'resultado-funcionarios-container'
+                        'resultado-rota1', 'resultado-bloqueados', 'resultado-funcionarios-tab'
                     ].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
@@ -2780,18 +2784,19 @@
         }
 
         function displayPedidosFuncionarios(div, pedidos) {
+            if (!div) return;
             if (pedidos.length === 0) {
-                div.innerHTML = ''; // Limpa se não houver pedidos
+                div.innerHTML = '<p class="text-muted">Nenhum pedido de funcionário encontrado no arquivo processado.</p>';
                 return;
             }
             const totalKg = pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
             const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             
             let html = `
-            <div class="card border-info mb-4">
+            <div class="card border-info">
                 <div class="card-header bg-info-subtle text-info-emphasis d-flex justify-content-between align-items-center">
                     <h2 class="card-title h5 mb-0"><i class="bi bi-people-fill me-2"></i>Pedidos de Funcionários</h2>
-                    <button class="btn btn-sm btn-outline-info no-print" onclick="imprimirGeneric('resultado-funcionarios-container', 'Pedidos de Funcionários')">
+                    <button class="btn btn-sm btn-outline-info no-print" onclick="imprimirGeneric('resultado-funcionarios-tab', 'Pedidos de Funcionários')">
                         <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
                     </button>
                 </div>
