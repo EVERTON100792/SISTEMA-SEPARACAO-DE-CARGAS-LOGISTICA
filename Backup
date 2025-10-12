@@ -287,7 +287,9 @@
                                  <li class="nav-item" role="presentation"><button class="nav-link active" id="fiorino-tab" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane" type="button" role="tab"><i class="bi bi-box-seam-fill me-2"></i>Fiorino (Varejo)</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" id="van-tab" data-bs-toggle="tab" data-bs-target="#van-tab-pane" type="button" role="tab"><i class="bi bi-truck-front-fill me-2"></i>Van (Varejo)</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" id="tres-quartos-tab" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane" type="button" role="tab"><i class="bi bi-truck-flatbed me-2"></i>3/4 (Varejo)</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" id="cf-tab" data-bs-toggle="tab" data-bs-target="#cf-tab-pane" type="button" role="tab"><i class="bi bi-diagram-3-fill me-2"></i>Cargas por CF</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="cf-tab" data-bs-toggle="tab" data-bs-target="#cf-tab-pane" type="button" role="tab"><i class="bi bi-truck me-2"></i>CARGAS TRUCK E CARRETA</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="funcionarios-tab" data-bs-toggle="tab" data-bs-target="#funcionarios-tab-pane" type="button" role="tab"><i class="bi bi-people-fill me-2"></i>Funcionários</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" id="transferencias-tab" data-bs-toggle="tab" data-bs-target="#transferencias-tab-pane" type="button" role="tab"><i class="bi bi-arrow-left-right me-2"></i>Transferências</button></li>
                              </ul>
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active p-3 workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
@@ -315,8 +317,18 @@
                                     <hr class="no-print"><div id="resultado-34-geral" class="mt-3"></div>
                                 </div>
                                 <div class="tab-pane fade p-3" id="cf-tab-pane" role="tabpanel">
-                                    <p class="card-subtitle text-body-secondary small mb-3">Selecione um grupo de CF para visualizar e imprimir os pedidos que o compõem.</p>
-                                    <div id="resultado-cf-accordion-container"><p class="text-muted">Processe um arquivo para ver os grupos de CF disponíveis.</p></div>
+                                    <p class="card-subtitle text-body-secondary small mb-3">Pedidos agrupados por CF, Condor ou Carreta sem CF.</p>
+                                    <div id="resultado-cf-accordion-container"><p class="text-muted">Processe um arquivo para ver os grupos de cargas.</p></div>
+                                </div>
+                                <div class="tab-pane fade p-3" id="funcionarios-tab-pane" role="tabpanel">
+                                    <div id="resultado-funcionarios-tab">
+                                         <p class="text-muted">Processe um arquivo para ver os pedidos de funcionários.</p>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade p-3" id="transferencias-tab-pane" role="tabpanel">
+                                    <div id="resultado-transferencias-tab">
+                                         <p class="text-muted">Processe um arquivo para ver os pedidos de transferência.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -453,44 +465,44 @@
                     
                     <div class="row mt-4">
                          <div class="col-lg-6 mb-4 mb-lg-0">
-                              <div class="card h-100">
-                                  <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-scissors me-2"></i>Pedidos Sem Corte</h2></div>
-                                  <div class="card-body d-flex flex-column">
-                                      <label for="semCorteInput" class="form-label">Pedidos a marcar como "Sem Corte":</label>
-                                      <div class="input-group mb-3">
-                                          <textarea class="form-control" id="semCorteInput" rows="3" placeholder="Cole os números aqui..."></textarea>
-                                          <button class="btn btn-outline-warning" type="button" onclick="marcarPedidosSemCorte()">Marcar</button>
-                                      </div>
-                                      <label class="form-label mt-2">Pedidos Marcados:</label>
-                                      <div id="lista-pedidos-sem-corte" class="p-2 border rounded border-secondary flex-grow-1" style="background-color: var(--dark-bg); min-height: 100px;"><span class="text-muted">Nenhum.</span></div>
-                                  </div>
-                              </div>
+                             <div class="card h-100">
+                                 <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-scissors me-2"></i>Pedidos Sem Corte</h2></div>
+                                 <div class="card-body d-flex flex-column">
+                                     <label for="semCorteInput" class="form-label">Pedidos a marcar como "Sem Corte":</label>
+                                     <div class="input-group mb-3">
+                                         <textarea class="form-control" id="semCorteInput" rows="3" placeholder="Cole os números aqui..."></textarea>
+                                         <button class="btn btn-outline-warning" type="button" onclick="marcarPedidosSemCorte()">Marcar</button>
+                                     </div>
+                                     <label class="form-label mt-2">Pedidos Marcados:</label>
+                                     <div id="lista-pedidos-sem-corte" class="p-2 border rounded border-secondary flex-grow-1" style="background-color: var(--dark-bg); min-height: 100px;"><span class="text-muted">Nenhum.</span></div>
+                                 </div>
+                             </div>
                          </div>
                          <div class="col-lg-6 mb-4 mb-lg-0">
-                              <div class="card h-100">
-                                  <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>Carga Especial</h2></div>
-                                   <div class="card-body d-flex flex-column">
-                                       <div class="flex-grow-1">
-                                           <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
-                                           <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
-                                       </div>
-                                       <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaPredefinida('pedidosEspeciaisInput', 'resultado-carga-especial', pedidosEspeciaisProcessados, 'Especial')"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
-                                   </div>
-                              </div>
+                             <div class="card h-100">
+                                 <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>Carga Especial</h2></div>
+                                 <div class="card-body d-flex flex-column">
+                                     <div class="flex-grow-1">
+                                         <label for="pedidosEspeciaisInput" class="form-label">Números dos Pedidos (um por linha):</label>
+                                         <textarea class="form-control" id="pedidosEspeciaisInput" rows="5" placeholder="Cole os números aqui..."></textarea>
+                                     </div>
+                                     <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaPredefinida('pedidosEspeciaisInput', 'resultado-carga-especial', pedidosEspeciaisProcessados, 'Especial')"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
+                                 </div>
+                             </div>
                          </div>
                     </div>
                      <div class="row mt-4">
                          <div class="col-lg-6">
-                              <div class="card h-100">
-                                   <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>Venda Antecipada</h2></div>
-                                   <div class="card-body d-flex flex-column">
-                                       <div class="flex-grow-1">
-                                           <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
-                                           <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui..."></textarea>
-                                       </div>
-                                       <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaPredefinida('vendaAntecipadaInput', 'resultado-venda-antecipada', pedidosVendaAntecipadaProcessados, 'Venda Antecipada')"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
-                                   </div>
-                              </div>
+                             <div class="card h-100">
+                                 <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>Venda Antecipada</h2></div>
+                                 <div class="card-body d-flex flex-column">
+                                     <div class="flex-grow-1">
+                                         <label for="vendaAntecipadaInput" class="form-label">Pedidos de Venda Antecipada:</label>
+                                         <textarea class="form-control" id="vendaAntecipadaInput" rows="5" placeholder="Cole os números aqui..."></textarea>
+                                     </div>
+                                     <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaPredefinida('vendaAntecipadaInput', 'resultado-venda-antecipada', pedidosVendaAntecipadaProcessados, 'Venda Antecipada')"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
+                                 </div>
+                             </div>
                          </div>
                     </div>
                 </div>
@@ -573,6 +585,10 @@
         let pedidosSemCorte = new Set();
         let pedidosVendaAntecipadaProcessados = new Set();
         let rota1SemCarga = [];
+        let pedidosFuncionarios = [];
+        let pedidosCarretaSemCF = [];
+        let pedidosTransferencias = [];
+        let pedidosCondorTruck = [];
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
         let activeLoads = {};
@@ -859,7 +875,7 @@
              if (!pedidoEncontrado) {
                 for (const cf in gruposPorCFGlobais) {
                     pedidoEncontrado = gruposPorCFGlobais[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
-                    if (pedidoEncontrado) { local = `Cargas por CF (CF: ${cf})`; accordionId = 'accordionCargasPorCF'; break; }
+                    if (pedidoEncontrado) { local = `Cargas Truck e Carreta (${cf})`; accordionId = 'accordionCargasPorCF'; break; }
                 }
             }
             if (!pedidoEncontrado) {
@@ -867,8 +883,16 @@
                 if (pedidoEncontrado) { local = 'Pedidos da Rota 1 para Alteração'; }
             }
              if (!pedidoEncontrado) {
-                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
-                  if (originalPedido) {
+                pedidoEncontrado = pedidosFuncionarios.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Pedidos de Funcionários'; accordionId = 'accordionFuncionarios';}
+            }
+             if (!pedidoEncontrado) {
+                pedidoEncontrado = pedidosTransferencias.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Pedidos de Transferência'; accordionId = 'accordionTransferencias'; }
+            }
+             if (!pedidoEncontrado) {
+                 const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
+                 if (originalPedido) {
                          pedidoEncontrado = originalPedido;
                          if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
                              local = 'Bloqueado Manualmente por você.';
@@ -880,7 +904,7 @@
                          else {
                              local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
                          }
-                  }
+                 }
              }
 
             if (pedidoEncontrado) {
@@ -888,7 +912,7 @@
                 if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
@@ -982,6 +1006,10 @@
             gruposPorCFGlobais = {};
             pedidosComCFNumericoIsolado = [];
             rota1SemCarga = [];
+            pedidosFuncionarios = [];
+            pedidosCarretaSemCF = [];
+            pedidosTransferencias = [];
+            pedidosCondorTruck = [];
             pedidosManualmenteBloqueadosAtuais = [];
             pedidosPrioritarios = [];
             tocoPedidoIds.clear();
@@ -1002,11 +1030,12 @@
                 'resultado-venda-antecipada', 'resultado-carga-especial', 'resultado-bloqueados', 'resultado-geral', 
                 'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral',
                 'resultado-rota1', 'resultado-toco', 
-                'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result'
+                'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result', 
+                'resultado-funcionarios-tab', 'resultado-transferencias-tab'
             ];
             idsParaLimpar.forEach(id => {
                 const el = document.getElementById(id);
-                if(el) el.innerHTML = '';
+                if(el) el.innerHTML = `<p class="text-muted">Processe um arquivo para ver os resultados.</p>`;
             });
 
             document.getElementById('card-resumo-geral-container').innerHTML = '';
@@ -1039,6 +1068,8 @@
                 const resultadoRota1Div = document.getElementById('resultado-rota1');
                 const resultadoBloqueadosDiv = document.getElementById('resultado-bloqueados');
                 const resultadoCfAccordionDiv = document.getElementById('resultado-cf-accordion-container');
+                const resultadoFuncionariosDiv = document.getElementById('resultado-funcionarios-tab');
+                const resultadoTransferenciasDiv = document.getElementById('resultado-transferencias-tab');
                 
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
@@ -1061,14 +1092,37 @@
                     [
                         'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 
                         'resultado-toco', 'resultado-cf-accordion-container', 'resultado-cf-numerico', 
-                        'resultado-rota1', 'resultado-bloqueados'
+                        'resultado-rota1', 'resultado-bloqueados', 'resultado-funcionarios-tab', 'resultado-transferencias-tab'
                     ].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
                     });
                     
+                    const pedidosExcluidos = new Set();
+                    dadosParaProcessar.forEach(p => {
+                        const coluna5 = String(p.Coluna5 || '').toUpperCase();
+                        if(coluna5.includes('TBL FUNCIONARIO')) {
+                            pedidosFuncionarios.push(p);
+                            pedidosExcluidos.add(p.Num_Pedido);
+                        } else if (coluna5.includes('TBL ESP CARRETA') && !isNumeric(p.CF)) {
+                            pedidosCarretaSemCF.push(p);
+                            pedidosExcluidos.add(p.Num_Pedido);
+                        } else if (coluna5.includes('TRANSF. TODESCH')) {
+                            pedidosTransferencias.push(p);
+                            pedidosExcluidos.add(p.Num_Pedido);
+                        } else if (coluna5.includes('CONDOR (TRUCK)') || coluna5.includes('CONDOR TOD TRUC')) {
+                            pedidosCondorTruck.push(p);
+                            pedidosExcluidos.add(p.Num_Pedido);
+                        }
+                    });
+                    
+                    displayPedidosFuncionarios(resultadoFuncionariosDiv, pedidosFuncionarios);
+                    displayPedidosTransferencias(resultadoTransferenciasDiv, pedidosTransferencias);
+                    
+                    let dadosFiltrados = dadosParaProcessar.filter(p => !pedidosExcluidos.has(p.Num_Pedido));
+                    
                     let pedidosDisponiveis = [];
-                    dadosParaProcessar.filter(p => p.Num_Pedido).forEach(p => {
+                    dadosFiltrados.filter(p => p.Num_Pedido).forEach(p => {
                         if (pedidosBloqueados.has(String(p.Num_Pedido))) {
                             pedidosManualmenteBloqueadosAtuais.push(p);
                         } else {
@@ -1150,7 +1204,7 @@
                     });
                     
                     gruposPorCFGlobais = gruposPorCF;
-                    displayCargasCfAccordion(resultadoCfAccordionDiv, gruposPorCFGlobais);
+                    displayCargasCfAccordion(resultadoCfAccordionDiv, gruposPorCFGlobais, pedidosCarretaSemCF, pedidosCondorTruck);
                     displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
 
                     pedidosGeraisAtuais = [...pedidosParaProcessamentoVarejo]; 
@@ -1344,7 +1398,7 @@
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -1370,6 +1424,14 @@
             div.innerHTML = html;
         }
 
+        function createPrintWindow(title) {
+            const printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>' + title + '</title>');
+            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
+            printWindow.document.write(`<style>body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; } .no-print { display: none !important; } .bg-success { background-color: #198754 !important; color: white !important; } .bg-primary { background-color: #0d6efd !important; color: white !important; } .bg-warning { background-color: #ffc107 !important; color: black !important; } .bg-danger { background-color: #dc3545 !important; color: white !important; } .table-responsive { overflow: visible !important; } table, th, td { border: 1px solid #dee2e6 !important; } .table-primary, .table-primary > th, .table-primary > td { --bs-table-bg: #cfe2ff !important; color: #000 !important; } h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }</style></head><body>`);
+            return printWindow;
+        }
+
         function imprimirGeneric(divId, title) {
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
@@ -1386,14 +1448,6 @@
                 printWindow.print(); 
                 printWindow.close(); 
             }, 500);
-        }
-
-        function createPrintWindow(title) {
-            const printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>' + title + '</title>');
-            printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
-            printWindow.document.write(`<style>body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; } .no-print { display: none !important; } .bg-success { background-color: #198754 !important; color: white !important; } .bg-primary { background-color: #0d6efd !important; color: white !important; } .bg-warning { background-color: #ffc107 !important; color: black !important; } .bg-danger { background-color: #dc3545 !important; color: white !important; } .table-responsive { overflow: visible !important; } table, th, td { border: 1px solid #dee2e6 !important; } .table-primary, .table-primary > th, .table-primary > td { --bs-table-bg: #cfe2ff !important; color: #000 !important; } h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }</style></head><body>`);
-            return printWindow;
         }
         
         function imprimirSobras(title) {
@@ -1944,13 +1998,13 @@
             const totalFinalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
             const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
             if (totalFinalLeftoverKg >= tresQuartosMin && leftoverGroups.length > 0) {
-                                 const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
-                                 if(vehicleForTertiary) {
-                                     const tresQuartosResult = runHeuristicOptimization(leftoverGroups, vehicleForTertiary);
-                                     tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
-                                     tertiaryLoads = tresQuartosResult.loads;
-                                     leftoverGroups = tresQuartosResult.leftovers;
-                                 }
+                                  const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
+                                  if(vehicleForTertiary) {
+                                      const tresQuartosResult = runHeuristicOptimization(leftoverGroups, vehicleForTertiary);
+                                      tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
+                                      tertiaryLoads = tresQuartosResult.loads;
+                                      leftoverGroups = tresQuartosResult.leftovers;
+                                  }
             }
 
             const allPotentialLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads ];
@@ -2103,8 +2157,9 @@
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
                 const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
-                if (clienteA < clienteB) return -1; if (clienteA > clienteB) return 1;
-                return pedidoA.localeCompare(pedidoB);
+                const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
+                if (clienteCompare !== 0) return clienteCompare;
+                return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
             });
 
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -2156,8 +2211,9 @@
                 pedidos.sort((a, b) => {
                     const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
                     const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
-                    if (clienteA < clienteB) return -1; if (clienteA > clienteB) return 1;
-                    return pedidoA.localeCompare(pedidoB);
+                    const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
+                    if (clienteCompare !== 0) return clienteCompare;
+                    return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
                 });
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const isOverloaded = grupo.totalKg > maxKg;
@@ -2178,30 +2234,74 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        function displayCargasCfAccordion(div, grupos) {
-            if (Object.keys(grupos).length === 0) {
-                div.innerHTML = '<p class="text-muted">Nenhum grupo de CF encontrado para visualização.</p>';
+        function displayCargasCfAccordion(div, grupos, pedidosCarreta, pedidosCondor) {
+            let todosOsGrupos = {...grupos};
+            const chaveCarreta = "Pedidos de Carreta/Truck sem CF";
+            const chaveCondor = "Pedidos Condor (Truck)";
+
+            if (pedidosCarreta && pedidosCarreta.length > 0) {
+                todosOsGrupos[chaveCarreta] = {
+                    pedidos: pedidosCarreta,
+                    totalKg: pedidosCarreta.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
+                    totalCubagem: pedidosCarreta.reduce((sum, p) => sum + p.Cubagem, 0)
+                };
+                gruposPorCFGlobais[chaveCarreta] = todosOsGrupos[chaveCarreta];
+            }
+            if (pedidosCondor && pedidosCondor.length > 0) {
+                todosOsGrupos[chaveCondor] = {
+                    pedidos: pedidosCondor,
+                    totalKg: pedidosCondor.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
+                    totalCubagem: pedidosCondor.reduce((sum, p) => sum + p.Cubagem, 0)
+                };
+                gruposPorCFGlobais[chaveCondor] = todosOsGrupos[chaveCondor];
+            }
+
+            if (Object.keys(todosOsGrupos).length === 0) {
+                div.innerHTML = '<p class="text-muted">Nenhum grupo de carga encontrado para visualização.</p>';
                 return;
             }
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasPorCF">';
-            Object.keys(grupos).sort((a,b) => a.localeCompare(b, undefined, {numeric: true})).forEach((cf, index) => {
-                const grupo = grupos[cf];
+            
+            const specialKeysOrder = [chaveCondor, chaveCarreta];
+            const sortedKeys = Object.keys(todosOsGrupos).sort((a,b) => {
+                const aIsSpecial = specialKeysOrder.includes(a);
+                const bIsSpecial = specialKeysOrder.includes(b);
+
+                if (aIsSpecial && bIsSpecial) {
+                    return specialKeysOrder.indexOf(a) - specialKeysOrder.indexOf(b);
+                }
+                if (aIsSpecial) return -1;
+                if (bIsSpecial) return 1;
+                return a.localeCompare(b, undefined, {numeric: true});
+            });
+
+            sortedKeys.forEach((cf, index) => {
+                const grupo = todosOsGrupos[cf];
+                
+                grupo.pedidos.sort((a, b) => {
+                    const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
+                    const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
+                    const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
+                    if (clienteCompare !== 0) return clienteCompare;
+                    return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
+                });
+
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].join(', ');
-                const collapseId = `collapseCF-Mesa-${cf.replace(/\s/g, '')}`;
+                const collapseId = `collapseCF-Mesa-${String(cf).replace(/\s|\(|\)|\//g, '')}`;
 
                 accordionHtml += `
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingCargaCFMesa${index}">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
-                                <strong>CF: ${cf}</strong> &nbsp;
-                                <span class="badge bg-secondary ms-2" title="Rotas">${rotas}</span>
+                                <strong>${isNumeric(cf) ? "CF: " : ""}${cf}</strong> &nbsp;
+                                <span class="badge bg-secondary ms-2" title="Rotas">${rotas || 'N/A'}</span>
                                 <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³</span>
                             </button>
                         </h2>
-                        <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCargasCF">
+                        <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCargasPorCF">
                             <div class="accordion-body">
                                 <button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirCargaCFIndividual('${cf}')">
                                     <i class="bi bi-printer-fill me-1"></i>Imprimir esta Carga
@@ -2217,14 +2317,14 @@
 
         function imprimirCargaCFIndividual(cf) {
             if (!gruposPorCFGlobais || !gruposPorCFGlobais[cf]) {
-                alert(`Nenhuma carga encontrada para o CF: ${cf}`);
+                alert(`Nenhuma carga encontrada para: ${cf}`);
                 return;
             }
             const grupo = gruposPorCFGlobais[cf];
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const printWindow = createPrintWindow('Imprimir Carga CF: ' + cf);
-            let contentToPrint = `<h3>Carga CF: ${cf} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³</h3>` + createTable(grupo.pedidos);
+            const printWindow = createPrintWindow(`Imprimir Carga: ${cf}`);
+            let contentToPrint = `<h3>Carga: ${cf} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³</h3>` + createTable(grupo.pedidos);
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
             printWindow.focus();
@@ -2369,7 +2469,7 @@
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Carga Especial<span class="badge bg-info rounded-pill">${nf(stats.pedidosEspeciais)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Bloqueados Manualmente<span class="badge bg-danger rounded-pill">${nf(stats.pedidosBloqueados)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas Toco (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosToco)}</span></li>
-                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas por CF (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosCF)}</span></li>
+                                <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas Truck/Carreta (pedidos)<span class="badge bg-secondary rounded-pill">${nf(stats.pedidosCF)}</span></li>
                                 <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">Cargas 3/4 Auto (pedidos)<span class="badge bg-warning rounded-pill">${nf(stats.pedidos34Auto)}</span></li>
                             </ul>
                         </div>
@@ -2727,6 +2827,105 @@
              const startBtn = activeTabPane ? activeTabPane.querySelector('#start-manual-load-btn') : null;
              if(startBtn) startBtn.style.display = 'inline-block';
         }
+
+        function displayPedidosFuncionarios(div, pedidos) {
+            if (!div) return;
+            if (pedidos.length === 0) {
+                div.innerHTML = '<p class="text-muted">Nenhum pedido de funcionário encontrado no arquivo processado.</p>';
+                return;
+            }
+
+            pedidos.sort((a, b) => {
+                const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
+                const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
+                const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
+                if (clienteCompare !== 0) return clienteCompare;
+                return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
+            });
+
+            const totalKg = pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
+            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
+            const accordionId = 'accordionFuncionarios';
+            const collapseId = 'collapseFuncionarios';
+            const headerId = 'headingFuncionarios';
+            const printAreaId = 'funcionarios-print-area';
+
+            let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="${headerId}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                            <strong>Pedidos de Funcionários</strong> &nbsp;
+                            <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} Pedidos</span>
+                            <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
+                        </button>
+                    </h2>
+                    <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
+                        <div class="accordion-body" id="${printAreaId}">
+                            <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+                                <p class="text-muted small mb-0">Pedidos com a tag "TBL FUNCIONARIO" na Coluna 5, separados automaticamente.</p>
+                                <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Funcionários')">
+                                    <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
+                                </button>
+                            </div>
+                            ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Coluna5', 'BLOQ.'])}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            div.innerHTML = accordionHtml;
+        }
+
+        function displayPedidosTransferencias(div, pedidos) {
+            if (!div) return;
+            if (pedidos.length === 0) {
+                div.innerHTML = '<p class="text-muted">Nenhum pedido de transferência encontrado no arquivo processado.</p>';
+                return;
+            }
+
+            pedidos.sort((a, b) => {
+                const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
+                const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
+                const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
+                if (clienteCompare !== 0) return clienteCompare;
+                return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
+            });
+
+            const totalKg = pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
+            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const accordionId = 'accordionTransferencias';
+            const collapseId = 'collapseTransferencias';
+            const headerId = 'headingTransferencias';
+            const printAreaId = 'transferencias-print-area';
+
+            let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="${headerId}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                            <strong>Pedidos de Transferência</strong> &nbsp;
+                            <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} Pedidos</span>
+                            <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
+                        </button>
+                    </h2>
+                    <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
+                        <div class="accordion-body" id="${printAreaId}">
+                            <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+                                <p class="text-muted small mb-0">Pedidos com a tag "TRANSF. TODESCH" na Coluna 5, separados automaticamente.</p>
+                                <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Transferência')">
+                                    <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
+                                </button>
+                            </div>
+                            ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Coluna5', 'BLOQ.'])}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            div.innerHTML = accordionHtml;
+        }
+
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
