@@ -16,83 +16,63 @@
     
     <style>
         :root {
-            --dark-bg: #101114;
-            --dark-surface: rgba(33, 35, 40, 0.75);
-            --dark-surface-opaque: #212328;
-            --dark-surface-secondary: rgba(44, 47, 55, 0.85);
+            --dark-bg: #181a1e;
+            --dark-surface: #212328;
+            --dark-surface-secondary: #2c2f37;
             --dark-border: #343841;
-            --dark-primary: #5271ff;
-            --dark-primary-hover: #6a85ff;
-            --dark-primary-glow: rgba(82, 113, 255, 0.3);
-            --dark-text-primary: #f0f2f5;
-            --dark-text-secondary: #a8b3c2;
-            --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            --box-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
+            --dark-primary: #4a7cf2;
+            --dark-primary-hover: #6390f5;
+            --dark-primary-glow: rgba(74, 124, 242, 0.25);
+            --dark-text-primary: #e9ecef;
+            --dark-text-secondary: #aab0b9;
+            --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            --box-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.3);
         }
 
-        /* --- Fundo animado --- */
-        @keyframes move-background {
-            from { transform: translate3d(0px, 0px, 0px); }
-            to { transform: translate3d(1000px, 1000px, 0px); }
-        }
-
+        /* --- Melhorias Gerais --- */
         body {
             background-color: var(--dark-bg);
+            background-image: linear-gradient(180deg, var(--dark-bg) 0%, #111 100%);
             font-family: 'Inter', sans-serif;
             color: var(--dark-text-primary);
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
-            position: relative;
         }
 
-        body::before {
-            content: '';
-            position: fixed;
-            width: 3000px;
-            height: 3000px;
-            top: -1000px;
-            left: -1000px;
-            z-index: -1;
-            background-image: radial-gradient(var(--dark-primary-glow) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: move-background 200s linear infinite;
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--dark-bg); }
+        ::-webkit-scrollbar-track {
+            background: var(--dark-bg);
+        }
         ::-webkit-scrollbar-thumb {
             background-color: var(--dark-border);
             border-radius: 10px;
             border: 2px solid var(--dark-bg);
         }
-        ::-webkit-scrollbar-thumb:hover { background-color: #555; }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #555;
+        }
 
-        h1, h2, h3, h4, h5 { font-weight: 600; }
+        h1, h2, h3, h4, h5 {
+            font-weight: 600;
+        }
 
-        /* --- Animações de Entrada --- */
+        /* --- Animação --- */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .stagger-in > * {
-            animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-        }
-        .stagger-in > *:nth-child(1) { animation-delay: 0.1s; }
-        .stagger-in > *:nth-child(2) { animation-delay: 0.2s; }
-        .stagger-in > *:nth-child(3) { animation-delay: 0.3s; }
-        .stagger-in > *:nth-child(4) { animation-delay: 0.4s; }
-        .stagger-in > *:nth-child(5) { animation-delay: 0.5s; }
 
         /* --- Layout Principal --- */
         #main-content {
             margin-left: 290px;
             width: calc(100% - 290px);
-            animation: fadeIn 0.6s ease-out;
+            animation: fadeIn 0.5s ease-out;
         }
 
-        /* --- Sidebar (Efeito Glassmorphism) --- */
+        /* --- Sidebar --- */
         #sidebar {
             width: 290px;
             min-height: 100vh;
@@ -101,10 +81,12 @@
             left: 0;
             z-index: 100;
             background-color: var(--dark-surface);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border-right: 1px solid var(--dark-border);
             transition: all 0.3s ease;
+        }
+
+        #sidebar .sidebar-header {
+            padding: 1.5rem 1.25rem;
         }
 
         #sidebar .nav-link {
@@ -114,71 +96,60 @@
             padding: 0.75rem 1.25rem;
             border-radius: 0.5rem;
             position: relative;
-        }
-        #sidebar .nav-link::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            height: 0;
-            width: 4px;
-            background-color: var(--dark-primary);
-            border-radius: 0 4px 4px 0;
-            transition: height 0.2s ease;
-        }
-        #sidebar .nav-link:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-            color: var(--dark-text-primary);
-        }
-        #sidebar .nav-link.active {
-            background-color: var(--dark-primary-glow);
-            color: white;
-        }
-        #sidebar .nav-link.active::before {
-            height: 60%;
+            border: 1px solid transparent;
         }
 
-        /* --- Estilo dos Cards (com borda gradiente) --- */
+        #sidebar .nav-link:hover {
+            background-color: var(--dark-surface-secondary);
+            color: var(--dark-text-primary);
+        }
+        
+        #sidebar .nav-link.active {
+            background-color: var(--dark-primary);
+            color: white;
+            box-shadow: 0 4px 15px var(--dark-primary-glow);
+        }
+
+        #sidebar .nav-link .bi {
+             transition: all 0.2s ease-in-out;
+        }
+
+        #sidebar .nav-link:hover .bi, #sidebar .nav-link.active .bi {
+            color: white;
+        }
+
+        /* --- Estilo dos Cards --- */
         .card {
-            background-color: var(--dark-surface-opaque);
+            background-color: var(--dark-surface);
             border: 1px solid var(--dark-border);
-            border-radius: 1rem;
+            border-radius: 0.8rem;
             box-shadow: var(--box-shadow);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
             overflow: hidden;
         }
-        .card::before {
-            content: "";
-            position: absolute;
-            top: 0; right: 0; bottom: 0; left: 0;
-            z-index: -1;
-            margin: -1px;
-            border-radius: inherit;
-            background: conic-gradient(from 180deg at 50% 50%, #6a85ff 0deg, #a8b3c2 180deg, #6a85ff 360deg);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+
         .card:hover {
-            transform: translateY(-8px);
+            transform: translateY(-5px);
             box-shadow: var(--box-shadow-hover);
         }
-        .card:hover::before {
-            opacity: 1;
-        }
+
         .card-header {
             background-color: var(--dark-surface-secondary);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
             border-bottom: 1px solid var(--dark-border);
             font-weight: 600;
             padding: 1rem 1.25rem;
         }
 
         /* --- Botões e Controles --- */
-        .btn { font-weight: 500; transition: all 0.2s ease-in-out; border-radius: 0.5rem; }
-        .btn:hover { transform: translateY(-2px); }
+        .btn {
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+            border-radius: 0.5rem;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
         .btn-primary { 
             background-color: var(--dark-primary); 
             border-color: var(--dark-primary); 
@@ -186,59 +157,54 @@
         .btn-primary:hover { 
             background-color: var(--dark-primary-hover); 
             border-color: var(--dark-primary-hover);
-            box-shadow: 0 6px 20px var(--dark-primary-glow);
+            box-shadow: 0 4px 15px var(--dark-primary-glow);
         }
 
         /* --- Componentes --- */
         .modal-content {
             background-color: var(--dark-surface);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 1rem;
+            border-radius: 0.8rem;
             border: 1px solid var(--dark-border);
-            box-shadow: 0 16px 70px rgba(0,0,0,0.5);
         }
         
         .accordion-item {
             background-color: transparent;
             border: 1px solid var(--dark-border);
-            border-radius: .5rem;
-            overflow: hidden;
         }
         .accordion-button {
-            background-color: var(--dark-surface-opaque);
+            background-color: var(--dark-surface-secondary);
             color: var(--dark-text-primary);
             font-weight: 500;
         }
         .accordion-button:not(.collapsed) {
-            background-image: linear-gradient(to right, var(--dark-primary), var(--dark-primary-hover));
+            background-color: var(--dark-primary);
             color: white;
             box-shadow: inset 0 -1px 0 rgba(0,0,0,.25);
         }
-        .accordion-button:focus { box-shadow: 0 0 0 .25rem var(--dark-primary-glow); }
-        .accordion-body { background-color: var(--dark-bg); }
+        .accordion-button:focus {
+            box-shadow: 0 0 0 .25rem var(--dark-primary-glow);
+        }
+        .accordion-body { background-color: var(--dark-surface); }
         
         .table {
             --bs-table-bg: transparent;
-            --bs-table-striped-bg: rgba(255, 255, 255, 0.03);
-            --bs-table-hover-bg: var(--dark-primary-glow);
+            --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
+            --bs-table-hover-bg: rgba(74, 124, 242, 0.1);
             --bs-table-border-color: var(--dark-border);
             font-size: 0.9rem;
         }
         thead th {
-            background-color: var(--dark-surface-opaque);
+            background-color: var(--dark-surface-secondary);
             font-weight: 600;
             border-bottom-width: 2px;
         }
         tbody tr { cursor: pointer; }
-        tbody tr:hover > td { color: var(--dark-text-primary); }
 
-        .nav-tabs { border-bottom: 1px solid var(--dark-border); }
         .nav-tabs .nav-link {
             color: var(--dark-text-secondary);
+            border: none;
             border-bottom: 3px solid transparent;
             font-weight: 500;
-            padding: 0.75rem 1rem;
         }
         .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
             color: var(--dark-primary);
@@ -246,15 +212,21 @@
             border-color: var(--dark-primary);
         }
         .tab-content {
-            background-color: transparent;
-            border: none;
-            padding: 1.5rem 0 0 0;
+            background-color: var(--dark-surface-secondary);
+            border: 1px solid var(--dark-border);
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+            padding: 1.5rem;
         }
 
-        tr.client-highlight > td { background-color: #49491c !important; }
+        tr.client-highlight > td {
+            background-color: #49491c !important;
+        }
+        
         .drop-zone-card.drag-over {
             border-color: var(--dark-primary);
-            box-shadow: 0 0 25px var(--dark-primary-glow);
+            border-width: 2px;
+            box-shadow: 0 0 20px var(--dark-primary-glow);
         }
 
         .status-message { min-height: 24px; }
@@ -270,21 +242,24 @@
                 border-right: none;
                 border-bottom: 1px solid var(--dark-border);
             }
-            #main-content { margin-left: 0; width: 100%; }
+            #main-content {
+                margin-left: 0;
+                width: 100%;
+            }
         }
         
-        /* --- Estilos de Impressão --- */
+        /* --- Estilos de Impressão (mantidos) --- */
         @media print {
-            body, body::before { animation: none !important; background: #fff !important; color: #000 !important; }
+            body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             #main-content { margin-left: 0 !important; width: 100% !important; }
             .no-print, #sidebar { display: none !important; }
-            .card, .accordion-item, .accordion-body, .card-header, .modal-content { background-color: #fff !important; color: #000 !important; border: 1px solid #dee2e6 !important; box-shadow: none !important; }
+            .container, .card, .accordion-item, .accordion-body, .card-header, .modal-content { background-color: #fff !important; color: #000 !important; border: 1px solid #dee2e6 !important; box-shadow: none !important; }
             button, .status-message, .card-subtitle, .accordion-button.collapsed, .accordion-collapse.collapse, .nav-tabs, .tab-content { display: none !important; }
             .table-responsive { overflow: visible !important; }
             table, th, td { border: 1px solid #dee2e6 !important; color: #000 !important; }
-            h1, h2, h3, h4, h5 { color: #000 !important; }
+            h1, h2, h3, h4, h5 { color: #000 !important; margin-top: 1rem; margin-bottom: 0.5rem; }
             .accordion-collapse, .tab-pane { display: block !important; padding: 0 !important; }
-            .accordion-button { display: block !important; background: #f8f9fa !important; color: #000 !important; border: 1px solid #dee2e6 !important; }
+            .accordion-button { display: block !important; background-color: #f8f9fa !important; color: #000 !important; border: 1px solid #dee2e6 !important; margin-bottom: 0.5rem; }
             .accordion-button strong, .accordion-button .badge { color: #000 !important; }
             .bg-warning { background-color: #ffc107 !important; color: black !important; }
             .bg-success, .bg-primary, .bg-danger { color: white !important; }
@@ -2557,7 +2532,7 @@
             <div class="card">
                 <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo do Processamento</div>
                 <div class="card-body">
-                    <div class="row g-4 stagger-in">
+                    <div class="row g-4">
                         <div class="col-md-4">
                             <h6 class="text-uppercase small fw-bold text-white-50">Totais da Planilha</h6>
                             <ul class="list-group list-group-flush">
