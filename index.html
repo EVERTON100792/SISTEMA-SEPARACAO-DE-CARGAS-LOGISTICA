@@ -594,91 +594,140 @@
 
     <script>
         // ================================================================================================
-        //  TODA A LÓGICA JAVASCRIPT ORIGINAL FOI MANTIDA EXATAMENTE IGUAL, CONFORME SOLICITADO.
-        //  Foram feitas apenas pequenas adições de classes CSS e estruturas HTML nos `innerHTML` 
-        //  para suportar os novos "empty states" e o visual aprimorado, sem alterar a funcionalidade.
+        //  LÓGICA JAVASCRIPT
         // ================================================================================================
         let resumoChart = null;
-        const vehicleCounts = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0 };
-
+        
         function updateAndRenderChart() {
-            // Reseta as contagens de cargas interativas
-            vehicleCounts.fiorino = 0;
-            vehicleCounts.van = 0;
-            vehicleCounts.tresQuartos = 0;
+            const vehicleCounts = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0 };
+            const vehicleKgs = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0 };
 
-            // Recalcula a partir das cargas ativas na tela
+            // Calcula contagens e pesos das cargas dinâmicas
             for (const loadId in activeLoads) {
                 const load = activeLoads[loadId];
-                if (load.vehicleType === 'fiorino') vehicleCounts.fiorino++;
-                else if (load.vehicleType === 'van') vehicleCounts.van++;
-                else if (load.vehicleType === 'tresQuartos') vehicleCounts.tresQuartos++;
+                if (vehicleCounts.hasOwnProperty(load.vehicleType)) {
+                    vehicleCounts[load.vehicleType]++;
+                    vehicleKgs[load.vehicleType] += load.totalKg;
+                }
             }
             
-            // A contagem de Toco é separada e calculada no processamento inicial
+            // Calcula contagem e peso das cargas Toco (que são estáticas após o processamento)
             vehicleCounts.toco = Object.keys(gruposToco).length;
+            vehicleKgs.toco = Object.values(gruposToco).reduce((sum, grupo) => sum + grupo.totalKg, 0);
 
-            const totalVarejo = vehicleCounts.fiorino + vehicleCounts.van + vehicleCounts.tresQuartos + vehicleCounts.toco;
+            const totalVarejoCount = vehicleCounts.fiorino + vehicleCounts.van + vehicleCounts.tresQuartos + vehicleCounts.toco;
+            const totalVarejoKg = vehicleKgs.fiorino + vehicleKgs.van + vehicleKgs.tresQuartos + vehicleKgs.toco;
 
-            const seriesData = [
-                vehicleCounts.fiorino,
-                vehicleCounts.van,
-                vehicleCounts.tresQuartos,
-                vehicleCounts.toco,
-                totalVarejo
-            ];
-            const categories = ['Fiorino', 'Van', '3/4', 'Toco', 'Total Varejo'];
+            const countSeries = [vehicleCounts.fiorino, vehicleCounts.van, vehicleCounts.tresQuartos, vehicleCounts.toco, totalVarejoCount];
+            const kgSeries = [vehicleKgs.fiorino, vehicleKgs.van, vehicleKgs.tresQuartos, vehicleKgs.toco, totalVarejoKg];
 
             if (resumoChart) {
-                // Se o gráfico já existe, apenas atualiza os dados
-                resumoChart.updateSeries([{ data: seriesData }]);
+                resumoChart.updateSeries([
+                    { name: 'Quantidade', data: countSeries },
+                    { name: 'Peso (kg)', data: kgSeries }
+                ]);
             } else {
-                // Se não existe, cria o gráfico
                 const options = {
-                    series: [{ name: 'Quantidade', data: seriesData }],
+                    series: [
+                        { name: 'Quantidade', type: 'column', data: countSeries },
+                        { name: 'Peso (kg)', type: 'column', data: kgSeries }
+                    ],
                     chart: {
-                        type: 'bar',
-                        height: 250,
+                        height: 350,
+                        type: 'line',
                         toolbar: { show: false },
                         foreColor: 'var(--dark-text-secondary)'
                     },
                     plotOptions: {
                         bar: {
                             horizontal: false,
-                            columnWidth: '60%',
-                            distributed: true,
-                            dataLabels: { position: 'top' }
-                        },
+                            columnWidth: '80%',
+                        }
                     },
                     dataLabels: {
                         enabled: true,
-                        offsetY: -20,
+                        enabledOnSeries: [0, 1],
+                         formatter: function (val, { seriesIndex }) {
+                            if (seriesIndex === 1) { // Format KG series
+                                return val > 1000 ? (val / 1000).toFixed(1) + 't' : val.toFixed(0) + 'kg';
+                            }
+                            return val.toFixed(0); // Format Count series
+                        },
                         style: {
                             fontSize: '12px',
-                            colors: [ "var(--dark-text-primary)" ]
+                            colors: ["#fff"]
+                        },
+                        background: {
+                            enabled: true,
+                            foreColor: '#000',
+                            padding: 4,
+                            borderRadius: 2,
+                            borderWidth: 1,
+                            borderColor: '#6a5acd',
+                            opacity: 0.6,
                         }
                     },
-                    legend: { show: false },
-                    colors: ['#28a745', '#007bff', '#ffc107', '#6c757d', '#6a5acd'],
+                    stroke: {
+                        show: true,
+                        width: 2,
+                        colors: ['transparent']
+                    },
+                    colors: ['#28a745', '#6a5acd'],
                     grid: {
                         borderColor: 'var(--dark-border)',
                         strokeDashArray: 4,
-                        yaxis: { lines: { show: true } }
                     },
                     xaxis: {
-                        categories: categories,
-                        labels: { style: { fontWeight: 600 } }
+                        categories: ['Fiorino', 'Van', '3/4', 'Toco', 'Total Varejo'],
                     },
-                    yaxis: {
-                        labels: {
-                            formatter: (val) => { return Math.floor(val) === val ? Math.floor(val) : '' }
+                    yaxis: [
+                        {
+                            axisTicks: { show: true },
+                            axisBorder: { show: true, color: '#28a745' },
+                            labels: {
+                                style: { colors: '#28a745' },
+                                formatter: (val) => val.toFixed(0)
+                            },
+                            title: {
+                                text: "Quantidade de Veículos",
+                                style: { color: '#28a745', fontWeight: 600 }
+                            },
+                        },
+                        {
+                            seriesName: 'Peso (kg)',
+                            opposite: true,
+                            axisTicks: { show: true },
+                            axisBorder: { show: true, color: '#6a5acd' },
+                            labels: {
+                                style: { colors: '#6a5acd' },
+                                formatter: (val) => (val / 1000).toFixed(1) + 't'
+                            },
+                            title: {
+                                text: "Peso Total (toneladas)",
+                                style: { color: '#6a5acd', fontWeight: 600 }
+                            }
+                        }
+                    ],
+                    tooltip: {
+                        theme: 'dark',
+                        y: {
+                            formatter: function (val, { seriesIndex }) {
+                                if (seriesIndex === 0) {
+                                    return val.toFixed(0) + " veículos";
+                                }
+                                return val.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + " kg";
+                            }
                         }
                     },
-                    tooltip: { theme: 'dark' }
+                    legend: {
+                        horizontalAlign: 'left',
+                        offsetX: 40
+                    }
                 };
 
                 const chartContainer = document.querySelector("#chart-resumo-veiculos");
                 if (chartContainer) {
+                    chartContainer.innerHTML = ''; // Limpa antes de renderizar
                     resumoChart = new ApexCharts(chartContainer, options);
                     resumoChart.render();
                 }
