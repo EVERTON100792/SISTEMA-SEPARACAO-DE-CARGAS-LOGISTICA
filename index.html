@@ -595,18 +595,14 @@
     <script>
         // ================================================================================================
         //  TODA A LÓGICA JAVASCRIPT ORIGINAL FOI MANTIDA EXATAMENTE IGUAL, CONFORME SOLICITADO.
-        //  Foram feitas apenas pequenas adições de classes CSS e estruturas HTML nos `innerHTML` 
-        //  para suportar os novos "empty states" e o visual aprimorado, sem alterar a funcionalidade.
+        //  A ÚNICA ALTERAÇÃO FOI NA FUNÇÃO `updateAndRenderChart` PARA MELHORAR O VISUAL DO GRÁFICO.
         // ================================================================================================
         let resumoChart = null;
-        // A variável global vehicleCounts foi removida pois os cálculos agora são feitos localmente na função do gráfico.
 
         function updateAndRenderChart() {
-            // Reseta as contagens e pesos a cada atualização
             const vehicleCounts = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0 };
             const vehicleWeights = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0 };
 
-            // Recalcula a partir das cargas ativas na tela (Varejo interativo)
             for (const loadId in activeLoads) {
                 const load = activeLoads[loadId];
                 if (load.vehicleType === 'fiorino') {
@@ -621,7 +617,6 @@
                 }
             }
 
-            // A contagem e peso de Toco é separada e calculada no processamento inicial
             vehicleCounts.toco = Object.keys(gruposToco).length;
             for (const cf in gruposToco) {
                 vehicleWeights.toco += gruposToco[cf].totalKg;
@@ -640,26 +635,51 @@
             ];
 
             if (resumoChart) {
-                // Se o gráfico já existe, apenas atualiza os dados
                 resumoChart.updateSeries(series);
             } else {
-                // Se não existe, cria o gráfico
                 const options = {
                     series: series,
                     chart: {
                         height: 350,
-                        type: 'line', // Usar 'line' como base permite eixos Y diferentes facilmente
+                        type: 'line',
                         stacked: false,
                         toolbar: { show: false },
-                        foreColor: 'var(--dark-text-secondary)'
+                        foreColor: 'var(--dark-text-secondary)',
+                        animations: {
+                            enabled: true,
+                            easing: 'easeinout',
+                            speed: 800,
+                            animateGradually: {
+                                enabled: true,
+                                delay: 150
+                            },
+                            dynamicAnimation: {
+                                enabled: true,
+                                speed: 350
+                            }
+                        }
+                    },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shade: 'dark',
+                            type: "vertical",
+                            shadeIntensity: 0.5,
+                            gradientToColors: undefined,
+                            inverseColors: false,
+                            opacityFrom: 0.85,
+                            opacityTo: 0.95,
+                            stops: [0, 100]
+                        }
                     },
                     stroke: {
-                        width: [0, 0], // Largura da linha (0 para colunas)
+                        width: [0, 0],
                         curve: 'smooth'
                     },
                     plotOptions: {
                         bar: {
-                            columnWidth: '60%'
+                            columnWidth: '60%',
+                            borderRadius: 5
                         }
                     },
                     colors: ['#6a5acd', '#00e396'],
@@ -675,11 +695,21 @@
                                 return val.toFixed(0);
                             }
                         },
-                        offsetY: -20,
+                        offsetY: -25,
                         style: {
-                            fontSize: '12px',
-                            colors: ["var(--dark-text-primary)"]
-                        }
+                            fontSize: '13px',
+                            fontWeight: 'bold',
+                            colors: ['#fff']
+                        },
+                        background: {
+                          enabled: true,
+                          foreColor: '#fff',
+                          borderRadius: 3,
+                          padding: 5,
+                          opacity: 0.7,
+                          borderWidth: 1,
+                          borderColor: '#666',
+                        },
                     },
                     grid: {
                         borderColor: 'var(--dark-border)',
@@ -688,7 +718,12 @@
                     },
                     xaxis: {
                         categories: categories,
-                        labels: { style: { fontWeight: 600 } }
+                        labels: { 
+                            style: { 
+                                fontWeight: 600,
+                                fontSize: '13px'
+                            } 
+                        }
                     },
                     yaxis: [
                         {
@@ -746,7 +781,7 @@
 
                 const chartContainer = document.querySelector("#chart-resumo-veiculos");
                 if (chartContainer) {
-                    chartContainer.innerHTML = ''; // Limpa o container antes de renderizar
+                    chartContainer.innerHTML = '';
                     resumoChart = new ApexCharts(chartContainer, options);
                     resumoChart.render();
                 }
@@ -762,6 +797,8 @@
 
         const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
         
+        // O restante do seu código JavaScript, a partir da função `deepClone`, permanece
+        // exatamente o mesmo das versões anteriores. Cole-o aqui.
         function deepClone(obj) {
             if (obj === null || typeof obj !== 'object') {
                 return obj;
