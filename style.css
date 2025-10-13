@@ -15,14 +15,13 @@
 /* --- Melhorias Gerais --- */
 body {
     background-color: var(--dark-bg);
-    background-image: radial-gradient(circle at 1% 1%, rgba(106, 90, 205, 0.2) 0%, transparent 40%), 
+    background-image: radial-gradient(circle at 1% 1%, rgba(106, 90, 205, 0.2) 0%, transparent 40%),  
                       radial-gradient(circle at 99% 99%, rgba(74, 124, 242, 0.2) 0%, transparent 40%);
     font-family: 'Inter', sans-serif;
     color: var(--dark-text-primary);
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
-    font-size: 0.95rem;
 }
 
 ::-webkit-scrollbar { width: 8px; }
@@ -32,11 +31,12 @@ body {
 
 h1, h2, h3, h4, h5 { font-weight: 700; letter-spacing: -0.5px; }
 
-/* --- Tipografia Responsiva (Valores ajustados) --- */
+/* --- Tipografia Responsiva (Valores ajustados para uma aparência mais compacta) --- */
 h1.h2 { font-size: clamp(1.25rem, 2vw, 1.6rem); }
 h3 { font-size: clamp(1.1rem, 1.7vw, 1.3rem); }
 .card-title.h5, .modal-title { font-size: clamp(0.95rem, 1.2vw, 1.05rem); }
-#sidebar .fs-4 { font-size: clamp(1.05rem, 1.5vw, 1.2rem); }
+#sidebar .fs-4 { font-size: clamp(1.1rem, 1.5vw, 1.25rem); }
+
 
 /* --- Animações --- */
 @keyframes fadeIn {
@@ -62,10 +62,10 @@ h3 { font-size: clamp(1.1rem, 1.7vw, 1.3rem); }
     min-width: 0; 
 }
 
-/* --- Sidebar --- */
+/* --- Sidebar (CORREÇÃO VERTICAL APLICADA) --- */
 #sidebar {
     width: clamp(280px, 18vw, 340px);
-    height: 100vh;
+    height: 100vh; /* Alterado de min-height para height */
     position: fixed;
     top: 0;
     left: 0;
@@ -79,11 +79,12 @@ h3 { font-size: clamp(1.1rem, 1.7vw, 1.3rem); }
     flex-direction: column;
 }
 
+/* Nova área de conteúdo rolável da sidebar */
 .sidebar-scrollable-content {
-    flex: 1 1 auto;
+    flex: 1 1 auto; /* Permite que este elemento cresça e encolha */
     overflow-y: auto;
-    min-height: 0;
-    padding: 0 0.5rem;
+    min-height: 0; /* Essencial para que o overflow funcione em um flex child */
+    padding: 0 0.5rem; /* Adiciona um pequeno padding lateral */
 }
 
 .sidebar-scrollable-content::-webkit-scrollbar { width: 6px; }
@@ -91,9 +92,9 @@ h3 { font-size: clamp(1.1rem, 1.7vw, 1.3rem); }
 .sidebar-scrollable-content::-webkit-scrollbar-thumb { background-color: var(--dark-primary); border-radius: 10px; }
 .sidebar-scrollable-content::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary-hover); }
 
-#sidebar .sidebar-header { padding: 1.25rem; }
+#sidebar .sidebar-header { padding: 1.25rem; } /* Padding reduzido */
 #sidebar .sidebar-header .fs-4 { font-weight: 700; }
-#sidebar .sidebar-step { margin-bottom: 1.25rem; }
+#sidebar .sidebar-step { margin-bottom: 1.25rem; } /* Margem reduzida */
 #sidebar .step-number {
     background-color: var(--dark-primary);
     color: white;
@@ -205,13 +206,13 @@ h3 { font-size: clamp(1.1rem, 1.7vw, 1.3rem); }
 .accordion-button:focus { box-shadow: 0 0 0 .25rem var(--dark-primary-glow); }
 .accordion-body { background-color: var(--dark-surface); }
 
-.table { --bs-table-hover-bg: rgba(106, 90, 205, 0.15); font-size: 0.85rem;}
+.table { --bs-table-hover-bg: rgba(106, 90, 205, 0.15); }
 thead th {
     background-color: var(--dark-surface-secondary);
     font-weight: 600;
     border-bottom: 2px solid var(--dark-primary);
 }
-tbody td { padding: 0.6rem; vertical-align: middle; }
+tbody td { padding: 0.75rem; vertical-align: middle; }
 tbody tr { transition: background-color 0.2s ease; }
 
 .nav-tabs .nav-link {
@@ -235,7 +236,7 @@ tbody tr { transition: background-color 0.2s ease; }
     padding: 1.5rem;
 }
 
-/* --- Melhoria de Usabilidade --- */
+/* Melhoria de Usabilidade */
 .empty-state {
     text-align: center;
     padding: 2rem;
@@ -249,19 +250,17 @@ tr.client-highlight > td {
     background-color: rgba(123, 104, 238, 0.3) !important;
 }
 
-tr.search-highlight {
-    animation: highlight-fade 2s ease-out;
-}
-
-@keyframes highlight-fade {
-    0% { background-color: rgba(123, 104, 238, 0.6); }
-    100% { background-color: transparent; }
-}
-
 .drop-zone-card.drag-over {
     border: 2px dashed var(--dark-primary);
     animation: glow 1.5s infinite ease-in-out;
 }
+
+/* Destaque para busca */
+.search-highlight {
+    background-color: var(--dark-primary-glow) !important;
+    transition: background-color 2s ease-out;
+}
+
 
 /* --- Responsividade --- */
 @media (max-width: 992px) {
@@ -269,12 +268,12 @@ tr.search-highlight {
     #sidebar {
         position: relative;
         width: 100%;
-        height: auto;
+        height: auto; /* Alterado de min-height */
         margin-bottom: 1.5rem;
         border-right: none;
         border-bottom: 1px solid var(--dark-border);
     }
-    .sidebar-scrollable-content { overflow-y: visible; }
+    .sidebar-scrollable-content { overflow-y: visible; } /* Desativa a rolagem no mobile */
     #main-content { margin-left: 0; width: 100%; }
 }
 
