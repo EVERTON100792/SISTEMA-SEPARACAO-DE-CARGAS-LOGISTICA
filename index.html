@@ -351,7 +351,7 @@
             <div id="resultado-carga-especial" class="mb-4"></div>
             
             <div class="card animated-entry mb-4" id="card-resumo-geral-container" style="display: none;">
-                <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo de Veículos (Varejo)</div>
+                <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo Geral (Varejo)</div>
                 <div class="card-body">
                     <div id="chart-resumo-veiculos"></div>
                 </div>
@@ -599,67 +599,88 @@
         //  para suportar os novos "empty states" e o visual aprimorado, sem alterar a funcionalidade.
         // ================================================================================================
         let resumoChart = null;
-        const vehicleCounts = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0 };
+        // A variável global vehicleCounts foi removida pois os cálculos agora são feitos localmente na função do gráfico.
 
         function updateAndRenderChart() {
-            // Reseta as contagens de cargas interativas
-            vehicleCounts.fiorino = 0;
-            vehicleCounts.van = 0;
-            vehicleCounts.tresQuartos = 0;
+            // Reseta as contagens e pesos a cada atualização
+            const vehicleCounts = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0 };
+            const vehicleWeights = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0 };
 
-            // Recalcula a partir das cargas ativas na tela
+            // Recalcula a partir das cargas ativas na tela (Varejo interativo)
             for (const loadId in activeLoads) {
                 const load = activeLoads[loadId];
-                if (load.vehicleType === 'fiorino') vehicleCounts.fiorino++;
-                else if (load.vehicleType === 'van') vehicleCounts.van++;
-                else if (load.vehicleType === 'tresQuartos') vehicleCounts.tresQuartos++;
+                if (load.vehicleType === 'fiorino') {
+                    vehicleCounts.fiorino++;
+                    vehicleWeights.fiorino += load.totalKg;
+                } else if (load.vehicleType === 'van') {
+                    vehicleCounts.van++;
+                    vehicleWeights.van += load.totalKg;
+                } else if (load.vehicleType === 'tresQuartos') {
+                    vehicleCounts.tresQuartos++;
+                    vehicleWeights.tresQuartos += load.totalKg;
+                }
             }
-            
-            // A contagem de Toco é separada e calculada no processamento inicial
+
+            // A contagem e peso de Toco é separada e calculada no processamento inicial
             vehicleCounts.toco = Object.keys(gruposToco).length;
+            for (const cf in gruposToco) {
+                vehicleWeights.toco += gruposToco[cf].totalKg;
+            }
 
-            const totalVarejo = vehicleCounts.fiorino + vehicleCounts.van + vehicleCounts.tresQuartos + vehicleCounts.toco;
+            const totalVarejoCount = vehicleCounts.fiorino + vehicleCounts.van + vehicleCounts.tresQuartos + vehicleCounts.toco;
+            const totalVarejoWeight = vehicleWeights.fiorino + vehicleWeights.van + vehicleWeights.tresQuartos + vehicleWeights.toco;
 
-            const seriesData = [
-                vehicleCounts.fiorino,
-                vehicleCounts.van,
-                vehicleCounts.tresQuartos,
-                vehicleCounts.toco,
-                totalVarejo
-            ];
+            const countSeriesData = [vehicleCounts.fiorino, vehicleCounts.van, vehicleCounts.tresQuartos, vehicleCounts.toco, totalVarejoCount];
+            const weightSeriesData = [vehicleWeights.fiorino, vehicleWeights.van, vehicleWeights.tresQuartos, vehicleWeights.toco, totalVarejoWeight];
             const categories = ['Fiorino', 'Van', '3/4', 'Toco', 'Total Varejo'];
+
+            const series = [
+                { name: 'Quantidade', type: 'column', data: countSeriesData },
+                { name: 'Peso (kg)', type: 'column', data: weightSeriesData }
+            ];
 
             if (resumoChart) {
                 // Se o gráfico já existe, apenas atualiza os dados
-                resumoChart.updateSeries([{ data: seriesData }]);
+                resumoChart.updateSeries(series);
             } else {
                 // Se não existe, cria o gráfico
                 const options = {
-                    series: [{ name: 'Quantidade', data: seriesData }],
+                    series: series,
                     chart: {
-                        type: 'bar',
-                        height: 250,
+                        height: 350,
+                        type: 'line', // Usar 'line' como base permite eixos Y diferentes facilmente
+                        stacked: false,
                         toolbar: { show: false },
                         foreColor: 'var(--dark-text-secondary)'
                     },
+                    stroke: {
+                        width: [0, 0], // Largura da linha (0 para colunas)
+                        curve: 'smooth'
+                    },
                     plotOptions: {
                         bar: {
-                            horizontal: false,
-                            columnWidth: '60%',
-                            distributed: true,
-                            dataLabels: { position: 'top' }
-                        },
+                            columnWidth: '60%'
+                        }
                     },
+                    colors: ['#6a5acd', '#00e396'],
                     dataLabels: {
                         enabled: true,
+                        formatter: function (val, { seriesIndex }) {
+                            if (seriesIndex === 0) { // Quantidade
+                                return val.toFixed(0);
+                            } else { // Peso
+                                if (val >= 1000) {
+                                    return (val / 1000).toFixed(1) + 'k';
+                                }
+                                return val.toFixed(0);
+                            }
+                        },
                         offsetY: -20,
                         style: {
                             fontSize: '12px',
-                            colors: [ "var(--dark-text-primary)" ]
+                            colors: ["var(--dark-text-primary)"]
                         }
                     },
-                    legend: { show: false },
-                    colors: ['#28a745', '#007bff', '#ffc107', '#6c757d', '#6a5acd'],
                     grid: {
                         borderColor: 'var(--dark-border)',
                         strokeDashArray: 4,
@@ -669,16 +690,63 @@
                         categories: categories,
                         labels: { style: { fontWeight: 600 } }
                     },
-                    yaxis: {
-                        labels: {
-                            formatter: (val) => { return Math.floor(val) === val ? Math.floor(val) : '' }
+                    yaxis: [
+                        {
+                            seriesName: 'Quantidade',
+                            axisTicks: { show: true },
+                            axisBorder: { show: true, color: '#6a5acd' },
+                            labels: {
+                                style: { colors: '#6a5acd' },
+                                formatter: function (val) {
+                                    return val.toFixed(0);
+                                }
+                            },
+                            title: {
+                                text: "Quantidade de Veículos",
+                                style: { color: '#6a5acd', fontWeight: 600 }
+                            },
+                        },
+                        {
+                            seriesName: 'Peso (kg)',
+                            opposite: true,
+                            axisTicks: { show: true },
+                            axisBorder: { show: true, color: '#00e396' },
+                            labels: {
+                                style: { colors: '#00e396' },
+                                formatter: function (val) {
+                                    return (val / 1000).toFixed(1) + "k kg";
+                                }
+                            },
+                            title: {
+                                text: "Peso Total (kg)",
+                                style: { color: '#00e396', fontWeight: 600 }
+                            }
+                        }
+                    ],
+                    tooltip: {
+                        theme: 'dark',
+                        shared: true,
+                        intersect: false,
+                        y: {
+                            formatter: function (val, { seriesIndex }) {
+                                if (seriesIndex === 0) { // Quantidade
+                                    return val.toFixed(0) + " veículos";
+                                } else { // Peso
+                                    return val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kg";
+                                }
+                            }
                         }
                     },
-                    tooltip: { theme: 'dark' }
+                    legend: {
+                        position: 'top',
+                        horizontalAlign: 'right',
+                        offsetY: -10
+                    }
                 };
 
                 const chartContainer = document.querySelector("#chart-resumo-veiculos");
                 if (chartContainer) {
+                    chartContainer.innerHTML = ''; // Limpa o container antes de renderizar
                     resumoChart = new ApexCharts(chartContainer, options);
                     resumoChart.render();
                 }
@@ -925,9 +993,9 @@
                                         }
                                     } else if (cellValue instanceof Date) {
                                        if (!isNaN(cellValue.getTime())) {
-                                         pedido[header] = cellValue;
+                                           pedido[header] = cellValue;
                                        } else {
-                                            pedido[header] = '';
+                                           pedido[header] = '';
                                        }
                                     } else {
                                         pedido[header] = cellValue !== undefined ? cellValue : '';
@@ -1069,7 +1137,7 @@
                 if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
                     const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
                     buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                       <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                                        <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 } else if (accordionId || local.startsWith('Carga')) { 
                     buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
                 }
@@ -1210,7 +1278,6 @@
                 resumoChart.destroy();
                 resumoChart = null;
             }
-            Object.keys(vehicleCounts).forEach(k => vehicleCounts[k] = 0);
             document.getElementById('card-resumo-geral-container').style.display = 'none';
             document.getElementById('filtro-rota-container').style.display = 'none';
 
@@ -1450,12 +1517,12 @@
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
                 table += `<tr id="pedido-${p.Num_Pedido}" 
-                                      class="${isPriorityRow ? 'table-primary' : ''}" 
-                                      data-cliente-id="${clienteIdNormalizado}" 
-                                      data-pedido-id="${p.Num_Pedido}"
-                                      onclick="highlightClientRows(event)"
-                                      draggable="true"
-                                      ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
+                                     class="${isPriorityRow ? 'table-primary' : ''}" 
+                                     data-cliente-id="${clienteIdNormalizado}" 
+                                     data-pedido-id="${p.Num_Pedido}"
+                                     onclick="highlightClientRows(event)"
+                                     draggable="true"
+                                     ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') {
@@ -1836,119 +1903,119 @@
 
         function runSimulatedAnnealing(packableGroups, vehicleType, uiText) {
              return new Promise(resolve => {
-                 const initialTemp = 1000;
-                 const coolingRate = 0.993;
-                 const iterationsPerTemp = 200;
+                  const initialTemp = 1000;
+                  const coolingRate = 0.993;
+                  const iterationsPerTemp = 200;
 
-                 const initialSortedGroups = [...packableGroups].sort((a, b) => b.totalKg - a.totalKg);
-                 let bestSolution = createSolutionFromHeuristic(initialSortedGroups, vehicleType);
-                 let currentSolution = deepClone(bestSolution);
-                 
-                 let currentTemp = initialTemp;
-                 
-                 const progressBar = document.getElementById('processing-progress-bar');
-                 const statusText = document.getElementById('processing-status-text');
-                 const detailsText = document.getElementById('processing-details-text');
+                  const initialSortedGroups = [...packableGroups].sort((a, b) => b.totalKg - a.totalKg);
+                  let bestSolution = createSolutionFromHeuristic(initialSortedGroups, vehicleType);
+                  let currentSolution = deepClone(bestSolution);
+                  
+                  let currentTemp = initialTemp;
+                  
+                  const progressBar = document.getElementById('processing-progress-bar');
+                  const statusText = document.getElementById('processing-status-text');
+                  const detailsText = document.getElementById('processing-details-text');
 
-                 function doTemperatureStep() {
-                         for (let i = 0; i < iterationsPerTemp; i++) {
-                             let neighborSolution = deepClone(currentSolution);
-                             let moveMade = false;
+                  function doTemperatureStep() {
+                       for (let i = 0; i < iterationsPerTemp; i++) {
+                           let neighborSolution = deepClone(currentSolution);
+                           let moveMade = false;
 
-                             const moveType = Math.random();
-                             if (moveType < 0.7 && neighborSolution.leftovers.length > 0) {
-                                 const leftoverIndex = Math.floor(Math.random() * neighborSolution.leftovers.length);
-                                 const groupToPlace = neighborSolution.leftovers[leftoverIndex];
-                                 const targetLoadIndex = neighborSolution.loads.length > 0 ? Math.floor(Math.random() * (neighborSolution.loads.length + 1)) : 0;
+                           const moveType = Math.random();
+                           if (moveType < 0.7 && neighborSolution.leftovers.length > 0) {
+                               const leftoverIndex = Math.floor(Math.random() * neighborSolution.leftovers.length);
+                               const groupToPlace = neighborSolution.leftovers[leftoverIndex];
+                               const targetLoadIndex = neighborSolution.loads.length > 0 ? Math.floor(Math.random() * (neighborSolution.loads.length + 1)) : 0;
 
-                                 if (targetLoadIndex < neighborSolution.loads.length) {
-                                     const targetLoad = neighborSolution.loads[targetLoadIndex];
-                                     if(isMoveValid(targetLoad, groupToPlace, vehicleType)) {
-                                         targetLoad.pedidos.push(...groupToPlace.pedidos);
-                                         targetLoad.totalKg += groupToPlace.totalKg;
-                                         targetLoad.totalCubagem += groupToPlace.totalCubagem;
-                                         neighborSolution.leftovers.splice(leftoverIndex, 1);
-                                         moveMade = true;
-                                     }
-                                 } else if (isMoveValid({pedidos:[], totalKg:0, totalCubagem:0}, groupToPlace, vehicleType)) { 
-                                     neighborSolution.loads.push(groupToPlace);
-                                     neighborSolution.leftovers.splice(leftoverIndex, 1);
-                                     moveMade = true;
-                                 }
-                             } else if (neighborSolution.loads.length > 0) {
-                                 const loadIndex = Math.floor(Math.random() * neighborSolution.loads.length);
-                                 const load = neighborSolution.loads[loadIndex];
-                                 
-                                 if (load.pedidos.length > 0) {
-                                     const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, p) => {
-                                         const cId = normalizeClientId(p.Cliente);
-                                         if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
-                                         acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
-                                         return acc;
-                                     }, {}));
+                               if (targetLoadIndex < neighborSolution.loads.length) {
+                                   const targetLoad = neighborSolution.loads[targetLoadIndex];
+                                   if(isMoveValid(targetLoad, groupToPlace, vehicleType)) {
+                                       targetLoad.pedidos.push(...groupToPlace.pedidos);
+                                       targetLoad.totalKg += groupToPlace.totalKg;
+                                       targetLoad.totalCubagem += groupToPlace.totalCubagem;
+                                       neighborSolution.leftovers.splice(leftoverIndex, 1);
+                                       moveMade = true;
+                                   }
+                               } else if (isMoveValid({pedidos:[], totalKg:0, totalCubagem:0}, groupToPlace, vehicleType)) { 
+                                   neighborSolution.loads.push(groupToPlace);
+                                   neighborSolution.leftovers.splice(leftoverIndex, 1);
+                                   moveMade = true;
+                               }
+                           } else if (neighborSolution.loads.length > 0) {
+                               const loadIndex = Math.floor(Math.random() * neighborSolution.loads.length);
+                               const load = neighborSolution.loads[loadIndex];
+                               
+                               if (load.pedidos.length > 0) {
+                                   const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, p) => {
+                                       const cId = normalizeClientId(p.Cliente);
+                                       if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                                       acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                                       return acc;
+                                   }, {}));
 
-                                     if(clientGroupsInLoad.length > 0) {
-                                         const groupIndexToRemove = Math.floor(Math.random() * clientGroupsInLoad.length);
-                                         const groupToMove = clientGroupsInLoad[groupIndexToRemove];
-                                         
-                                         const idsToRemove = new Set(groupToMove.pedidos.map(p => p.Num_Pedido));
-                                         load.pedidos = load.pedidos.filter(p => !idsToRemove.has(p.Num_Pedido));
-                                         load.totalKg -= groupToMove.totalKg;
-                                         load.totalCubagem -= groupToMove.totalCubagem;
-                                         if(load.pedidos.length === 0) neighborSolution.loads.splice(loadIndex,1);
+                                   if(clientGroupsInLoad.length > 0) {
+                                       const groupIndexToRemove = Math.floor(Math.random() * clientGroupsInLoad.length);
+                                       const groupToMove = clientGroupsInLoad[groupIndexToRemove];
+                                       
+                                       const idsToRemove = new Set(groupToMove.pedidos.map(p => p.Num_Pedido));
+                                       load.pedidos = load.pedidos.filter(p => !idsToRemove.has(p.Num_Pedido));
+                                       load.totalKg -= groupToMove.totalKg;
+                                       load.totalCubagem -= groupToMove.totalCubagem;
+                                       if(load.pedidos.length === 0) neighborSolution.loads.splice(loadIndex,1);
 
-                                         neighborSolution.leftovers.push(groupToMove);
-                                         moveMade = true;
-                                     }
-                                 }
-                             }
-                             
-                             if(moveMade){
-                                 const currentEnergy = getSolutionEnergy(currentSolution, vehicleType);
-                                 const neighborEnergy = getSolutionEnergy(neighborSolution, vehicleType);
+                                       neighborSolution.leftovers.push(groupToMove);
+                                       moveMade = true;
+                                   }
+                               }
+                           }
+                           
+                           if(moveMade){
+                               const currentEnergy = getSolutionEnergy(currentSolution, vehicleType);
+                               const neighborEnergy = getSolutionEnergy(neighborSolution, vehicleType);
 
-                                 if (neighborEnergy < currentEnergy || Math.random() < Math.exp((currentEnergy - neighborEnergy) / currentTemp)) {
-                                     currentSolution = neighborSolution;
-                                     if (getSolutionEnergy(currentSolution, vehicleType) < getSolutionEnergy(bestSolution, vehicleType)) {
-                                         bestSolution = deepClone(currentSolution);
-                                     }
-                                 }
-                             }
-                         }
+                               if (neighborEnergy < currentEnergy || Math.random() < Math.exp((currentEnergy - neighborEnergy) / currentTemp)) {
+                                   currentSolution = neighborSolution;
+                                   if (getSolutionEnergy(currentSolution, vehicleType) < getSolutionEnergy(bestSolution, vehicleType)) {
+                                       bestSolution = deepClone(currentSolution);
+                                   }
+                               }
+                           }
+                       }
 
-                         currentTemp *= coolingRate;
-                         const progress = Math.min(100, 100 * (1 - Math.log(currentTemp) / Math.log(initialTemp)));
-                         progressBar.style.width = `${progress}%`;
-                         statusText.textContent = uiText;
-                         const displaySobras = calculateDisplaySobras(bestSolution, vehicleType);
-                         detailsText.textContent = `Sobra Atual: ${displaySobras.toFixed(2)} kg`;
+                       currentTemp *= coolingRate;
+                       const progress = Math.min(100, 100 * (1 - Math.log(currentTemp) / Math.log(initialTemp)));
+                       progressBar.style.width = `${progress}%`;
+                       statusText.textContent = uiText;
+                       const displaySobras = calculateDisplaySobras(bestSolution, vehicleType);
+                       detailsText.textContent = `Sobra Atual: ${displaySobras.toFixed(2)} kg`;
 
-                         if (currentTemp > 1) {
-                             requestAnimationFrame(doTemperatureStep);
-                         } else {
-                             const config = getVehicleConfig(vehicleType);
-                             let finalLoads = [];
-                             let finalLeftovers = [...bestSolution.leftovers];
-                             bestSolution.loads.forEach(load => {
-                                 if (load.pedidos.length > 0 && load.totalKg >= config.minKg) {
-                                     finalLoads.push(load);
-                                 } else if (load.pedidos.length > 0) {
-                                     const groups = Object.values(load.pedidos.reduce((acc, p) => { 
-                                         const cId = normalizeClientId(p.Cliente);
-                                         if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
-                                         acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
-                                         return acc; 
-                                     }, {}));
-                                     finalLeftovers.push(...groups);
-                                 }
-                             });
-                             console.log(`Otimização para ${vehicleType} finalizada com ${finalLeftovers.reduce((s, g) => s + g.totalKg, 0).toFixed(2)}kg de sobra.`);
-                             resolve({ loads: finalLoads, leftovers: finalLeftovers });
-                         }
-                 }
-                 
-                 requestAnimationFrame(doTemperatureStep);
-              });
+                       if (currentTemp > 1) {
+                           requestAnimationFrame(doTemperatureStep);
+                       } else {
+                           const config = getVehicleConfig(vehicleType);
+                           let finalLoads = [];
+                           let finalLeftovers = [...bestSolution.leftovers];
+                           bestSolution.loads.forEach(load => {
+                               if (load.pedidos.length > 0 && load.totalKg >= config.minKg) {
+                                   finalLoads.push(load);
+                               } else if (load.pedidos.length > 0) {
+                                   const groups = Object.values(load.pedidos.reduce((acc, p) => { 
+                                       const cId = normalizeClientId(p.Cliente);
+                                       if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                                       acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                                       return acc; 
+                                   }, {}));
+                                   finalLeftovers.push(...groups);
+                               }
+                           });
+                           console.log(`Otimização para ${vehicleType} finalizada com ${finalLeftovers.reduce((s, g) => s + g.totalKg, 0).toFixed(2)}kg de sobra.`);
+                           resolve({ loads: finalLoads, leftovers: finalLeftovers });
+                       }
+                  }
+                  
+                  requestAnimationFrame(doTemperatureStep);
+             });
         }
 
         function refinarCargasComTrocas(initialLoads, initialLeftovers, vehicleType) {
@@ -2157,13 +2224,13 @@
             const totalFinalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
             const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
             if (totalFinalLeftoverKg >= tresQuartosMin && leftoverGroups.length > 0) {
-                                     const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
-                                     if(vehicleForTertiary) {
-                                         const tresQuartosResult = runHeuristicOptimization(leftoverGroups, vehicleForTertiary);
-                                         tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
-                                         tertiaryLoads = tresQuartosResult.loads;
-                                         leftoverGroups = tresQuartosResult.leftovers;
-                                     }
+                                              const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
+                                              if(vehicleForTertiary) {
+                                                  const tresQuartosResult = runHeuristicOptimization(leftoverGroups, vehicleForTertiary);
+                                                  tresQuartosResult.loads.forEach(l => l.vehicleType = 'tresQuartos');
+                                                  tertiaryLoads = tresQuartosResult.loads;
+                                                  leftoverGroups = tresQuartosResult.leftovers;
+                                              }
             }
 
             const allPotentialLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads ];
