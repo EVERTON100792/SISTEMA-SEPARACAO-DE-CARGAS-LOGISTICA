@@ -579,6 +579,7 @@ function highlightAndScroll(row) {
     }, 2500); // Remove o destaque após 2.5 segundos
 }
 
+
 function atualizarListaBloqueados() {
     const divLista = document.getElementById('lista-pedidos-bloqueados');
     if (pedidosBloqueados.size === 0) {
@@ -1913,14 +1914,6 @@ function drop(event) {
     updateAndRenderChart();
 }
 
-// ... (Restante do código JS, incluindo startManualLoadBuilder, updateLoadUI, etc., permanece o mesmo) ...
-
-// O restante do seu código JavaScript, a partir daqui, está funcional e foi mantido.
-// Foram incluídas as funções de drag-and-drop e a lógica de montagem manual.
-
-// ===================================================================================================
-// FUNÇÕES DE MONTAGEM MANUAL E ATUALIZAÇÃO DE UI (sem alterações lógicas, apenas mantidas)
-// ===================================================================================================
 function updateLoadUI(loadId) {
     const activeTabPane = document.querySelector('.tab-pane.active');
     
