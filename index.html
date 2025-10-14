@@ -50,10 +50,10 @@
         h1, h2, h3, h4, h5 { font-weight: 700; letter-spacing: -0.5px; }
         
         /* --- Tipografia Responsiva (Valores ajustados para uma aparência mais compacta e profissional) --- */
-        h1.h2 { font-size: clamp(1.25rem, 2vw, 1.5rem); }
-        h3 { font-size: clamp(1.05rem, 1.7vw, 1.2rem); }
-        .card-title.h5, .modal-title { font-size: clamp(0.95rem, 1.2vw, 1.05rem); }
-        #sidebar .fs-4 { font-size: clamp(1.0rem, 1.5vw, 1.15rem); }
+        h1.h2 { font-size: clamp(1.35rem, 2vw, 1.75rem); }
+        h3 { font-size: clamp(1.15rem, 1.7vw, 1.4rem); }
+        .card-title.h5, .modal-title { font-size: clamp(1rem, 1.2vw, 1.1rem); }
+        #sidebar .fs-4 { font-size: clamp(1.1rem, 1.5vw, 1.25rem); }
 
 
         /* --- Animações --- */
@@ -73,15 +73,16 @@
 
         /* --- Layout Principal --- */
         #main-content {
-            --sidebar-width: clamp(250px, 16vw, 300px);
+            --sidebar-width: clamp(280px, 18vw, 340px);
             margin-left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
             animation: fadeIn 0.5s ease-out;
             min-width: 0; 
         }
 
+        /* --- Sidebar (CORREÇÃO VERTICAL APLICADA) --- */
         #sidebar {
-            width: clamp(250px, 16vw, 300px);
+            width: clamp(280px, 18vw, 340px);
             height: 100vh; /* Alterado de min-height para height */
             position: fixed;
             top: 0;
@@ -109,10 +110,10 @@
         .sidebar-scrollable-content::-webkit-scrollbar-thumb { background-color: var(--dark-primary); border-radius: 10px; }
         .sidebar-scrollable-content::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary-hover); }
 
-        #sidebar .sidebar-header { padding: 1rem 1.25rem; }
+        #sidebar .sidebar-header { padding: 1.25rem; } /* Padding reduzido */
         #sidebar .sidebar-header .fs-4 { font-weight: 700; }
-        #sidebar .sidebar-step { margin-bottom: 1rem; }
-        #sidebar .step-number { /* Tamanho do número do passo reduzido */
+        #sidebar .sidebar-step { margin-bottom: 1.25rem; } /* Margem reduzida */
+        #sidebar .step-number {
             background-color: var(--dark-primary);
             color: white;
             border-radius: 50%;
@@ -122,13 +123,13 @@
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            margin-right: 0.5rem;
+            margin-right: 0.75rem;
         }
         #sidebar .form-label { font-weight: 500; color: var(--dark-text-secondary); }
 
         #sidebar .nav-link {
             color: var(--dark-text-secondary);
-            font-weight: 500; font-size: 0.9rem;
+            font-weight: 500;
             padding: 0.75rem 1.25rem;
             border-radius: 0.5rem;
             position: relative;
@@ -151,7 +152,7 @@
         .card {
             background-color: var(--dark-surface);
             border: 1px solid var(--dark-border);
-            border-radius: 0.75rem; /* Raio da borda reduzido */
+            border-radius: 1rem;
             box-shadow: var(--box-shadow);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             overflow: hidden;
@@ -167,16 +168,16 @@
             background-color: var(--dark-surface-secondary);
             border-bottom: 1px solid var(--dark-border);
             font-weight: 600;
-            padding: 0.75rem 1.25rem; /* Padding reduzido */
+            padding: 1rem 1.5rem;
         }
-        .card-body { padding: 1.25rem; } /* Padding reduzido */
+        .card-body { padding: 1.5rem; }
 
         /* --- Botões e Controles --- */
         .btn {
             font-weight: 600;
             transition: all 0.2s ease-in-out;
             border-radius: 0.5rem;
-            padding: 0.5rem 1rem; /* Padding reduzido */
+            padding: 0.6rem 1.2rem;
         }
         .btn:hover {
             transform: translateY(-2px);
@@ -189,19 +190,18 @@
         .btn-primary:hover { box-shadow: 0 4px 20px var(--dark-primary-glow); }
         .form-control, .form-select {
             background-color: var(--dark-surface-secondary);
-            border: 1px solid var(--dark-border); font-size: 0.9rem;
+            border: 1px solid var(--dark-border);
             color: var(--dark-text-primary);
         }
         .form-control:focus, .form-select:focus {
             background-color: var(--dark-surface-secondary);
             border-color: var(--dark-primary);
-            box-shadow: 0 0 0 .2rem var(--dark-primary-glow); /* Sombra de foco reduzida */
+            box-shadow: 0 0 0 .25rem var(--dark-primary-glow);
             color: var(--dark-text-primary);
         }
         
         /* --- Componentes --- */
         .modal-content {
-            font-size: 0.9rem;
             background-color: var(--dark-surface);
             backdrop-filter: blur(var(--backdrop-blur));
             border-radius: 1rem;
@@ -221,19 +221,19 @@
             background: linear-gradient(45deg, var(--dark-primary), var(--dark-primary-hover));
             color: white;
         }
-        .accordion-button:focus { box-shadow: 0 0 0 .2rem var(--dark-primary-glow); }
+        .accordion-button:focus { box-shadow: 0 0 0 .25rem var(--dark-primary-glow); }
         .accordion-body { background-color: var(--dark-surface); }
         
         .table { --bs-table-hover-bg: rgba(106, 90, 205, 0.15); }
         thead th {
             background-color: var(--dark-surface-secondary);
-            font-weight: 600; font-size: 0.85rem;
+            font-weight: 600;
             border-bottom: 2px solid var(--dark-primary);
         }
-        tbody td { padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.875rem; } /* Padding e fonte reduzidos */
+        tbody td { padding: 0.75rem; vertical-align: middle; }
         tbody tr { transition: background-color 0.2s ease; }
 
-        .nav-tabs .nav-link { /* Abas mais compactas */
+        .nav-tabs .nav-link {
             color: var(--dark-text-secondary);
             border: none;
             border-bottom: 3px solid transparent;
@@ -251,7 +251,7 @@
             border: 1px solid var(--dark-border);
             border-top: none;
             border-radius: 0 0 0.8rem 0.8rem;
-            padding: 1.25rem; /* Padding reduzido */
+            padding: 1.5rem;
         }
 
         /* Melhoria de Usabilidade */
@@ -288,7 +288,7 @@
             #main-content { margin-left: 0; width: 100%; }
         }
         
-        /* --- Estilos de Impressão (Ajustes para tabelas mais compactas) --- */
+        /* --- Estilos de Impressão --- */
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             #main-content { margin-left: 0 !important; width: 100% !important; }
@@ -296,7 +296,7 @@
             .container, .card, .accordion-item, .accordion-body, .card-header, .modal-content { background-color: #fff !important; color: #000 !important; border: 1px solid #dee2e6 !important; box-shadow: none !important; }
             button, .status-message, .card-subtitle, .accordion-button.collapsed, .accordion-collapse.collapse, .nav-tabs, .tab-content { display: none !important; }
             .table-responsive { overflow: visible !important; }
-            table, th, td { border: 1px solid #dee2e6 !important; color: #000 !important; padding: 0.25rem 0.4rem; font-size: 9pt; }
+            table, th, td { border: 1px solid #dee2e6 !important; color: #000 !important; }
             h1, h2, h3, h4, h5 { color: #000 !important; }
             .accordion-collapse, .tab-pane { display: block !important; padding: 0 !important; }
             .accordion-button { display: block !important; background-color: #f8f9fa !important; color: #000 !important; }
@@ -319,7 +319,7 @@
                 <hr>
                 <div id="sidebar-controls">
                     <div class="sidebar-step">
-                        <h6 class="form-label text-uppercase small fw-bold"><span class="step-number">1</span> Carregar Arquivo</h6>
+                        <h6 class="form-label text-uppercase small"><span class="step-number">1</span> Carregar Arquivo</h6>
                         <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv">
                         <div class="form-check form-switch mt-2">
                             <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
@@ -328,7 +328,7 @@
                     </div>
 
                     <div id="filtro-rota-container" class="sidebar-step" style="display: none;">
-                        <h6 class="form-label text-uppercase small fw-bold"><span class="step-number">2</span> Filtrar Rotas (Opcional)</h6>
+                        <h6 class="form-label text-uppercase small"><span class="step-number">2</span> Filtrar Rotas (Opcional)</h6>
                         <div class="mb-2">
                             <select id="rotaInicioSelect" class="form-select form-select-sm">
                                 <option value="">Rota de Início...</option>
@@ -343,7 +343,7 @@
                     </div>
 
                     <div class="sidebar-step d-grid mt-4">
-                        <h6 class="form-label text-uppercase small fw-bold"><span class="step-number">3</span> Otimizar</h6>
+                        <h6 class="form-label text-uppercase small"><span class="step-number">3</span> Otimizar</h6>
                         <button class="btn btn-primary" id="processarBtn" onclick="processar()" disabled>
                             <i class="bi bi-magic me-2"></i>Processar Cargas
                         </button>
@@ -365,7 +365,7 @@
             </div>
         </nav>
 
-        <main id="main-content" class="p-4">
+        <main id="main-content" class="p-4 p-lg-5">
             
             <h1 class="h2 mb-4 animated-entry">Dashboard de Separação de Cargas</h1>
 
@@ -438,7 +438,7 @@
                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
                         </div>
                        <div class="card-body">
-                           <div class="input-group mb-3 no-print"><input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar Pedido, Cliente ou Cidade..."><button id="searchBtn" class="btn btn-outline-secondary" type="button"><i class="bi bi-search"></i></button></div>
+                           <div class="input-group mb-3 no-print"><input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar por Nº do Pedido..."><button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()"><i class="bi bi-search"></i></button></div>
                            <div id="search-result" class="mb-3"></div>
                            <div id="resultado-geral"><div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div></div>
                        </div>
@@ -878,7 +878,6 @@
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
         let activeLoads = {};
-        let processedRoutes = new Set();
         let manualLoadInProgress = null;
 
         const defaultConfigs = {
@@ -984,13 +983,6 @@
             document.getElementById('resetAllConfigs').addEventListener('click', resetAll);
             document.getElementById('limparResultadosBtn').addEventListener('click', limparTudo);
 
-            document.getElementById('searchBtn').addEventListener('click', buscarPedido);
-            document.getElementById('pedidoSearchInput').addEventListener('keyup', (event) => {
-                if (event.key === 'Enter') {
-                    buscarPedido();
-                }
-            });
-
             document.querySelectorAll('#sidebar-nav a').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -1005,8 +997,6 @@
                     }
                 });
             });
-
-            loadStateFromLocalStorage();
         });
 
         const rotaVeiculoMap = {
@@ -1127,179 +1117,98 @@
             document.getElementById('rotaFimSelect').selectedIndex = 0;
         }
 
+
         function buscarPedido() {
-            const searchTerm = document.getElementById('pedidoSearchInput').value.trim().toLowerCase();
+            const searchInput = document.getElementById('pedidoSearchInput').value.trim();
             const searchResultDiv = document.getElementById('search-result');
             searchResultDiv.innerHTML = '';
-            if (!searchTerm) return;
-            if (planilhaData.length === 0) {
-                searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>';
-                return;
+            if (!searchInput) return;
+            if (planilhaData.length === 0) { searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>'; return; }
+            let pedidoEncontrado = null; let local = 'Não encontrado'; let accordionId = '';
+            
+            if (currentLeftoversForPrinting.length > 0) {
+                 pedidoEncontrado = currentLeftoversForPrinting.find(p => String(p.Num_Pedido) === searchInput);
+                 if (pedidoEncontrado) local = 'Sobras Finais (na Mesa de Trabalho)';
             }
-
-            const searchPredicate = p =>
-                String(p.Num_Pedido).toLowerCase().includes(searchTerm) ||
-                String(p.Nome_Cliente).toLowerCase().includes(searchTerm) ||
-                String(p.Cidade).toLowerCase().includes(searchTerm);
-
-            let resultados = [];
-
-            const findInList = (list, location, tabId, accordionId) => {
-                list.filter(searchPredicate).forEach(p => {
-                    resultados.push({ pedido: p, local: location, tabId: tabId, accordionId: accordionId });
-                });
-            };
-
-            // 1. Cargas Ativas (Fiorino, Van, 3/4, Toco, etc)
-            for (const loadId in activeLoads) {
-                const load = activeLoads[loadId];
-                const tabMap = { 'fiorino': 'fiorino-tab-pane', 'van': 'van-tab-pane', 'tresQuartos': 'tres-quartos-tab-pane', 'toco': 'cf-tab-pane' };
-                const tabId = tabMap[load.vehicleType] || null;
-                let accordionId = null;
-                if (load.vehicleType === 'toco') {
-                    accordionId = `collapseToco${Object.keys(gruposToco).findIndex(cf => cf === load.pedidos[0]?.CF)}`;
-                }
-                load.pedidos.filter(searchPredicate).forEach(p => {
-                    resultados.push({ pedido: p, local: `Carga #${load.numero || loadId.split('-')[1]} (${load.vehicleType})`, tabId: tabId, accordionId: accordionId, cardId: loadId });
-                });
-            }
-
-            // 2. Sobras
-            findInList(currentLeftoversForPrinting, 'Sobras Finais (Mesa de Trabalho)', 'fiorino-tab-pane', null); // Assumes leftovers are in a tab
-
-            // 3. Pedidos Disponíveis (Varejo)
-            findInList(pedidosGeraisAtuais, 'Pedidos Disponíveis (Varejo)', null, 'accordionGeral');
-
-            // 4. Outras seções
-            findInList(pedidosManualmenteBloqueadosAtuais, 'Bloqueado Manualmente', null, null);
-            findInList(pedidosComCFNumericoIsolado, 'Pedidos Filtrados (Bloqueio Varejo)', null, 'accordionCF');
-            findInList(rota1SemCarga, 'Pedidos da Rota 1 para Alteração', null, null);
-            findInList(pedidosFuncionarios, 'Pedidos de Funcionários', 'funcionarios-tab-pane', 'accordionFuncionarios');
-            findInList(pedidosTransferencias, 'Pedidos de Transferência', 'transferencias-tab-pane', 'accordionTransferencias');
-
-            for (const cf in gruposPorCFGlobais) {
-                gruposPorCFGlobais[cf].pedidos.filter(searchPredicate).forEach(p => {
-                    const collapseId = `collapseCF-Mesa-${String(cf).replace(/\s|\(|\)|\//g, '')}`;
-                    resultados.push({ pedido: p, local: `Carga Truck/Carreta (${cf})`, tabId: 'cf-tab-pane', accordionId: collapseId });
-                });
-            }
-
-            // Remover duplicatas baseadas no número do pedido
-            const uniqueResultados = [];
-            const seenPedidos = new Set();
-            for (const res of resultados) {
-                if (!seenPedidos.has(res.pedido.Num_Pedido)) {
-                    uniqueResultados.push(res);
-                    seenPedidos.add(res.pedido.Num_Pedido);
-                }
-            }
-
-            if (uniqueResultados.length === 0) {
-                searchResultDiv.innerHTML = '<div class="alert alert-warning">Nenhum pedido encontrado para o termo buscado.</div>';
-            } else {
-                let html = `<div class="alert alert-info"><h5>${uniqueResultados.length} resultado(s) encontrado(s):</h5></div>`;
-                html += '<ul class="list-group">';
-                uniqueResultados.forEach((res, index) => {
-                    const { pedido, local, tabId, accordionId, cardId } = res;
-                    const isPriority = pedidosPrioritarios.includes(String(pedido.Num_Pedido));
-                    const priorityButtonHtml = isPriority
-                        ? `<button class="btn btn-sm btn-outline-secondary" onclick="despriorizarPedido('${pedido.Num_Pedido}')"><i class="bi bi-star-slash-fill me-1"></i>Remover Prioridade</button>`
-                        : `<button class="btn btn-sm btn-outline-warning" onclick="priorizarPedido('${pedido.Num_Pedido}')"><i class="bi bi-star-fill me-1"></i>Priorizar</button>`;
-
-                    const params = `\'${pedido.Num_Pedido}\', ${tabId ? `\'${tabId}\'` : null}, ${accordionId ? `\'${accordionId}\'` : null}, ${cardId ? `\'${cardId}\'` : null}`;
-                    html += `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>Pedido:</strong> ${pedido.Num_Pedido} ${isPriority ? '<span class="badge bg-primary ms-2">Prioridade</span>' : ''}<br>
-                                <small><strong>Cliente:</strong> ${pedido.Nome_Cliente} (${pedido.Cidade})</small><br>
-                                <small class="text-muted"><strong>Local:</strong> ${local}</small>
-                            </div>
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="highlightPedido(${params})">
-                                    Ir para <i class="bi bi-arrow-right-short"></i>
-                                </button>
-                                ${priorityButtonHtml}
-                            </div>
-                        </li>`;
-                });
-                html += '</ul>';
-                searchResultDiv.innerHTML = html;
-            }
-        }
-
-        function priorizarPedido(numPedido) {
-            numPedido = String(numPedido);
-            if (!pedidosPrioritarios.includes(numPedido)) {
-                console.log(`Priorizando pedido: ${numPedido}`);
-                pedidosPrioritarios.push(numPedido);
-                // Se a planilha já foi processada, reprocessa para aplicar a prioridade
-                saveStateToLocalStorage(); // Salva a prioridade imediatamente
-                if (planilhaData.length > 0) processar();
-            }
-        }
-
-        function despriorizarPedido(numPedido) {
-            numPedido = String(numPedido);
-            const index = pedidosPrioritarios.indexOf(numPedido);
-            if (index > -1) {
-                console.log(`Removendo prioridade do pedido: ${numPedido}`);
-                pedidosPrioritarios.splice(index, 1);
-                // Se a planilha já foi processada, reprocessa para remover a prioridade
-                saveStateToLocalStorage(); // Salva a remoção da prioridade imediatamente
-                if (planilhaData.length > 0) processar();
-            }
-        }
-
-        function highlightPedido(numPedido, tabId = null, accordionId = null, cardId = null) {
-            // 1. Mudar para a aba correta, se aplicável
-            if (tabId) {
-                const tabButton = document.querySelector(`button[data-bs-target="#${tabId}"]`);
-                if (tabButton) {
-                    bootstrap.Tab.getOrCreateInstance(tabButton).show();
-                }
-            }
-
-            // Atraso para garantir que a aba foi renderizada antes de procurar elementos
-            setTimeout(() => {
-                // 2. Expandir o accordion, se aplicável
-                let targetElement = null;
-                if (accordionId) {
-                    const collapseEl = document.getElementById(accordionId);
-                    if (collapseEl) {
-                        if (!collapseEl.classList.contains('show')) {
-                            bootstrap.Collapse.getOrCreateInstance(collapseEl).show();
-                        }
-                        // Se for um accordion, o elemento a ser rolado é o header dele
-                        targetElement = collapseEl.previousElementSibling; 
+            if (!pedidoEncontrado) {
+                for (const loadId in activeLoads) {
+                    const load = activeLoads[loadId];
+                    pedidoEncontrado = load.pedidos.find(p => String(p.Num_Pedido) === searchInput);
+                    if (pedidoEncontrado) {
+                        local = `Carga #${load.numero || loadId.split('-')[1]} (${load.vehicleType})`;
+                        break;
                     }
                 }
-
-                // 3. Encontrar a linha do pedido
-                const row = document.getElementById(`pedido-${numPedido}`);
-                if (row) {
-                    // Se encontramos a linha, ela se torna o alvo principal
-                    targetElement = row;
-                } else if (cardId) {
-                    // Se não achamos a linha mas temos um cardId, o card é o alvo
-                    targetElement = document.getElementById(cardId);
+            }
+            if (!pedidoEncontrado) {
+                pedidoEncontrado = pedidosManualmenteBloqueadosAtuais.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Bloqueado Manualmente'; }
+            }
+            if (!pedidoEncontrado) {
+                pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Pedidos Disponíveis (Varejo)'; accordionId = 'accordionGeral'; } 
+            }
+            if (!pedidoEncontrado) {
+                pedidoEncontrado = pedidosComCFNumericoIsolado.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Pedidos Filtrados (Bloqueio de Varejo)'; accordionId = 'accordionCF'; }
+            }
+            if (!pedidoEncontrado) {
+                for (const cf in gruposToco) {
+                    pedidoEncontrado = gruposToco[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
+                    if (pedidoEncontrado) { local = `Cargas "Toco" (CF: ${cf})`; accordionId = 'accordionToco'; break; }
                 }
-
-                // 4. Remover destaques antigos e aplicar o novo
-                document.querySelectorAll('.search-highlight').forEach(el => el.classList.remove('search-highlight', 'table-info'));
-                if (targetElement) {
-                    targetElement.classList.add('search-highlight');
-                    if (targetElement.tagName === 'TR') {
-                        targetElement.classList.add('table-info');
-                    }
-                    // 5. Rolar para o elemento
-                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+             if (!pedidoEncontrado) {
+                for (const cf in gruposPorCFGlobais) {
+                    pedidoEncontrado = gruposPorCFGlobais[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
+                    if (pedidoEncontrado) { local = `Cargas Truck e Carreta (${cf})`; accordionId = 'accordionCargasPorCF'; break; }
                 }
-            }, 350); // O timeout é importante para a transição de abas e accordions
+            }
+            if (!pedidoEncontrado) {
+                pedidoEncontrado = rota1SemCarga.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Pedidos da Rota 1 para Alteração'; }
+            }
+             if (!pedidoEncontrado) {
+                pedidoEncontrado = pedidosFuncionarios.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Pedidos de Funcionários'; accordionId = 'accordionFuncionarios';}
+            }
+             if (!pedidoEncontrado) {
+                pedidoEncontrado = pedidosTransferencias.find(p => String(p.Num_Pedido) === searchInput);
+                if (pedidoEncontrado) { local = 'Pedidos de Transferência'; accordionId = 'accordionTransferencias'; }
+            }
+             if (!pedidoEncontrado) {
+                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
+                  if (originalPedido) {
+                          pedidoEncontrado = originalPedido;
+                          if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
+                                local = 'Bloqueado Manualmente por você.';
+                          } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
+                              local = 'Alocado na Carga Especial.';
+                          } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
+                              local = 'Alocado na Carga de Venda Antecipada.';
+                          }
+                          else {
+                               local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
+                          }
+                  }
+             }
+
+            if (pedidoEncontrado) {
+                let buttons = '';
+                if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
+                    const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
+                    buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
+                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                } else if (accordionId || local.startsWith('Carga')) { 
+                    buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+                }
+                searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
+            } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
         }
 
-        document.head.insertAdjacentHTML('beforeend', '<style>.search-highlight { box-shadow: 0 0 0 3px var(--dark-primary) !important; transition: box-shadow 0.5s ease-in-out; }</style>');
+        function priorizarPedido(numPedido) { if (!pedidosPrioritarios.includes(String(numPedido))) { pedidosPrioritarios.push(String(numPedido)); buscarPedido(); } }
 
-        function highlightPedido_OLD(numPedido) {
+        function highlightPedido(numPedido) {
             document.querySelectorAll('tr.table-info').forEach(r => r.classList.remove('table-info'));
             const row = document.getElementById(`pedido-${numPedido}`);
             if (row) {
@@ -1337,17 +1246,13 @@
             if (numPedido) {
                 pedidosBloqueados.add(numPedido);
                 input.value = '';
-                saveStateToLocalStorage();
                 atualizarListaBloqueados();
-                if (planilhaData.length > 0) processar();
             }
         }
 
         function desbloquearPedido(numPedido) {
             pedidosBloqueados.delete(numPedido);
-            saveStateToLocalStorage();
             atualizarListaBloqueados();
-            if (planilhaData.length > 0) processar();
         }
 
         function atualizarListaSemCorte() {
@@ -1372,17 +1277,13 @@
             const input = document.getElementById('semCorteInput');
             const numeros = input.value.split('\n').map(n => n.trim()).filter(Boolean);
             numeros.forEach(num => pedidosSemCorte.add(num));
-            saveStateToLocalStorage();
             input.value = '';
             atualizarListaSemCorte();
-            if (planilhaData.length > 0) processar();
         }
 
         function removerMarcacaoSemCorte(numPedido) {
             pedidosSemCorte.delete(numPedido);
-            saveStateToLocalStorage();
             atualizarListaSemCorte();
-            if (planilhaData.length > 0) processar();
         }
 
         function resetarEstadoGlobal() {
@@ -1396,10 +1297,10 @@
             pedidosTransferencias = [];
             pedidosCondorTruck = [];
             pedidosManualmenteBloqueadosAtuais = [];
+            pedidosPrioritarios = [];
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
             activeLoads = {};
-            processedRoutes.clear();
         }
 
         function limparTudo(){
@@ -1453,7 +1354,6 @@
             fileInput.value = '';
             planilhaData = [];
             processarBtn.disabled = true;
-            localStorage.removeItem('logisticsAppState');
             statusDiv.innerHTML = '';
         }
 
@@ -1507,7 +1407,7 @@
                         } else if (coluna5.includes('TBL ESP CARRETA') && !isNumeric(p.CF)) {
                             pedidosCarretaSemCF.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (coluna5.includes('TABELA TRANSFER')) {
+                        } else if (coluna5.includes('TRANSF. TODESCH')) {
                             pedidosTransferencias.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
                         } else if (coluna5.includes('CONDOR (TRUCK)') || coluna5.includes('CONDOR TOD TRUC')) {
@@ -1614,7 +1514,6 @@
                     displayGerais(resultadoGeralDiv, gruposGerais);
                     
                     updateAndRenderChart();
-                    saveStateToLocalStorage();
                     
                     statusDiv.innerHTML = `<p class="text-success">Processamento concluído!</p>`;
                 } catch (error) { 
@@ -2252,13 +2151,6 @@
             const allRouteButtons = document.querySelectorAll('#botoes-fiorino button, #botoes-van button, #botoes-34 button');
             allRouteButtons.forEach(btn => btn.disabled = true);
 
-            const routesKey = Array.isArray(routeOrRoutes) ? routeOrRoutes.sort().join(',') : String(routeOrRoutes);
-            if (processedRoutes.has(routesKey)) {
-                alert('Esta rota já foi processada. Para reprocessar, limpe os resultados ou processe uma rota diferente.');
-                allRouteButtons.forEach(btn => btn.disabled = false);
-                return;
-            }
-
             const resultadoDiv = document.getElementById(divId);
             
             const autoGeneratedContent = resultadoDiv.querySelector('.resultado-container');
@@ -2267,6 +2159,12 @@
             if (buttonElement) {
                 currentLeftoversForPrinting = [];
                 const parentContainer = buttonElement.parentElement;
+                parentContainer.querySelectorAll('button').forEach(btn => {
+                    btn.classList.remove('active', 'btn-success', 'btn-primary', 'btn-warning', 'btn-secondary');
+                    const originalColorClass = btn.id.includes('fiorino') ? 'success' : (btn.id.includes('van') ? 'primary' : 'warning');
+                    btn.classList.add(`btn-outline-${originalColorClass}`);
+                    btn.innerHTML = btn.innerHTML.replace('<i class="bi bi-check-circle-fill me-2"></i>', '');
+                });
                 const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
                 buttonElement.classList.remove(`btn-outline-${colorClass}`);
                 buttonElement.classList.add(`btn-${colorClass}`, 'active');
@@ -2434,14 +2332,6 @@
                 activeLoads[loadId] = load;
             });
 
-            // Salvar o contexto da rota processada para recarregamento
-            const routeContext = {
-                divId: divId,
-                title: title,
-                routesKey: routesKey
-            };
-            saveRouteContext(routeContext);
-
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
                 van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
@@ -2477,7 +2367,6 @@
             }
             resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             updateAndRenderChart();
-            saveStateToLocalStorage();
         }
         
         function refineLoadsWithSimpleFit(initialLoads, initialLeftovers) {
@@ -2957,7 +2846,6 @@
             }
 
             updateAndRenderChart();
-            saveStateToLocalStorage();
         }
 
         function updateLoadUI(loadId) {
@@ -3172,7 +3060,6 @@
             }, 300);
 
             updateAndRenderChart();
-            saveStateToLocalStorage();
         }
 
         function cancelManualLoad() {
@@ -3275,7 +3162,7 @@
                     <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
                         <div class="accordion-body" id="${printAreaId}">
                             <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                <p class="text-muted small mb-0">Pedidos com a tag "TABELA TRANSFER" na Coluna 5, separados automaticamente.</p>
+                                <p class="text-muted small mb-0">Pedidos com a tag "TRANSF. TODESCH" na Coluna 5, separados automaticamente.</p>
                                 <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Transferência')">
                                     <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
                                 </button>
@@ -3287,194 +3174,6 @@
             </div>`;
 
             div.innerHTML = accordionHtml;
-        }
-
-        // ================================================================================================
-        //  LÓGICA DE PERSISTÊNCIA DE ESTADO
-        // ================================================================================================
-        
-        function saveStateToLocalStorage() {
-            if (typeof(Storage) === "undefined") {
-                console.warn("Seu navegador não suporta Local Storage. O progresso não será salvo.");
-                return;
-            }
-            try {
-                const state = {
-                    planilhaData,
-                    originalColumnHeaders,
-                    pedidosGeraisAtuais,
-                    gruposToco,
-                    gruposPorCFGlobais,
-                    pedidosComCFNumericoIsolado,
-                    pedidosManualmenteBloqueadosAtuais,
-                    pedidosPrioritarios: Array.from(pedidosPrioritarios),
-                    pedidosBloqueados: Array.from(pedidosBloqueados),
-                    pedidosEspeciaisProcessados: Array.from(pedidosEspeciaisProcessados),
-                    pedidosSemCorte: Array.from(pedidosSemCorte),
-                    pedidosVendaAntecipadaProcessados: Array.from(pedidosVendaAntecipadaProcessados),
-                    rota1SemCarga,
-                    pedidosFuncionarios,
-                    pedidosCarretaSemCF,
-                    pedidosTransferencias,
-                    pedidosCondorTruck,
-                    tocoPedidoIds: Array.from(tocoPedidoIds),
-                    currentLeftoversForPrinting,
-                    activeLoads,
-                    processedRoutes: Array.from(processedRoutes),
-                    processedRouteContexts: JSON.parse(localStorage.getItem('logisticsRouteContexts') || '{}')
-                };
-                localStorage.setItem('logisticsAppState', JSON.stringify(state));
-                console.log("Estado da aplicação salvo no Local Storage.");
-            } catch (e) {
-                console.error("Erro ao salvar o estado no Local Storage:", e);
-                alert("Erro ao salvar o estado. O armazenamento pode estar cheio.");
-            }
-        }
-
-        function saveRouteContext(context) {
-            try {
-                const contexts = JSON.parse(localStorage.getItem('logisticsRouteContexts') || '{}');
-                contexts[context.routesKey] = context;
-                localStorage.setItem('logisticsRouteContexts', JSON.stringify(contexts));
-            } catch (e) {
-                console.error("Erro ao salvar contexto da rota:", e);
-            }
-        }
-
-        function clearRouteContexts() {
-            localStorage.removeItem('logisticsRouteContexts');
-        }
-
-        function loadStateFromLocalStorage() {
-            if (typeof(Storage) === "undefined") return;
-
-            const savedStateJSON = localStorage.getItem('logisticsAppState');
-            if (!savedStateJSON) {
-                console.log("Nenhum estado salvo encontrado.");
-                return;
-            }
-
-            try {
-                const savedState = JSON.parse(savedStateJSON);
-                
-                planilhaData = savedState.planilhaData || [];
-                if (planilhaData.length === 0) return;
-
-                originalColumnHeaders = savedState.originalColumnHeaders || [];
-                pedidosGeraisAtuais = savedState.pedidosGeraisAtuais || [];
-                gruposToco = savedState.gruposToco || {};
-                gruposPorCFGlobais = savedState.gruposPorCFGlobais || {};
-                pedidosComCFNumericoIsolado = savedState.pedidosComCFNumericoIsolado || [];
-                pedidosManualmenteBloqueadosAtuais = savedState.pedidosManualmenteBloqueadosAtuais || [];
-                pedidosPrioritarios = savedState.pedidosPrioritarios || [];
-                pedidosBloqueados = new Set(savedState.pedidosBloqueados || []);
-                pedidosEspeciaisProcessados = new Set(savedState.pedidosEspeciaisProcessados || []);
-                pedidosSemCorte = new Set(savedState.pedidosSemCorte || []);
-                pedidosVendaAntecipadaProcessados = new Set(savedState.pedidosVendaAntecipadaProcessados || []);
-                rota1SemCarga = savedState.rota1SemCarga || [];
-                pedidosFuncionarios = savedState.pedidosFuncionarios || [];
-                pedidosCarretaSemCF = savedState.pedidosCarretaSemCF || [];
-                pedidosTransferencias = savedState.pedidosTransferencias || [];
-                pedidosCondorTruck = savedState.pedidosCondorTruck || [];
-                tocoPedidoIds = new Set(savedState.tocoPedidoIds || []);
-                currentLeftoversForPrinting = savedState.currentLeftoversForPrinting || [];
-                activeLoads = savedState.activeLoads || {};
-                processedRoutes = new Set(savedState.processedRoutes || []);
-                const processedRouteContexts = savedState.processedRouteContexts || {};
-
-                // Re-renderizar a UI com os dados carregados
-                statusDiv.innerHTML = `<p class="text-success">Progresso anterior restaurado com sucesso!</p>`;
-                processarBtn.disabled = false;
-                popularFiltrosDeRota();
-                atualizarListaBloqueados();
-                atualizarListaSemCorte();
-                
-                // Re-renderizar todas as seções principais
-                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
-                displayGerais(document.getElementById('resultado-geral'), gruposGerais);
-                displayToco(document.getElementById('resultado-toco'), gruposToco);
-                displayCargasCfAccordion(document.getElementById('resultado-cf-accordion-container'), gruposPorCFGlobais, pedidosCarretaSemCF, pedidosCondorTruck);
-                reRenderActiveLoads(processedRouteContexts);
-                updateAndRenderChart();
-
-                console.log("Estado da aplicação restaurado do Local Storage.");
-            } catch (e) {
-                console.error("Erro ao carregar o estado do Local Storage:", e);
-                localStorage.removeItem('logisticsAppState'); // Limpa estado corrompido
-            }
-        }
-
-        function reRenderActiveLoads(processedRouteContexts) {
-            if (Object.keys(activeLoads).length === 0) return;
-
-            const vehicleInfo = {
-                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
-                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
-                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
-            };
-
-            // Agrupa as cargas por contexto de rota (divId)
-            const loadsByContext = {};
-
-            Object.values(processedRouteContexts).forEach(context => {
-                const resultadoDiv = document.getElementById(context.divId);
-                if (!resultadoDiv) return;
-
-                let html = `<h5 class="mt-3">Cargas para <strong>${context.title}</strong></h5>`;
-                
-                const loadsForThisContext = Object.values(activeLoads).filter(load => {
-                    // Heurística para associar carga ao contexto: verifica se algum pedido da carga pertence à rota do contexto
-                    const routesInContext = context.routesKey.split(',');
-                    return load.pedidos.some(p => routesInContext.includes(String(p.Cod_Rota)));
-                });
-
-                if (loadsForThisContext.length > 0) {
-                    loadsForThisContext.forEach(load => {
-                        if (vehicleInfo[load.vehicleType]) {
-                            html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType]);
-                        }
-                    });
-                } else {
-                    html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
-                }
-
-                resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
-
-                // Reativa o botão da rota processada
-                const routeButton = document.querySelector(`button[onclick*="${context.routesKey}"]`);
-                if (routeButton) {
-                    const vehicleType = routeButton.id.split('-')[1];
-                    const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
-                    routeButton.classList.remove(`btn-outline-${colorClass}`);
-                    routeButton.classList.add(`btn-${colorClass}`, 'active');
-                    routeButton.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>${context.title}`;
-                }
-            });
-
-            // Renderiza as sobras na última aba ativa (ou na primeira, como fallback)
-            if (currentLeftoversForPrinting.length > 0) {
-                const lastContext = Object.values(processedRouteContexts).pop();
-                if (lastContext) {
-                    const resultadoDiv = document.getElementById(lastContext.divId);
-                    if (resultadoDiv) {
-                        const finalLeftoverKg = currentLeftoversForPrinting.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
-                        const manualLoadButton = `<button id="start-manual-load-btn" class="btn btn-success ms-auto no-print" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual</button>`;
-                        const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${lastContext.title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
-
-                        let leftoversHtml = `<div id="leftovers-card-${lastContext.divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
-                                             <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                             <div class="card mb-3">
-                                                 <div class="card-header bg-danger text-white d-flex align-items-center">
-                                                     Pedidos Restantes
-                                                     <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
-                                                 </div>
-                                                 <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                             </div>
-                                         </div>`;
-                        resultadoDiv.querySelector('.resultado-container').insertAdjacentHTML('beforeend', leftoversHtml);
-                    }
-                }
-            }
         }
 
     </script>
