@@ -18,7 +18,7 @@
     <style>
         :root {
             --dark-bg: #10101a;
-            --dark-surface: rgba(28, 28, 42, 0.75);
+            --dark-surface: rgba(28, 28, 42, 0.85);
             --dark-surface-secondary: rgba(40, 40, 60, 0.8);
             --dark-border: rgba(90, 80, 130, 0.3);
             --dark-primary: #6a5acd; /* SlateBlue */
@@ -26,7 +26,7 @@
             --dark-primary-glow: rgba(106, 90, 205, 0.4);
             --dark-text-primary: #f0f0f5;
             --dark-text-secondary: #a0a0b0;
-            --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.25);
             --backdrop-blur: 10px;
         }
 
@@ -50,10 +50,10 @@
         h1, h2, h3, h4, h5 { font-weight: 700; letter-spacing: -0.5px; }
         
         /* --- Tipografia Responsiva (Valores ajustados para uma aparência mais compacta e profissional) --- */
-        h1.h2 { font-size: clamp(1.35rem, 2vw, 1.75rem); }
-        h3 { font-size: clamp(1.15rem, 1.7vw, 1.4rem); }
-        .card-title.h5, .modal-title { font-size: clamp(1rem, 1.2vw, 1.1rem); }
-        #sidebar .fs-4 { font-size: clamp(1.1rem, 1.5vw, 1.25rem); }
+        h1.h2 { font-size: clamp(0.85rem, 1.7vw, 1.1rem); }
+        h3 { font-size: clamp(0.8rem, 1.3vw, 0.95rem); }
+        .card-title.h5, .modal-title { font-size: clamp(0.7rem, 1.1vw, 0.8rem); }
+        #sidebar .fs-4 { font-size: clamp(0.85rem, 1.3vw, 0.95rem); }
 
 
         /* --- Animações --- */
@@ -73,16 +73,16 @@
 
         /* --- Layout Principal --- */
         #main-content {
-            --sidebar-width: clamp(280px, 18vw, 340px);
+            --sidebar-width: clamp(230px, 14vw, 260px);
             margin-left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
             animation: fadeIn 0.5s ease-out;
             min-width: 0; 
         }
 
-        /* --- Sidebar (CORREÇÃO VERTICAL APLICADA) --- */
+        /* --- Sidebar --- */
         #sidebar {
-            width: clamp(280px, 18vw, 340px);
+            width: clamp(230px, 14vw, 260px);
             height: 100vh; /* Alterado de min-height para height */
             position: fixed;
             top: 0;
@@ -110,9 +110,9 @@
         .sidebar-scrollable-content::-webkit-scrollbar-thumb { background-color: var(--dark-primary); border-radius: 10px; }
         .sidebar-scrollable-content::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary-hover); }
 
-        #sidebar .sidebar-header { padding: 1.25rem; } /* Padding reduzido */
+        #sidebar .sidebar-header { padding: 0.8rem 1rem; }
         #sidebar .sidebar-header .fs-4 { font-weight: 700; }
-        #sidebar .sidebar-step { margin-bottom: 1.25rem; } /* Margem reduzida */
+        #sidebar .sidebar-step { margin-bottom: 1rem; }
         #sidebar .step-number {
             background-color: var(--dark-primary);
             color: white;
@@ -130,7 +130,7 @@
         #sidebar .nav-link {
             color: var(--dark-text-secondary);
             font-weight: 500;
-            padding: 0.75rem 1.25rem;
+            padding: 0.45rem 1rem;
             border-radius: 0.5rem;
             position: relative;
             transition: all 0.3s ease;
@@ -152,7 +152,7 @@
         .card {
             background-color: var(--dark-surface);
             border: 1px solid var(--dark-border);
-            border-radius: 1rem;
+            border-radius: 0.75rem;
             box-shadow: var(--box-shadow);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             overflow: hidden;
@@ -160,24 +160,24 @@
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
         }
         .card:hover {
-            transform: translateY(-5px) scale(1.01);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
             border-color: var(--dark-primary-glow);
         }
         .card-header {
             background-color: var(--dark-surface-secondary);
             border-bottom: 1px solid var(--dark-border);
             font-weight: 600;
-            padding: 1rem 1.5rem;
+            padding: 0.65rem 1rem;
         }
-        .card-body { padding: 1.5rem; }
+        .card-body { padding: 1rem; }
 
         /* --- Botões e Controles --- */
         .btn {
             font-weight: 600;
             transition: all 0.2s ease-in-out;
             border-radius: 0.5rem;
-            padding: 0.6rem 1.2rem;
+            padding: 0.35rem 0.75rem;
         }
         .btn:hover {
             transform: translateY(-2px);
@@ -204,7 +204,7 @@
         .modal-content {
             background-color: var(--dark-surface);
             backdrop-filter: blur(var(--backdrop-blur));
-            border-radius: 1rem;
+            border-radius: 0.75rem;
             border: 1px solid var(--dark-border);
         }
         
@@ -230,7 +230,7 @@
             font-weight: 600;
             border-bottom: 2px solid var(--dark-primary);
         }
-        tbody td { padding: 0.75rem; vertical-align: middle; }
+        tbody td { padding: 0.45rem 0.6rem; vertical-align: middle; font-size: 0.8rem; }
         tbody tr { transition: background-color 0.2s ease; }
 
         .nav-tabs .nav-link {
@@ -238,7 +238,7 @@
             border: none;
             border-bottom: 3px solid transparent;
             font-weight: 600;
-            padding: 0.75rem 1rem;
+            padding: 0.45rem 0.8rem;
             transition: all 0.3s ease;
         }
         .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
@@ -251,7 +251,7 @@
             border: 1px solid var(--dark-border);
             border-top: none;
             border-radius: 0 0 0.8rem 0.8rem;
-            padding: 1.5rem;
+            padding: 1rem;
         }
 
         /* Melhoria de Usabilidade */
@@ -309,7 +309,7 @@
 <body>
     
     <div class="d-flex">
-        <nav id="sidebar" class="p-3 text-white no-print">
+        <nav id="sidebar" class="p-2 text-white no-print">
             <div class="sidebar-header d-flex align-items-center mb-3">
                 <i class="bi bi-box-seam-fill me-3 fs-1" style="color: var(--dark-primary);"></i>
                 <span class="fs-4">Otimizador</span>
@@ -365,7 +365,7 @@
             </div>
         </nav>
 
-        <main id="main-content" class="p-4 p-lg-5">
+        <main id="main-content" class="p-3">
             
             <h1 class="h2 mb-4 animated-entry">Dashboard de Separação de Cargas</h1>
 
@@ -438,7 +438,7 @@
                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
                         </div>
                        <div class="card-body">
-                           <div class="input-group mb-3 no-print"><input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar por Nº do Pedido..."><button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()"><i class="bi bi-search"></i></button></div>
+                           <div class="input-group mb-3 no-print"><input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar Pedido, Cliente, Cidade..."><button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()"><i class="bi bi-search"></i></button></div>
                            <div id="search-result" class="mb-3"></div>
                            <div id="resultado-geral"><div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div></div>
                        </div>
@@ -1119,6 +1119,143 @@
 
 
         function buscarPedido() {
+            const searchTerm = document.getElementById('pedidoSearchInput').value.trim().toLowerCase();
+            const searchResultDiv = document.getElementById('search-result');
+            searchResultDiv.innerHTML = '';
+            if (!searchTerm) return;
+            if (planilhaData.length === 0) { 
+                searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>'; 
+                return; 
+            }
+
+            const searchPool = [
+                { data: currentLeftoversForPrinting, location: 'Sobras Finais (Mesa de Trabalho)', tabId: null, accordionId: null },
+                ...Object.values(activeLoads).map(load => ({
+                    data: load.pedidos,
+                    location: `Carga #${load.numero || load.id.split('-')[1]} (${load.vehicleType})`,
+                    tabId: `#${load.vehicleType}-tab-pane`,
+                    accordionId: load.vehicleType === 'toco' ? 'accordionToco' : null
+                })),
+                { data: pedidosManualmenteBloqueadosAtuais, location: 'Bloqueado Manualmente', tabId: null, accordionId: null },
+                { data: pedidosGeraisAtuais, location: 'Pedidos Disponíveis (Varejo)', tabId: null, accordionId: 'accordionGeral' },
+                { data: pedidosComCFNumericoIsolado, location: 'Pedidos Filtrados (Bloqueio Varejo)', tabId: null, accordionId: 'accordionCF' },
+                ...Object.values(gruposToco).map(grupo => ({
+                    data: grupo.pedidos,
+                    location: `Cargas "Toco" (CF: ${grupo.pedidos[0]?.CF})`,
+                    tabId: '#cf-tab-pane',
+                    accordionId: 'accordionToco'
+                })),
+                ...Object.values(gruposPorCFGlobais).map(grupo => ({
+                    data: grupo.pedidos,
+                    location: `Cargas Truck e Carreta (${grupo.pedidos[0]?.CF || 'Sem CF'})`,
+                    tabId: '#cf-tab-pane',
+                    accordionId: 'accordionCargasPorCF'
+                })),
+                { data: rota1SemCarga, location: 'Pedidos Rota 1 para Alteração', tabId: null, accordionId: null },
+                { data: pedidosFuncionarios, location: 'Pedidos de Funcionários', tabId: '#funcionarios-tab-pane', accordionId: 'accordionFuncionarios' },
+                { data: pedidosTransferencias, location: 'Pedidos de Transferência', tabId: '#transferencias-tab-pane', accordionId: 'accordionTransferencias' }
+            ];
+
+            let foundPedidos = [];
+            const processedPedidos = new Set();
+
+            for (const source of searchPool) {
+                const results = source.data.filter(p => {
+                    if (processedPedidos.has(p.Num_Pedido)) return false;
+                    const match = String(p.Num_Pedido).toLowerCase().includes(searchTerm) ||
+                                  String(p.Nome_Cliente).toLowerCase().includes(searchTerm) ||
+                                  String(p.Cidade).toLowerCase().includes(searchTerm);
+                    if (match) {
+                        processedPedidos.add(p.Num_Pedido);
+                        return true;
+                    }
+                    return false;
+                });
+
+                if (results.length > 0) {
+                    foundPedidos.push(...results.map(p => ({ ...p, location: source.location, tabId: source.tabId, accordionId: source.accordionId })));
+                }
+            }
+            
+            // Fallback to search in the original sheet if nothing is found
+            if (foundPedidos.length === 0) {
+                const originalResults = planilhaData.filter(p => {
+                    if (processedPedidos.has(p.Num_Pedido)) return false;
+                     const match = String(p.Num_Pedido).toLowerCase().includes(searchTerm) ||
+                                  String(p.Nome_Cliente).toLowerCase().includes(searchTerm) ||
+                                  String(p.Cidade).toLowerCase().includes(searchTerm);
+                    if (match) {
+                        processedPedidos.add(p.Num_Pedido);
+                        return true;
+                    }
+                    return false;
+                });
+
+                if (originalResults.length > 0) {
+                     foundPedidos.push(...originalResults.map(p => {
+                        let location = 'Encontrado na planilha original, mas filtrado ou já processado.';
+                        if (pedidosBloqueados.has(String(p.Num_Pedido))) location = 'Bloqueado Manualmente por você.';
+                        else if (pedidosEspeciaisProcessados.has(String(p.Num_Pedido))) location = 'Alocado na Carga Especial.';
+                        else if (pedidosVendaAntecipadaProcessados.has(String(p.Num_Pedido))) location = 'Alocado na Carga de Venda Antecipada.';
+                        return { ...p, location, tabId: null, accordionId: null };
+                     }));
+                }
+            }
+
+            if (foundPedidos.length > 0) {
+                let html = `<div class="alert alert-info"><h5>${foundPedidos.length} resultado(s) para "${searchTerm}"</h5>`;
+                foundPedidos.slice(0, 10).forEach(pedidoEncontrado => { // Limit to 10 results to avoid clutter
+                    html += `<div class="border-bottom py-2">
+                                <p class="mb-1"><strong>Pedido:</strong> ${pedidoEncontrado.Num_Pedido} | <strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}</p>
+                                <p class="mb-1 small text-muted"><strong>Local:</strong> ${pedidoEncontrado.location}</p>
+                                <button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}', '${pedidoEncontrado.tabId}', '${pedidoEncontrado.accordionId}')">Destacar na Lista</button>
+                             </div>`;
+                });
+                if (foundPedidos.length > 10) {
+                    html += `<p class="mt-2 small text-muted">Exibindo os 10 primeiros resultados.</p>`;
+                }
+                html += `</div>`;
+                searchResultDiv.innerHTML = html;
+            } else {
+                searchResultDiv.innerHTML = '<p class="text-danger">Nenhum pedido encontrado para o termo buscado.</p>';
+            }
+        }
+
+        function priorizarPedido(numPedido) { if (!pedidosPrioritarios.includes(String(numPedido))) { pedidosPrioritarios.push(String(numPedido)); buscarPedido(); } }
+
+        function highlightPedido(numPedido, tabId, accordionId) {
+            // Switch to the correct tab if necessary
+            if (tabId && tabId !== 'null') {
+                const tabElement = document.querySelector(`button[data-bs-target="${tabId}"]`);
+                if (tabElement) {
+                    const tab = new bootstrap.Tab(tabElement);
+                    tab.show();
+                }
+            }
+
+            // Use a short delay to allow the tab to render before scrolling
+            setTimeout(() => {
+                document.querySelectorAll('tr.table-info').forEach(r => r.classList.remove('table-info'));
+                const row = document.getElementById(`pedido-${numPedido}`);
+                if (row) {
+                    row.classList.add('table-info');
+                    
+                    // Open the accordion if it's closed
+                    const collapseEl = row.closest('.accordion-collapse');
+                    if (collapseEl && !collapseEl.classList.contains('show')) { 
+                        bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); 
+                    }
+
+                    // Scroll to the element after another short delay for the accordion to open
+                    setTimeout(() => { 
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
+                    }, 350);
+                }
+            }, 200);
+        }
+
+        /*
+        function buscarPedido() {
             const searchInput = document.getElementById('pedidoSearchInput').value.trim();
             const searchResultDiv = document.getElementById('search-result');
             searchResultDiv.innerHTML = '';
@@ -1204,22 +1341,8 @@
                 }
                 searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
             } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
-        }
+        }*/
 
-        function priorizarPedido(numPedido) { if (!pedidosPrioritarios.includes(String(numPedido))) { pedidosPrioritarios.push(String(numPedido)); buscarPedido(); } }
-
-        function highlightPedido(numPedido) {
-            document.querySelectorAll('tr.table-info').forEach(r => r.classList.remove('table-info'));
-            const row = document.getElementById(`pedido-${numPedido}`);
-            if (row) {
-                row.classList.add('table-info');
-                const collapseEl = row.closest('.accordion-collapse');
-                if (collapseEl && !collapseEl.classList.contains('show')) { 
-                    bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); 
-                }
-                setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350);
-            }
-        }
         
         function atualizarListaBloqueados() {
             const divLista = document.getElementById('lista-pedidos-bloqueados');
@@ -1541,7 +1664,12 @@
                 return;
             }
 
-            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => isOverdue(p.Predat) && !String(p['BLOQ.']).trim());
+            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => {
+                const isBloqC = String(p['BLOQ.']).trim().toUpperCase() === 'C';
+                const isNotBlocked = !String(p['BLOQ.']).trim();
+                
+                return isOverdue(p.Predat) && (isNotBlocked || isBloqC);
+            });
 
             if (pedidosAtrasados.length === 0) {
                 alert("Nenhum pedido em atraso (e não bloqueado) foi encontrado nos resultados processados.");
