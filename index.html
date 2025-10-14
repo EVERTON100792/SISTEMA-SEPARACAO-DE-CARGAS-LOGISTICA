@@ -15,45 +15,59 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts" defer></script>
+
     <style>
         :root {
-            --dark-bg: #10101a;
-            --dark-surface: rgba(28, 28, 42, 0.85);
-            --dark-surface-secondary: rgba(40, 40, 60, 0.8);
-            --dark-border: rgba(90, 80, 130, 0.3);
-            --dark-primary: #6a5acd; /* SlateBlue */
-            --dark-primary-hover: #7b68ee; /* MediumSlateBlue */
-            --dark-primary-glow: rgba(106, 90, 205, 0.4);
+            --dark-bg: #0d1117; /* GitHub Dark Background */
+            --dark-surface: rgba(22, 27, 34, 0.8);
+            --dark-surface-secondary: rgba(33, 38, 45, 0.7);
+            --dark-border: rgba(144, 158, 171, 0.2);
+            --dark-primary: #58a6ff; /* GitHub Blue */
+            --dark-primary-hover: #79c0ff;
+            --dark-primary-glow: rgba(88, 166, 255, 0.3);
             --dark-text-primary: #f0f0f5;
-            --dark-text-secondary: #a0a0b0;
-            --box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.25);
+            --dark-text-secondary: #8b9eab;
+            --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
             --backdrop-blur: 10px;
+        }
+
+        @keyframes background-pan {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         /* --- Melhorias Gerais --- */
         body {
             background-color: var(--dark-bg);
-            background-image: radial-gradient(circle at 1% 1%, rgba(106, 90, 205, 0.2) 0%, transparent 40%), 
-                              radial-gradient(circle at 99% 99%, rgba(74, 124, 242, 0.2) 0%, transparent 40%);
+            background: linear-gradient(125deg, var(--dark-bg), #161b22, var(--dark-bg));
+            background-size: 400% 400%;
+            animation: background-pan 15s ease-in-out infinite;
             font-family: 'Inter', sans-serif;
             color: var(--dark-text-primary);
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
         }
-
+        
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--dark-bg); }
-        ::-webkit-scrollbar-thumb { background-color: var(--dark-primary); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { 
+            background-color: var(--dark-surface-secondary); 
+            border-radius: 10px; 
+            border: 2px solid var(--dark-bg);
+        }
         ::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary-hover); }
 
         h1, h2, h3, h4, h5 { font-weight: 700; letter-spacing: -0.5px; }
         
-        /* --- Tipografia Responsiva (Valores ajustados para uma aparência mais compacta e profissional) --- */
-        h1.h2 { font-size: clamp(0.85rem, 1.7vw, 1.1rem); }
-        h3 { font-size: clamp(0.8rem, 1.3vw, 0.95rem); }
-        .card-title.h5, .modal-title { font-size: clamp(0.7rem, 1.1vw, 0.8rem); }
-        #sidebar .fs-4 { font-size: clamp(0.85rem, 1.3vw, 0.95rem); }
+        /* --- Tipografia Responsiva (Valores ajustados para melhor hierarquia) --- */
+        h1.h2 { font-size: clamp(1.5rem, 2.5vw, 2rem); }
+        h3 { font-size: clamp(1.2rem, 2vw, 1.5rem); }
+        .card-title.h5, .modal-title { font-size: clamp(1rem, 1.5vw, 1.1rem); }
+        #sidebar .fs-4 { font-size: clamp(1.1rem, 1.5vw, 1.25rem); }
 
 
         /* --- Animações --- */
@@ -62,9 +76,9 @@
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes glow {
-            0% { box-shadow: 0 0 5px var(--dark-primary-glow); }
-            50% { box-shadow: 0 0 20px var(--dark-primary-glow), 0 0 10px var(--dark-primary-glow); }
-            100% { box-shadow: 0 0 5px var(--dark-primary-glow); }
+            0% { box-shadow: 0 0 4px var(--dark-primary-glow); }
+            50% { box-shadow: 0 0 16px var(--dark-primary-glow), 0 0 8px var(--dark-primary-glow); }
+            100% { box-shadow: 0 0 4px var(--dark-primary-glow); }
         }
         .animated-entry { animation: fadeIn 0.6s ease-out forwards; }
         .animated-entry:nth-child(1) { animation-delay: 0.1s; }
@@ -73,7 +87,7 @@
 
         /* --- Layout Principal --- */
         #main-content {
-            --sidebar-width: clamp(230px, 14vw, 260px);
+            --sidebar-width: clamp(250px, 16vw, 280px);
             margin-left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
             animation: fadeIn 0.5s ease-out;
@@ -82,7 +96,7 @@
 
         /* --- Sidebar --- */
         #sidebar {
-            width: clamp(230px, 14vw, 260px);
+            width: clamp(250px, 16vw, 280px);
             height: 100vh; /* Alterado de min-height para height */
             position: fixed;
             top: 0;
@@ -101,17 +115,17 @@
         .sidebar-scrollable-content {
             flex: 1 1 auto; /* Permite que este elemento cresça e encolha */
             overflow-y: auto;
-            min-height: 0; /* Essencial para que o overflow funcione em um flex child */
-            padding: 0 0.5rem; /* Adiciona um pequeno padding lateral */
+            min-height: 0; 
+            padding: 0 1rem; 
         }
         
         .sidebar-scrollable-content::-webkit-scrollbar { width: 6px; }
         .sidebar-scrollable-content::-webkit-scrollbar-track { background: transparent; }
-        .sidebar-scrollable-content::-webkit-scrollbar-thumb { background-color: var(--dark-primary); border-radius: 10px; }
+        .sidebar-scrollable-content::-webkit-scrollbar-thumb { background-color: var(--dark-surface-secondary); border-radius: 10px; }
         .sidebar-scrollable-content::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary-hover); }
 
-        #sidebar .sidebar-header { padding: 0.8rem 1rem; }
-        #sidebar .sidebar-header .fs-4 { font-weight: 700; }
+        #sidebar .sidebar-header { padding: 1.25rem 1rem; }
+        #sidebar .sidebar-header .fs-4 { font-weight: 600; }
         #sidebar .sidebar-step { margin-bottom: 1rem; }
         #sidebar .step-number {
             background-color: var(--dark-primary);
@@ -125,12 +139,12 @@
             font-weight: 700;
             margin-right: 0.75rem;
         }
-        #sidebar .form-label { font-weight: 500; color: var(--dark-text-secondary); }
+        #sidebar .form-label { font-weight: 600; color: var(--dark-text-secondary); font-size: 0.8rem; }
 
         #sidebar .nav-link {
             color: var(--dark-text-secondary);
             font-weight: 500;
-            padding: 0.45rem 1rem;
+            padding: 0.6rem 1rem;
             border-radius: 0.5rem;
             position: relative;
             transition: all 0.3s ease;
@@ -138,13 +152,13 @@
         }
         #sidebar .nav-link:hover {
             background-color: var(--dark-surface-secondary);
-            color: var(--dark-text-primary);
+            color: var(--dark-primary-hover);
             transform: translateX(5px);
         }
         #sidebar .nav-link.active {
-            background: var(--dark-primary);
+            background: linear-gradient(90deg, var(--dark-primary) 0%, rgba(88, 166, 255, 0.4) 100%);
             color: white;
-            font-weight: 600;
+            font-weight: 700;
             box-shadow: 0 4px 20px var(--dark-primary-glow);
         }
 
@@ -161,23 +175,23 @@
         }
         .card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-            border-color: var(--dark-primary-glow);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+            border-color: var(--dark-primary);
         }
         .card-header {
             background-color: var(--dark-surface-secondary);
             border-bottom: 1px solid var(--dark-border);
             font-weight: 600;
-            padding: 0.65rem 1rem;
+            padding: 0.75rem 1.25rem;
         }
-        .card-body { padding: 1rem; }
+        .card-body { padding: 1.25rem; }
 
         /* --- Botões e Controles --- */
         .btn {
             font-weight: 600;
             transition: all 0.2s ease-in-out;
             border-radius: 0.5rem;
-            padding: 0.35rem 0.75rem;
+            padding: 0.5rem 1rem;
         }
         .btn:hover {
             transform: translateY(-2px);
@@ -185,7 +199,7 @@
         }
         .btn-primary {
             background: linear-gradient(45deg, var(--dark-primary), var(--dark-primary-hover));
-            border: none;
+            border: 1px solid var(--dark-primary);
         }
         .btn-primary:hover { box-shadow: 0 4px 20px var(--dark-primary-glow); }
         .form-control, .form-select {
@@ -218,19 +232,19 @@
             font-weight: 600;
         }
         .accordion-button:not(.collapsed) {
-            background: linear-gradient(45deg, var(--dark-primary), var(--dark-primary-hover));
+            background: linear-gradient(90deg, var(--dark-primary) 0%, rgba(88, 166, 255, 0.3) 100%);
             color: white;
         }
         .accordion-button:focus { box-shadow: 0 0 0 .25rem var(--dark-primary-glow); }
         .accordion-body { background-color: var(--dark-surface); }
         
-        .table { --bs-table-hover-bg: rgba(106, 90, 205, 0.15); }
+        .table { --bs-table-hover-bg: rgba(88, 166, 255, 0.1); }
         thead th {
             background-color: var(--dark-surface-secondary);
-            font-weight: 600;
+            font-weight: 700;
             border-bottom: 2px solid var(--dark-primary);
         }
-        tbody td { padding: 0.45rem 0.6rem; vertical-align: middle; font-size: 0.8rem; }
+        tbody td { padding: 0.4rem 0.55rem; vertical-align: middle; font-size: 0.78rem; }
         tbody tr { transition: background-color 0.2s ease; }
 
         .nav-tabs .nav-link {
@@ -238,7 +252,7 @@
             border: none;
             border-bottom: 3px solid transparent;
             font-weight: 600;
-            padding: 0.45rem 0.8rem;
+            padding: 0.6rem 1rem;
             transition: all 0.3s ease;
         }
         .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
@@ -251,7 +265,7 @@
             border: 1px solid var(--dark-border);
             border-top: none;
             border-radius: 0 0 0.8rem 0.8rem;
-            padding: 1rem;
+            padding: 1.25rem;
         }
 
         /* Melhoria de Usabilidade */
@@ -265,7 +279,7 @@
         .empty-state .bi { font-size: 2.5rem; color: var(--dark-primary); margin-bottom: 1rem; }
         
         tr.client-highlight > td {
-            background-color: rgba(123, 104, 238, 0.3) !important;
+            background-color: rgba(88, 166, 255, 0.2) !important;
         }
         
         .drop-zone-card.drag-over {
@@ -358,8 +372,8 @@
                     <li class="mb-1"><a href="#workspace-card" class="nav-link"><i class="bi bi-tools me-2 fs-5"></i>Mesas de Trabalho</a></li>
                     <li class="mb-1"><a href="#additional-results" class="nav-link"><i class="bi bi-clipboard2-data-fill me-2 fs-5"></i>Resultados Adicionais</a></li>
                 </ul>
-            </div>
-            <div class="d-grid gap-2 mt-auto pt-3 border-top border-secondary">
+            </div>            
+            <div class="d-grid gap-2 mt-auto p-2 border-top border-secondary">
                 <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#configModal"><i class="bi bi-sliders me-2"></i>Configurações & Ações</button>
                 <button class="btn btn-outline-danger" id="limparResultadosBtn"><i class="bi bi-eraser-fill me-2"></i>Limpar Tudo</button>
             </div>
@@ -367,7 +381,7 @@
 
         <main id="main-content" class="p-3">
             
-            <h1 class="h2 mb-4 animated-entry">Dashboard de Separação de Cargas</h1>
+            <h1 class="h2 mb-4 animated-entry">Dashboard de Otimização Logística</h1>
 
             <div id="resultado-venda-antecipada" class="mb-4"></div>
             <div id="resultado-carga-especial" class="mb-4"></div>
@@ -382,7 +396,7 @@
             <div class="row" id="workspace-card">
                 <div class="col-lg-8 mb-4 animated-entry">
                     <div class="card h-100">
-                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2></div>
+                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-bounding-box me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2></div>
                         <div class="card-body p-0">
                              <ul class="nav nav-tabs nav-fill px-3 pt-2" id="vehicleTabs" role="tablist">
                                  <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane"><i class="bi bi-box-seam-fill me-2"></i>Fiorino</button></li>
@@ -395,7 +409,7 @@
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Fiorinos.</p>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para otimizar as cargas de Fiorino.</p>
                                         <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-fiorino-geral', 'Cargas de Fiorino (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-fiorino"><div class="empty-state"><i class="bi bi-box"></i><p>Nenhuma rota de Fiorino disponível. Processe um arquivo para começar.</p></div></div>
@@ -403,7 +417,7 @@
                                 </div>
                                 <div class="tab-pane fade workspace-tab-pane" id="van-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Vans.</p>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para otimizar as cargas de Van.</p>
                                         <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-van"><div class="empty-state"><i class="bi bi-truck-front-fill"></i><p>Nenhuma rota de Van disponível. Processe um arquivo para começar.</p></div></div>
@@ -411,7 +425,7 @@
                                 </div>
                                 <div class="tab-pane fade workspace-tab-pane" id="tres-quartos-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as cargas 3/4.</p>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para otimizar as cargas 3/4.</p>
                                         <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-34-geral', 'Cargas de 3/4 (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-34"><div class="empty-state"><i class="bi bi-truck-flatbed"></i><p>Nenhuma rota de 3/4 disponível. Processe um arquivo para começar.</p></div></div>
@@ -439,6 +453,16 @@
                         </div>
                        <div class="card-body">
                            <div class="input-group mb-3 no-print"><input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar Pedido, Cliente, Cidade..."><button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()"><i class="bi bi-search"></i></button></div>
+                           <div class="d-flex justify-content-start align-items-center mb-2 no-print gap-2">
+                               <div class="btn-group btn-group-sm" role="group" id="general-filters">
+                                   <button type="button" class="btn btn-outline-secondary active" data-filter="all">Todos</button>
+                                   <button type="button" class="btn btn-outline-secondary" data-filter="overdue"><i class="bi bi-clock-history text-danger"></i> Atrasados</button>
+                                   <button type="button" class="btn btn-outline-secondary" data-filter="scheduled"><i class="bi bi-calendar-check text-warning"></i> Agendados</button>
+                               </div>
+                               <button type="button" class="btn btn-sm btn-outline-secondary" id="collapse-all-general" title="Recolher Tudo">
+                                   <i class="bi bi-arrows-collapse"></i>
+                               </button>
+                           </div>
                            <div id="search-result" class="mb-3"></div>
                            <div id="resultado-geral"><div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div></div>
                        </div>
@@ -695,7 +719,7 @@
                         }
                     },
                     stroke: {
-                        width: [0, 0],
+                        width: [0, 4],
                         curve: 'smooth'
                     },
                     plotOptions: {
@@ -704,7 +728,7 @@
                             borderRadius: 5
                         }
                     },
-                    colors: ['#6a5acd', '#00e396'],
+                    colors: ['var(--dark-primary)', '#00e396'],
                     dataLabels: {
                         enabled: true,
                         formatter: function (val, { seriesIndex }) {
@@ -751,16 +775,16 @@
                         {
                             seriesName: 'Quantidade',
                             axisTicks: { show: true },
-                            axisBorder: { show: true, color: '#6a5acd' },
+                            axisBorder: { show: true, color: 'var(--dark-primary)' },
                             labels: {
-                                style: { colors: '#6a5acd' },
+                                style: { colors: 'var(--dark-primary)' },
                                 formatter: function (val) {
                                     return val.toFixed(0);
                                 }
                             },
                             title: {
                                 text: "Quantidade de Veículos",
-                                style: { color: '#6a5acd', fontWeight: 600 }
+                                style: { color: 'var(--dark-primary)', fontWeight: 600 }
                             },
                         },
                         {
@@ -983,6 +1007,9 @@
             document.getElementById('resetAllConfigs').addEventListener('click', resetAll);
             document.getElementById('limparResultadosBtn').addEventListener('click', limparTudo);
 
+            // Carrega a sessão automaticamente ao iniciar a página
+            loadSession();
+
             document.querySelectorAll('#sidebar-nav a').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -996,6 +1023,23 @@
                         });
                     }
                 });
+            });
+            
+            document.getElementById('general-filters').addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    document.querySelectorAll('#general-filters button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    const filter = e.target.dataset.filter;
+                    const accordionContainer = document.getElementById('accordionGeral');
+                    if (accordionContainer) {
+                        filterGeneralTable(accordionContainer, filter);
+                    }
+                }
+            });
+
+            document.getElementById('collapse-all-general').addEventListener('click', () => {
+                const accordionContainer = document.getElementById('accordionGeral');
+                if (accordionContainer) collapseAllAccordions(accordionContainer);
             });
         });
 
@@ -1070,7 +1114,8 @@
                         pedido.Cubagem = parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
                         return pedido; 
                     });
-                    planilhaData.forEach(checkAgendamento);
+
+                    planilhaData.forEach(checkAgendamento); // Garante que todos os pedidos tenham o status de agendamento
                     statusDiv.innerHTML = `<p class="text-success">Planilha "${file.name}" carregada.</p>`;
                     processarBtn.disabled = false;
                     
@@ -1366,6 +1411,7 @@
         function bloquearPedido() {
             const input = document.getElementById('bloquearPedidoInput');
             const numPedido = input.value.trim();
+            if (!numPedido) return;
             if (numPedido) {
                 pedidosBloqueados.add(numPedido);
                 input.value = '';
@@ -1376,6 +1422,7 @@
         function desbloquearPedido(numPedido) {
             pedidosBloqueados.delete(numPedido);
             atualizarListaBloqueados();
+            saveSession();
         }
 
         function atualizarListaSemCorte() {
@@ -1400,12 +1447,14 @@
             const input = document.getElementById('semCorteInput');
             const numeros = input.value.split('\n').map(n => n.trim()).filter(Boolean);
             numeros.forEach(num => pedidosSemCorte.add(num));
+            if (numeros.length > 0) saveSession();
             input.value = '';
             atualizarListaSemCorte();
         }
 
         function removerMarcacaoSemCorte(numPedido) {
             pedidosSemCorte.delete(numPedido);
+            saveSession();
             atualizarListaSemCorte();
         }
 
@@ -1473,6 +1522,7 @@
             atualizarListaBloqueados();
             atualizarListaSemCorte();
             limparFiltroDeRota();
+            localStorage.removeItem('logisticsSession');
             
             fileInput.value = '';
             planilhaData = [];
@@ -1497,8 +1547,6 @@
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
                     
-                    resetarEstadoGlobal();
-
                     const rotaInicio = document.getElementById('rotaInicioSelect').value;
                     const rotaFim = document.getElementById('rotaFimSelect').value;
                     let dadosParaProcessar = [...planilhaData];
@@ -1545,6 +1593,8 @@
                     let dadosFiltrados = dadosParaProcessar.filter(p => !pedidosExcluidos.has(p.Num_Pedido));
                     
                     let pedidosDisponiveis = [];
+                    pedidosManualmenteBloqueadosAtuais = []; // Limpa para re-popular
+
                     dadosFiltrados.filter(p => p.Num_Pedido).forEach(p => {
                         if (pedidosBloqueados.has(String(p.Num_Pedido))) {
                             pedidosManualmenteBloqueadosAtuais.push(p);
@@ -1637,6 +1687,7 @@
                     displayGerais(resultadoGeralDiv, gruposGerais);
                     
                     updateAndRenderChart();
+                    saveSession();
                     
                     statusDiv.innerHTML = `<p class="text-success">Processamento concluído!</p>`;
                 } catch (error) { 
@@ -1697,10 +1748,10 @@
         }
         
         function createTable(pedidos, columnsToDisplay, sourceId = '') {
-            if (!pedidos || pedidos.length === 0) return '';
-            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'Predat', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
+            if (!pedidos || pedidos.length === 0) return '<p class="text-muted">Nenhum pedido para exibir.</p>';
+            const colunasExibir = columnsToDisplay || ['Status', 'Cod_Rota', 'Cliente', 'Nome_Cliente', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'Predat', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
             let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped table-hover"><thead><tr>';
-            colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
+            colunasExibir.forEach(c => table += `<th data-sort="${c}" style="cursor: pointer;">${c.replace('_', ' ')} <i class="bi bi-arrow-down-up small"></i></th>`);
             table += '</tr></thead><tbody>';
             pedidos.forEach(p => {
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
@@ -1721,8 +1772,14 @@
                         const semCorteBadge = isSemCorte ? ' <span class="badge bg-transparent" title="Pedido Sem Corte"><i class="bi bi-scissors text-warning"></i></span>' : '';
                         table += `<td>${cellContent}${priorityBadge}${semCorteBadge}</td>`;
                     } else if (c === 'Agendamento' && cellContent === 'Sim') {
-                        table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
-                    } else if (c === 'Predat' || c === 'Dat_Ped') {
+                        table += `<td><span class="badge bg-warning text-dark" title="Pedido Agendado">${cellContent}</span></td>`;
+                    } else if (c === 'Status') {
+                        const isLate = isOverdue(p.Predat);
+                        const isScheduled = p.Agendamento === 'Sim';
+                        if (isLate) table += '<td><span class="badge bg-danger-subtle text-danger-emphasis" title="Atrasado"><i class="bi bi-clock-history"></i></span></td>';
+                        else if (isScheduled) table += '<td><span class="badge bg-warning-subtle text-warning-emphasis" title="Agendado"><i class="bi bi-calendar-check"></i></span></td>';
+                        else table += '<td><span class="badge bg-success-subtle text-success-emphasis" title="Disponível"><i class="bi bi-check-circle"></i></span></td>';
+                    }else if (c === 'Predat' || c === 'Dat_Ped') {
                         let formattedDate = '';
                         const dateObj = cellContent instanceof Date ? cellContent : new Date(cellContent);
 
@@ -1747,7 +1804,103 @@
                 table += '</tr>';
             });
             table += '</tbody></table></div>';
-            return table;
+            
+            // Adiciona o listener de ordenação após a tabela ser criada
+            setTimeout(() => {
+                const tableElement = document.querySelector(`div[data-source-id="${sourceId}"] table`);
+                if (tableElement) {
+                    tableElement.querySelectorAll('th[data-sort]').forEach(th => {
+                        th.addEventListener('click', () => sortTable(tableElement, th.dataset.sort));
+                    });
+                }
+            }, 100);
+
+            return `<div data-source-id="${sourceId}">${table}</div>`;
+        }
+
+        function sortTable(table, column) {
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const isAsc = table.dataset.sortOrder === 'asc';
+            const newOrder = isAsc ? 'desc' : 'asc';
+            table.dataset.sortOrder = newOrder;
+
+            rows.sort((a, b) => {
+                const cellA = a.querySelector(`td:nth-child(${getColumnIndex(table, column)})`)?.textContent.trim() || '';
+                const cellB = b.querySelector(`td:nth-child(${getColumnIndex(table, column)})`)?.textContent.trim() || '';
+
+                let valA, valB;
+                if (column === 'Quilos_Saldo' || column === 'Cubagem') {
+                    valA = parseFloat(cellA.replace('.', '').replace(',', '.')) || 0;
+                    valB = parseFloat(cellB.replace('.', '').replace(',', '.')) || 0;
+                } else if (column === 'Predat' || column === 'Dat_Ped') {
+                    valA = parseDate(cellA);
+                    valB = parseDate(cellB);
+                } else {
+                    valA = cellA;
+                    valB = cellB;
+                }
+
+                if (valA < valB) return isAsc ? 1 : -1;
+                if (valA > valB) return isAsc ? -1 : 1;
+                return 0;
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        function getColumnIndex(table, columnName) {
+            const headers = Array.from(table.querySelectorAll('th'));
+            return headers.findIndex(th => th.dataset.sort === columnName) + 1;
+        }
+
+        function parseDate(dateString) {
+            if (!dateString) return new Date(0);
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return new Date(dateString);
+        }
+
+        function filterGeneralTable(accordionContainer, filter) {
+            const accordionItems = accordionContainer.querySelectorAll('.accordion-item');
+
+            accordionItems.forEach(item => {
+                const rows = item.querySelectorAll('tbody tr');
+                let hasVisibleRows = false;
+
+                rows.forEach(row => {
+                    const pedidoId = row.dataset.pedidoId;
+                    const pedido = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === pedidoId);
+                    if (!pedido) return;
+
+                    const isLate = isOverdue(pedido.Predat);
+                    const isScheduled = pedido.Agendamento === 'Sim';
+
+                    const shouldShow = filter === 'all' || (filter === 'overdue' && isLate) || (filter === 'scheduled' && isScheduled);
+
+                    row.style.display = shouldShow ? '' : 'none';
+                    if (shouldShow) {
+                        hasVisibleRows = true;
+                    }
+                });
+
+                const collapseElement = item.querySelector('.accordion-collapse');
+                const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseElement);
+
+                if (hasVisibleRows) {
+                    bsCollapse.show();
+                } else {
+                    bsCollapse.hide();
+                }
+            });
+        }
+
+        function collapseAllAccordions(accordionContainer) {
+            accordionContainer.querySelectorAll('.accordion-collapse.show').forEach(el => {
+                bootstrap.Collapse.getOrCreateInstance(el).hide();
+            });
         }
 
         function displayGerais(div, grupos) {
@@ -1813,7 +1966,7 @@
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos, null, `cf-numerico-${rota}`)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -2280,6 +2433,19 @@
             allRouteButtons.forEach(btn => btn.disabled = true);
 
             const resultadoDiv = document.getElementById(divId);
+
+            const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
+            
+            // CORREÇÃO: Remove as cargas antigas associadas a esta(s) rota(s) antes de criar novas.
+            // Isso evita que o gráfico conte as cargas múltiplas vezes ao reprocessar a mesma rota.
+            const routeSet = new Set(routes);
+            for (const loadId in activeLoads) {
+                const load = activeLoads[loadId];
+                if (load.pedidos && load.pedidos.length > 0 && routeSet.has(String(load.pedidos[0].Cod_Rota))) {
+                    delete activeLoads[loadId];
+                }
+            }
+            // Fim da correção
             
             const autoGeneratedContent = resultadoDiv.querySelector('.resultado-container');
             if (autoGeneratedContent) { autoGeneratedContent.remove(); }
@@ -2305,7 +2471,6 @@
                 return;
             }
 
-            const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
             let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
 
             const clientGroupsMap = pedidosRota.reduce((acc, pedido) => {
@@ -2489,12 +2654,13 @@
                                              Pedidos Restantes
                                              <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
                                          </div>
-                                         <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                         <div class="card-body">${createTable(currentLeftoversForPrinting, ['Status', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                                      </div>
                                  </div>`;
             }
             resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             updateAndRenderChart();
+            saveSession();
         }
         
         function refineLoadsWithSimpleFit(initialLoads, initialLeftovers) {
@@ -2974,6 +3140,7 @@
             }
 
             updateAndRenderChart();
+            saveSession();
         }
 
         function updateLoadUI(loadId) {
@@ -3013,7 +3180,7 @@
                                 Pedidos Restantes
                                 <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
                             </div>
-                            <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                            <div class="card-body">${createTable(currentLeftoversForPrinting, ['Status', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                         </div>`;
                 }
                 return;
@@ -3154,6 +3321,7 @@
             };
 
             activeLoads[newLoad.id] = newLoad;
+            currentLeftoversForPrinting = manualLoadInProgress.pedidos.length > 0 ? currentLeftoversForPrinting.filter(p => !manualLoadInProgress.pedidos.some(mp => mp.Num_Pedido === p.Num_Pedido)) : currentLeftoversForPrinting;
             
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
@@ -3188,6 +3356,7 @@
             }, 300);
 
             updateAndRenderChart();
+            saveSession();
         }
 
         function cancelManualLoad() {
@@ -3302,6 +3471,125 @@
             </div>`;
 
             div.innerHTML = accordionHtml;
+        }
+
+        function saveSession() {
+            if (planilhaData.length === 0) {
+                return;
+            }
+
+            const sessionState = {
+                planilhaData,
+                originalColumnHeaders,
+                pedidosBloqueados: Array.from(pedidosBloqueados),
+                pedidosSemCorte: Array.from(pedidosSemCorte),
+                pedidosGeraisAtuais,
+                gruposToco,
+                gruposPorCFGlobais,
+                pedidosComCFNumericoIsolado,
+                pedidosManualmenteBloqueadosAtuais,
+                rota1SemCarga,
+                pedidosFuncionarios,
+                pedidosCarretaSemCF,
+                pedidosTransferencias,
+                pedidosCondorTruck,
+                activeLoads,
+                currentLeftoversForPrinting,
+                pedidosEspeciaisProcessados: Array.from(pedidosEspeciaisProcessados),
+                pedidosVendaAntecipadaProcessados: Array.from(pedidosVendaAntecipadaProcessados),
+            };
+
+            try {
+                localStorage.setItem('logisticsSession', JSON.stringify(sessionState));
+                console.log("Sessão salva automaticamente.");
+            } catch (e) {
+                console.error("Erro ao salvar a sessão:", e);
+            }
+        }
+
+        function loadSession() {
+            const savedSession = localStorage.getItem('logisticsSession');
+            if (!savedSession) {
+                return;
+            }
+
+            try {
+                const sessionState = JSON.parse(savedSession, (key, value) => {
+                    if (key === 'Predat' || key === 'Dat_Ped') {
+                        if (value && typeof value === 'string') {
+                            const date = new Date(value);
+                            if (!isNaN(date)) return date;
+                        }
+                    }
+                    return value;
+                });
+
+                planilhaData = sessionState.planilhaData || [];
+                originalColumnHeaders = sessionState.originalColumnHeaders || [];
+                pedidosGeraisAtuais = sessionState.pedidosGeraisAtuais || [];
+                gruposToco = sessionState.gruposToco || {};
+                gruposPorCFGlobais = sessionState.gruposPorCFGlobais || {};
+                pedidosComCFNumericoIsolado = sessionState.pedidosComCFNumericoIsolado || [];
+                pedidosManualmenteBloqueadosAtuais = sessionState.pedidosManualmenteBloqueadosAtuais || [];
+                rota1SemCarga = sessionState.rota1SemCarga || [];
+                pedidosFuncionarios = sessionState.pedidosFuncionarios || [];
+                pedidosCarretaSemCF = sessionState.pedidosCarretaSemCF || [];
+                pedidosTransferencias = sessionState.pedidosTransferencias || [];
+                pedidosCondorTruck = sessionState.pedidosCondorTruck || [];
+                pedidosBloqueados = new Set(sessionState.pedidosBloqueados || []);
+                pedidosSemCorte = new Set(sessionState.pedidosSemCorte || []);
+                activeLoads = sessionState.activeLoads || {};
+                currentLeftoversForPrinting = sessionState.currentLeftoversForPrinting || [];
+                pedidosEspeciaisProcessados = new Set(sessionState.pedidosEspeciaisProcessados || []);
+                pedidosVendaAntecipadaProcessados = new Set(sessionState.pedidosVendaAntecipadaProcessados || []);
+
+                // Re-renderizar a UI com os dados carregados
+                reRenderUIFromState();
+                
+                console.log("Sessão de trabalho anterior carregada com sucesso!");
+
+            } catch (e) {
+                console.error("Erro ao carregar a sessão:", e);
+                alert(`Falha ao carregar a sessão. Os dados podem estar corrompidos. Erro: ${e.message}`);
+                localStorage.removeItem('logisticsSession');
+            }
+        }
+
+        function reRenderUIFromState() {
+            // Recria as listas de resultados adicionais
+            popularFiltrosDeRota();
+            processarBtn.disabled = false;
+            displayPedidosBloqueados(document.getElementById('resultado-bloqueados'), pedidosManualmenteBloqueadosAtuais);
+            displayRota1(document.getElementById('resultado-rota1'), rota1SemCarga);
+            displayToco(document.getElementById('resultado-toco'), gruposToco);
+            displayPedidosCFNumerico(document.getElementById('resultado-cf-numerico'), pedidosComCFNumericoIsolado);
+            
+            // Recria as listas de pedidos especiais
+            displayPedidosFuncionarios(document.getElementById('resultado-funcionarios-tab'), pedidosFuncionarios);
+            displayPedidosTransferencias(document.getElementById('resultado-transferencias-tab'), pedidosTransferencias);
+            displayCargasCfAccordion(document.getElementById('resultado-cf-accordion-container'), gruposPorCFGlobais, pedidosCarretaSemCF, pedidosCondorTruck);
+
+            // Recria a lista de pedidos disponíveis
+            const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
+            displayGerais(document.getElementById('resultado-geral'), gruposGerais);
+            
+            // Recria as cargas nas mesas de trabalho
+            const vehicleTypes = ['fiorino', 'van', 'tresQuartos'];
+            vehicleTypes.forEach(type => {
+                const loadsForType = Object.values(activeLoads).filter(l => l.vehicleType === type);
+                if (loadsForType.length > 0) {
+                    const divId = `resultado-${type === 'tresQuartos' ? '34' : type}-geral`;
+                    const div = document.getElementById(divId);
+                    const vehicleInfo = { fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' }, van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' }, tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' } };
+                    let html = loadsForType.map(load => renderLoadCard(load, type, vehicleInfo[type])).join('');
+                    div.innerHTML = `<div class="resultado-container">${html}</div>`;
+                }
+            });
+
+            // Atualiza o gráfico e as listas de configurações
+            updateAndRenderChart();
+            atualizarListaBloqueados();
+            atualizarListaSemCorte();
         }
 
     </script>
