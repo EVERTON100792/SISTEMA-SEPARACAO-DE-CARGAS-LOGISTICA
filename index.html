@@ -15,59 +15,45 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts" defer></script>
-
     <style>
         :root {
-            --dark-bg: #0d1117; /* GitHub Dark Background */
-            --dark-surface: rgba(22, 27, 34, 0.8);
-            --dark-surface-secondary: rgba(33, 38, 45, 0.7);
-            --dark-border: rgba(144, 158, 171, 0.2);
-            --dark-primary: #58a6ff; /* GitHub Blue */
-            --dark-primary-hover: #79c0ff;
-            --dark-primary-glow: rgba(88, 166, 255, 0.3);
+            --dark-bg: #10101a;
+            --dark-surface: rgba(28, 28, 42, 0.75);
+            --dark-surface-secondary: rgba(40, 40, 60, 0.8);
+            --dark-border: rgba(90, 80, 130, 0.3);
+            --dark-primary: #6a5acd; /* SlateBlue */
+            --dark-primary-hover: #7b68ee; /* MediumSlateBlue */
+            --dark-primary-glow: rgba(106, 90, 205, 0.4);
             --dark-text-primary: #f0f0f5;
-            --dark-text-secondary: #8b9eab;
-            --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            --dark-text-secondary: #a0a0b0;
+            --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             --backdrop-blur: 10px;
-        }
-
-        @keyframes background-pan {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
 
         /* --- Melhorias Gerais --- */
         body {
             background-color: var(--dark-bg);
-            background: linear-gradient(125deg, var(--dark-bg), #161b22, var(--dark-bg));
-            background-size: 400% 400%;
-            animation: background-pan 15s ease-in-out infinite;
+            background-image: radial-gradient(circle at 1% 1%, rgba(106, 90, 205, 0.2) 0%, transparent 40%), 
+                              radial-gradient(circle at 99% 99%, rgba(74, 124, 242, 0.2) 0%, transparent 40%);
             font-family: 'Inter', sans-serif;
             color: var(--dark-text-primary);
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
         }
-        
+
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--dark-bg); }
-        ::-webkit-scrollbar-thumb { 
-            background-color: var(--dark-surface-secondary); 
-            border-radius: 10px; 
-            border: 2px solid var(--dark-bg);
-        }
+        ::-webkit-scrollbar-thumb { background-color: var(--dark-primary); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary-hover); }
 
         h1, h2, h3, h4, h5 { font-weight: 700; letter-spacing: -0.5px; }
         
-        /* --- Tipografia Responsiva (Valores ajustados para melhor hierarquia) --- */
-        h1.h2 { font-size: clamp(1.5rem, 2.5vw, 2rem); }
-        h3 { font-size: clamp(1.2rem, 2vw, 1.5rem); }
-        .card-title.h5, .modal-title { font-size: clamp(1rem, 1.5vw, 1.1rem); }
-        #sidebar .fs-4 { font-size: clamp(1.1rem, 1.5vw, 1.25rem); }
+        /* --- Tipografia Responsiva (Valores ajustados para uma aparência mais compacta e profissional) --- */
+        h1.h2 { font-size: clamp(1.25rem, 2vw, 1.5rem); }
+        h3 { font-size: clamp(1.05rem, 1.7vw, 1.2rem); }
+        .card-title.h5, .modal-title { font-size: clamp(0.95rem, 1.2vw, 1.05rem); }
+        #sidebar .fs-4 { font-size: clamp(1.0rem, 1.5vw, 1.15rem); }
 
 
         /* --- Animações --- */
@@ -76,9 +62,9 @@
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes glow {
-            0% { box-shadow: 0 0 4px var(--dark-primary-glow); }
-            50% { box-shadow: 0 0 16px var(--dark-primary-glow), 0 0 8px var(--dark-primary-glow); }
-            100% { box-shadow: 0 0 4px var(--dark-primary-glow); }
+            0% { box-shadow: 0 0 5px var(--dark-primary-glow); }
+            50% { box-shadow: 0 0 20px var(--dark-primary-glow), 0 0 10px var(--dark-primary-glow); }
+            100% { box-shadow: 0 0 5px var(--dark-primary-glow); }
         }
         .animated-entry { animation: fadeIn 0.6s ease-out forwards; }
         .animated-entry:nth-child(1) { animation-delay: 0.1s; }
@@ -87,16 +73,15 @@
 
         /* --- Layout Principal --- */
         #main-content {
-            --sidebar-width: clamp(250px, 16vw, 280px);
+            --sidebar-width: clamp(250px, 16vw, 300px);
             margin-left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
             animation: fadeIn 0.5s ease-out;
             min-width: 0; 
         }
 
-        /* --- Sidebar --- */
         #sidebar {
-            width: clamp(250px, 16vw, 280px);
+            width: clamp(250px, 16vw, 300px);
             height: 100vh; /* Alterado de min-height para height */
             position: fixed;
             top: 0;
@@ -115,19 +100,19 @@
         .sidebar-scrollable-content {
             flex: 1 1 auto; /* Permite que este elemento cresça e encolha */
             overflow-y: auto;
-            min-height: 0; 
-            padding: 0 1rem; 
+            min-height: 0; /* Essencial para que o overflow funcione em um flex child */
+            padding: 0 0.5rem; /* Adiciona um pequeno padding lateral */
         }
         
         .sidebar-scrollable-content::-webkit-scrollbar { width: 6px; }
         .sidebar-scrollable-content::-webkit-scrollbar-track { background: transparent; }
-        .sidebar-scrollable-content::-webkit-scrollbar-thumb { background-color: var(--dark-surface-secondary); border-radius: 10px; }
+        .sidebar-scrollable-content::-webkit-scrollbar-thumb { background-color: var(--dark-primary); border-radius: 10px; }
         .sidebar-scrollable-content::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary-hover); }
 
-        #sidebar .sidebar-header { padding: 1.25rem 1rem; }
-        #sidebar .sidebar-header .fs-4 { font-weight: 600; }
+        #sidebar .sidebar-header { padding: 1rem 1.25rem; }
+        #sidebar .sidebar-header .fs-4 { font-weight: 700; }
         #sidebar .sidebar-step { margin-bottom: 1rem; }
-        #sidebar .step-number {
+        #sidebar .step-number { /* Tamanho do número do passo reduzido */
             background-color: var(--dark-primary);
             color: white;
             border-radius: 50%;
@@ -137,14 +122,14 @@
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            margin-right: 0.75rem;
+            margin-right: 0.5rem;
         }
-        #sidebar .form-label { font-weight: 600; color: var(--dark-text-secondary); font-size: 0.8rem; }
+        #sidebar .form-label { font-weight: 500; color: var(--dark-text-secondary); }
 
         #sidebar .nav-link {
             color: var(--dark-text-secondary);
-            font-weight: 500;
-            padding: 0.6rem 1rem;
+            font-weight: 500; font-size: 0.9rem;
+            padding: 0.75rem 1.25rem;
             border-radius: 0.5rem;
             position: relative;
             transition: all 0.3s ease;
@@ -152,13 +137,13 @@
         }
         #sidebar .nav-link:hover {
             background-color: var(--dark-surface-secondary);
-            color: var(--dark-primary-hover);
+            color: var(--dark-text-primary);
             transform: translateX(5px);
         }
         #sidebar .nav-link.active {
-            background: linear-gradient(90deg, var(--dark-primary) 0%, rgba(88, 166, 255, 0.4) 100%);
+            background: var(--dark-primary);
             color: white;
-            font-weight: 700;
+            font-weight: 600;
             box-shadow: 0 4px 20px var(--dark-primary-glow);
         }
 
@@ -166,7 +151,7 @@
         .card {
             background-color: var(--dark-surface);
             border: 1px solid var(--dark-border);
-            border-radius: 0.75rem;
+            border-radius: 0.75rem; /* Raio da borda reduzido */
             box-shadow: var(--box-shadow);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             overflow: hidden;
@@ -174,24 +159,24 @@
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
         }
         .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 32px rgba(0,0,0,0.3);
-            border-color: var(--dark-primary);
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            border-color: var(--dark-primary-glow);
         }
         .card-header {
             background-color: var(--dark-surface-secondary);
             border-bottom: 1px solid var(--dark-border);
             font-weight: 600;
-            padding: 0.75rem 1.25rem;
+            padding: 0.75rem 1.25rem; /* Padding reduzido */
         }
-        .card-body { padding: 1.25rem; }
+        .card-body { padding: 1.25rem; } /* Padding reduzido */
 
         /* --- Botões e Controles --- */
         .btn {
             font-weight: 600;
             transition: all 0.2s ease-in-out;
             border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 1rem; /* Padding reduzido */
         }
         .btn:hover {
             transform: translateY(-2px);
@@ -199,26 +184,27 @@
         }
         .btn-primary {
             background: linear-gradient(45deg, var(--dark-primary), var(--dark-primary-hover));
-            border: 1px solid var(--dark-primary);
+            border: none;
         }
         .btn-primary:hover { box-shadow: 0 4px 20px var(--dark-primary-glow); }
         .form-control, .form-select {
             background-color: var(--dark-surface-secondary);
-            border: 1px solid var(--dark-border);
+            border: 1px solid var(--dark-border); font-size: 0.9rem;
             color: var(--dark-text-primary);
         }
         .form-control:focus, .form-select:focus {
             background-color: var(--dark-surface-secondary);
             border-color: var(--dark-primary);
-            box-shadow: 0 0 0 .25rem var(--dark-primary-glow);
+            box-shadow: 0 0 0 .2rem var(--dark-primary-glow); /* Sombra de foco reduzida */
             color: var(--dark-text-primary);
         }
         
         /* --- Componentes --- */
         .modal-content {
+            font-size: 0.9rem;
             background-color: var(--dark-surface);
             backdrop-filter: blur(var(--backdrop-blur));
-            border-radius: 0.75rem;
+            border-radius: 1rem;
             border: 1px solid var(--dark-border);
         }
         
@@ -232,27 +218,27 @@
             font-weight: 600;
         }
         .accordion-button:not(.collapsed) {
-            background: linear-gradient(90deg, var(--dark-primary) 0%, rgba(88, 166, 255, 0.3) 100%);
+            background: linear-gradient(45deg, var(--dark-primary), var(--dark-primary-hover));
             color: white;
         }
-        .accordion-button:focus { box-shadow: 0 0 0 .25rem var(--dark-primary-glow); }
+        .accordion-button:focus { box-shadow: 0 0 0 .2rem var(--dark-primary-glow); }
         .accordion-body { background-color: var(--dark-surface); }
         
-        .table { --bs-table-hover-bg: rgba(88, 166, 255, 0.1); }
+        .table { --bs-table-hover-bg: rgba(106, 90, 205, 0.15); }
         thead th {
             background-color: var(--dark-surface-secondary);
-            font-weight: 700;
+            font-weight: 600; font-size: 0.85rem;
             border-bottom: 2px solid var(--dark-primary);
         }
-        tbody td { padding: 0.4rem 0.55rem; vertical-align: middle; font-size: 0.78rem; }
+        tbody td { padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.875rem; } /* Padding e fonte reduzidos */
         tbody tr { transition: background-color 0.2s ease; }
 
-        .nav-tabs .nav-link {
+        .nav-tabs .nav-link { /* Abas mais compactas */
             color: var(--dark-text-secondary);
             border: none;
             border-bottom: 3px solid transparent;
             font-weight: 600;
-            padding: 0.6rem 1rem;
+            padding: 0.75rem 1rem;
             transition: all 0.3s ease;
         }
         .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
@@ -265,7 +251,7 @@
             border: 1px solid var(--dark-border);
             border-top: none;
             border-radius: 0 0 0.8rem 0.8rem;
-            padding: 1.25rem;
+            padding: 1.25rem; /* Padding reduzido */
         }
 
         /* Melhoria de Usabilidade */
@@ -279,7 +265,7 @@
         .empty-state .bi { font-size: 2.5rem; color: var(--dark-primary); margin-bottom: 1rem; }
         
         tr.client-highlight > td {
-            background-color: rgba(88, 166, 255, 0.2) !important;
+            background-color: rgba(123, 104, 238, 0.3) !important;
         }
         
         .drop-zone-card.drag-over {
@@ -302,7 +288,7 @@
             #main-content { margin-left: 0; width: 100%; }
         }
         
-        /* --- Estilos de Impressão --- */
+        /* --- Estilos de Impressão (Ajustes para tabelas mais compactas) --- */
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             #main-content { margin-left: 0 !important; width: 100% !important; }
@@ -310,7 +296,7 @@
             .container, .card, .accordion-item, .accordion-body, .card-header, .modal-content { background-color: #fff !important; color: #000 !important; border: 1px solid #dee2e6 !important; box-shadow: none !important; }
             button, .status-message, .card-subtitle, .accordion-button.collapsed, .accordion-collapse.collapse, .nav-tabs, .tab-content { display: none !important; }
             .table-responsive { overflow: visible !important; }
-            table, th, td { border: 1px solid #dee2e6 !important; color: #000 !important; }
+            table, th, td { border: 1px solid #dee2e6 !important; color: #000 !important; padding: 0.25rem 0.4rem; font-size: 9pt; }
             h1, h2, h3, h4, h5 { color: #000 !important; }
             .accordion-collapse, .tab-pane { display: block !important; padding: 0 !important; }
             .accordion-button { display: block !important; background-color: #f8f9fa !important; color: #000 !important; }
@@ -323,7 +309,7 @@
 <body>
     
     <div class="d-flex">
-        <nav id="sidebar" class="p-2 text-white no-print">
+        <nav id="sidebar" class="p-3 text-white no-print">
             <div class="sidebar-header d-flex align-items-center mb-3">
                 <i class="bi bi-box-seam-fill me-3 fs-1" style="color: var(--dark-primary);"></i>
                 <span class="fs-4">Otimizador</span>
@@ -333,7 +319,7 @@
                 <hr>
                 <div id="sidebar-controls">
                     <div class="sidebar-step">
-                        <h6 class="form-label text-uppercase small"><span class="step-number">1</span> Carregar Arquivo</h6>
+                        <h6 class="form-label text-uppercase small fw-bold"><span class="step-number">1</span> Carregar Arquivo</h6>
                         <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv">
                         <div class="form-check form-switch mt-2">
                             <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
@@ -342,7 +328,7 @@
                     </div>
 
                     <div id="filtro-rota-container" class="sidebar-step" style="display: none;">
-                        <h6 class="form-label text-uppercase small"><span class="step-number">2</span> Filtrar Rotas (Opcional)</h6>
+                        <h6 class="form-label text-uppercase small fw-bold"><span class="step-number">2</span> Filtrar Rotas (Opcional)</h6>
                         <div class="mb-2">
                             <select id="rotaInicioSelect" class="form-select form-select-sm">
                                 <option value="">Rota de Início...</option>
@@ -357,7 +343,7 @@
                     </div>
 
                     <div class="sidebar-step d-grid mt-4">
-                        <h6 class="form-label text-uppercase small"><span class="step-number">3</span> Otimizar</h6>
+                        <h6 class="form-label text-uppercase small fw-bold"><span class="step-number">3</span> Otimizar</h6>
                         <button class="btn btn-primary" id="processarBtn" onclick="processar()" disabled>
                             <i class="bi bi-magic me-2"></i>Processar Cargas
                         </button>
@@ -372,16 +358,16 @@
                     <li class="mb-1"><a href="#workspace-card" class="nav-link"><i class="bi bi-tools me-2 fs-5"></i>Mesas de Trabalho</a></li>
                     <li class="mb-1"><a href="#additional-results" class="nav-link"><i class="bi bi-clipboard2-data-fill me-2 fs-5"></i>Resultados Adicionais</a></li>
                 </ul>
-            </div>            
-            <div class="d-grid gap-2 mt-auto p-2 border-top border-secondary">
+            </div>
+            <div class="d-grid gap-2 mt-auto pt-3 border-top border-secondary">
                 <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#configModal"><i class="bi bi-sliders me-2"></i>Configurações & Ações</button>
                 <button class="btn btn-outline-danger" id="limparResultadosBtn"><i class="bi bi-eraser-fill me-2"></i>Limpar Tudo</button>
             </div>
         </nav>
 
-        <main id="main-content" class="p-3">
+        <main id="main-content" class="p-4">
             
-            <h1 class="h2 mb-4 animated-entry">Dashboard de Otimização Logística</h1>
+            <h1 class="h2 mb-4 animated-entry">Dashboard de Separação de Cargas</h1>
 
             <div id="resultado-venda-antecipada" class="mb-4"></div>
             <div id="resultado-carga-especial" class="mb-4"></div>
@@ -396,7 +382,7 @@
             <div class="row" id="workspace-card">
                 <div class="col-lg-8 mb-4 animated-entry">
                     <div class="card h-100">
-                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-bounding-box me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2></div>
+                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2></div>
                         <div class="card-body p-0">
                              <ul class="nav nav-tabs nav-fill px-3 pt-2" id="vehicleTabs" role="tablist">
                                  <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane"><i class="bi bi-box-seam-fill me-2"></i>Fiorino</button></li>
@@ -409,7 +395,7 @@
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para otimizar as cargas de Fiorino.</p>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Fiorinos.</p>
                                         <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-fiorino-geral', 'Cargas de Fiorino (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-fiorino"><div class="empty-state"><i class="bi bi-box"></i><p>Nenhuma rota de Fiorino disponível. Processe um arquivo para começar.</p></div></div>
@@ -417,7 +403,7 @@
                                 </div>
                                 <div class="tab-pane fade workspace-tab-pane" id="van-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para otimizar as cargas de Van.</p>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Vans.</p>
                                         <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-van"><div class="empty-state"><i class="bi bi-truck-front-fill"></i><p>Nenhuma rota de Van disponível. Processe um arquivo para começar.</p></div></div>
@@ -425,7 +411,7 @@
                                 </div>
                                 <div class="tab-pane fade workspace-tab-pane" id="tres-quartos-tab-pane" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para otimizar as cargas 3/4.</p>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as cargas 3/4.</p>
                                         <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-34-geral', 'Cargas de 3/4 (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-34"><div class="empty-state"><i class="bi bi-truck-flatbed"></i><p>Nenhuma rota de 3/4 disponível. Processe um arquivo para começar.</p></div></div>
@@ -452,17 +438,7 @@
                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
                         </div>
                        <div class="card-body">
-                           <div class="input-group mb-3 no-print"><input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar Pedido, Cliente, Cidade..."><button class="btn btn-outline-secondary" type="button" onclick="buscarPedido()"><i class="bi bi-search"></i></button></div>
-                           <div class="d-flex justify-content-start align-items-center mb-2 no-print gap-2">
-                               <div class="btn-group btn-group-sm" role="group" id="general-filters">
-                                   <button type="button" class="btn btn-outline-secondary active" data-filter="all">Todos</button>
-                                   <button type="button" class="btn btn-outline-secondary" data-filter="overdue"><i class="bi bi-clock-history text-danger"></i> Atrasados</button>
-                                   <button type="button" class="btn btn-outline-secondary" data-filter="scheduled"><i class="bi bi-calendar-check text-warning"></i> Agendados</button>
-                               </div>
-                               <button type="button" class="btn btn-sm btn-outline-secondary" id="collapse-all-general" title="Recolher Tudo">
-                                   <i class="bi bi-arrows-collapse"></i>
-                               </button>
-                           </div>
+                           <div class="input-group mb-3 no-print"><input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar Pedido, Cliente ou Cidade..."><button id="searchBtn" class="btn btn-outline-secondary" type="button"><i class="bi bi-search"></i></button></div>
                            <div id="search-result" class="mb-3"></div>
                            <div id="resultado-geral"><div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div></div>
                        </div>
@@ -719,7 +695,7 @@
                         }
                     },
                     stroke: {
-                        width: [0, 4],
+                        width: [0, 0],
                         curve: 'smooth'
                     },
                     plotOptions: {
@@ -728,7 +704,7 @@
                             borderRadius: 5
                         }
                     },
-                    colors: ['var(--dark-primary)', '#00e396'],
+                    colors: ['#6a5acd', '#00e396'],
                     dataLabels: {
                         enabled: true,
                         formatter: function (val, { seriesIndex }) {
@@ -775,16 +751,16 @@
                         {
                             seriesName: 'Quantidade',
                             axisTicks: { show: true },
-                            axisBorder: { show: true, color: 'var(--dark-primary)' },
+                            axisBorder: { show: true, color: '#6a5acd' },
                             labels: {
-                                style: { colors: 'var(--dark-primary)' },
+                                style: { colors: '#6a5acd' },
                                 formatter: function (val) {
                                     return val.toFixed(0);
                                 }
                             },
                             title: {
                                 text: "Quantidade de Veículos",
-                                style: { color: 'var(--dark-primary)', fontWeight: 600 }
+                                style: { color: '#6a5acd', fontWeight: 600 }
                             },
                         },
                         {
@@ -902,6 +878,7 @@
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
         let activeLoads = {};
+        let processedRoutes = new Set();
         let manualLoadInProgress = null;
 
         const defaultConfigs = {
@@ -1007,8 +984,12 @@
             document.getElementById('resetAllConfigs').addEventListener('click', resetAll);
             document.getElementById('limparResultadosBtn').addEventListener('click', limparTudo);
 
-            // Carrega a sessão automaticamente ao iniciar a página
-            loadSession();
+            document.getElementById('searchBtn').addEventListener('click', buscarPedido);
+            document.getElementById('pedidoSearchInput').addEventListener('keyup', (event) => {
+                if (event.key === 'Enter') {
+                    buscarPedido();
+                }
+            });
 
             document.querySelectorAll('#sidebar-nav a').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
@@ -1024,23 +1005,8 @@
                     }
                 });
             });
-            
-            document.getElementById('general-filters').addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON') {
-                    document.querySelectorAll('#general-filters button').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
-                    const filter = e.target.dataset.filter;
-                    const accordionContainer = document.getElementById('accordionGeral');
-                    if (accordionContainer) {
-                        filterGeneralTable(accordionContainer, filter);
-                    }
-                }
-            });
 
-            document.getElementById('collapse-all-general').addEventListener('click', () => {
-                const accordionContainer = document.getElementById('accordionGeral');
-                if (accordionContainer) collapseAllAccordions(accordionContainer);
-            });
+            loadStateFromLocalStorage();
         });
 
         const rotaVeiculoMap = {
@@ -1114,8 +1080,7 @@
                         pedido.Cubagem = parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
                         return pedido; 
                     });
-
-                    planilhaData.forEach(checkAgendamento); // Garante que todos os pedidos tenham o status de agendamento
+                    planilhaData.forEach(checkAgendamento);
                     statusDiv.innerHTML = `<p class="text-success">Planilha "${file.name}" carregada.</p>`;
                     processarBtn.disabled = false;
                     
@@ -1162,232 +1127,190 @@
             document.getElementById('rotaFimSelect').selectedIndex = 0;
         }
 
-
         function buscarPedido() {
             const searchTerm = document.getElementById('pedidoSearchInput').value.trim().toLowerCase();
             const searchResultDiv = document.getElementById('search-result');
             searchResultDiv.innerHTML = '';
             if (!searchTerm) return;
-            if (planilhaData.length === 0) { 
-                searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>'; 
-                return; 
+            if (planilhaData.length === 0) {
+                searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>';
+                return;
             }
 
-            const searchPool = [
-                { data: currentLeftoversForPrinting, location: 'Sobras Finais (Mesa de Trabalho)', tabId: null, accordionId: null },
-                ...Object.values(activeLoads).map(load => ({
-                    data: load.pedidos,
-                    location: `Carga #${load.numero || load.id.split('-')[1]} (${load.vehicleType})`,
-                    tabId: `#${load.vehicleType}-tab-pane`,
-                    accordionId: load.vehicleType === 'toco' ? 'accordionToco' : null
-                })),
-                { data: pedidosManualmenteBloqueadosAtuais, location: 'Bloqueado Manualmente', tabId: null, accordionId: null },
-                { data: pedidosGeraisAtuais, location: 'Pedidos Disponíveis (Varejo)', tabId: null, accordionId: 'accordionGeral' },
-                { data: pedidosComCFNumericoIsolado, location: 'Pedidos Filtrados (Bloqueio Varejo)', tabId: null, accordionId: 'accordionCF' },
-                ...Object.values(gruposToco).map(grupo => ({
-                    data: grupo.pedidos,
-                    location: `Cargas "Toco" (CF: ${grupo.pedidos[0]?.CF})`,
-                    tabId: '#cf-tab-pane',
-                    accordionId: 'accordionToco'
-                })),
-                ...Object.values(gruposPorCFGlobais).map(grupo => ({
-                    data: grupo.pedidos,
-                    location: `Cargas Truck e Carreta (${grupo.pedidos[0]?.CF || 'Sem CF'})`,
-                    tabId: '#cf-tab-pane',
-                    accordionId: 'accordionCargasPorCF'
-                })),
-                { data: rota1SemCarga, location: 'Pedidos Rota 1 para Alteração', tabId: null, accordionId: null },
-                { data: pedidosFuncionarios, location: 'Pedidos de Funcionários', tabId: '#funcionarios-tab-pane', accordionId: 'accordionFuncionarios' },
-                { data: pedidosTransferencias, location: 'Pedidos de Transferência', tabId: '#transferencias-tab-pane', accordionId: 'accordionTransferencias' }
-            ];
+            const searchPredicate = p =>
+                String(p.Num_Pedido).toLowerCase().includes(searchTerm) ||
+                String(p.Nome_Cliente).toLowerCase().includes(searchTerm) ||
+                String(p.Cidade).toLowerCase().includes(searchTerm);
 
-            let foundPedidos = [];
-            const processedPedidos = new Set();
+            let resultados = [];
 
-            for (const source of searchPool) {
-                const results = source.data.filter(p => {
-                    if (processedPedidos.has(p.Num_Pedido)) return false;
-                    const match = String(p.Num_Pedido).toLowerCase().includes(searchTerm) ||
-                                  String(p.Nome_Cliente).toLowerCase().includes(searchTerm) ||
-                                  String(p.Cidade).toLowerCase().includes(searchTerm);
-                    if (match) {
-                        processedPedidos.add(p.Num_Pedido);
-                        return true;
-                    }
-                    return false;
+            const findInList = (list, location, tabId, accordionId) => {
+                list.filter(searchPredicate).forEach(p => {
+                    resultados.push({ pedido: p, local: location, tabId: tabId, accordionId: accordionId });
                 });
+            };
 
-                if (results.length > 0) {
-                    foundPedidos.push(...results.map(p => ({ ...p, location: source.location, tabId: source.tabId, accordionId: source.accordionId })));
+            // 1. Cargas Ativas (Fiorino, Van, 3/4, Toco, etc)
+            for (const loadId in activeLoads) {
+                const load = activeLoads[loadId];
+                const tabMap = { 'fiorino': 'fiorino-tab-pane', 'van': 'van-tab-pane', 'tresQuartos': 'tres-quartos-tab-pane', 'toco': 'cf-tab-pane' };
+                const tabId = tabMap[load.vehicleType] || null;
+                let accordionId = null;
+                if (load.vehicleType === 'toco') {
+                    accordionId = `collapseToco${Object.keys(gruposToco).findIndex(cf => cf === load.pedidos[0]?.CF)}`;
                 }
-            }
-            
-            // Fallback to search in the original sheet if nothing is found
-            if (foundPedidos.length === 0) {
-                const originalResults = planilhaData.filter(p => {
-                    if (processedPedidos.has(p.Num_Pedido)) return false;
-                     const match = String(p.Num_Pedido).toLowerCase().includes(searchTerm) ||
-                                  String(p.Nome_Cliente).toLowerCase().includes(searchTerm) ||
-                                  String(p.Cidade).toLowerCase().includes(searchTerm);
-                    if (match) {
-                        processedPedidos.add(p.Num_Pedido);
-                        return true;
-                    }
-                    return false;
+                load.pedidos.filter(searchPredicate).forEach(p => {
+                    resultados.push({ pedido: p, local: `Carga #${load.numero || loadId.split('-')[1]} (${load.vehicleType})`, tabId: tabId, accordionId: accordionId, cardId: loadId });
                 });
+            }
 
-                if (originalResults.length > 0) {
-                     foundPedidos.push(...originalResults.map(p => {
-                        let location = 'Encontrado na planilha original, mas filtrado ou já processado.';
-                        if (pedidosBloqueados.has(String(p.Num_Pedido))) location = 'Bloqueado Manualmente por você.';
-                        else if (pedidosEspeciaisProcessados.has(String(p.Num_Pedido))) location = 'Alocado na Carga Especial.';
-                        else if (pedidosVendaAntecipadaProcessados.has(String(p.Num_Pedido))) location = 'Alocado na Carga de Venda Antecipada.';
-                        return { ...p, location, tabId: null, accordionId: null };
-                     }));
+            // 2. Sobras
+            findInList(currentLeftoversForPrinting, 'Sobras Finais (Mesa de Trabalho)', 'fiorino-tab-pane', null); // Assumes leftovers are in a tab
+
+            // 3. Pedidos Disponíveis (Varejo)
+            findInList(pedidosGeraisAtuais, 'Pedidos Disponíveis (Varejo)', null, 'accordionGeral');
+
+            // 4. Outras seções
+            findInList(pedidosManualmenteBloqueadosAtuais, 'Bloqueado Manualmente', null, null);
+            findInList(pedidosComCFNumericoIsolado, 'Pedidos Filtrados (Bloqueio Varejo)', null, 'accordionCF');
+            findInList(rota1SemCarga, 'Pedidos da Rota 1 para Alteração', null, null);
+            findInList(pedidosFuncionarios, 'Pedidos de Funcionários', 'funcionarios-tab-pane', 'accordionFuncionarios');
+            findInList(pedidosTransferencias, 'Pedidos de Transferência', 'transferencias-tab-pane', 'accordionTransferencias');
+
+            for (const cf in gruposPorCFGlobais) {
+                gruposPorCFGlobais[cf].pedidos.filter(searchPredicate).forEach(p => {
+                    const collapseId = `collapseCF-Mesa-${String(cf).replace(/\s|\(|\)|\//g, '')}`;
+                    resultados.push({ pedido: p, local: `Carga Truck/Carreta (${cf})`, tabId: 'cf-tab-pane', accordionId: collapseId });
+                });
+            }
+
+            // Remover duplicatas baseadas no número do pedido
+            const uniqueResultados = [];
+            const seenPedidos = new Set();
+            for (const res of resultados) {
+                if (!seenPedidos.has(res.pedido.Num_Pedido)) {
+                    uniqueResultados.push(res);
+                    seenPedidos.add(res.pedido.Num_Pedido);
                 }
             }
 
-            if (foundPedidos.length > 0) {
-                let html = `<div class="alert alert-info"><h5>${foundPedidos.length} resultado(s) para "${searchTerm}"</h5>`;
-                foundPedidos.slice(0, 10).forEach(pedidoEncontrado => { // Limit to 10 results to avoid clutter
-                    html += `<div class="border-bottom py-2">
-                                <p class="mb-1"><strong>Pedido:</strong> ${pedidoEncontrado.Num_Pedido} | <strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}</p>
-                                <p class="mb-1 small text-muted"><strong>Local:</strong> ${pedidoEncontrado.location}</p>
-                                <button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}', '${pedidoEncontrado.tabId}', '${pedidoEncontrado.accordionId}')">Destacar na Lista</button>
-                             </div>`;
-                });
-                if (foundPedidos.length > 10) {
-                    html += `<p class="mt-2 small text-muted">Exibindo os 10 primeiros resultados.</p>`;
-                }
-                html += `</div>`;
-                searchResultDiv.innerHTML = html;
+            if (uniqueResultados.length === 0) {
+                searchResultDiv.innerHTML = '<div class="alert alert-warning">Nenhum pedido encontrado para o termo buscado.</div>';
             } else {
-                searchResultDiv.innerHTML = '<p class="text-danger">Nenhum pedido encontrado para o termo buscado.</p>';
+                let html = `<div class="alert alert-info"><h5>${uniqueResultados.length} resultado(s) encontrado(s):</h5></div>`;
+                html += '<ul class="list-group">';
+                uniqueResultados.forEach((res, index) => {
+                    const { pedido, local, tabId, accordionId, cardId } = res;
+                    const isPriority = pedidosPrioritarios.includes(String(pedido.Num_Pedido));
+                    const priorityButtonHtml = isPriority
+                        ? `<button class="btn btn-sm btn-outline-secondary" onclick="despriorizarPedido('${pedido.Num_Pedido}')"><i class="bi bi-star-slash-fill me-1"></i>Remover Prioridade</button>`
+                        : `<button class="btn btn-sm btn-outline-warning" onclick="priorizarPedido('${pedido.Num_Pedido}')"><i class="bi bi-star-fill me-1"></i>Priorizar</button>`;
+
+                    const params = `\'${pedido.Num_Pedido}\', ${tabId ? `\'${tabId}\'` : null}, ${accordionId ? `\'${accordionId}\'` : null}, ${cardId ? `\'${cardId}\'` : null}`;
+                    html += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Pedido:</strong> ${pedido.Num_Pedido} ${isPriority ? '<span class="badge bg-primary ms-2">Prioridade</span>' : ''}<br>
+                                <small><strong>Cliente:</strong> ${pedido.Nome_Cliente} (${pedido.Cidade})</small><br>
+                                <small class="text-muted"><strong>Local:</strong> ${local}</small>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="highlightPedido(${params})">
+                                    Ir para <i class="bi bi-arrow-right-short"></i>
+                                </button>
+                                ${priorityButtonHtml}
+                            </div>
+                        </li>`;
+                });
+                html += '</ul>';
+                searchResultDiv.innerHTML = html;
             }
         }
 
-        function priorizarPedido(numPedido) { if (!pedidosPrioritarios.includes(String(numPedido))) { pedidosPrioritarios.push(String(numPedido)); buscarPedido(); } }
+        function priorizarPedido(numPedido) {
+            numPedido = String(numPedido);
+            if (!pedidosPrioritarios.includes(numPedido)) {
+                console.log(`Priorizando pedido: ${numPedido}`);
+                pedidosPrioritarios.push(numPedido);
+                // Se a planilha já foi processada, reprocessa para aplicar a prioridade
+                saveStateToLocalStorage(); // Salva a prioridade imediatamente
+                if (planilhaData.length > 0) processar();
+            }
+        }
 
-        function highlightPedido(numPedido, tabId, accordionId) {
-            // Switch to the correct tab if necessary
-            if (tabId && tabId !== 'null') {
-                const tabElement = document.querySelector(`button[data-bs-target="${tabId}"]`);
-                if (tabElement) {
-                    const tab = new bootstrap.Tab(tabElement);
-                    tab.show();
+        function despriorizarPedido(numPedido) {
+            numPedido = String(numPedido);
+            const index = pedidosPrioritarios.indexOf(numPedido);
+            if (index > -1) {
+                console.log(`Removendo prioridade do pedido: ${numPedido}`);
+                pedidosPrioritarios.splice(index, 1);
+                // Se a planilha já foi processada, reprocessa para remover a prioridade
+                saveStateToLocalStorage(); // Salva a remoção da prioridade imediatamente
+                if (planilhaData.length > 0) processar();
+            }
+        }
+
+        function highlightPedido(numPedido, tabId = null, accordionId = null, cardId = null) {
+            // 1. Mudar para a aba correta, se aplicável
+            if (tabId) {
+                const tabButton = document.querySelector(`button[data-bs-target="#${tabId}"]`);
+                if (tabButton) {
+                    bootstrap.Tab.getOrCreateInstance(tabButton).show();
                 }
             }
 
-            // Use a short delay to allow the tab to render before scrolling
+            // Atraso para garantir que a aba foi renderizada antes de procurar elementos
             setTimeout(() => {
-                document.querySelectorAll('tr.table-info').forEach(r => r.classList.remove('table-info'));
+                // 2. Expandir o accordion, se aplicável
+                let targetElement = null;
+                if (accordionId) {
+                    const collapseEl = document.getElementById(accordionId);
+                    if (collapseEl) {
+                        if (!collapseEl.classList.contains('show')) {
+                            bootstrap.Collapse.getOrCreateInstance(collapseEl).show();
+                        }
+                        // Se for um accordion, o elemento a ser rolado é o header dele
+                        targetElement = collapseEl.previousElementSibling; 
+                    }
+                }
+
+                // 3. Encontrar a linha do pedido
                 const row = document.getElementById(`pedido-${numPedido}`);
                 if (row) {
-                    row.classList.add('table-info');
-                    
-                    // Open the accordion if it's closed
-                    const collapseEl = row.closest('.accordion-collapse');
-                    if (collapseEl && !collapseEl.classList.contains('show')) { 
-                        bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); 
-                    }
-
-                    // Scroll to the element after another short delay for the accordion to open
-                    setTimeout(() => { 
-                        row.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
-                    }, 350);
+                    // Se encontramos a linha, ela se torna o alvo principal
+                    targetElement = row;
+                } else if (cardId) {
+                    // Se não achamos a linha mas temos um cardId, o card é o alvo
+                    targetElement = document.getElementById(cardId);
                 }
-            }, 200);
+
+                // 4. Remover destaques antigos e aplicar o novo
+                document.querySelectorAll('.search-highlight').forEach(el => el.classList.remove('search-highlight', 'table-info'));
+                if (targetElement) {
+                    targetElement.classList.add('search-highlight');
+                    if (targetElement.tagName === 'TR') {
+                        targetElement.classList.add('table-info');
+                    }
+                    // 5. Rolar para o elemento
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 350); // O timeout é importante para a transição de abas e accordions
         }
 
-        /*
-        function buscarPedido() {
-            const searchInput = document.getElementById('pedidoSearchInput').value.trim();
-            const searchResultDiv = document.getElementById('search-result');
-            searchResultDiv.innerHTML = '';
-            if (!searchInput) return;
-            if (planilhaData.length === 0) { searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>'; return; }
-            let pedidoEncontrado = null; let local = 'Não encontrado'; let accordionId = '';
-            
-            if (currentLeftoversForPrinting.length > 0) {
-                 pedidoEncontrado = currentLeftoversForPrinting.find(p => String(p.Num_Pedido) === searchInput);
-                 if (pedidoEncontrado) local = 'Sobras Finais (na Mesa de Trabalho)';
-            }
-            if (!pedidoEncontrado) {
-                for (const loadId in activeLoads) {
-                    const load = activeLoads[loadId];
-                    pedidoEncontrado = load.pedidos.find(p => String(p.Num_Pedido) === searchInput);
-                    if (pedidoEncontrado) {
-                        local = `Carga #${load.numero || loadId.split('-')[1]} (${load.vehicleType})`;
-                        break;
-                    }
-                }
-            }
-            if (!pedidoEncontrado) {
-                pedidoEncontrado = pedidosManualmenteBloqueadosAtuais.find(p => String(p.Num_Pedido) === searchInput);
-                if (pedidoEncontrado) { local = 'Bloqueado Manualmente'; }
-            }
-            if (!pedidoEncontrado) {
-                pedidoEncontrado = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === searchInput);
-                if (pedidoEncontrado) { local = 'Pedidos Disponíveis (Varejo)'; accordionId = 'accordionGeral'; } 
-            }
-            if (!pedidoEncontrado) {
-                pedidoEncontrado = pedidosComCFNumericoIsolado.find(p => String(p.Num_Pedido) === searchInput);
-                if (pedidoEncontrado) { local = 'Pedidos Filtrados (Bloqueio de Varejo)'; accordionId = 'accordionCF'; }
-            }
-            if (!pedidoEncontrado) {
-                for (const cf in gruposToco) {
-                    pedidoEncontrado = gruposToco[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
-                    if (pedidoEncontrado) { local = `Cargas "Toco" (CF: ${cf})`; accordionId = 'accordionToco'; break; }
-                }
-            }
-             if (!pedidoEncontrado) {
-                for (const cf in gruposPorCFGlobais) {
-                    pedidoEncontrado = gruposPorCFGlobais[cf].pedidos.find(p => String(p.Num_Pedido) === searchInput);
-                    if (pedidoEncontrado) { local = `Cargas Truck e Carreta (${cf})`; accordionId = 'accordionCargasPorCF'; break; }
-                }
-            }
-            if (!pedidoEncontrado) {
-                pedidoEncontrado = rota1SemCarga.find(p => String(p.Num_Pedido) === searchInput);
-                if (pedidoEncontrado) { local = 'Pedidos da Rota 1 para Alteração'; }
-            }
-             if (!pedidoEncontrado) {
-                pedidoEncontrado = pedidosFuncionarios.find(p => String(p.Num_Pedido) === searchInput);
-                if (pedidoEncontrado) { local = 'Pedidos de Funcionários'; accordionId = 'accordionFuncionarios';}
-            }
-             if (!pedidoEncontrado) {
-                pedidoEncontrado = pedidosTransferencias.find(p => String(p.Num_Pedido) === searchInput);
-                if (pedidoEncontrado) { local = 'Pedidos de Transferência'; accordionId = 'accordionTransferencias'; }
-            }
-             if (!pedidoEncontrado) {
-                  const originalPedido = planilhaData.find(p => String(p.Num_Pedido) === searchInput);
-                  if (originalPedido) {
-                          pedidoEncontrado = originalPedido;
-                          if(pedidosBloqueados.has(String(originalPedido.Num_Pedido))) {
-                                local = 'Bloqueado Manualmente por você.';
-                          } else if (pedidosEspeciaisProcessados.has(String(originalPedido.Num_Pedido))) {
-                              local = 'Alocado na Carga Especial.';
-                          } else if (pedidosVendaAntecipadaProcessados.has(String(originalPedido.Num_Pedido))) {
-                              local = 'Alocado na Carga de Venda Antecipada.';
-                          }
-                          else {
-                               local = 'Encontrado na planilha original, mas foi filtrado por alguma regra.';
-                          }
-                  }
-             }
+        document.head.insertAdjacentHTML('beforeend', '<style>.search-highlight { box-shadow: 0 0 0 3px var(--dark-primary) !important; transition: box-shadow 0.5s ease-in-out; }</style>');
 
-            if (pedidoEncontrado) {
-                let buttons = '';
-                if (local.startsWith('Pedidos Disponíveis') || local.startsWith('Sobras')) {
-                    const isPrioritized = pedidosPrioritarios.includes(String(pedidoEncontrado.Num_Pedido));
-                    buttons = `<button class="btn btn-primary btn-sm" onclick="priorizarPedido('${pedidoEncontrado.Num_Pedido}')" ${isPrioritized ? 'disabled' : ''}>${isPrioritized ? 'Prioridade Marcada' : 'Marcar como Prioridade'}</button>
-                                     <button class="btn btn-secondary btn-sm ms-2" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
-                } else if (accordionId || local.startsWith('Carga')) { 
-                    buttons = `<button class="btn btn-secondary btn-sm" onclick="highlightPedido('${pedidoEncontrado.Num_Pedido}')">Destacar na Lista</button>`;
+        function highlightPedido_OLD(numPedido) {
+            document.querySelectorAll('tr.table-info').forEach(r => r.classList.remove('table-info'));
+            const row = document.getElementById(`pedido-${numPedido}`);
+            if (row) {
+                row.classList.add('table-info');
+                const collapseEl = row.closest('.accordion-collapse');
+                if (collapseEl && !collapseEl.classList.contains('show')) { 
+                    bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); 
                 }
-                searchResultDiv.innerHTML = `<div class="alert alert-info"><h5>Pedido ${searchInput} encontrado!</h5><p class="mb-1"><strong>Local:</strong> ${local}</p><p class="mb-1"><strong>Cliente:</strong> ${pedidoEncontrado.Nome_Cliente}<br><strong>Peso:</strong> ${pedidoEncontrado.Quilos_Saldo} kg</p>${buttons ? `<div class="mt-2">${buttons}</div>` : ''}</div>`;
-            } else { searchResultDiv.innerHTML = '<p class="text-danger">Pedido não encontrado em nenhuma das listas.</p>'; }
-        }*/
-
+                setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350);
+            }
+        }
         
         function atualizarListaBloqueados() {
             const divLista = document.getElementById('lista-pedidos-bloqueados');
@@ -1411,18 +1334,20 @@
         function bloquearPedido() {
             const input = document.getElementById('bloquearPedidoInput');
             const numPedido = input.value.trim();
-            if (!numPedido) return;
             if (numPedido) {
                 pedidosBloqueados.add(numPedido);
                 input.value = '';
+                saveStateToLocalStorage();
                 atualizarListaBloqueados();
+                if (planilhaData.length > 0) processar();
             }
         }
 
         function desbloquearPedido(numPedido) {
             pedidosBloqueados.delete(numPedido);
+            saveStateToLocalStorage();
             atualizarListaBloqueados();
-            saveSession();
+            if (planilhaData.length > 0) processar();
         }
 
         function atualizarListaSemCorte() {
@@ -1447,15 +1372,17 @@
             const input = document.getElementById('semCorteInput');
             const numeros = input.value.split('\n').map(n => n.trim()).filter(Boolean);
             numeros.forEach(num => pedidosSemCorte.add(num));
-            if (numeros.length > 0) saveSession();
+            saveStateToLocalStorage();
             input.value = '';
             atualizarListaSemCorte();
+            if (planilhaData.length > 0) processar();
         }
 
         function removerMarcacaoSemCorte(numPedido) {
             pedidosSemCorte.delete(numPedido);
-            saveSession();
+            saveStateToLocalStorage();
             atualizarListaSemCorte();
+            if (planilhaData.length > 0) processar();
         }
 
         function resetarEstadoGlobal() {
@@ -1469,10 +1396,10 @@
             pedidosTransferencias = [];
             pedidosCondorTruck = [];
             pedidosManualmenteBloqueadosAtuais = [];
-            pedidosPrioritarios = [];
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
             activeLoads = {};
+            processedRoutes.clear();
         }
 
         function limparTudo(){
@@ -1522,11 +1449,11 @@
             atualizarListaBloqueados();
             atualizarListaSemCorte();
             limparFiltroDeRota();
-            localStorage.removeItem('logisticsSession');
             
             fileInput.value = '';
             planilhaData = [];
             processarBtn.disabled = true;
+            localStorage.removeItem('logisticsAppState');
             statusDiv.innerHTML = '';
         }
 
@@ -1547,6 +1474,8 @@
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
                     
+                    resetarEstadoGlobal();
+
                     const rotaInicio = document.getElementById('rotaInicioSelect').value;
                     const rotaFim = document.getElementById('rotaFimSelect').value;
                     let dadosParaProcessar = [...planilhaData];
@@ -1578,7 +1507,7 @@
                         } else if (coluna5.includes('TBL ESP CARRETA') && !isNumeric(p.CF)) {
                             pedidosCarretaSemCF.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (coluna5.includes('TRANSF. TODESCH')) {
+                        } else if (coluna5.includes('TABELA TRANSFER')) {
                             pedidosTransferencias.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
                         } else if (coluna5.includes('CONDOR (TRUCK)') || coluna5.includes('CONDOR TOD TRUC')) {
@@ -1593,8 +1522,6 @@
                     let dadosFiltrados = dadosParaProcessar.filter(p => !pedidosExcluidos.has(p.Num_Pedido));
                     
                     let pedidosDisponiveis = [];
-                    pedidosManualmenteBloqueadosAtuais = []; // Limpa para re-popular
-
                     dadosFiltrados.filter(p => p.Num_Pedido).forEach(p => {
                         if (pedidosBloqueados.has(String(p.Num_Pedido))) {
                             pedidosManualmenteBloqueadosAtuais.push(p);
@@ -1687,7 +1614,7 @@
                     displayGerais(resultadoGeralDiv, gruposGerais);
                     
                     updateAndRenderChart();
-                    saveSession();
+                    saveStateToLocalStorage();
                     
                     statusDiv.innerHTML = `<p class="text-success">Processamento concluído!</p>`;
                 } catch (error) { 
@@ -1715,12 +1642,7 @@
                 return;
             }
 
-            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => {
-                const isBloqC = String(p['BLOQ.']).trim().toUpperCase() === 'C';
-                const isNotBlocked = !String(p['BLOQ.']).trim();
-                
-                return isOverdue(p.Predat) && (isNotBlocked || isBloqC);
-            });
+            const pedidosAtrasados = pedidosGeraisAtuais.filter(p => isOverdue(p.Predat) && !String(p['BLOQ.']).trim());
 
             if (pedidosAtrasados.length === 0) {
                 alert("Nenhum pedido em atraso (e não bloqueado) foi encontrado nos resultados processados.");
@@ -1748,10 +1670,10 @@
         }
         
         function createTable(pedidos, columnsToDisplay, sourceId = '') {
-            if (!pedidos || pedidos.length === 0) return '<p class="text-muted">Nenhum pedido para exibir.</p>';
-            const colunasExibir = columnsToDisplay || ['Status', 'Cod_Rota', 'Cliente', 'Nome_Cliente', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'Predat', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
+            if (!pedidos || pedidos.length === 0) return '';
+            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'Predat', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
             let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped table-hover"><thead><tr>';
-            colunasExibir.forEach(c => table += `<th data-sort="${c}" style="cursor: pointer;">${c.replace('_', ' ')} <i class="bi bi-arrow-down-up small"></i></th>`);
+            colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
             pedidos.forEach(p => {
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
@@ -1772,14 +1694,8 @@
                         const semCorteBadge = isSemCorte ? ' <span class="badge bg-transparent" title="Pedido Sem Corte"><i class="bi bi-scissors text-warning"></i></span>' : '';
                         table += `<td>${cellContent}${priorityBadge}${semCorteBadge}</td>`;
                     } else if (c === 'Agendamento' && cellContent === 'Sim') {
-                        table += `<td><span class="badge bg-warning text-dark" title="Pedido Agendado">${cellContent}</span></td>`;
-                    } else if (c === 'Status') {
-                        const isLate = isOverdue(p.Predat);
-                        const isScheduled = p.Agendamento === 'Sim';
-                        if (isLate) table += '<td><span class="badge bg-danger-subtle text-danger-emphasis" title="Atrasado"><i class="bi bi-clock-history"></i></span></td>';
-                        else if (isScheduled) table += '<td><span class="badge bg-warning-subtle text-warning-emphasis" title="Agendado"><i class="bi bi-calendar-check"></i></span></td>';
-                        else table += '<td><span class="badge bg-success-subtle text-success-emphasis" title="Disponível"><i class="bi bi-check-circle"></i></span></td>';
-                    }else if (c === 'Predat' || c === 'Dat_Ped') {
+                        table += `<td><span class="badge bg-warning text-dark">${cellContent}</span></td>`;
+                    } else if (c === 'Predat' || c === 'Dat_Ped') {
                         let formattedDate = '';
                         const dateObj = cellContent instanceof Date ? cellContent : new Date(cellContent);
 
@@ -1804,103 +1720,7 @@
                 table += '</tr>';
             });
             table += '</tbody></table></div>';
-            
-            // Adiciona o listener de ordenação após a tabela ser criada
-            setTimeout(() => {
-                const tableElement = document.querySelector(`div[data-source-id="${sourceId}"] table`);
-                if (tableElement) {
-                    tableElement.querySelectorAll('th[data-sort]').forEach(th => {
-                        th.addEventListener('click', () => sortTable(tableElement, th.dataset.sort));
-                    });
-                }
-            }, 100);
-
-            return `<div data-source-id="${sourceId}">${table}</div>`;
-        }
-
-        function sortTable(table, column) {
-            const tbody = table.querySelector('tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            const isAsc = table.dataset.sortOrder === 'asc';
-            const newOrder = isAsc ? 'desc' : 'asc';
-            table.dataset.sortOrder = newOrder;
-
-            rows.sort((a, b) => {
-                const cellA = a.querySelector(`td:nth-child(${getColumnIndex(table, column)})`)?.textContent.trim() || '';
-                const cellB = b.querySelector(`td:nth-child(${getColumnIndex(table, column)})`)?.textContent.trim() || '';
-
-                let valA, valB;
-                if (column === 'Quilos_Saldo' || column === 'Cubagem') {
-                    valA = parseFloat(cellA.replace('.', '').replace(',', '.')) || 0;
-                    valB = parseFloat(cellB.replace('.', '').replace(',', '.')) || 0;
-                } else if (column === 'Predat' || column === 'Dat_Ped') {
-                    valA = parseDate(cellA);
-                    valB = parseDate(cellB);
-                } else {
-                    valA = cellA;
-                    valB = cellB;
-                }
-
-                if (valA < valB) return isAsc ? 1 : -1;
-                if (valA > valB) return isAsc ? -1 : 1;
-                return 0;
-            });
-
-            rows.forEach(row => tbody.appendChild(row));
-        }
-
-        function getColumnIndex(table, columnName) {
-            const headers = Array.from(table.querySelectorAll('th'));
-            return headers.findIndex(th => th.dataset.sort === columnName) + 1;
-        }
-
-        function parseDate(dateString) {
-            if (!dateString) return new Date(0);
-            const parts = dateString.split('/');
-            if (parts.length === 3) {
-                return new Date(parts[2], parts[1] - 1, parts[0]);
-            }
-            return new Date(dateString);
-        }
-
-        function filterGeneralTable(accordionContainer, filter) {
-            const accordionItems = accordionContainer.querySelectorAll('.accordion-item');
-
-            accordionItems.forEach(item => {
-                const rows = item.querySelectorAll('tbody tr');
-                let hasVisibleRows = false;
-
-                rows.forEach(row => {
-                    const pedidoId = row.dataset.pedidoId;
-                    const pedido = pedidosGeraisAtuais.find(p => String(p.Num_Pedido) === pedidoId);
-                    if (!pedido) return;
-
-                    const isLate = isOverdue(pedido.Predat);
-                    const isScheduled = pedido.Agendamento === 'Sim';
-
-                    const shouldShow = filter === 'all' || (filter === 'overdue' && isLate) || (filter === 'scheduled' && isScheduled);
-
-                    row.style.display = shouldShow ? '' : 'none';
-                    if (shouldShow) {
-                        hasVisibleRows = true;
-                    }
-                });
-
-                const collapseElement = item.querySelector('.accordion-collapse');
-                const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseElement);
-
-                if (hasVisibleRows) {
-                    bsCollapse.show();
-                } else {
-                    bsCollapse.hide();
-                }
-            });
-        }
-
-        function collapseAllAccordions(accordionContainer) {
-            accordionContainer.querySelectorAll('.accordion-collapse.show').forEach(el => {
-                bootstrap.Collapse.getOrCreateInstance(el).hide();
-            });
+            return table;
         }
 
         function displayGerais(div, grupos) {
@@ -1966,7 +1786,7 @@
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos, null, `cf-numerico-${rota}`)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -2432,20 +2252,14 @@
             const allRouteButtons = document.querySelectorAll('#botoes-fiorino button, #botoes-van button, #botoes-34 button');
             allRouteButtons.forEach(btn => btn.disabled = true);
 
-            const resultadoDiv = document.getElementById(divId);
-
-            const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
-            
-            // CORREÇÃO: Remove as cargas antigas associadas a esta(s) rota(s) antes de criar novas.
-            // Isso evita que o gráfico conte as cargas múltiplas vezes ao reprocessar a mesma rota.
-            const routeSet = new Set(routes);
-            for (const loadId in activeLoads) {
-                const load = activeLoads[loadId];
-                if (load.pedidos && load.pedidos.length > 0 && routeSet.has(String(load.pedidos[0].Cod_Rota))) {
-                    delete activeLoads[loadId];
-                }
+            const routesKey = Array.isArray(routeOrRoutes) ? routeOrRoutes.sort().join(',') : String(routeOrRoutes);
+            if (processedRoutes.has(routesKey)) {
+                alert('Esta rota já foi processada. Para reprocessar, limpe os resultados ou processe uma rota diferente.');
+                allRouteButtons.forEach(btn => btn.disabled = false);
+                return;
             }
-            // Fim da correção
+
+            const resultadoDiv = document.getElementById(divId);
             
             const autoGeneratedContent = resultadoDiv.querySelector('.resultado-container');
             if (autoGeneratedContent) { autoGeneratedContent.remove(); }
@@ -2453,12 +2267,6 @@
             if (buttonElement) {
                 currentLeftoversForPrinting = [];
                 const parentContainer = buttonElement.parentElement;
-                parentContainer.querySelectorAll('button').forEach(btn => {
-                    btn.classList.remove('active', 'btn-success', 'btn-primary', 'btn-warning', 'btn-secondary');
-                    const originalColorClass = btn.id.includes('fiorino') ? 'success' : (btn.id.includes('van') ? 'primary' : 'warning');
-                    btn.classList.add(`btn-outline-${originalColorClass}`);
-                    btn.innerHTML = btn.innerHTML.replace('<i class="bi bi-check-circle-fill me-2"></i>', '');
-                });
                 const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
                 buttonElement.classList.remove(`btn-outline-${colorClass}`);
                 buttonElement.classList.add(`btn-${colorClass}`, 'active');
@@ -2471,6 +2279,7 @@
                 return;
             }
 
+            const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
             let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
 
             const clientGroupsMap = pedidosRota.reduce((acc, pedido) => {
@@ -2625,6 +2434,14 @@
                 activeLoads[loadId] = load;
             });
 
+            // Salvar o contexto da rota processada para recarregamento
+            const routeContext = {
+                divId: divId,
+                title: title,
+                routesKey: routesKey
+            };
+            saveRouteContext(routeContext);
+
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
                 van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
@@ -2654,13 +2471,13 @@
                                              Pedidos Restantes
                                              <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
                                          </div>
-                                         <div class="card-body">${createTable(currentLeftoversForPrinting, ['Status', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                         <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                                      </div>
                                  </div>`;
             }
             resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             updateAndRenderChart();
-            saveSession();
+            saveStateToLocalStorage();
         }
         
         function refineLoadsWithSimpleFit(initialLoads, initialLeftovers) {
@@ -3140,7 +2957,7 @@
             }
 
             updateAndRenderChart();
-            saveSession();
+            saveStateToLocalStorage();
         }
 
         function updateLoadUI(loadId) {
@@ -3180,7 +2997,7 @@
                                 Pedidos Restantes
                                 <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
                             </div>
-                            <div class="card-body">${createTable(currentLeftoversForPrinting, ['Status', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                            <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                         </div>`;
                 }
                 return;
@@ -3321,7 +3138,6 @@
             };
 
             activeLoads[newLoad.id] = newLoad;
-            currentLeftoversForPrinting = manualLoadInProgress.pedidos.length > 0 ? currentLeftoversForPrinting.filter(p => !manualLoadInProgress.pedidos.some(mp => mp.Num_Pedido === p.Num_Pedido)) : currentLeftoversForPrinting;
             
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
@@ -3356,7 +3172,7 @@
             }, 300);
 
             updateAndRenderChart();
-            saveSession();
+            saveStateToLocalStorage();
         }
 
         function cancelManualLoad() {
@@ -3459,7 +3275,7 @@
                     <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
                         <div class="accordion-body" id="${printAreaId}">
                             <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                <p class="text-muted small mb-0">Pedidos com a tag "TRANSF. TODESCH" na Coluna 5, separados automaticamente.</p>
+                                <p class="text-muted small mb-0">Pedidos com a tag "TABELA TRANSFER" na Coluna 5, separados automaticamente.</p>
                                 <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Transferência')">
                                     <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
                                 </button>
@@ -3473,123 +3289,192 @@
             div.innerHTML = accordionHtml;
         }
 
-        function saveSession() {
-            if (planilhaData.length === 0) {
+        // ================================================================================================
+        //  LÓGICA DE PERSISTÊNCIA DE ESTADO
+        // ================================================================================================
+        
+        function saveStateToLocalStorage() {
+            if (typeof(Storage) === "undefined") {
+                console.warn("Seu navegador não suporta Local Storage. O progresso não será salvo.");
                 return;
             }
-
-            const sessionState = {
-                planilhaData,
-                originalColumnHeaders,
-                pedidosBloqueados: Array.from(pedidosBloqueados),
-                pedidosSemCorte: Array.from(pedidosSemCorte),
-                pedidosGeraisAtuais,
-                gruposToco,
-                gruposPorCFGlobais,
-                pedidosComCFNumericoIsolado,
-                pedidosManualmenteBloqueadosAtuais,
-                rota1SemCarga,
-                pedidosFuncionarios,
-                pedidosCarretaSemCF,
-                pedidosTransferencias,
-                pedidosCondorTruck,
-                activeLoads,
-                currentLeftoversForPrinting,
-                pedidosEspeciaisProcessados: Array.from(pedidosEspeciaisProcessados),
-                pedidosVendaAntecipadaProcessados: Array.from(pedidosVendaAntecipadaProcessados),
-            };
-
             try {
-                localStorage.setItem('logisticsSession', JSON.stringify(sessionState));
-                console.log("Sessão salva automaticamente.");
+                const state = {
+                    planilhaData,
+                    originalColumnHeaders,
+                    pedidosGeraisAtuais,
+                    gruposToco,
+                    gruposPorCFGlobais,
+                    pedidosComCFNumericoIsolado,
+                    pedidosManualmenteBloqueadosAtuais,
+                    pedidosPrioritarios: Array.from(pedidosPrioritarios),
+                    pedidosBloqueados: Array.from(pedidosBloqueados),
+                    pedidosEspeciaisProcessados: Array.from(pedidosEspeciaisProcessados),
+                    pedidosSemCorte: Array.from(pedidosSemCorte),
+                    pedidosVendaAntecipadaProcessados: Array.from(pedidosVendaAntecipadaProcessados),
+                    rota1SemCarga,
+                    pedidosFuncionarios,
+                    pedidosCarretaSemCF,
+                    pedidosTransferencias,
+                    pedidosCondorTruck,
+                    tocoPedidoIds: Array.from(tocoPedidoIds),
+                    currentLeftoversForPrinting,
+                    activeLoads,
+                    processedRoutes: Array.from(processedRoutes),
+                    processedRouteContexts: JSON.parse(localStorage.getItem('logisticsRouteContexts') || '{}')
+                };
+                localStorage.setItem('logisticsAppState', JSON.stringify(state));
+                console.log("Estado da aplicação salvo no Local Storage.");
             } catch (e) {
-                console.error("Erro ao salvar a sessão:", e);
+                console.error("Erro ao salvar o estado no Local Storage:", e);
+                alert("Erro ao salvar o estado. O armazenamento pode estar cheio.");
             }
         }
 
-        function loadSession() {
-            const savedSession = localStorage.getItem('logisticsSession');
-            if (!savedSession) {
+        function saveRouteContext(context) {
+            try {
+                const contexts = JSON.parse(localStorage.getItem('logisticsRouteContexts') || '{}');
+                contexts[context.routesKey] = context;
+                localStorage.setItem('logisticsRouteContexts', JSON.stringify(contexts));
+            } catch (e) {
+                console.error("Erro ao salvar contexto da rota:", e);
+            }
+        }
+
+        function clearRouteContexts() {
+            localStorage.removeItem('logisticsRouteContexts');
+        }
+
+        function loadStateFromLocalStorage() {
+            if (typeof(Storage) === "undefined") return;
+
+            const savedStateJSON = localStorage.getItem('logisticsAppState');
+            if (!savedStateJSON) {
+                console.log("Nenhum estado salvo encontrado.");
                 return;
             }
 
             try {
-                const sessionState = JSON.parse(savedSession, (key, value) => {
-                    if (key === 'Predat' || key === 'Dat_Ped') {
-                        if (value && typeof value === 'string') {
-                            const date = new Date(value);
-                            if (!isNaN(date)) return date;
-                        }
-                    }
-                    return value;
-                });
+                const savedState = JSON.parse(savedStateJSON);
+                
+                planilhaData = savedState.planilhaData || [];
+                if (planilhaData.length === 0) return;
 
-                planilhaData = sessionState.planilhaData || [];
-                originalColumnHeaders = sessionState.originalColumnHeaders || [];
-                pedidosGeraisAtuais = sessionState.pedidosGeraisAtuais || [];
-                gruposToco = sessionState.gruposToco || {};
-                gruposPorCFGlobais = sessionState.gruposPorCFGlobais || {};
-                pedidosComCFNumericoIsolado = sessionState.pedidosComCFNumericoIsolado || [];
-                pedidosManualmenteBloqueadosAtuais = sessionState.pedidosManualmenteBloqueadosAtuais || [];
-                rota1SemCarga = sessionState.rota1SemCarga || [];
-                pedidosFuncionarios = sessionState.pedidosFuncionarios || [];
-                pedidosCarretaSemCF = sessionState.pedidosCarretaSemCF || [];
-                pedidosTransferencias = sessionState.pedidosTransferencias || [];
-                pedidosCondorTruck = sessionState.pedidosCondorTruck || [];
-                pedidosBloqueados = new Set(sessionState.pedidosBloqueados || []);
-                pedidosSemCorte = new Set(sessionState.pedidosSemCorte || []);
-                activeLoads = sessionState.activeLoads || {};
-                currentLeftoversForPrinting = sessionState.currentLeftoversForPrinting || [];
-                pedidosEspeciaisProcessados = new Set(sessionState.pedidosEspeciaisProcessados || []);
-                pedidosVendaAntecipadaProcessados = new Set(sessionState.pedidosVendaAntecipadaProcessados || []);
+                originalColumnHeaders = savedState.originalColumnHeaders || [];
+                pedidosGeraisAtuais = savedState.pedidosGeraisAtuais || [];
+                gruposToco = savedState.gruposToco || {};
+                gruposPorCFGlobais = savedState.gruposPorCFGlobais || {};
+                pedidosComCFNumericoIsolado = savedState.pedidosComCFNumericoIsolado || [];
+                pedidosManualmenteBloqueadosAtuais = savedState.pedidosManualmenteBloqueadosAtuais || [];
+                pedidosPrioritarios = savedState.pedidosPrioritarios || [];
+                pedidosBloqueados = new Set(savedState.pedidosBloqueados || []);
+                pedidosEspeciaisProcessados = new Set(savedState.pedidosEspeciaisProcessados || []);
+                pedidosSemCorte = new Set(savedState.pedidosSemCorte || []);
+                pedidosVendaAntecipadaProcessados = new Set(savedState.pedidosVendaAntecipadaProcessados || []);
+                rota1SemCarga = savedState.rota1SemCarga || [];
+                pedidosFuncionarios = savedState.pedidosFuncionarios || [];
+                pedidosCarretaSemCF = savedState.pedidosCarretaSemCF || [];
+                pedidosTransferencias = savedState.pedidosTransferencias || [];
+                pedidosCondorTruck = savedState.pedidosCondorTruck || [];
+                tocoPedidoIds = new Set(savedState.tocoPedidoIds || []);
+                currentLeftoversForPrinting = savedState.currentLeftoversForPrinting || [];
+                activeLoads = savedState.activeLoads || {};
+                processedRoutes = new Set(savedState.processedRoutes || []);
+                const processedRouteContexts = savedState.processedRouteContexts || {};
 
                 // Re-renderizar a UI com os dados carregados
-                reRenderUIFromState();
+                statusDiv.innerHTML = `<p class="text-success">Progresso anterior restaurado com sucesso!</p>`;
+                processarBtn.disabled = false;
+                popularFiltrosDeRota();
+                atualizarListaBloqueados();
+                atualizarListaSemCorte();
                 
-                console.log("Sessão de trabalho anterior carregada com sucesso!");
+                // Re-renderizar todas as seções principais
+                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
+                displayGerais(document.getElementById('resultado-geral'), gruposGerais);
+                displayToco(document.getElementById('resultado-toco'), gruposToco);
+                displayCargasCfAccordion(document.getElementById('resultado-cf-accordion-container'), gruposPorCFGlobais, pedidosCarretaSemCF, pedidosCondorTruck);
+                reRenderActiveLoads(processedRouteContexts);
+                updateAndRenderChart();
 
+                console.log("Estado da aplicação restaurado do Local Storage.");
             } catch (e) {
-                console.error("Erro ao carregar a sessão:", e);
-                alert(`Falha ao carregar a sessão. Os dados podem estar corrompidos. Erro: ${e.message}`);
-                localStorage.removeItem('logisticsSession');
+                console.error("Erro ao carregar o estado do Local Storage:", e);
+                localStorage.removeItem('logisticsAppState'); // Limpa estado corrompido
             }
         }
 
-        function reRenderUIFromState() {
-            // Recria as listas de resultados adicionais
-            popularFiltrosDeRota();
-            processarBtn.disabled = false;
-            displayPedidosBloqueados(document.getElementById('resultado-bloqueados'), pedidosManualmenteBloqueadosAtuais);
-            displayRota1(document.getElementById('resultado-rota1'), rota1SemCarga);
-            displayToco(document.getElementById('resultado-toco'), gruposToco);
-            displayPedidosCFNumerico(document.getElementById('resultado-cf-numerico'), pedidosComCFNumericoIsolado);
-            
-            // Recria as listas de pedidos especiais
-            displayPedidosFuncionarios(document.getElementById('resultado-funcionarios-tab'), pedidosFuncionarios);
-            displayPedidosTransferencias(document.getElementById('resultado-transferencias-tab'), pedidosTransferencias);
-            displayCargasCfAccordion(document.getElementById('resultado-cf-accordion-container'), gruposPorCFGlobais, pedidosCarretaSemCF, pedidosCondorTruck);
+        function reRenderActiveLoads(processedRouteContexts) {
+            if (Object.keys(activeLoads).length === 0) return;
 
-            // Recria a lista de pedidos disponíveis
-            const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
-            displayGerais(document.getElementById('resultado-geral'), gruposGerais);
-            
-            // Recria as cargas nas mesas de trabalho
-            const vehicleTypes = ['fiorino', 'van', 'tresQuartos'];
-            vehicleTypes.forEach(type => {
-                const loadsForType = Object.values(activeLoads).filter(l => l.vehicleType === type);
-                if (loadsForType.length > 0) {
-                    const divId = `resultado-${type === 'tresQuartos' ? '34' : type}-geral`;
-                    const div = document.getElementById(divId);
-                    const vehicleInfo = { fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' }, van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' }, tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' } };
-                    let html = loadsForType.map(load => renderLoadCard(load, type, vehicleInfo[type])).join('');
-                    div.innerHTML = `<div class="resultado-container">${html}</div>`;
+            const vehicleInfo = {
+                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
+                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
+                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
+            };
+
+            // Agrupa as cargas por contexto de rota (divId)
+            const loadsByContext = {};
+
+            Object.values(processedRouteContexts).forEach(context => {
+                const resultadoDiv = document.getElementById(context.divId);
+                if (!resultadoDiv) return;
+
+                let html = `<h5 class="mt-3">Cargas para <strong>${context.title}</strong></h5>`;
+                
+                const loadsForThisContext = Object.values(activeLoads).filter(load => {
+                    // Heurística para associar carga ao contexto: verifica se algum pedido da carga pertence à rota do contexto
+                    const routesInContext = context.routesKey.split(',');
+                    return load.pedidos.some(p => routesInContext.includes(String(p.Cod_Rota)));
+                });
+
+                if (loadsForThisContext.length > 0) {
+                    loadsForThisContext.forEach(load => {
+                        if (vehicleInfo[load.vehicleType]) {
+                            html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType]);
+                        }
+                    });
+                } else {
+                    html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
+                }
+
+                resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
+
+                // Reativa o botão da rota processada
+                const routeButton = document.querySelector(`button[onclick*="${context.routesKey}"]`);
+                if (routeButton) {
+                    const vehicleType = routeButton.id.split('-')[1];
+                    const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
+                    routeButton.classList.remove(`btn-outline-${colorClass}`);
+                    routeButton.classList.add(`btn-${colorClass}`, 'active');
+                    routeButton.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>${context.title}`;
                 }
             });
 
-            // Atualiza o gráfico e as listas de configurações
-            updateAndRenderChart();
-            atualizarListaBloqueados();
-            atualizarListaSemCorte();
+            // Renderiza as sobras na última aba ativa (ou na primeira, como fallback)
+            if (currentLeftoversForPrinting.length > 0) {
+                const lastContext = Object.values(processedRouteContexts).pop();
+                if (lastContext) {
+                    const resultadoDiv = document.getElementById(lastContext.divId);
+                    if (resultadoDiv) {
+                        const finalLeftoverKg = currentLeftoversForPrinting.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
+                        const manualLoadButton = `<button id="start-manual-load-btn" class="btn btn-success ms-auto no-print" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual</button>`;
+                        const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${lastContext.title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
+
+                        let leftoversHtml = `<div id="leftovers-card-${lastContext.divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
+                                             <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
+                                             <div class="card mb-3">
+                                                 <div class="card-header bg-danger text-white d-flex align-items-center">
+                                                     Pedidos Restantes
+                                                     <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
+                                                 </div>
+                                                 <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                             </div>
+                                         </div>`;
+                        resultadoDiv.querySelector('.resultado-container').insertAdjacentHTML('beforeend', leftoversHtml);
+                    }
+                }
+            }
         }
 
     </script>
