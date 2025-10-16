@@ -394,7 +394,6 @@
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cf-tab-pane"><i class="bi bi-truck me-2"></i>Truck/Carreta</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#funcionarios-tab-pane"><i class="bi bi-people-fill me-2"></i>Funcionários</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#transferencias-tab-pane"><i class="bi bi-arrow-left-right me-2"></i>Transferências</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#exportacao-tab-pane"><i class="bi bi-globe-americas me-2"></i>Exportação</button></li>
                              </ul>
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
@@ -429,9 +428,6 @@
                                 </div>
                                 <div class="tab-pane fade" id="transferencias-tab-pane" role="tabpanel">
                                     <div id="resultado-transferencias-tab"><div class="empty-state"><i class="bi bi-arrow-left-right"></i><p>Nenhum pedido de transferência encontrado. Processe um arquivo.</p></div></div>
-                                </div>
-                                <div class="tab-pane fade" id="exportacao-tab-pane" role="tabpanel">
-                                    <div id="resultado-exportacao-tab"><div class="empty-state"><i class="bi bi-globe-americas"></i><p>Nenhum pedido de exportação encontrado. Processe um arquivo.</p></div></div>
                                 </div>
                             </div>
                         </div>
@@ -897,7 +893,6 @@
         let pedidosFuncionarios = [];
         let pedidosCarretaSemCF = [];
         let pedidosTransferencias = [];
-        let pedidosExportacao = [];
         let pedidosCondorTruck = [];
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
@@ -1215,7 +1210,6 @@
             findInList(rota1SemCarga, 'Pedidos da Rota 1 para Alteração', null, null);
             findInList(pedidosFuncionarios, 'Pedidos de Funcionários', 'funcionarios-tab-pane', 'collapseFuncionarios');
             findInList(pedidosTransferencias, 'Pedidos de Transferência', 'transferencias-tab-pane', 'collapseTransferencias');
-            findInList(pedidosExportacao, 'Pedidos de Exportação', 'exportacao-tab-pane', 'collapseExportacao');
 
             const specialKeysOrder = ["Pedidos Condor (Truck)", "Pedidos de Carreta/Truck sem CF"];
             const sortedCfKeys = Object.keys(gruposPorCFGlobais).sort((a,b) => {
@@ -1496,7 +1490,6 @@
             pedidosFuncionarios = [];
             pedidosCarretaSemCF = [];
             pedidosTransferencias = [];
-            pedidosExportacao = [];
             pedidosCondorTruck = [];
             pedidosManualmenteBloqueadosAtuais = [];
             tocoPedidoIds.clear();
@@ -1525,7 +1518,7 @@
                 'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral',
                 'resultado-rota1', 'resultado-toco', 
                 'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result', 
-                'resultado-funcionarios-tab', 'resultado-transferencias-tab', 'resultado-exportacao-tab'
+                'resultado-funcionarios-tab', 'resultado-transferencias-tab'
             ];
             const emptyStateMessages = {
                 'resultado-geral': '<div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div>',
@@ -1580,7 +1573,6 @@
                 const resultadoCfAccordionDiv = document.getElementById('resultado-cf-accordion-container');
                 const resultadoFuncionariosDiv = document.getElementById('resultado-funcionarios-tab');
                 const resultadoTransferenciasDiv = document.getElementById('resultado-transferencias-tab');
-                const resultadoExportacaoDiv = document.getElementById('resultado-exportacao-tab');
                 
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
@@ -1603,8 +1595,7 @@
                     [
                         'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 
                         'resultado-toco', 'resultado-cf-accordion-container', 'resultado-cf-numerico', 
-                        'resultado-rota1', 'resultado-bloqueados', 'resultado-funcionarios-tab', 'resultado-transferencias-tab',
-                        'resultado-exportacao-tab'
+                        'resultado-rota1', 'resultado-bloqueados', 'resultado-funcionarios-tab', 'resultado-transferencias-tab'
                     ].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
@@ -1619,11 +1610,8 @@
                         } else if (coluna5.includes('TBL ESP CARRETA') && !isNumeric(p.CF)) {
                             pedidosCarretaSemCF.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (coluna5.includes('TABELA TRANSFER') || coluna5.includes('TRANSF. TODESCH')) {
+                        } else if (coluna5.includes('TABELA TRANSFER')) {
                             pedidosTransferencias.push(p);
-                            pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (coluna5.includes('TBL EXPORTACAO')) {
-                            pedidosExportacao.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
                         } else if (coluna5.includes('CONDOR (TRUCK)') || coluna5.includes('CONDOR TOD TRUC')) {
                             pedidosCondorTruck.push(p);
@@ -1633,7 +1621,6 @@
                     
                     displayPedidosFuncionarios(resultadoFuncionariosDiv, pedidosFuncionarios);
                     displayPedidosTransferencias(resultadoTransferenciasDiv, pedidosTransferencias);
-                    displayPedidosExportacao(resultadoExportacaoDiv, pedidosExportacao);
                     
                     let dadosFiltrados = dadosParaProcessar.filter(p => !pedidosExcluidos.has(p.Num_Pedido));
                     
@@ -3525,7 +3512,7 @@
                     <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
                         <div class="accordion-body" id="${printAreaId}">
                             <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                <p class="text-muted small mb-0">Pedidos com "TABELA TRANSFER" ou "TRANSF. TODESCH" na Coluna 5, separados automaticamente.</p>
+                                <p class="text-muted small mb-0">Pedidos com a tag "TABELA TRANSFER" na Coluna 5, separados automaticamente.</p>
                                 <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Transferência')">
                                     <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
                                 </button>
@@ -3536,51 +3523,6 @@
                 </div>
             </div>`;
 
-            div.innerHTML = accordionHtml;
-        }
-
-        function displayPedidosExportacao(div, pedidos) {
-            if (!div) return;
-            if (pedidos.length === 0) {
-                div.innerHTML = '<div class="empty-state"><i class="bi bi-globe-americas"></i><p>Nenhum pedido de exportação encontrado.</p></div>';
-                return;
-            }
-
-            pedidos.sort((a, b) => {
-                const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
-                const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
-                const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
-                if (clienteCompare !== 0) return clienteCompare;
-                return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
-            });
-
-            const totalKg = pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
-            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-            const accordionId = 'accordionExportacao';
-            const collapseId = 'collapseExportacao';
-            const headerId = 'headingExportacao';
-            const printAreaId = 'exportacao-print-area';
-
-            let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="${headerId}">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
-                            <strong>Pedidos de Exportação</strong> &nbsp;
-                            <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} Pedidos</span>
-                            <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
-                        </button>
-                    </h2>
-                    <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
-                        <div class="accordion-body" id="${printAreaId}">
-                            <div class="d-flex justify-content-end align-items-center mb-3 no-print">
-                                <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Exportação')"><i class="bi bi-printer-fill me-1"></i>Imprimir Lista</button>
-                            </div>
-                            ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Coluna5', 'BLOQ.'])}
-                        </div>
-                    </div>
-                </div>
-            </div>`;
             div.innerHTML = accordionHtml;
         }
 
@@ -3612,7 +3554,6 @@
                     pedidosFuncionarios,
                     pedidosCarretaSemCF,
                     pedidosTransferencias,
-                    pedidosExportacao,
                     pedidosCondorTruck,
                     tocoPedidoIds: Array.from(tocoPedidoIds),
                     currentLeftoversForPrinting,
@@ -3677,7 +3618,6 @@
                 pedidosFuncionarios = savedState.pedidosFuncionarios || [];
                 pedidosCarretaSemCF = savedState.pedidosCarretaSemCF || [];
                 pedidosTransferencias = savedState.pedidosTransferencias || [];
-                pedidosExportacao = savedState.pedidosExportacao || [];
                 pedidosCondorTruck = savedState.pedidosCondorTruck || [];
                 tocoPedidoIds = new Set(savedState.tocoPedidoIds || []);
                 currentLeftoversForPrinting = savedState.currentLeftoversForPrinting || [];
@@ -3695,7 +3635,6 @@
                 pedidosFuncionarios = reviveDates(pedidosFuncionarios);
                 pedidosCarretaSemCF = reviveDates(pedidosCarretaSemCF);
                 pedidosTransferencias = reviveDates(pedidosTransferencias);
-                pedidosExportacao = reviveDates(pedidosExportacao);
                 pedidosCondorTruck = reviveDates(pedidosCondorTruck);
                 currentLeftoversForPrinting = reviveDates(currentLeftoversForPrinting);
                 Object.values(activeLoads).forEach(load => load.pedidos = reviveDates(load.pedidos));
@@ -3721,7 +3660,6 @@
                 displayPedidosCFNumerico(document.getElementById('resultado-cf-numerico'), pedidosComCFNumericoIsolado);
                 displayPedidosFuncionarios(document.getElementById('resultado-funcionarios-tab'), pedidosFuncionarios);
                 displayPedidosTransferencias(document.getElementById('resultado-transferencias-tab'), pedidosTransferencias);
-                displayPedidosExportacao(document.getElementById('resultado-exportacao-tab'), pedidosExportacao);
                 reRenderManualLoads();
 
                 reRenderActiveLoads(processedRouteContexts);
