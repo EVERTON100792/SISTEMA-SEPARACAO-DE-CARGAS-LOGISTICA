@@ -383,7 +383,10 @@
             <div class="card animated-entry mb-4" id="card-resumo-geral-container" style="display: none;">
                 <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo Geral (Varejo)</div>
                 <div class="card-body">
-                    <div id="chart-resumo-veiculos"></div>
+                    <div class="row mb-4" id="kpi-container">
+                        <!-- KPIs serão inseridos aqui pelo JavaScript -->
+                    </div>
+                    <div id="chart-resumo-veiculos" style="min-height: 350px;"></div>
                 </div>
             </div>
 
@@ -922,6 +925,7 @@
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
         let activeLoads = {};
+        let kpiData = {}; // Objeto para armazenar dados dos KPIs
         let processedRoutes = new Set();
         let processedRouteContexts = {};
         let manualLoadInProgress = null;
@@ -1521,6 +1525,7 @@
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
             activeLoads = {};
+            kpiData = {};
             processedRoutes.clear();
             // As prioridades (pedidosPrioritarios, pedidosRecall) não são limpas aqui,
             // pois são um estado persistente que o usuário controla manualmente.
@@ -1542,7 +1547,7 @@
             const idsParaLimpar = [
                 'resultado-venda-antecipada', 'resultado-carga-especial', 'resultado-bloqueados', 'resultado-geral', 
                 'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral',
-                'resultado-rota1', 'resultado-toco', 
+                'resultado-rota1', 'resultado-toco', 'kpi-container',
                 'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result', 
                 'resultado-funcionarios-tab', 'resultado-transferencias-tab', 'resultado-exportacao-tab'
             ];
@@ -1749,6 +1754,7 @@
                     displayGerais(resultadoGeralDiv, gruposGerais);
                     
                     updateAndRenderChart();
+                    updateAndRenderKPIs();
                     saveStateToLocalStorage();
                     
                     statusDiv.innerHTML = `<p class="text-success">Processamento concluído!</p>`;
@@ -1759,6 +1765,52 @@
                     processarBtn.disabled = false;
                 }
             }, 50);
+        }
+
+        function updateAndRenderKPIs() {
+            const totalPedidosVarejo = pedidosGeraisAtuais.length;
+            const pesoTotalVarejo = pedidosGeraisAtuais.reduce((sum, p) => sum + p.Quilos_Saldo, 0);            
+
+            const pedidosAlocadosVarejo = Object.values(activeLoads).filter(l => ['fiorino', 'van', 'tresQuartos'].includes(l.vehicleType)).reduce((sum, l) => sum + l.pedidos.length, 0);
+            const pedidosEmSobra = totalPedidosVarejo - pedidosAlocadosVarejo;
+            
+            const cargasMontadas = Object.values(activeLoads).filter(l => ['fiorino', 'van', 'tresQuartos'].includes(l.vehicleType));
+            let totalOcupacao = 0;
+            if (cargasMontadas.length > 0) {
+                cargasMontadas.forEach(load => {
+                    const config = getVehicleConfig(load.vehicleType);
+                    if (config.softMaxKg > 0) {
+                        totalOcupacao += (load.totalKg / config.softMaxKg);
+                    }
+                });
+                kpiData.taxaOcupacaoMedia = (totalOcupacao / cargasMontadas.length) * 100;
+            } else {
+                kpiData.taxaOcupacaoMedia = 0;
+            }
+
+            kpiData.totalPedidosVarejo = totalPedidosVarejo;
+            kpiData.pesoTotalVarejo = pesoTotalVarejo;
+            kpiData.pedidosEmSobra = pedidosEmSobra;
+
+            const kpiContainer = document.getElementById('kpi-container');
+            kpiContainer.innerHTML = `
+                <div class="col-md-3 col-6 mb-3"><div class="card bg-secondary-subtle h-100"><div class="card-body text-center">
+                    <h6 class="card-subtitle text-muted">Total Pedidos (Varejo)</h6>
+                    <p class="h3 card-title mb-0">${kpiData.totalPedidosVarejo}</p>
+                </div></div></div>
+                <div class="col-md-3 col-6 mb-3"><div class="card bg-secondary-subtle h-100"><div class="card-body text-center">
+                    <h6 class="card-subtitle text-muted">Peso Total (Varejo)</h6>
+                    <p class="h3 card-title mb-0">${(kpiData.pesoTotalVarejo / 1000).toFixed(1)}<small class="h5"> t</small></p>
+                </div></div></div>
+                <div class="col-md-3 col-6 mb-3"><div class="card bg-danger-subtle h-100"><div class="card-body text-center">
+                    <h6 class="card-subtitle text-muted">Pedidos em Sobra</h6>
+                    <p class="h3 card-title mb-0">${kpiData.pedidosEmSobra}</p>
+                </div></div></div>
+                <div class="col-md-3 col-6 mb-3"><div class="card bg-success-subtle h-100"><div class="card-body text-center">
+                    <h6 class="card-subtitle text-muted">Ocupação Média</h6>
+                    <p class="h3 card-title mb-0">${kpiData.taxaOcupacaoMedia.toFixed(1)}<small class="h5"> %</small></p>
+                </div></div></div>
+            `;
         }
 
         function isOverdue(predat) {
@@ -3757,6 +3809,7 @@
                     tocoPedidoIds: Array.from(tocoPedidoIds),
                     currentLeftoversForPrinting,
                     activeLoads,
+                    kpiData,
                     processedRoutes: Array.from(processedRoutes), // Salva as rotas processadas
                     processedRouteContexts: processedRouteContexts // Salva os contextos
                 };
@@ -3822,6 +3875,7 @@
                 tocoPedidoIds = new Set(savedState.tocoPedidoIds || []);
                 currentLeftoversForPrinting = savedState.currentLeftoversForPrinting || [];
                 activeLoads = savedState.activeLoads || {};
+                kpiData = savedState.kpiData || {};
                 processedRoutes = new Set(savedState.processedRoutes || []);
                 processedRouteContexts = savedState.processedRouteContexts || {};
 
@@ -3865,6 +3919,7 @@
                 reRenderManualLoads();
 
                 reRenderActiveLoads(processedRouteContexts);
+                if (Object.keys(kpiData).length > 0) updateAndRenderKPIs();
                 updateAndRenderChart();
 
                 console.log("Estado da aplicação restaurado do Local Storage.");
