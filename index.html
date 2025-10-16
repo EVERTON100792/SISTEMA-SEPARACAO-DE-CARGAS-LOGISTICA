@@ -1616,7 +1616,7 @@
                         if(coluna5.includes('TBL FUNCIONARIO')) {
                             pedidosFuncionarios.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (coluna5.includes('TBL ESP CARRETA') && !isNumeric(p.CF)) {
+                        } else if (coluna5.includes('TBL ESP CARRETA') && !isNumeric(p.CF)) { // Nota: A grafia foi corrigida de TRASN para TRANSF
                             pedidosCarretaSemCF.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
                         } else if (coluna5.includes('TABELA TRANSFER') || coluna5.includes('TRASN. TODESCH')) {
