@@ -1183,7 +1183,7 @@
                     if (index !== -1) accordionId = `collapseToco${index}`;
                 }
                 load.pedidos.filter(searchPredicate).forEach(p => {
-                    resultados.push({ pedido: p, local: `Carga #${load.numero || loadId.split('-')[1]} (${load.vehicleType})`, tabId: tabId, accordionId: accordionId, cardId: loadId });
+                    resultados.push({ pedido: p, local: `Carga #${load.numero || loadId.split('-')[1]} (${load.vehicleType})`, tabId: tabId, accordionId: accordionId, cardId: loadId, inLoad: true });
                 });
             }
 
@@ -1191,14 +1191,25 @@
             findInList(currentLeftoversForPrinting, 'Sobras Finais (Mesa de Trabalho)', 'fiorino-tab-pane', null); // Assumes leftovers are in a tab
 
             // 3. Pedidos Disponíveis (Varejo)
-            findInList(pedidosGeraisAtuais, 'Pedidos Disponíveis (Varejo)', null, 'accordionGeral');
+            if (pedidosGeraisAtuais.length > 0) {
+                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [] }; } acc[rota].pedidos.push(p); return acc; }, {});
+                const sortedRotasGerais = Object.keys(gruposGerais).sort();
+                pedidosGeraisAtuais.filter(searchPredicate).forEach(p => {
+                    const rota = p.Cod_Rota;
+                    const index = sortedRotasGerais.indexOf(String(rota));
+                    if (index !== -1) {
+                        const collapseId = `collapseGeral${index}`;
+                        resultados.push({ pedido: p, local: `Pedidos Disponíveis (Rota ${rota})`, tabId: null, accordionId: collapseId });
+                    }
+                });
+            }
 
             // 4. Outras seções
             findInList(pedidosManualmenteBloqueadosAtuais, 'Bloqueado Manualmente', null, null);
             findInList(pedidosComCFNumericoIsolado, 'Pedidos Filtrados (Bloqueio Varejo)', null, 'accordionCF');
             findInList(rota1SemCarga, 'Pedidos da Rota 1 para Alteração', null, null);
-            findInList(pedidosFuncionarios, 'Pedidos de Funcionários', 'funcionarios-tab-pane', 'accordionFuncionarios');
-            findInList(pedidosTransferencias, 'Pedidos de Transferência', 'transferencias-tab-pane', 'accordionTransferencias');
+            findInList(pedidosFuncionarios, 'Pedidos de Funcionários', 'funcionarios-tab-pane', 'collapseFuncionarios');
+            findInList(pedidosTransferencias, 'Pedidos de Transferência', 'transferencias-tab-pane', 'collapseTransferencias');
 
             const specialKeysOrder = ["Pedidos Condor (Truck)", "Pedidos de Carreta/Truck sem CF"];
             const sortedCfKeys = Object.keys(gruposPorCFGlobais).sort((a,b) => {
@@ -1238,7 +1249,7 @@
                 html += '<ul class="list-group">';
                 uniqueResultados.forEach((res, index) => {
                     const { pedido, local, tabId, accordionId, cardId } = res;
-                    const isPriority = pedidosPrioritarios.includes(String(pedido.Num_Pedido));
+                    const isPriority = pedidosPrioritarios.includes(String(pedido.Num_Pedido)); // Mantido para outras lógicas
                     const isRecall = pedidosRecall.includes(String(pedido.Num_Pedido));
 
                     const priorityButtonHtml = isPriority
@@ -1256,6 +1267,7 @@
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div onclick="highlightPedido(${params})" style="${clickableAreaStyle}" class="flex-grow-1 me-3">
                                 <strong>Pedido:</strong> ${pedido.Num_Pedido} 
+                                ${res.inLoad ? '<span class="badge bg-success ms-2">Em Carga Montada</span>' : ''}
                                 ${isPriority ? '<span class="badge bg-warning text-dark ms-2">Prioridade</span>' : ''}
                                 ${isRecall ? '<span class="badge bg-info ms-2">Recall</span>' : ''}<br>
                                 <small><strong>Rota:</strong> ${pedido.Cod_Rota || 'N/A'}</small><br>
@@ -1321,52 +1333,62 @@
             }
         }
 
-        function highlightPedido(numPedido, tabId = null, accordionId = null, cardId = null) {
-            // 1. Mudar para a aba correta, se aplicável
-            if (tabId) {
-                const tabButton = document.querySelector(`button[data-bs-target="#${tabId}"]`);
-                if (tabButton) {
-                    bootstrap.Tab.getOrCreateInstance(tabButton).show();
-                }
-            }
+        function highlightPedido(numPedido, tabId, collapseId, cardId) {
+            const scrollToTarget = () => {
+                setTimeout(() => { // Pequeno delay final para garantir a renderização
+                    let targetElement = document.getElementById(`pedido-${numPedido}`);
+                    if (!targetElement) {
+                        targetElement = document.getElementById(cardId);
+                    }
+                    if (!targetElement && collapseId) {
+                        const collapseEl = document.getElementById(collapseId);
+                        if (collapseEl) targetElement = collapseEl.previousElementSibling;
+                    }
 
-            // Atraso para garantir que a aba foi renderizada antes de procurar elementos
-            setTimeout(() => {
-                // 2. Expandir o accordion, se aplicável
-                let targetElement = null;
-                if (accordionId) {
-                    const collapseEl = document.getElementById(accordionId);
-                    if (collapseEl) {
-                        if (!collapseEl.classList.contains('show')) {
-                            bootstrap.Collapse.getOrCreateInstance(collapseEl).show();
+                    document.querySelectorAll('.search-highlight').forEach(el => el.classList.remove('search-highlight', 'table-info'));
+
+                    if (targetElement) {
+                        targetElement.classList.add('search-highlight');
+                        if (targetElement.tagName === 'TR') {
+                            targetElement.classList.add('table-info');
                         }
-                        // Se for um accordion, o elemento a ser rolado é o header dele
-                        targetElement = collapseEl.previousElementSibling; 
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 150); // Aumentado um pouco para garantir renderização
+            };
+
+            const expandAccordionAndScroll = () => {
+                let collapseElement = collapseId ? document.getElementById(collapseId) : null;
+
+                // Fallback: Se o ID for do accordion-container, tenta achar o collapse dentro dele
+                if (collapseElement && !collapseElement.classList.contains('accordion-collapse')) {
+                    const innerCollapse = collapseElement.querySelector('.accordion-collapse');
+                    if (innerCollapse) {
+                        collapseElement = innerCollapse;
                     }
                 }
 
-                // 3. Encontrar a linha do pedido
-                const row = document.getElementById(`pedido-${numPedido}`);
-                if (row) {
-                    // Se encontramos a linha, ela se torna o alvo principal
-                    targetElement = row;
-                } else if (cardId) {
-                    // Se não achamos a linha mas temos um cardId, o card é o alvo
-                    targetElement = document.getElementById(cardId);
+                if (collapseElement && !collapseElement.classList.contains('show')) {
+                    collapseElement.addEventListener('shown.bs.collapse', scrollToTarget, { once: true });
+                    bootstrap.Collapse.getOrCreateInstance(collapseElement).show();
+                } else {
+                    scrollToTarget();
                 }
+            };
 
-                // 4. Remover destaques antigos e aplicar o novo
-                document.querySelectorAll('.search-highlight').forEach(el => el.classList.remove('search-highlight', 'table-info'));
-                if (targetElement) {
-                    targetElement.classList.add('search-highlight');
-                    if (targetElement.tagName === 'TR') {
-                        targetElement.classList.add('table-info');
-                    }
-                    // 5. Rolar para o elemento
-                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (tabId) {
+                const tabEl = document.querySelector(`button[data-bs-target="#${tabId}"]`);
+                if (tabEl && !tabEl.classList.contains('active')) {
+                    const tabInstance = bootstrap.Tab.getOrCreateInstance(tabEl);
+                    tabEl.addEventListener('shown.bs.tab', expandAccordionAndScroll, { once: true });
+                    tabInstance.show();
+                } else {
+                    expandAccordionAndScroll();
                 }
-            }, 350); // O timeout é importante para a transição de abas e accordions
-        }        
+            } else {
+                expandAccordionAndScroll();
+            }
+        }
 
         document.head.insertAdjacentHTML('beforeend', `<style>
             .search-highlight { animation: highlight-animation 1.5s ease-in-out; }
@@ -1934,28 +1956,30 @@
             const divToPrint = document.getElementById(divId);
             if (!divToPrint) return;
 
-            const printWindow = createPrintWindow(title);
             const divClone = divToPrint.cloneNode(true);
 
-            // Lógica unificada para atualizar observações antes de imprimir
+            // Lógica para buscar o texto da observação salva e colocar na área de impressão
             const allCardsInClone = divClone.querySelectorAll('.card[data-load-id]');
             allCardsInClone.forEach(cardClone => {
                 const loadId = cardClone.dataset.loadId;
-                const originalCard = document.getElementById(loadId);
-                if (originalCard) {
-                    const originalTextarea = originalCard.querySelector('textarea[id^="obs-"]');
-                    const clonePrintDiv = cardClone.querySelector('.print-only');
-                    if (clonePrintDiv) {
-                        const printParagraph = clonePrintDiv.querySelector('p');
-                        const textToPrint = activeLoads[loadId]?.observation || (originalTextarea ? originalTextarea.value : '');
-                        if (printParagraph && textToPrint) {
-                            printParagraph.innerHTML = `<strong>Observações:</strong><br>${textToPrint.replace(/\n/g, '<br>')}`;
-                        }
+                const load = activeLoads[loadId];
+                const observationText = load?.observation || '';
+
+                const clonePrintDiv = cardClone.querySelector('.print-only-observation');
+                if (clonePrintDiv) {
+                    const printParagraph = clonePrintDiv.querySelector('p');
+                    if (printParagraph && observationText) {
+                        printParagraph.innerHTML = `<strong>Observações:</strong><br>${observationText.replace(/\n/g, '<br>')}`;
+                        clonePrintDiv.style.display = 'block'; // Garante que seja visível
+                    } else if (printParagraph) {
+                        printParagraph.innerHTML = '';
+                        clonePrintDiv.style.display = 'none'; // Esconde se não houver texto
                     }
                 }
             });
-
-            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + divClone.innerHTML;
+            
+            const printWindow = createPrintWindow(title);
+            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + divClone.outerHTML;
             printWindow.document.close();
             printWindow.focus(); 
             setTimeout(() => { 
@@ -1976,15 +2000,38 @@
         }
 
         function imprimirCargasGeneric(divId, title) {
-            const divToPrint = document.getElementById(divId);
-            if (!divToPrint) return;
-            
-            const completedLoadsCards = divToPrint.querySelectorAll('.card .card-header:not(.bg-danger)');
-            if (completedLoadsCards.length === 0) { alert(`Nenhuma carga concluída para imprimir na seção "${title}".`); return; }
-            
-            // Correção: A função agora chama diretamente a função de impressão genérica,
-            // que já contém a lógica correta para lidar com as observações.
-            imprimirGeneric(divId, title);
+            const containerDiv = document.getElementById(divId);
+            if (!containerDiv) return;
+
+            // Seleciona apenas os cards de carga montada, excluindo o card de sobras.
+            // O seletor busca por cards que tenham um data-load-id e não sejam o de sobras.
+            const cardsParaImprimir = containerDiv.querySelectorAll('.card[data-load-id]:not([data-load-id="leftovers"])');
+
+            if (cardsParaImprimir.length === 0) { alert(`Nenhuma carga montada para imprimir na seção "${title}".`); return; }
+
+            const containerClone = document.createElement('div');
+
+            cardsParaImprimir.forEach(originalCard => {
+                const cardClone = originalCard.cloneNode(true);
+                const loadId = cardClone.dataset.loadId;
+                const observationText = activeLoads[loadId]?.observation || '';
+                
+                const clonePrintDiv = cardClone.querySelector('.print-only-observation');
+                if (clonePrintDiv) {
+                    const printParagraph = clonePrintDiv.querySelector('p');
+                    if (printParagraph && observationText) {
+                        printParagraph.innerHTML = `<strong>Observações:</strong><br>${observationText.replace(/\n/g, '<br>')}`;
+                        clonePrintDiv.style.display = 'block';
+                    }
+                }
+                containerClone.appendChild(cardClone);
+            });
+
+            const printWindow = createPrintWindow(title);
+            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + containerClone.innerHTML;
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
 
         function imprimirTocoIndividual(cf) {
@@ -2009,10 +2056,21 @@
                 return;
             }
 
+            const cardClone = cardToPrint.cloneNode(true);
+            const observationText = load?.observation || '';
+            const clonePrintDiv = cardClone.querySelector('.print-only-observation');
+            if (clonePrintDiv) {
+                const printParagraph = clonePrintDiv.querySelector('p');
+                if (printParagraph && observationText) {
+                    printParagraph.innerHTML = `<strong>Observações:</strong><br>${observationText.replace(/\n/g, '<br>')}`;
+                    clonePrintDiv.style.display = 'block';
+                }
+            }
+
             const title = `Impressão - Carga Manual ${load.numero} (${load.vehicleType})`;
             const printWindow = createPrintWindow(title);
             
-            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + cardToPrint.outerHTML;
+            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + cardClone.outerHTML;
             printWindow.document.close();
             printWindow.focus(); 
             setTimeout(() => { 
@@ -2754,7 +2812,7 @@
             const printButton = String(load.id).startsWith('manual-') ? `<button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirCargaManualIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Esta Carga</button>` : '';
 
             const observationForPrint = `
-                <div class="print-only mt-2 p-2 border rounded" style="background-color: #f8f9fa;">
+                <div class="print-only-observation mt-2 p-2 border rounded" style="background-color: #f8f9fa; display: none;">
                     <p class="mb-0"></p>
                 </div>`;
 
