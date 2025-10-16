@@ -14,6 +14,10 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <!-- Bibliotecas para Geração de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     
     <style>
         :root {
@@ -363,6 +367,7 @@
                     <li class="nav-item mb-1"><a href="#card-resumo-geral-container" class="nav-link"><i class="bi bi-pie-chart-fill me-2 fs-5"></i>Resumo</a></li>
                     <li class="mb-1"><a href="#workspace-card" class="nav-link"><i class="bi bi-tools me-2 fs-5"></i>Mesas de Trabalho</a></li>
                     <li class="mb-1"><a href="#additional-results" class="nav-link"><i class="bi bi-clipboard2-data-fill me-2 fs-5"></i>Resultados Adicionais</a></li>
+                    <li class="mb-1"><a href="#relatorios-section" class="nav-link"><i class="bi bi-file-earmark-pdf-fill me-2 fs-5"></i>Relatórios</a></li>
                 </ul>
             </div>
             <div class="d-grid gap-2 mt-auto pt-3 border-top border-secondary">
@@ -503,6 +508,21 @@
                     <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (Bloqueio de Varejo por Regra)</h2></div>
                     <div class="card-body"><div id="resultado-cf-numerico"></div></div>
                 </div>
+            </div>
+
+            <div id="relatorios-section">
+                <hr class="my-5">
+                <h3 class="mb-4 animated-entry">Relatórios Gerenciais</h3>
+                <div class="card animated-entry">
+                     <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-file-earmark-pdf-fill me-2"></i>Previsão de Expedição</h2></div>
+                     <div class="card-body text-center">
+                         <p class="text-muted">Gere um relatório gerencial em PDF com a previsão de expedição baseada nos resultados atuais.</p>
+                         <p class="text-muted small">O relatório incluirá um resumo geral e o detalhamento das cargas de varejo montadas.</p>
+                         <button class="btn btn-primary btn-lg mt-2" onclick="gerarRelatorioPDF()">
+                             <i class="bi bi-download me-2"></i>Gerar Relatório PDF
+                         </button>
+                     </div>
+                 </div>
             </div>
 
         </main>
@@ -3575,6 +3595,133 @@
                     </div>
                 </div></div>`;
             div.innerHTML = accordionHtml;
+        }
+
+        function gerarRelatorioPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // --- 1. Coleta e Agrupamento de Dados ---
+            const allLoads = Object.values(activeLoads);
+            if (allLoads.length === 0 && currentLeftoversForPrinting.length === 0 && pedidosTransferencias.length === 0 && pedidosExportacao.length === 0 && pedidosFuncionarios.length === 0) {
+                alert("Não há dados processados para gerar o relatório. Por favor, processe um arquivo primeiro.");
+                return;
+            }
+
+            const varejoLoads = allLoads.filter(l => ['fiorino', 'van', 'tresQuartos', 'toco'].includes(l.vehicleType));
+            const manualLoads = allLoads.filter(l => !['fiorino', 'van', 'tresQuartos', 'toco'].includes(l.vehicleType));
+
+            const resumoVarejo = varejoLoads.reduce((acc, load) => {
+                const type = load.vehicleType === 'tresQuartos' ? '3/4' : load.vehicleType.charAt(0).toUpperCase() + load.vehicleType.slice(1);
+                if (!acc[type]) {
+                    acc[type] = { veiculos: 0, peso: 0, pedidos: 0 };
+                }
+                acc[type].veiculos++;
+                acc[type].peso += load.totalKg;
+                acc[type].pedidos += load.pedidos.length;
+                return acc;
+            }, {});
+
+            const totalPedidosAlocados = allLoads.reduce((sum, l) => sum + l.pedidos.length, 0);
+            const totalPesoAlocado = allLoads.reduce((sum, l) => sum + l.totalKg, 0);
+            const totalVeiculos = varejoLoads.length + manualLoads.length;
+
+            // --- 2. Construção do PDF ---
+            const today = new Date().toLocaleDateString('pt-BR');
+            let finalY = 10; // Inicia a posição Y
+
+            // Cabeçalho
+            doc.setFontSize(20);
+            doc.setTextColor('#00bfa5');
+            doc.text("ApexLog", 14, 20);
+            doc.setFontSize(18);
+            doc.setTextColor(40);
+            doc.text("Relatório de Previsão de Expedição", 105, 20, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Data de Geração: ${today}`, 200, 26, { align: 'right' });
+            doc.setLineWidth(0.5);
+            doc.setDrawColor('#00bfa5');
+            doc.line(14, 29, 200, 29);
+
+            finalY = 35; // Posição Y após o cabeçalho
+            // Resumo Geral
+            doc.setFontSize(14);
+            doc.setTextColor(40);
+            doc.text("Resumo Geral da Previsão", 14, finalY);
+            doc.autoTable({
+                startY: finalY + 6,
+                body: [
+                    ['Total de Veículos Previstos:', totalVeiculos.toString()],
+                    ['Peso Total Alocado (kg):', totalPesoAlocado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })],
+                    ['Total de Pedidos Alocados:', totalPedidosAlocados.toString()],
+                    ['Pedidos em Sobra (Não alocados):', currentLeftoversForPrinting.length.toString()],
+                ],
+                theme: 'striped',
+                styles: { fontSize: 10, cellPadding: 2.5 },
+                headStyles: { fillColor: [30, 33, 48] },
+                columnStyles: { 0: { fontStyle: 'bold' } }
+            });
+
+            finalY = doc.lastAutoTable.finalY; // Atualiza a posição Y
+
+            // Detalhamento Varejo
+            const bodyVarejo = Object.keys(resumoVarejo).map(tipo => {
+                const data = resumoVarejo[tipo];
+                const pesoMedio = data.veiculos > 0 ? (data.peso / data.veiculos) : 0;
+                return [
+                    tipo,
+                    data.veiculos,
+                    data.peso.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+                    pesoMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+                    data.pedidos
+                ];
+            });
+
+            if (bodyVarejo.length > 0) {
+                finalY += 10; // Adiciona um espaço antes da próxima seção
+                doc.setFontSize(14);
+                doc.setTextColor(40);
+                doc.text("Detalhamento de Cargas (Varejo)", 14, finalY);
+                doc.autoTable({
+                    head: [['Tipo de Veículo', 'Qtd. Veículos', 'Peso Total (kg)', 'Peso Médio/Veículo (kg)', 'Qtd. Pedidos']],
+                    body: bodyVarejo,
+                    startY: finalY + 6,
+                    headStyles: { fillColor: [0, 191, 165], textColor: 255 }
+                });
+                finalY = doc.lastAutoTable.finalY; // Atualiza a posição Y
+            }
+
+            // Outras Categorias (Re-adicionado)
+            const bodyOutros = [];
+            if(pedidosTransferencias.length > 0) bodyOutros.push(['Transferências', pedidosTransferencias.length, pedidosTransferencias.reduce((s, p) => s + p.Quilos_Saldo, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })]);
+            if(pedidosExportacao.length > 0) bodyOutros.push(['Exportação', pedidosExportacao.length, pedidosExportacao.reduce((s, p) => s + p.Quilos_Saldo, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })]);
+            if(pedidosFuncionarios.length > 0) bodyOutros.push(['Funcionários', pedidosFuncionarios.length, pedidosFuncionarios.reduce((s, p) => s + p.Quilos_Saldo, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })]);
+
+            if (bodyOutros.length > 0) {
+                finalY += 10; // Adiciona um espaço
+                doc.setFontSize(14);
+                doc.setTextColor(40);
+                doc.text("Outras Categorias de Pedidos", 14, finalY);
+                doc.autoTable({
+                    head: [['Categoria', 'Qtd. Pedidos', 'Peso Total (kg)']],
+                    body: bodyOutros,
+                    startY: finalY + 6,
+                    headStyles: { fillColor: [80, 90, 110], textColor: 255 }
+                });
+            }
+
+            // Rodapé e Salvamento
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text(`Página ${i} de ${pageCount}`, doc.internal.pageSize.width / 2, 287, { align: 'center' });
+                doc.text('Este é um relatório de previsão e pode sofrer alterações.', 14, 287);
+            }
+
+            doc.save(`Previsao_Expedicao_${today.replace(/\//g, '-')}.pdf`);
         }
 
         // ================================================================================================
