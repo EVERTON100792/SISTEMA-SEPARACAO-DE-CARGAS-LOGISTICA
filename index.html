@@ -1616,10 +1616,10 @@
                         if(coluna5.includes('TBL FUNCIONARIO')) {
                             pedidosFuncionarios.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (coluna5.includes('TBL ESP CARRETA') && !isNumeric(p.CF)) { // Nota: A grafia foi corrigida de TRASN para TRANSF
+                        } else if (coluna5.includes('TBL ESP CARRETA') && !isNumeric(p.CF)) {
                             pedidosCarretaSemCF.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (coluna5.includes('TABELA TRANSFER') || coluna5.includes('TRASN. TODESCH')) {
+                        } else if (coluna5.includes('TABELA TRANSFER') || coluna5.includes('TRANSF. TODESCH')) {
                             pedidosTransferencias.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
                         } else if (coluna5.includes('TBL EXPORTACAO')) {
@@ -3525,7 +3525,7 @@
                     <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
                         <div class="accordion-body" id="${printAreaId}">
                             <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                <p class="text-muted small mb-0">Pedidos com "TABELA TRANSFER" ou "TRASN. TODESCH" na Coluna 5, separados automaticamente.</p>
+                                <p class="text-muted small mb-0">Pedidos com "TABELA TRANSFER" ou "TRANSF. TODESCH" na Coluna 5, separados automaticamente.</p>
                                 <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Transferência')">
                                     <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
                                 </button>
