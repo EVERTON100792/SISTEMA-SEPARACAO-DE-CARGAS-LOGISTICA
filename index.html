@@ -2188,19 +2188,13 @@
             if ((load.totalCubagem + groupToAdd.totalCubagem) > config.hardMaxCubage) return false;
 
             if (groupToAdd.isSpecial) {
-                const clientNameToAdd = groupToAdd.pedidos[0].Nome_Cliente.toUpperCase().trim();
-                const clientIdToAdd = normalizeClientId(groupToAdd.pedidos[0].Cliente);
-
-                // Pega todos os códigos de cliente únicos NA carga que pertencem ao MESMO nome de cliente especial
-                const specialClientCodesInLoad = new Set(
+                const specialClientIdsInLoad = new Set(
                     load.pedidos
-                        .filter(p => p.Nome_Cliente && p.Nome_Cliente.toUpperCase().trim() === clientNameToAdd)
+                        .filter(isSpecialClient)
                         .map(p => normalizeClientId(p.Cliente))
                 );
-
-                // Se já existem 2 ou mais códigos de cliente distintos para este cliente especial na carga,
-                // e o grupo que estamos tentando adicionar tem um código que ainda não está lá, bloqueamos a adição.
-                if (specialClientCodesInLoad.size >= 2 && !specialClientCodesInLoad.has(clientIdToAdd)) {
+                const groupToAddClientId = normalizeClientId(groupToAdd.pedidos[0].Cliente);
+                if (!specialClientIdsInLoad.has(groupToAddClientId) && specialClientIdsInLoad.size >= 2) {
                     return false;
                 }
             }
@@ -2559,9 +2553,7 @@
 
             const clientGroupsMap = pedidosRota.reduce((acc, pedido) => {
                 const clienteId = normalizeClientId(pedido.Cliente);
-                // A propriedade isSpecial deve ser definida no momento da criação do grupo
                 if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) }; }
-                
                 acc[clienteId].pedidos.push(pedido);
                 acc[clienteId].totalKg += pedido.Quilos_Saldo;
                 acc[clienteId].totalCubagem += pedido.Cubagem;
