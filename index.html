@@ -14,10 +14,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
-    <!-- Bibliotecas para Geração de PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     
     <style>
         :root {
@@ -367,7 +363,6 @@
                     <li class="nav-item mb-1"><a href="#card-resumo-geral-container" class="nav-link"><i class="bi bi-pie-chart-fill me-2 fs-5"></i>Resumo</a></li>
                     <li class="mb-1"><a href="#workspace-card" class="nav-link"><i class="bi bi-tools me-2 fs-5"></i>Mesas de Trabalho</a></li>
                     <li class="mb-1"><a href="#additional-results" class="nav-link"><i class="bi bi-clipboard2-data-fill me-2 fs-5"></i>Resultados Adicionais</a></li>
-                    <li class="mb-1"><a href="#relatorios-section" class="nav-link"><i class="bi bi-file-earmark-pdf-fill me-2 fs-5"></i>Relatórios</a></li>
                 </ul>
             </div>
             <div class="d-grid gap-2 mt-auto pt-3 border-top border-secondary">
@@ -383,10 +378,7 @@
             <div class="card animated-entry mb-4" id="card-resumo-geral-container" style="display: none;">
                 <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo Geral (Varejo)</div>
                 <div class="card-body">
-                    <div class="row mb-4" id="kpi-container">
-                        <!-- KPIs serão inseridos aqui pelo JavaScript -->
-                    </div>
-                    <div id="chart-resumo-veiculos" style="min-height: 350px;"></div>
+                    <div id="chart-resumo-veiculos"></div>
                 </div>
             </div>
 
@@ -402,7 +394,6 @@
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cf-tab-pane"><i class="bi bi-truck me-2"></i>Truck/Carreta</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#funcionarios-tab-pane"><i class="bi bi-people-fill me-2"></i>Funcionários</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#transferencias-tab-pane"><i class="bi bi-arrow-left-right me-2"></i>Transferências</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#exportacao-tab-pane"><i class="bi bi-globe-americas me-2"></i>Exportação</button></li>
                              </ul>
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
@@ -437,9 +428,6 @@
                                 </div>
                                 <div class="tab-pane fade" id="transferencias-tab-pane" role="tabpanel">
                                     <div id="resultado-transferencias-tab"><div class="empty-state"><i class="bi bi-arrow-left-right"></i><p>Nenhum pedido de transferência encontrado. Processe um arquivo.</p></div></div>
-                                </div>
-                                <div class="tab-pane fade" id="exportacao-tab-pane" role="tabpanel">
-                                    <div id="resultado-exportacao-tab"><div class="empty-state"><i class="bi bi-globe-americas"></i><p>Nenhum pedido de exportação encontrado. Processe um arquivo.</p></div></div>
                                 </div>
                             </div>
                         </div>
@@ -511,21 +499,6 @@
                     <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (Bloqueio de Varejo por Regra)</h2></div>
                     <div class="card-body"><div id="resultado-cf-numerico"></div></div>
                 </div>
-            </div>
-
-            <div id="relatorios-section">
-                <hr class="my-5">
-                <h3 class="mb-4 animated-entry">Relatórios Gerenciais</h3>
-                <div class="card animated-entry">
-                     <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-file-earmark-pdf-fill me-2"></i>Previsão de Expedição</h2></div>
-                     <div class="card-body text-center">
-                         <p class="text-muted">Gere um relatório gerencial em PDF com a previsão de expedição baseada nos resultados atuais.</p>
-                         <p class="text-muted small">O relatório incluirá um resumo geral e o detalhamento das cargas de varejo montadas.</p>
-                         <button class="btn btn-primary btn-lg mt-2" onclick="gerarRelatorioPDF()">
-                             <i class="bi bi-download me-2"></i>Gerar Relatório PDF
-                         </button>
-                     </div>
-                 </div>
             </div>
 
         </main>
@@ -862,7 +835,7 @@
             '1398', '1494', '4639', '4872', '5546', '6896', 'D11238', '17163', '19622', '20350', '22545', '23556', '23761', '24465', '29302', '32462', '32831', '32851', '32869', '32905', '33039', '33046', '33047', '33107', '33388', '33392', '33400', '33401', '33403', '33406', '33420', '33494', '33676', '33762', '33818', '33859', '33907', '33971', '34011', '34096', '34167', '34425', '34511', '34810', '34981', '35050', '35054', '35798', '36025', '36580', '36792', '36853', '36945', '37101', '37589', '37634', '38207', '38448', '38482', '38564', '38681', '38735', 'D38896', '39081', '39177', '39620', '40144', '40442', '40702', '40844', '41233', '42200', '42765', '47244', '47253', '47349', '50151', '50816', '51993', '52780', '53134', '58645', '60900', '61182', '61315', '61316', '61317', '61318', '61324', '63080', '63500', '63705', '64288', '66590', '67660', '67884', '69281', '69286', '69318', '70968', '71659', '73847', '76019', '76580', '77475', '77520', '78895', '79838', '80727', '81353', 'DB3183', '83184', '83634', '85534', 'DB6159', '86350', '86641', '89073', '89151', '90373', '92017', '95092', '95660', '96758', '98227', '99268', '100087', '101246', '101253', '101346', '103518', '105394', '106198', '109288', '110023', '110894', '111145', '111154', '111302', '112207', '112670', '117028', '117123', '120423', '120455', '120473', '120533', '121747', '122155', '122785', '123815', '124320', '125228', '126430', '131476', '132397', '133916', '135395', '135928', '136086', '136260', '137919', '138825', '139013', '139329', '139611', '143102', '44192', '144457', '145014', '145237', '145322', '146644', '146988', '148071', '149598', '150503', '151981', '152601', '152835', '152925', '153289', '154423', '154778', '154808', '155177', '155313', '155368', '155419', '155475', '155823', '155888', '156009', '156585', '156696', '157403', '158235', '159168', '160382', '160982', '161737', '162499', '162789', '163234', '163382', '163458', '164721', '164779', '164780', '164924', '165512', '166195', '166337', '166353', '166468', '166469', '167353', '167810', '167819', '168464', '169863', '169971', '170219', '170220', '170516', '171147', '171160', '171191', '171200', '171320', '171529', '171642', '171863', '172270', '172490', '172656', '172859', '173621', '173964', '173977', '174249', '174593', '174662', '174901', '175365', '175425', '175762', '175767', '175783', '176166', '176278', '176453', '176747', '177327', '177488', '177529', '177883', '177951', '177995', '178255', '178377', '178666', '179104', '179510', '179542', '179690', '180028', '180269', '180342', '180427', '180472', '180494', '180594', '180772', '181012', '181052', '181179', '182349', '182885', '182901', '183011', '183016', '183046', '183048', '183069', '183070', '183091', '183093', '183477', '183676', '183787', '184011', '184038', '189677', '190163', '190241', '190687', '190733', '191148', '191149', '191191', '191902', '191972', '192138', '192369', '192638', '192713', '193211', '193445', '193509', '194432', '194508', '194750', '194751', '194821', '194831', '195287', '195338', '195446', '196118', '196405', '196446', '196784', '197168', '197249', '197983', '198187', '198438', '198747', '198796', '198895', '198907', '198908', '199172', '199615', '199625', '199650', '199651', '199713', '199733', '199927', '199991', '200091', '200194', '200239', '200253', '200382', '200404', '200597', '200917', '201294', '201754', '201853', '201936', '201948', '201956', '201958', '201961', '201974', '202022', '202187', '202199', '202714', '203072', '203093', '203201', '203435', '203436', '203451', '203512', '203769', '204895', '204910', '204911', '204913', '204914', '204915', '204917', '204971', '204979', '205108', '205220', '205744', '205803', '206116', '206163', '206208', '206294', '206380', '206628', '206730', '206731', '206994', '207024', '207029', '207403', '207689', '207902', '208489', '208613', '208622', '208741', '208822', '208844', '208853', '208922', '209002', '209004', '209248', '209281', '209321', '209322', '209684', '210124', '210230', '210490', '210747', '210759', '210819', '210852', '211059', '211110', '211276', '211277', '211279', '211332', '211411', '212401', '212417', '212573', '212900', '213188', '213189', '213190', '213202', '213203', '213242', '213442', '213454', '213855', '213909', '213910', '213967', '214046', '214150', '214387', '214433', '214442', '214594', '214746', '215022', '215116', '215160', '215161', '215493', '215494', '215651', '215687', '215733', '215777', '215942', '216112', '216393', '216400', '216630', '216684', '217190', '217283', '217310', '217343', '217545', '217605', '217828', '217871', '217872', '217877', '217949', '217965', '218169', '218196', '218383', '218486', '218578', '218580', '218640', '218820', '218845', '219539', '219698', '219715', '219884', '220158', '220183', '220645', '220950', '221023', '221248', '221251', '222164', '222165', '223025', '223379', '223525', '223703', '223727', '223877', '223899', '223900', '223954', '224956', '224957', '224958', '224959', '224961', '224962', '225112', '225408', '225449', '225904', '226903', '226939', '227190', '227387', '228589', '228693', '228695'
         ]);
 
-        const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA', 'CASA VISCARD S/A COM. E IMPORTACAO'];
+        const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA'];
         
         // ================================================================================================
         //  INÍCIO DO SEU CÓDIGO JAVASCRIPT ORIGINAL (SEM MODIFICAÇÕES NA LÓGICA)
@@ -920,12 +893,10 @@
         let pedidosFuncionarios = [];
         let pedidosCarretaSemCF = [];
         let pedidosTransferencias = [];
-        let pedidosExportacao = [];
         let pedidosCondorTruck = [];
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
         let activeLoads = {};
-        let kpiData = {}; // Objeto para armazenar dados dos KPIs
         let processedRoutes = new Set();
         let processedRouteContexts = {};
         let manualLoadInProgress = null;
@@ -1519,13 +1490,11 @@
             pedidosFuncionarios = [];
             pedidosCarretaSemCF = [];
             pedidosTransferencias = [];
-            pedidosExportacao = [];
             pedidosCondorTruck = [];
             pedidosManualmenteBloqueadosAtuais = [];
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
             activeLoads = {};
-            kpiData = {};
             processedRoutes.clear();
             // As prioridades (pedidosPrioritarios, pedidosRecall) não são limpas aqui,
             // pois são um estado persistente que o usuário controla manualmente.
@@ -1547,9 +1516,9 @@
             const idsParaLimpar = [
                 'resultado-venda-antecipada', 'resultado-carga-especial', 'resultado-bloqueados', 'resultado-geral', 
                 'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral',
-                'resultado-rota1', 'resultado-toco', 'kpi-container',
+                'resultado-rota1', 'resultado-toco', 
                 'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result', 
-                'resultado-funcionarios-tab', 'resultado-transferencias-tab', 'resultado-exportacao-tab'
+                'resultado-funcionarios-tab', 'resultado-transferencias-tab'
             ];
             const emptyStateMessages = {
                 'resultado-geral': '<div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div>',
@@ -1604,7 +1573,6 @@
                 const resultadoCfAccordionDiv = document.getElementById('resultado-cf-accordion-container');
                 const resultadoFuncionariosDiv = document.getElementById('resultado-funcionarios-tab');
                 const resultadoTransferenciasDiv = document.getElementById('resultado-transferencias-tab');
-                const resultadoExportacaoDiv = document.getElementById('resultado-exportacao-tab');
                 
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
@@ -1627,8 +1595,7 @@
                     [
                         'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 
                         'resultado-toco', 'resultado-cf-accordion-container', 'resultado-cf-numerico', 
-                        'resultado-rota1', 'resultado-bloqueados', 'resultado-funcionarios-tab', 
-                        'resultado-transferencias-tab', 'resultado-exportacao-tab'
+                        'resultado-rota1', 'resultado-bloqueados', 'resultado-funcionarios-tab', 'resultado-transferencias-tab'
                     ].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
@@ -1643,11 +1610,8 @@
                         } else if (coluna5.includes('TBL ESP CARRETA') && !isNumeric(p.CF)) {
                             pedidosCarretaSemCF.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (coluna5.includes('TABELA TRANSFER') || coluna5.includes('TRANSF. TODESCH')) {
+                        } else if (coluna5.includes('TABELA TRANSFER')) {
                             pedidosTransferencias.push(p);
-                            pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (coluna5.includes('TBL EXPORTACAO')) {
-                            pedidosExportacao.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
                         } else if (coluna5.includes('CONDOR (TRUCK)') || coluna5.includes('CONDOR TOD TRUC')) {
                             pedidosCondorTruck.push(p);
@@ -1657,7 +1621,6 @@
                     
                     displayPedidosFuncionarios(resultadoFuncionariosDiv, pedidosFuncionarios);
                     displayPedidosTransferencias(resultadoTransferenciasDiv, pedidosTransferencias);
-                    displayPedidosExportacao(resultadoExportacaoDiv, pedidosExportacao);
                     
                     let dadosFiltrados = dadosParaProcessar.filter(p => !pedidosExcluidos.has(p.Num_Pedido));
                     
@@ -1754,7 +1717,6 @@
                     displayGerais(resultadoGeralDiv, gruposGerais);
                     
                     updateAndRenderChart();
-                    updateAndRenderKPIs();
                     saveStateToLocalStorage();
                     
                     statusDiv.innerHTML = `<p class="text-success">Processamento concluído!</p>`;
@@ -1765,59 +1727,6 @@
                     processarBtn.disabled = false;
                 }
             }, 50);
-        }
-
-        function updateAndRenderKPIs() {
-            // --- Lógica de KPIs Estáticos para Visão de Planejamento ---
-            // Os valores são calculados com base nos dados iniciais após o processamento.
-
-            // 1. Calcula totais de Toco
-            const pesoTotalToco = Object.values(gruposToco).reduce((sum, g) => sum + g.totalKg, 0);
-            const totalPedidosToco = Object.values(gruposToco).reduce((sum, g) => sum + g.pedidos.length, 0);
-
-            // 2. Calcula totais do Varejo
-            const totalPedidosVarejo = pedidosGeraisAtuais.length;
-            const pesoTotalVarejo = pedidosGeraisAtuais.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
-
-            // 3. Calcula os pedidos que precisam ser predatados (atrasados e sem bloqueio restritivo)
-            const todosPedidosParaAnalise = [...pedidosGeraisAtuais, ...pedidosComCFNumericoIsolado, ...pedidosManualmenteBloqueadosAtuais, ...rota1SemCarga];
-            const pedidosAPredatar = todosPedidosParaAnalise.filter(p => {
-                const bloqueio = String(p['BLOQ.'] || '').trim().toUpperCase();
-                return isOverdue(p.Predat) && (bloqueio === '' || bloqueio === 'C');
-            });
-
-            // 4. NOVO KPI: Calcula o peso que ficou fora de carga (Saldo para o próximo dia)
-            // Lógica corrigida: O valor inicial são os bloqueados. As sobras das montagens são somadas e nunca diminuem o total.
-            const pesoDosBloqueados = pedidosManualmenteBloqueadosAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + pedidosComCFNumericoIsolado.reduce((s, p) => s + p.Quilos_Saldo, 0);
-            const pesoDasSobrasAcumuladas = currentLeftoversForPrinting.reduce((s, p) => s + p.Quilos_Saldo, 0);
-            const pesoForaDeCarga = pesoDosBloqueados + pesoDasSobrasAcumuladas;
-
-            // 5. Consolida os dados para os KPIs e armazena
-            kpiData.totalPedidos = totalPedidosVarejo + totalPedidosToco;
-            kpiData.pesoTotal = pesoTotalVarejo + pesoTotalToco;
-            kpiData.pedidosAPredatar = pedidosAPredatar.length;
-            kpiData.pesoForaDeCarga = pesoForaDeCarga;
-
-            // Renderiza os KPIs no HTML
-            const kpiContainer = document.getElementById('kpi-container');
-            kpiContainer.innerHTML = `
-                <div class="col-md-3 col-6 mb-3"><div class="card bg-secondary-subtle h-100"><div class="card-body text-center">
-                    <h6 class="card-subtitle text-muted">Total Pedidos (Varejo+Toco)</h6>
-                    <p class="h3 card-title mb-0">${kpiData.totalPedidos}</p>
-                </div></div></div>
-                <div class="col-md-3 col-6 mb-3"><div class="card bg-secondary-subtle h-100"><div class="card-body text-center">
-                    <h6 class="card-subtitle text-muted">Peso Total (Varejo+Toco)</h6>
-                    <p class="h3 card-title mb-0">${(kpiData.pesoTotal / 1000).toFixed(2)}<small class="h5"> t</small></p>
-                </div></div></div>
-                <div class="col-md-3 col-6 mb-3"><div class="card bg-warning-subtle h-100"><div class="card-body text-center">
-                    <h6 class="card-subtitle text-muted">Peso Fora de Carga</h6>
-                    <p class="h3 card-title mb-0">${(kpiData.pesoForaDeCarga / 1000).toFixed(2)}<small class="h5"> t</small></p>
-                </div></div></div>
-                <div class="col-md-3 col-6 mb-3"><div class="card bg-danger-subtle h-100"><div class="card-body text-center">
-                    <h6 class="card-subtitle text-muted">Pedidos a Predatar</h6>
-                    <p class="h3 card-title mb-0">${kpiData.pedidosAPredatar}</p>
-                </div></div></div>
-            `;
         }
 
         function isOverdue(predat) {
@@ -2533,12 +2442,13 @@
             const autoGeneratedContent = resultadoDiv.querySelector('.resultado-container');
             if (autoGeneratedContent) { autoGeneratedContent.remove(); }
 
-            // Restaura o feedback visual no botão da rota processada
             if (buttonElement) {
+                currentLeftoversForPrinting = [];
+                const parentContainer = buttonElement.parentElement;
                 const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
                 buttonElement.classList.remove(`btn-outline-${colorClass}`);
                 buttonElement.classList.add(`btn-${colorClass}`, 'active');
-                buttonElement.disabled = true; // Desativa o botão para evitar reprocessamento
+                buttonElement.disabled = true; // Desativa o botão após o primeiro clique
                 buttonElement.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>${title}`;
             }
 
@@ -2694,7 +2604,7 @@
                 }
             });
 
-            currentLeftoversForPrinting.push(...finalLeftoverGroups.flatMap(group => group.pedidos));
+            currentLeftoversForPrinting = finalLeftoverGroups.flatMap(group => group.pedidos);
 
             finalValidLoads.forEach((load, index) => {
                 load.numero = `${load.vehicleType.charAt(0).toUpperCase()}${index + 1}`;
@@ -2747,7 +2657,6 @@
             }
             resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             updateAndRenderChart();
-            updateAndRenderKPIs(); // Adicionado para atualizar os KPIs dinâmicos
             saveStateToLocalStorage();
         }
         
@@ -3285,7 +3194,6 @@
             }
 
             updateAndRenderChart();
-            updateAndRenderKPIs(); // Adicionado para atualizar os KPIs dinâmicos
             saveStateToLocalStorage();
         }
 
@@ -3501,7 +3409,6 @@
             }, 300);
 
             updateAndRenderChart();
-            updateAndRenderKPIs(); // Adicionado para atualizar os KPIs dinâmicos
             saveStateToLocalStorage();
         }
 
@@ -3518,8 +3425,7 @@
              
              const activeTabPane = document.querySelector('.tab-pane.active');
              const startBtn = activeTabPane ? activeTabPane.querySelector('#start-manual-load-btn') : null;
-             if(startBtn) startBtn.style.display = 'inline-block'; 
-             updateAndRenderKPIs(); // Adicionado para atualizar os KPIs dinâmicos
+             if(startBtn) startBtn.style.display = 'inline-block';
         }
 
         function displayPedidosFuncionarios(div, pedidos) {
@@ -3620,178 +3526,6 @@
             div.innerHTML = accordionHtml;
         }
 
-        function displayPedidosExportacao(div, pedidos) {
-            if (!div) return;
-            if (pedidos.length === 0) {
-                div.innerHTML = '<div class="empty-state"><i class="bi bi-globe-americas"></i><p>Nenhum pedido de exportação encontrado.</p></div>';
-                return;
-            }
-
-            pedidos.sort((a, b) => {
-                const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
-                const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
-                const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
-                if (clienteCompare !== 0) return clienteCompare;
-                return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
-            });
-
-            const totalKg = pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
-            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-            const accordionId = 'accordionExportacao';
-            const collapseId = 'collapseExportacao';
-            const headerId = 'headingExportacao';
-            const printAreaId = 'exportacao-print-area';
-
-            let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="${headerId}">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
-                            <strong>Pedidos de Exportação</strong> &nbsp;
-                            <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} Pedidos</span>
-                            <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
-                        </button>
-                    </h2>
-                    <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
-                        <div class="accordion-body" id="${printAreaId}"><div class="d-flex justify-content-between align-items-center mb-3 no-print"><p class="text-muted small mb-0">Pedidos com a tag "TBL EXPORTACAO" na Coluna 5.</p><button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Exportação')"><i class="bi bi-printer-fill me-1"></i>Imprimir Lista</button></div>${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Coluna5', 'BLOQ.'])}</div>
-                    </div>
-                </div></div>`;
-            div.innerHTML = accordionHtml;
-        }
-
-        function gerarRelatorioPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            // --- 1. Coleta e Agrupamento de Dados ---
-            const allLoads = Object.values(activeLoads);
-            if (allLoads.length === 0 && currentLeftoversForPrinting.length === 0 && pedidosTransferencias.length === 0 && pedidosExportacao.length === 0 && pedidosFuncionarios.length === 0) {
-                alert("Não há dados processados para gerar o relatório. Por favor, processe um arquivo primeiro.");
-                return;
-            }
-
-            const varejoLoads = allLoads.filter(l => ['fiorino', 'van', 'tresQuartos', 'toco'].includes(l.vehicleType));
-            const manualLoads = allLoads.filter(l => !['fiorino', 'van', 'tresQuartos', 'toco'].includes(l.vehicleType));
-
-            const resumoVarejo = varejoLoads.reduce((acc, load) => {
-                const type = load.vehicleType === 'tresQuartos' ? '3/4' : load.vehicleType.charAt(0).toUpperCase() + load.vehicleType.slice(1);
-                if (!acc[type]) {
-                    acc[type] = { veiculos: 0, peso: 0, pedidos: 0 };
-                }
-                acc[type].veiculos++;
-                acc[type].peso += load.totalKg;
-                acc[type].pedidos += load.pedidos.length;
-                return acc;
-            }, {});
-
-            const totalPedidosAlocados = allLoads.reduce((sum, l) => sum + l.pedidos.length, 0);
-            const totalPesoAlocado = allLoads.reduce((sum, l) => sum + l.totalKg, 0);
-            const totalVeiculos = varejoLoads.length + manualLoads.length;
-
-            // --- 2. Construção do PDF ---
-            const today = new Date().toLocaleDateString('pt-BR');
-            let finalY = 10; // Inicia a posição Y
-
-            // Cabeçalho
-            doc.setFontSize(20);
-            doc.setTextColor('#00bfa5');
-            doc.text("ApexLog", 14, 20);
-            doc.setFontSize(18);
-            doc.setTextColor(40);
-            doc.text("Relatório de Previsão de Expedição", 105, 20, { align: 'center' });
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text(`Data de Geração: ${today}`, 200, 26, { align: 'right' });
-            doc.setLineWidth(0.5);
-            doc.setDrawColor('#00bfa5');
-            doc.line(14, 29, 200, 29);
-
-            finalY = 35; // Posição Y após o cabeçalho
-            // Resumo Geral
-            doc.setFontSize(14);
-            doc.setTextColor(40);
-            doc.text("Resumo Geral da Previsão", 14, finalY);
-            doc.autoTable({
-                startY: finalY + 6,
-                body: [
-                    ['Total de Veículos Previstos:', totalVeiculos.toString()],
-                    ['Peso Total Alocado (kg):', totalPesoAlocado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })],
-                    ['Total de Pedidos Alocados:', totalPedidosAlocados.toString()],
-                    ['Pedidos em Sobra (Não alocados):', currentLeftoversForPrinting.length.toString()],
-                ],
-                theme: 'striped',
-                styles: { fontSize: 10, cellPadding: 2.5 },
-                headStyles: { fillColor: [30, 33, 48] },
-                columnStyles: { 0: { fontStyle: 'bold' } }
-            });
-
-            finalY = doc.lastAutoTable.finalY; // Atualiza a posição Y
-
-            // Detalhamento Varejo
-            const bodyVarejo = Object.keys(resumoVarejo).map(tipo => {
-                const data = resumoVarejo[tipo];
-                const pesoMedio = data.veiculos > 0 ? (data.peso / data.veiculos) : 0;
-                return [
-                    tipo,
-                    data.veiculos,
-                    data.peso.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
-                    pesoMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
-                    data.pedidos
-                ];
-            });
-
-            if (bodyVarejo.length > 0) {
-                finalY += 10; // Adiciona um espaço antes da próxima seção
-                doc.setFontSize(14);
-                doc.setTextColor(40);
-                doc.text("Detalhamento de Cargas (Varejo)", 14, finalY);
-                doc.autoTable({
-                    head: [['Tipo de Veículo', 'Qtd. Veículos', 'Peso Total (kg)', 'Peso Médio/Veículo (kg)', 'Qtd. Pedidos']],
-                    body: bodyVarejo,
-                    startY: finalY + 6,
-                    headStyles: { fillColor: [0, 191, 165], textColor: 255 }
-                });
-                finalY = doc.lastAutoTable.finalY; // Atualiza a posição Y
-            }
-
-            // Outras Categorias (Re-adicionado)
-            const bodyOutros = [];
-            if(pedidosTransferencias.length > 0) bodyOutros.push(['Transferências', pedidosTransferencias.length, pedidosTransferencias.reduce((s, p) => s + p.Quilos_Saldo, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })]);
-            if(pedidosExportacao.length > 0) bodyOutros.push(['Exportação', pedidosExportacao.length, pedidosExportacao.reduce((s, p) => s + p.Quilos_Saldo, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })]);
-            
-            const totalPedidosTruck = Object.values(gruposPorCFGlobais).reduce((sum, g) => sum + g.pedidos.length, 0);
-            const totalPesoTruck = Object.values(gruposPorCFGlobais).reduce((sum, g) => sum + g.totalKg, 0);
-            if (totalPedidosTruck > 0) {
-                bodyOutros.push(['Truck / Carreta', totalPedidosTruck, totalPesoTruck.toLocaleString('pt-BR', { minimumFractionDigits: 2 })]);
-            }
-            if(pedidosFuncionarios.length > 0) bodyOutros.push(['Funcionários', pedidosFuncionarios.length, pedidosFuncionarios.reduce((s, p) => s + p.Quilos_Saldo, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })]);
-
-            if (bodyOutros.length > 0) {
-                finalY += 10; // Adiciona um espaço
-                doc.setFontSize(14);
-                doc.setTextColor(40);
-                doc.text("Outras Categorias de Pedidos", 14, finalY);
-                doc.autoTable({
-                    head: [['Categoria', 'Qtd. Pedidos', 'Peso Total (kg)']],
-                    body: bodyOutros,
-                    startY: finalY + 6,
-                    headStyles: { fillColor: [80, 90, 110], textColor: 255 }
-                });
-            }
-
-            // Rodapé e Salvamento
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(150);
-                doc.text(`Página ${i} de ${pageCount}`, doc.internal.pageSize.width / 2, 287, { align: 'center' });
-                doc.text('Este é um relatório de previsão e pode sofrer alterações.', 14, 287);
-            }
-
-            doc.save(`Previsao_Expedicao_${today.replace(/\//g, '-')}.pdf`);
-        }
-
         // ================================================================================================
         //  LÓGICA DE PERSISTÊNCIA DE ESTADO
         // ================================================================================================
@@ -3820,12 +3554,10 @@
                     pedidosFuncionarios,
                     pedidosCarretaSemCF,
                     pedidosTransferencias,
-                    pedidosExportacao,
                     pedidosCondorTruck,
                     tocoPedidoIds: Array.from(tocoPedidoIds),
                     currentLeftoversForPrinting,
                     activeLoads,
-                    kpiData,
                     processedRoutes: Array.from(processedRoutes), // Salva as rotas processadas
                     processedRouteContexts: processedRouteContexts // Salva os contextos
                 };
@@ -3886,12 +3618,10 @@
                 pedidosFuncionarios = savedState.pedidosFuncionarios || [];
                 pedidosCarretaSemCF = savedState.pedidosCarretaSemCF || [];
                 pedidosTransferencias = savedState.pedidosTransferencias || [];
-                pedidosExportacao = savedState.pedidosExportacao || [];
                 pedidosCondorTruck = savedState.pedidosCondorTruck || [];
                 tocoPedidoIds = new Set(savedState.tocoPedidoIds || []);
                 currentLeftoversForPrinting = savedState.currentLeftoversForPrinting || [];
                 activeLoads = savedState.activeLoads || {};
-                kpiData = savedState.kpiData || {};
                 processedRoutes = new Set(savedState.processedRoutes || []);
                 processedRouteContexts = savedState.processedRouteContexts || {};
 
@@ -3905,7 +3635,6 @@
                 pedidosFuncionarios = reviveDates(pedidosFuncionarios);
                 pedidosCarretaSemCF = reviveDates(pedidosCarretaSemCF);
                 pedidosTransferencias = reviveDates(pedidosTransferencias);
-                pedidosExportacao = reviveDates(pedidosExportacao);
                 pedidosCondorTruck = reviveDates(pedidosCondorTruck);
                 currentLeftoversForPrinting = reviveDates(currentLeftoversForPrinting);
                 Object.values(activeLoads).forEach(load => load.pedidos = reviveDates(load.pedidos));
@@ -3931,11 +3660,9 @@
                 displayPedidosCFNumerico(document.getElementById('resultado-cf-numerico'), pedidosComCFNumericoIsolado);
                 displayPedidosFuncionarios(document.getElementById('resultado-funcionarios-tab'), pedidosFuncionarios);
                 displayPedidosTransferencias(document.getElementById('resultado-transferencias-tab'), pedidosTransferencias);
-                displayPedidosExportacao(document.getElementById('resultado-exportacao-tab'), pedidosExportacao);
                 reRenderManualLoads();
 
                 reRenderActiveLoads(processedRouteContexts);
-                if (Object.keys(kpiData).length > 0) updateAndRenderKPIs();
                 updateAndRenderChart();
 
                 console.log("Estado da aplicação restaurado do Local Storage.");
