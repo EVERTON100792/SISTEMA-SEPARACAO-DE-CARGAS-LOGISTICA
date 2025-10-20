@@ -1892,15 +1892,18 @@
         }
 
         function exportarPedidosAtrasados() {
-            const todosPedidosVarejo = [...pedidosGeraisAtuais, ...pedidosComCFNumericoIsolado];
+            // Junta os pedidos de varejo com os pedidos de toco para uma análise completa de atrasos.
+            const pedidosToco = Object.values(gruposToco).flatMap(g => g.pedidos);
+            const todosPedidosParaAnalise = [...pedidosGeraisAtuais, ...pedidosComCFNumericoIsolado, ...pedidosToco];
 
-            if (todosPedidosVarejo.length === 0) {
-                alert("Por favor, processe la planilha primeiro para definir as rotas.");
+            if (todosPedidosParaAnalise.length === 0) {
+                alert("Por favor, processe a planilha primeiro para ter dados para exportar.");
                 return;
             }
 
-            // Agora, o filtro é aplicado a TODOS os pedidos de varejo, não apenas os disponíveis para carga.
-            const pedidosAtrasados = todosPedidosVarejo.filter(p => {
+            // O filtro é aplicado a todos os pedidos (Varejo + Toco).
+            // Inclui pedidos atrasados que não têm bloqueio ou cujo bloqueio é 'C' (crédito).
+            const pedidosAtrasados = todosPedidosParaAnalise.filter(p => {
                 const bloqueio = String(p['BLOQ.'] || '').trim().toUpperCase();
                 // Inclui pedidos atrasados que não têm bloqueio ou cujo bloqueio é 'C'.
                 return isOverdue(p.Predat) && (bloqueio === '' || bloqueio === 'C');
