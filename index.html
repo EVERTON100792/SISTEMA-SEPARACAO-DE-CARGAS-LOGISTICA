@@ -176,6 +176,15 @@
         }
         .card-body { padding: 1.25rem; } /* Padding reduzido */
 
+        /* --- Ajuste para card de Pedidos Disponíveis rolável --- */
+        #pedidos-disponiveis-card .card-body {
+            max-height: 75vh; /* Altura máxima para ocupar boa parte da tela */
+            overflow-y: auto;
+        }
+        @media (max-width: 992px) {
+            #pedidos-disponiveis-card .card-body { max-height: none; overflow-y: visible; } /* Desativa no mobile */
+        }
+
         /* --- Botões e Controles --- */
         .btn {
             font-weight: 600;
