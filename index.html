@@ -24,19 +24,21 @@
             --dark-bg: #111217; /* Cinza-azulado muito escuro */
             --dark-surface: rgba(28, 30, 40, 0.75); /* Superfície com tom violeta, efeito vidro */
             --dark-surface-secondary: rgba(38, 40, 52, 0.85);
-            --dark-border: rgba(120, 111, 255, 0.15); /* Borda com brilho violeta sutil */
+            --dark-border: rgba(120, 111, 255, 0.2); /* Borda com brilho violeta sutil */
             --dark-primary: #786FFF; /* Violeta vibrante */
             --dark-primary-hover: #8B84FF;
             --dark-primary-glow: rgba(120, 111, 255, 0.3);
+            --dark-accent: #00E0C6; /* Ciano para acentos e gráficos */
             --dark-text-primary: #F0F2F5; /* Branco acinzentado, mais suave */
             --dark-text-secondary: #A0AEC0; /* Cinza claro para texto secundário */
-            --box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.25); /* Sombra mais suave */
+            --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); /* Sombra mais pronunciada */
             --backdrop-blur: 10px;
         }
 
         /* --- Melhorias Gerais --- */
         body {
             background-color: var(--dark-bg);
+            /* Gradiente sutil e estático para não cansar a visão */
             background-image: radial-gradient(circle at 1% 1%, rgba(120, 111, 255, 0.12) 0%, transparent 35%), 
                               radial-gradient(circle at 99% 99%, rgba(0, 224, 198, 0.1) 0%, transparent 35%);
             font-family: 'Inter', sans-serif;
@@ -230,10 +232,14 @@
             background-color: var(--dark-surface-secondary);
             color: var(--dark-text-primary);
             font-weight: 600;
+            transition: background 0.3s ease, color 0.3s ease;
         }
         .accordion-button:not(.collapsed) {
             background: linear-gradient(45deg, var(--dark-primary), var(--dark-primary-hover));
             color: white;
+        }
+        .accordion-button::after {
+            transition: transform 0.3s ease-in-out; /* Suaviza a rotação do ícone */
         }
         .accordion-button:focus { box-shadow: 0 0 0 .2rem var(--dark-primary-glow); }
         .accordion-body { background-color: var(--dark-surface); }
@@ -250,7 +256,7 @@
         .nav-tabs .nav-link { /* Abas mais compactas */
             color: var(--dark-text-secondary);
             border: none;
-            border-bottom: 3px solid transparent;
+            border-bottom: 3px solid transparent; /* Transição na borda */
             font-weight: 600;
             padding: 0.75rem 1rem;
             transition: all 0.3s ease;
