@@ -1135,6 +1135,9 @@
         });
 
         const rotaVeiculoMap = {
+            // Novas rotas de São Paulo (Varejo - Van/3/4)
+            '2575': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2575' }, '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' },
+            // Rotas do Paraná (Varejo)
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
             '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
             '11361': { type: 'tresQuartos', title: 'Rota 11361' }, '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] }, '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] }, '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] }, '11541': { type: 'tresQuartos', title: 'Rota 11541' }
@@ -2045,12 +2048,19 @@
                         rotaValue = `[${combinedRoutes.map(r => `'${r}'`).join(', ')}]`;
                         combinedRoutes.forEach(r => addedButtons.add(r));
                     }
+
+                    // Define o título do botão dinamicamente
+                    let buttonTitle = config.title;
+                    if (['2575', '2705'].includes(String(rota))) {
+                        buttonTitle = `${rota} (VAN-3/4- SP)`;
+                    }
+
                     const vehicleType = config.type;
                     const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
                     const functionCall = vehicleType === 'fiorino' ? 'separarCargasFiorino' : (vehicleType === 'van' ? 'separarCargasVan' : 'separarCargas34');
                     const divId = vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : (vehicleType === 'van' ? 'resultado-van-geral' : 'resultado-34-geral');
                     const btnId = `btn-${vehicleType}-${rota}`;
-                    botoes[vehicleType] += `<button id="${btnId}" class="btn btn-outline-${colorClass} mt-2 me-2" onclick="${functionCall}(${rotaValue}, '${divId}', '${config.title}', this)">${config.title}</button>`;
+                    botoes[vehicleType] += `<button id="${btnId}" class="btn btn-outline-${colorClass} mt-2 me-2" onclick="${functionCall}(${rotaValue}, '${divId}', '${buttonTitle}', this)">${buttonTitle}</button>`;
                 }
             });
             document.getElementById('botoes-fiorino').innerHTML = botoes.fiorino || '<div class="empty-state"><i class="bi bi-box"></i><p>Nenhuma rota de Fiorino encontrada.</p></div>';
@@ -2061,8 +2071,15 @@
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const veiculo = rotaVeiculoMap[rota]?.type || 'N/D';
-                const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>Rota: ${rota} (${veiculoNome})</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
+                
+                let rotaDisplay;
+                if (['2575', '2705'].includes(String(rota))) {
+                    rotaDisplay = `Rota: ${rota} (VAN-3/4- SP)`;
+                } else {
+                    const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
+                    rotaDisplay = `Rota: ${rota} (${veiculoNome})`;
+                }
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -2181,11 +2198,30 @@
 
             const containerClone = document.createElement('div');
 
+            let finalTitle = title; // Começa com o título padrão
+
+            // Verifica se o título é o da aba de Van e se as cargas são de SP
+            if (title === 'Cargas de Van (Varejo)') {
+                let isSaoPauloRoute = false;
+                for (const card of cardsParaImprimir) {
+                    const loadId = card.dataset.loadId;
+                    // Verifica se a carga tem pedidos das rotas de SP
+                    if (activeLoads[loadId] && activeLoads[loadId].pedidos.some(p => ['2575', '2705'].includes(String(p.Cod_Rota)))) {
+                        isSaoPauloRoute = true;
+                        break; // Encontrou uma, já pode parar
+                    }
+                }
+
+                // Se for uma rota de SP, altera o título
+                if (isSaoPauloRoute) {
+                    finalTitle = 'Cargas de Van (Varejo) São Paulo';
+                }
+            }
+
             cardsParaImprimir.forEach(originalCard => {
                 const cardClone = originalCard.cloneNode(true);
                 const loadId = cardClone.dataset.loadId;
                 const observationText = activeLoads[loadId]?.observation || '';
-                
                 const clonePrintDiv = cardClone.querySelector('.print-only-observation');
                 if (clonePrintDiv) {
                     const printParagraph = clonePrintDiv.querySelector('p');
@@ -2197,8 +2233,8 @@
                 containerClone.appendChild(cardClone);
             });
 
-            const printWindow = createPrintWindow(title);
-            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + containerClone.innerHTML;
+            const printWindow = createPrintWindow(finalTitle); // Usa o título final
+            printWindow.document.body.innerHTML = `<h3>${finalTitle}</h3>` + containerClone.innerHTML; // Usa o título final
             printWindow.document.close();
             printWindow.focus();
             setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
@@ -3008,6 +3044,9 @@
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">CARGA COM PRIORIDADE</span>' : '';
             const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
 
+            const isSaoPauloRoute = load.pedidos.some(p => ['2575', '2705'].includes(String(p.Cod_Rota)));
+            const spDescription = isSaoPauloRoute ? ' (São Paulo)' : '';
+
             const config = getVehicleConfig(vehicleType);
             const maxKg = config.hardMaxKg;
 
@@ -3027,7 +3066,7 @@
             
             const printButton = String(load.id).startsWith('manual-') ? `<button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirCargaManualIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Esta Carga</button>` : '';
 
-            const observationForPrint = `
+            const observationForPrint = ` 
                 <div class="print-only-observation mt-2 p-2 border rounded" style="background-color: #f8f9fa; display: none;">
                     <p class="mb-0"></p>
                 </div>`;
@@ -3042,7 +3081,7 @@
                 initialObservationHtml = `<button class="btn btn-sm btn-outline-info" onclick="toggleObservationEdit('${load.id}', true)"><i class="bi bi-plus-circle me-1"></i>Adicionar Observação</button>`;
             }
 
-            return `<div id="${load.id}" class="card mb-3 drop-zone-card ${isPriorityLoad ? 'border-primary' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}"><div class="card-header ${headerColorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${printButton}${progressBar}<div class="mt-3 no-print" id="obs-container-${load.id}">${initialObservationHtml}</div>${observationForPrint}${createTable(load.pedidos, null, load.id)}</div></div>`;
+            return `<div id="${load.id}" class="card mb-3 drop-zone-card ${isPriorityLoad ? 'border-primary' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}"><div class="card-header ${headerColorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero}${spDescription} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${printButton}${progressBar}<div class="mt-3 no-print" id="obs-container-${load.id}">${initialObservationHtml}</div>${observationForPrint}${createTable(load.pedidos, null, load.id)}</div></div>`;
         }
         
         function separarCargasFiorino(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'fiorino', buttonElement); }
