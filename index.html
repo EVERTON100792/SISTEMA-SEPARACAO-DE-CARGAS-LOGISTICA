@@ -1132,6 +1132,35 @@
         }
         document.addEventListener('DOMContentLoaded', updateOptimizationDescription);
             loadStateFromLocalStorage();
+
+            // Adiciona um listener global para o evento 'shown.bs.collapse' de todos os acordeões
+            document.addEventListener('shown.bs.collapse', function (event) {
+                const accordionCollapse = event.target;
+                const accordionHeader = accordionCollapse.previousElementSibling;
+
+                if (!accordionHeader) return;
+
+                // Verifica se o acordeão está dentro do card de pedidos disponíveis
+                const pedidosDisponiveisCard = accordionCollapse.closest('#pedidos-disponiveis-card');
+
+                setTimeout(() => {
+                    if (pedidosDisponiveisCard) {
+                        // Caso especial: acordeão dentro do card com rolagem interna
+                        const cardBody = pedidosDisponiveisCard.querySelector('.card-body');
+                        if (cardBody) {
+                            // Calcula a posição do cabeçalho relativo ao corpo do card e rola
+                            const headerTop = accordionHeader.offsetTop;
+                            cardBody.scrollTo({
+                                top: headerTop - cardBody.offsetTop - 10, // -10 para dar uma pequena margem
+                                behavior: 'smooth'
+                            });
+                        }
+                    } else {
+                        // Comportamento padrão para todos os outros acordeões
+                        accordionHeader.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }, 150); // Delay para garantir que a animação de abertura não interfira na rolagem.
+            });
         });
 
         const rotaVeiculoMap = {
