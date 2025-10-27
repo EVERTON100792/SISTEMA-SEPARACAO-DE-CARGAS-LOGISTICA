@@ -1301,9 +1301,9 @@
 
             let resultados = [];
 
-            const findInList = (list, location, tabId, accordionId) => {
+            const findInList = (list, location, tabId, accordionId, cardId = null) => {
                 list.filter(searchPredicate).forEach(p => {
-                    resultados.push({ pedido: p, local: location, tabId: tabId, accordionId: accordionId });
+                    resultados.push({ pedido: p, local: location, tabId: tabId, accordionId: accordionId, cardId: cardId });
                 });
             };
 
@@ -1342,7 +1342,7 @@
             }
 
             // 4. Outras seções
-            findInList(pedidosManualmenteBloqueadosAtuais, 'Bloqueado Manualmente', null, null);
+            findInList(pedidosManualmenteBloqueadosAtuais, 'Bloqueado Manualmente', null, null, 'resultado-bloqueados');
             findInList(pedidosComCFNumericoIsolado, 'Pedidos Filtrados (Bloqueio Varejo)', null, 'accordionCF');
             findInList(rota1SemCarga, 'Pedidos da Rota 1 para Alteração', null, null);
             findInList(pedidosFuncionarios, 'Pedidos de Funcionários', 'funcionarios-tab-pane', 'collapseFuncionarios');
@@ -1396,6 +1396,14 @@
                     const recallButtonHtml = isRecall
                         ? `<button class="btn btn-sm btn-outline-secondary" onclick="despriorizarRecall('${pedido.Num_Pedido}')"><i class="bi bi-arrow-repeat me-1"></i>Remover Recall</button>`
                         : `<button class="btn btn-sm btn-outline-info" onclick="priorizarRecall('${pedido.Num_Pedido}')"><i class="bi bi-arrow-repeat me-1"></i>Priorizar Recall</button>`;
+                    
+                    let blockInfoHtml = '';
+                    const blockType = String(pedido['BLOQ.'] || '').trim().toUpperCase();
+                    if (blockType === 'C') {
+                        blockInfoHtml = '<span class="badge bg-danger ms-2">Bloqueado: Comercial</span>'; // Alterado para Comercial
+                    } else if (blockType === 'V') {
+                        blockInfoHtml = '<span class="badge bg-danger ms-2">Bloqueado: Financeiro</span>'; // Alterado para Financeiro
+                    }
 
                     const params = `\'${pedido.Num_Pedido}\', ${tabId ? `\'${tabId}\'` : null}, ${accordionId ? `\'${accordionId}\'` : null}, ${cardId ? `\'${cardId}\'` : null}`;
                     const clickableAreaStyle = 'cursor: pointer;';
@@ -1407,7 +1415,8 @@
                                 ${res.inLoad ? '<span class="badge bg-success ms-2">Em Carga Montada</span>' : ''}
                                 ${isPriority ? '<span class="badge bg-warning text-dark ms-2">Prioridade</span>' : ''}
                                 ${isRecall ? '<span class="badge bg-info ms-2">Recall</span>' : ''}<br>
-                                <small><strong>Rota:</strong> ${pedido.Cod_Rota || 'N/A'}</small><br>
+                                ${blockInfoHtml}
+                                <small class="d-block"><strong>Rota:</strong> ${pedido.Cod_Rota || 'N/A'}</small><br>
                                 <small><strong>Cliente:</strong> ${pedido.Nome_Cliente} (${pedido.Cidade})</small><br>
                                 <small class="text-muted"><strong>Local:</strong> ${local}</small>
                             </div>
@@ -1470,7 +1479,7 @@
             }
         }
 
-        function highlightPedido(numPedido, tabId, collapseId, cardId) {
+        function highlightPedido(numPedido, tabId, collapseId, cardId = null) {
             const scrollToTarget = () => {
                 setTimeout(() => { // Pequeno delay final para garantir a renderização
                     let targetElement = document.getElementById(`pedido-${numPedido}`);
