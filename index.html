@@ -47,7 +47,7 @@
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
             background-attachment: fixed; /* Otimização para rolagem mais suave */
-        }
+        }        
 
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--dark-bg); }
@@ -57,15 +57,15 @@
         h1, h2, h3, h4, h5 { font-weight: 700; letter-spacing: -0.5px; }
         
         /* --- Tipografia Responsiva (Valores ajustados para uma aparência mais compacta e profissional) --- */
-        h1.h2 { font-size: clamp(1.25rem, 2vw, 1.5rem); }
-        h3 { font-size: clamp(1.05rem, 1.7vw, 1.2rem); }
-        .card-title.h5, .modal-title { font-size: clamp(0.95rem, 1.2vw, 1.05rem); }
-        #sidebar .fs-4 { font-size: clamp(1.0rem, 1.5vw, 1.15rem); }
+        h1.h2 { font-size: clamp(1.15rem, 1.8vw, 1.4rem); }
+        h3 { font-size: clamp(0.95rem, 1.5vw, 1.1rem); }
+        .card-title.h5, .modal-title { font-size: clamp(0.85rem, 1.1vw, 0.95rem); }
+        #sidebar .fs-4 { font-size: clamp(0.95rem, 1.4vw, 1.1rem); }
 
 
         /* --- Animações --- */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes glow {
@@ -80,10 +80,18 @@
 
         /* --- Layout Principal --- */
         #main-content {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
             --sidebar-width: clamp(250px, 16vw, 300px);
             margin-left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
             animation: fadeIn 0.5s ease-out;
+            min-width: 0; 
+        }
+
+        .main-view {
+            display: none; /* All views are hidden by default */
             min-width: 0; 
         }
 
@@ -108,15 +116,20 @@
             flex: 1 1 auto; /* Permite que este elemento cresça e encolha */
             overflow-y: auto;
             min-height: 0; /* Essencial para que o overflow funcione em um flex child */
-            padding: 0 0.5rem; /* Adiciona um pequeno padding lateral */
+            padding: 0 0.5rem; /* Pequeno padding lateral */
+            /* Estilo para a barra de rolagem personalizada (Firefox) */
+            scrollbar-width: thin; /* "auto" ou "thin" */
+            scrollbar-color: rgba(120, 111, 255, 0.15) transparent; /* thumb e track color */
         }
-        
+
+        /* Estilo para a barra de rolagem personalizada (Chrome, Edge, Safari) - CORRIGIDO */
         .sidebar-scrollable-content::-webkit-scrollbar { width: 6px; }
         .sidebar-scrollable-content::-webkit-scrollbar-track { background: transparent; }
-        .sidebar-scrollable-content::-webkit-scrollbar-thumb { background-color: var(--dark-primary); border-radius: 10px; }
-        .sidebar-scrollable-content::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary-hover); }
+        .sidebar-scrollable-content::-webkit-scrollbar-thumb { background-color: rgba(120, 111, 255, 0.15); border-radius: 10px; transition: background-color 0.3s ease; }
+        .sidebar-scrollable-content::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary); }
 
         #sidebar .sidebar-header { padding: 1rem 1.25rem; }
+        #sidebar .sidebar-header { margin-bottom: 0.5rem; } /* Menos espaço */
         #sidebar .sidebar-header .fs-4 { font-weight: 700; }
         #sidebar .sidebar-step { margin-bottom: 1rem; }
         #sidebar .step-number { /* Tamanho do número do passo reduzido */
@@ -125,13 +138,17 @@
             border-radius: 50%;
             width: 24px;
             height: 24px;
+            font-size: 0.75rem; /* Menor */
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
             margin-right: 0.5rem;
         }
-        #sidebar .form-label { font-weight: 500; color: var(--dark-text-secondary); }
+        #sidebar .form-label { 
+            font-weight: 500; color: var(--dark-text-secondary); 
+            font-size: 0.85rem; /* Menor */
+        }
 
         #sidebar .nav-link {
             color: var(--dark-text-secondary);
@@ -139,6 +156,7 @@
             padding: 0.75rem 1.25rem;
             border-radius: 0.5rem;
             position: relative;
+            font-size: 0.85rem; /* Menor */
             transition: all 0.3s ease;
             border: 1px solid transparent;
         }
@@ -152,6 +170,10 @@
             color: white;
             font-weight: 600;
             box-shadow: 0 4px 20px var(--dark-primary-glow);
+        }
+
+        #sidebar hr {
+            border-color: rgba(120, 111, 255, 0.1); /* HR mais sutil */
         }
 
         /* --- Estilo dos Cards --- */
@@ -180,22 +202,24 @@
 
         /* --- Ajuste para card de Pedidos Disponíveis rolável --- */
         #pedidos-disponiveis-card .card-body {
-            max-height: 75vh; /* Altura máxima para ocupar boa parte da tela */
+            max-height: calc(100vh - 220px); /* Altura dinâmica baseada na altura da tela */
             overflow-y: auto;
         }
         @media (max-width: 992px) {
-            #pedidos-disponiveis-card .card-body { max-height: none; overflow-y: visible; } /* Desativa no mobile */
+            #main-content { height: auto; }
+            #pedidos-disponiveis-card .card-body { max-height: 50vh; } /* Limita a altura no mobile */
         }
 
         /* --- Botões e Controles --- */
         .btn {
             font-weight: 600;
+            font-size: 0.85rem; /* Menor */
             transition: all 0.2s ease-in-out;
             border-radius: 0.5rem;
-            padding: 0.5rem 1rem; /* Padding reduzido */
+            padding: 0.4rem 0.8rem; /* Padding reduzido */
         }
         .btn:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px); /* Efeito mais sutil */
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         .btn-primary {
@@ -205,7 +229,7 @@
         .btn-primary:hover { box-shadow: 0 4px 20px var(--dark-primary-glow); }
         .form-control, .form-select {
             background-color: var(--dark-surface-secondary);
-            border: 1px solid var(--dark-border); font-size: 0.9rem;
+            border: 1px solid var(--dark-border); font-size: 0.85rem; /* Menor */
             color: var(--dark-text-primary);
         }
         .form-control:focus, .form-select:focus {
@@ -216,7 +240,7 @@
         }
         
         /* --- Componentes --- */
-        .modal-content {
+        .modal-content { /* Modal mais compacto */
             font-size: 0.9rem;
             background-color: var(--dark-surface);
             backdrop-filter: blur(var(--backdrop-blur));
@@ -258,7 +282,7 @@
             border: none;
             border-bottom: 3px solid transparent; /* Transição na borda */
             font-weight: 600;
-            padding: 0.75rem 1rem;
+            padding: 0.6rem 0.9rem; /* Menor */
             transition: all 0.3s ease;
         }
         .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
@@ -270,7 +294,7 @@
             background-color: var(--dark-surface);
             border: 1px solid var(--dark-border);
             border-top: none;
-            border-radius: 0 0 0.8rem 0.8rem;
+            border-radius: 0 0 0.75rem 0.75rem; /* Menor */
             padding: 1.25rem; /* Padding reduzido */
         }
 
@@ -279,7 +303,7 @@
             text-align: center;
             padding: 2rem;
             background-color: rgba(0,0,0,0.1);
-            border-radius: 0.8rem;
+            border-radius: 0.75rem;
             color: var(--dark-text-secondary);
         }
         .empty-state .bi { font-size: 2.5rem; color: var(--dark-primary); margin-bottom: 1rem; }
@@ -389,7 +413,7 @@
             </div>
             
             <div class="sidebar-scrollable-content">
-                <hr>
+                <hr class="my-3">
                 <div id="sidebar-controls">
                     <div class="sidebar-step">
                         <h6 class="form-label text-uppercase small fw-bold"><span class="step-number">1</span> Carregar Arquivo</h6>
@@ -424,36 +448,45 @@
                     </div>
                 </div>
 
-                <hr>
+                <hr class="my-3">
 
+                <h6 class="form-label text-uppercase small fw-bold mb-2">Navegação</h6>
                 <ul class="nav nav-pills flex-column" id="sidebar-nav">
-                    <li class="nav-item mb-1"><a href="#card-resumo-geral-container" class="nav-link"><i class="bi bi-pie-chart-fill me-2 fs-5"></i>Resumo</a></li>
-                    <li class="mb-1"><a href="#workspace-card" class="nav-link"><i class="bi bi-tools me-2 fs-5"></i>Mesas de Trabalho</a></li>
-                    <li class="mb-1"><a href="#additional-results" class="nav-link"><i class="bi bi-clipboard2-data-fill me-2 fs-5"></i>Resultados Adicionais</a></li>
-                    <li class="mb-1"><a href="#relatorios-section" class="nav-link"><i class="bi bi-file-earmark-pdf-fill me-2 fs-5"></i>Relatórios</a></li>
+                    <li class="nav-item mb-1"><a href="#summary-view" class="nav-link active"><i class="bi bi-pie-chart-fill me-2 fs-5"></i>Resumo</a></li>
+                    <li class="nav-item mb-1"><a href="#workspace-view" class="nav-link"><i class="bi bi-tools me-2 fs-5"></i>Mesas de Trabalho</a></li>
+                    <li class="nav-item mb-1"><a href="#additional-results-view" class="nav-link"><i class="bi bi-clipboard2-data-fill me-2 fs-5"></i>Resultados Adicionais</a></li>
+                    <li class="nav-item mb-1"><a href="#reports-view" class="nav-link"><i class="bi bi-file-earmark-pdf-fill me-2 fs-5"></i>Relatórios</a></li>
                 </ul>
             </div>
-            <div class="d-grid gap-2 mt-auto pt-3 border-top border-secondary">
+            <div class="d-grid gap-2 mt-auto pt-3 border-top" style="border-color: var(--dark-border) !important;">
                 <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#configModal"><i class="bi bi-sliders me-2"></i>Configurações & Ações</button>
                 <button class="btn btn-outline-danger" id="limparResultadosBtn"><i class="bi bi-eraser-fill me-2"></i>Limpar Tudo</button>
             </div>
         </nav>
 
-        <main id="main-content" class="p-4">
+        <main id="main-content">
             
-            <h1 class="h2 mb-4 animated-entry">ApexLog - Dashboard Otimizado</h1>
-
-            <div class="card animated-entry mb-4" id="card-resumo-geral-container" style="display: none;">
-                <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo Geral (Varejo)</div>
-                <div class="card-body">
-                    <div class="row mb-4" id="kpi-container">
-                        <!-- KPIs serão inseridos aqui pelo JavaScript -->
+            <!-- ======================================================================================= -->
+            <!-- VIEW: RESUMO GERAL -->
+            <!-- ======================================================================================= -->
+            <div id="summary-view" class="main-view p-4 overflow-auto" style="display: block;">
+                <h1 class="h2 mb-4 animated-entry">ApexLog - Dashboard Otimizado</h1>
+                <div class="card animated-entry" id="card-resumo-geral-container" style="display: none;">
+                    <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo Geral (Varejo)</div>
+                    <div class="card-body">
+                        <div class="row mb-4" id="kpi-container"></div>
+                        <div id="chart-resumo-veiculos" style="min-height: 350px;"></div>
                     </div>
-                    <div id="chart-resumo-veiculos" style="min-height: 350px;"></div>
                 </div>
+                <div id="summary-empty-state" class="empty-state mt-4 animated-entry"><i class="bi bi-pie-chart"></i><p>O resumo geral será exibido aqui após o processamento de um arquivo.</p></div>
             </div>
 
-            <div class="row" id="workspace-card">
+            <!-- ======================================================================================= -->
+            <!-- VIEW: MESAS DE TRABALHO -->
+            <!-- ======================================================================================= -->
+            <div id="workspace-view" class="main-view p-4" style="display: none;">
+                <h1 class="h2 mb-4 animated-entry">Mesas de Trabalho</h1>
+                <div class="row h-100">
                 <div class="col-lg-8 mb-4 animated-entry">
                     <div class="card h-100">
                         <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2></div>
@@ -522,63 +555,67 @@
                        </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Seções de Carga Especial e Venda Antecipada movidas para baixo da Mesa de Trabalho -->
-            <div class="row my-4">
-                <div class="col-lg-6 mb-4 mb-lg-0 animated-entry">
-                    <div class="card h-100">
-                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>Venda Antecipada</h2></div>
-                        <div class="card-body d-flex flex-column">
-                            <label for="vendaAntecipadaInput" class="form-label small">Cole os números dos pedidos (um por linha):</label>
-                            <textarea class="form-control flex-grow-1" id="vendaAntecipadaInput" rows="4" placeholder="Ex: 12345&#10;12346&#10;12347"></textarea>
-                            <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaPredefinida('vendaAntecipadaInput', 'resultado-venda-antecipada', pedidosVendaAntecipadaProcessados, 'Venda Antecipada')"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6 animated-entry">
-                    <div class="card h-100">
-                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>Carga Especial</h2></div>
-                        <div class="card-body d-flex flex-column">
-                            <label for="pedidosEspeciaisInput" class="form-label small">Cole os números dos pedidos (um por linha):</label>
-                            <textarea class="form-control flex-grow-1" id="pedidosEspeciaisInput" rows="4" placeholder="Ex: 54321&#10;54322&#10;54323"></textarea>
-                            <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaPredefinida('pedidosEspeciaisInput', 'resultado-carga-especial', pedidosEspeciaisProcessados, 'Especial')"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
-                        </div>
-                    </div>
                 </div>
             </div>
-            <!-- Divs para os resultados das cargas manuais, agora posicionados abaixo dos cards de entrada -->
-            <div id="resultado-venda-antecipada" class="my-4 animated-entry"></div>
-            <div id="resultado-carga-especial" class="my-4 animated-entry"></div>
 
-            <div id="additional-results">
-                <hr class="my-5">
-                <h3 class="mb-4 animated-entry">Resultados Adicionais da Análise</h3>
+            <!-- ======================================================================================= -->
+            <!-- VIEW: RESULTADOS ADICIONAIS -->
+            <!-- ======================================================================================= -->
+            <div id="additional-results-view" class="main-view p-4 overflow-auto" style="display: none;">
+                <h1 class="h2 mb-4 animated-entry">Resultados Adicionais</h1>
+
+                <!-- Cargas Manuais -->
+                <div class="row">
+                    <div class="col-lg-6 mb-4 animated-entry">
+                        <div class="card">
+                            <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>Venda Antecipada</h2></div>
+                            <div class="card-body">
+                                <label for="vendaAntecipadaInput" class="form-label small">Cole os números dos pedidos (um por linha):</label>
+                                <textarea class="form-control" id="vendaAntecipadaInput" rows="3" placeholder="Ex: 12345&#10;12346&#10;12347"></textarea>
+                                <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaPredefinida('vendaAntecipadaInput', 'resultado-venda-antecipada', pedidosVendaAntecipadaProcessados, 'Venda Antecipada')"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
+                            </div>
+                        </div>
+                        <div id="resultado-venda-antecipada" class="mt-4 animated-entry"></div>
+                    </div>
+                    <div class="col-lg-6 mb-4 animated-entry">
+                        <div class="card">
+                            <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>Carga Especial</h2></div>
+                            <div class="card-body">
+                                <label for="pedidosEspeciaisInput" class="form-label small">Cole os números dos pedidos (um por linha):</label>
+                                <textarea class="form-control" id="pedidosEspeciaisInput" rows="3" placeholder="Ex: 54321&#10;54322&#10;54323"></textarea>
+                                <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaPredefinida('pedidosEspeciaisInput', 'resultado-carga-especial', pedidosEspeciaisProcessados, 'Especial')"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
+                            </div>
+                        </div>
+                        <div id="resultado-carga-especial" class="mt-4 animated-entry"></div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <h3 class="mb-3 animated-entry">Análises Automáticas</h3>
                 
                 <div class="card mb-4 border-danger animated-entry">
                     <div class="card-header bg-danger-subtle text-danger-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-slash-circle-fill me-2"></i>Pedidos Bloqueados Manualmente</h2></div>
                     <div class="card-body"><div id="resultado-bloqueados"></div></div>
                 </div>
-
                 <div class="card mb-4 border-warning animated-entry">
                     <div class="card-header bg-warning-subtle text-warning-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-sign-turn-right-fill me-2"></i>Pedidos da Rota 1 para Alteração</h2></div>
                     <div class="card-body"><div id="resultado-rota1"></div></div>
                 </div>
-
                 <div class="card mb-4 animated-entry">
                     <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-inboxes-fill me-2"></i>Cargas "Toco"</h2></div>
                     <div class="card-body"><div id="resultado-toco"></div></div>
                 </div>
-                                
                 <div class="card mb-4 animated-entry">
                     <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (Bloqueio de Varejo por Regra)</h2></div>
                     <div class="card-body"><div id="resultado-cf-numerico"></div></div>
                 </div>
             </div>
 
-            <div id="relatorios-section">
-                <hr class="my-5">
-                <h3 class="mb-4 animated-entry">Relatórios Gerenciais</h3>
+            <!-- ======================================================================================= -->
+            <!-- VIEW: RELATÓRIOS -->
+            <!-- ======================================================================================= -->
+            <div id="reports-view" class="main-view p-4 overflow-auto" style="display: none;">
+                <h1 class="h2 mb-4 animated-entry">Relatórios Gerenciais</h1>
                 <div class="card animated-entry">
                      <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-file-earmark-pdf-fill me-2"></i>Previsão de Expedição</h2></div>
                      <div class="card-body text-center">
@@ -921,6 +958,7 @@
             }
 
             const container = document.getElementById('card-resumo-geral-container');
+            document.getElementById('summary-empty-state').style.display = 'none';
             if (container) container.style.display = 'block';
         }
         
@@ -1106,34 +1144,28 @@
                 }
             });
 
-            document.querySelectorAll('#sidebar-nav a').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
+            // Lógica de navegação por abas/views na sidebar
+            document.querySelectorAll('#sidebar-nav a.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    document.querySelector('#sidebar-nav a.active')?.classList.remove('active');
+                    // Remove 'active' de todos os links e adiciona no que foi clicado
+                    document.querySelector('#sidebar-nav a.nav-link.active')?.classList.remove('active');
                     this.classList.add('active');
-                    const targetId = this.getAttribute('href');
-                    const targetElement = document.querySelector(targetId);
-                    if (targetElement) {
-                        targetElement.scrollIntoView({
-                            behavior: 'smooth'
-                        });
-                    }
+                    // Esconde todas as views principais
+                    document.querySelectorAll('.main-view').forEach(view => {
+                        view.style.display = 'none';
+                    });
+                    // Mostra a view correta com base no href do link
+                    const targetViewId = this.getAttribute('href');
+                    document.querySelector(targetViewId).style.display = 'block';
                 });
             });
+            
+            document.getElementById('optimizationLevelSelect').addEventListener('change', updateOptimizationDescription);
+            updateOptimizationDescription();
 
-        function updateOptimizationDescription() {
-            const level = document.getElementById('optimizationLevelSelect').value;
-            const descriptionDiv = document.getElementById('optimization-description');
-            if (level === '1') {
-                descriptionDiv.innerHTML = `<p class="mb-1"><strong>Rápido:</strong> Usa uma abordagem direta para agrupar pedidos. Ideal para resultados imediatos com boa qualidade.</p>`;
-            } else {
-                descriptionDiv.innerHTML = `<p class="mb-1"><strong>Especialista (Recomendado):</strong> Simula um profissional experiente. Utiliza múltiplas estratégias, otimização profunda e reconstrução inteligente para minimizar as sobras ao máximo, respeitando todas as regras.</p>`;
-            }
-        }
-        document.addEventListener('DOMContentLoaded', updateOptimizationDescription);
             loadStateFromLocalStorage();
 
-            // Adiciona um listener global para o evento 'shown.bs.collapse' de todos os acordeões
             document.addEventListener('shown.bs.collapse', function (event) {
                 const accordionCollapse = event.target;
                 const accordionHeader = accordionCollapse.previousElementSibling;
@@ -1162,6 +1194,17 @@
                 }, 150); // Delay para garantir que a animação de abertura não interfira na rolagem.
             });
         });
+
+        function updateOptimizationDescription() {
+            const level = document.getElementById('optimizationLevelSelect').value;
+            const descriptionDiv = document.getElementById('optimization-description');
+            if (level === '1') {
+                descriptionDiv.innerHTML = `<p class="mb-1"><strong>Rápido:</strong> Usa uma abordagem direta para agrupar pedidos. Ideal para resultados imediatos com boa qualidade.</p>`;
+            } else {
+                descriptionDiv.innerHTML = `<p class="mb-1"><strong>Especialista (Recomendado):</strong> Simula um profissional experiente. Utiliza múltiplas estratégias, otimização profunda e reconstrução inteligente para minimizar as sobras ao máximo, respeitando todas as regras.</p>`;
+            }
+        }
+
 
         const rotaVeiculoMap = {
             // Novas rotas de São Paulo (Varejo - Van/3/4)
@@ -1307,6 +1350,12 @@
                 });
             };
 
+            const findInListWithCustomNav = (list, location, tabId, accordionId, cardId = null) => {
+                list.filter(searchPredicate).forEach(p => {
+                    resultados.push({ pedido: p, local: location, tabId: tabId, accordionId: accordionId, cardId: cardId });
+                });
+            };
+
             // 1. Cargas Ativas (Fiorino, Van, 3/4, Toco, etc)
             for (const loadId in activeLoads) {
                 const load = activeLoads[loadId];
@@ -1324,13 +1373,22 @@
                 });
             }
 
+            // 1.1 Cargas Manuais (Venda Antecipada, Especial)
+            findInListWithCustomNav(pedidosVendaAntecipadaProcessados.flatMap(id => planilhaData.filter(p => String(p.Num_Pedido) === id)), 'Venda Antecipada', 'additional-results-view', null, 'resultado-venda-antecipada');
+            findInListWithCustomNav(pedidosEspeciaisProcessados.flatMap(id => planilhaData.filter(p => String(p.Num_Pedido) === id)), 'Carga Especial', 'additional-results-view', null, 'resultado-carga-especial');
+
             // 2. Sobras
-            findInList(currentLeftoversForPrinting, 'Sobras Finais (Mesa de Trabalho)', 'fiorino-tab-pane', null); // Assumes leftovers are in a tab
+            const activeTabPane = document.querySelector('.workspace-tab-pane.active');
+            const activeTabId = activeTabPane ? activeTabPane.id : 'fiorino-tab-pane'; // Default to fiorino tab
+            findInList(currentLeftoversForPrinting, 'Sobras Finais (Mesa de Trabalho)', activeTabId, null, `leftovers-card-${activeTabId}`);
 
             // 3. Pedidos Disponíveis (Varejo)
             if (pedidosGeraisAtuais.length > 0) {
-                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [] }; } acc[rota].pedidos.push(p); return acc; }, {});
-                const sortedRotasGerais = Object.keys(gruposGerais).sort();
+                const rotas = [...new Set(pedidosGeraisAtuais.map(p => String(p.Cod_Rota || ''))) ].filter(Boolean);
+                const spRoutesSet = new Set(['2571', '2575', '2705']);
+                const rotasNormais = rotas.filter(r => !spRoutesSet.has(r)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                const rotasSP = rotas.filter(r => spRoutesSet.has(r)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                const sortedRotasGerais = [...rotasNormais, ...rotasSP];
                 pedidosGeraisAtuais.filter(searchPredicate).forEach(p => {
                     const rota = p.Cod_Rota;
                     const index = sortedRotasGerais.indexOf(String(rota));
@@ -1342,12 +1400,13 @@
             }
 
             // 4. Outras seções
-            findInList(pedidosManualmenteBloqueadosAtuais, 'Bloqueado Manualmente', null, null, 'resultado-bloqueados');
-            findInList(pedidosComCFNumericoIsolado, 'Pedidos Filtrados (Bloqueio Varejo)', null, 'accordionCF');
-            findInList(rota1SemCarga, 'Pedidos da Rota 1 para Alteração', null, null);
-            findInList(pedidosFuncionarios, 'Pedidos de Funcionários', 'funcionarios-tab-pane', 'collapseFuncionarios');
-            findInList(pedidosTransferencias, 'Pedidos de Transferência', 'transferencias-tab-pane', 'collapseTransferencias');
-
+            findInListWithCustomNav(pedidosManualmenteBloqueadosAtuais, 'Bloqueado Manualmente', 'additional-results-view', null, 'resultado-bloqueados');
+            findInListWithCustomNav(pedidosComCFNumericoIsolado, 'Pedidos Filtrados (Bloqueio Varejo)', 'additional-results-view', 'accordionCF');
+            findInListWithCustomNav(rota1SemCarga, 'Pedidos da Rota 1 para Alteração', 'additional-results-view', null, 'resultado-rota1');
+            findInListWithCustomNav(pedidosFuncionarios, 'Pedidos de Funcionários', 'workspace-view', 'collapseFuncionarios', null);
+            findInListWithCustomNav(pedidosTransferencias, 'Pedidos de Transferência', 'workspace-view', 'collapseTransferencias', null);
+            findInListWithCustomNav(pedidosExportacao, 'Pedidos de Exportação', 'workspace-view', 'collapseExportacao', null);
+            
             const specialKeysOrder = ["Pedidos Condor (Truck)", "Pedidos de Carreta/Truck sem CF"];
             const sortedCfKeys = Object.keys(gruposPorCFGlobais).sort((a,b) => {
                 const aIsSpecial = specialKeysOrder.includes(a);
@@ -1361,7 +1420,7 @@
             for (const cf in gruposPorCFGlobais) {
                 gruposPorCFGlobais[cf].pedidos.filter(searchPredicate).forEach(p => {
                     const index = sortedCfKeys.indexOf(cf);
-                    const collapseId = `collapseCF-Mesa-${index}`;
+                    const collapseId = `collapseCF-Mesa-${index}`; // Este ID é usado no displayCargasCfAccordion
                     resultados.push({ pedido: p, local: `Carga Truck/Carreta (${cf})`, tabId: 'cf-tab-pane', accordionId: collapseId });
                 });
             }
@@ -1405,7 +1464,17 @@
                         blockInfoHtml = '<span class="badge bg-danger ms-2">Bloqueado: Financeiro</span>'; // Alterado para Financeiro
                     }
 
-                    const params = `\'${pedido.Num_Pedido}\', ${tabId ? `\'${tabId}\'` : null}, ${accordionId ? `\'${accordionId}\'` : null}, ${cardId ? `\'${cardId}\'` : null}`;
+                    let viewId = null;
+                    if (['additional-results-view', 'workspace-view'].includes(tabId)) {
+                        viewId = tabId;
+                        tabId = null; // tabId é para as abas internas do workspace
+                    } else if (tabId) {
+                        viewId = 'workspace-view';
+                    } else {
+                        viewId = 'workspace-view'; // default
+                    }
+
+                    const params = `\'${pedido.Num_Pedido}\', \'${viewId}\', ${tabId ? `\'${tabId}\'` : null}, ${accordionId ? `\'${accordionId}\'` : null}, ${cardId ? `\'${cardId}\'` : null}`;
                     const clickableAreaStyle = 'cursor: pointer;';
 
                     html += `
@@ -1479,7 +1548,7 @@
             }
         }
 
-        function highlightPedido(numPedido, tabId, collapseId, cardId = null) {
+        function highlightPedido(numPedido, viewId, tabId, collapseId, cardId = null) {
             const scrollToTarget = () => {
                 setTimeout(() => { // Pequeno delay final para garantir a renderização
                     let targetElement = document.getElementById(`pedido-${numPedido}`);
@@ -1503,6 +1572,21 @@
                 }, 150); // Aumentado um pouco para garantir renderização
             };
 
+            // 1. Navegar para a View principal (Resumo, Mesas, etc.)
+            const navLink = document.querySelector(`#sidebar-nav a[href="#${viewId}"]`);
+            if (navLink && !navLink.classList.contains('active')) {
+                // Remove 'active' de todos os links e adiciona no que foi clicado
+                document.querySelector('#sidebar-nav a.nav-link.active')?.classList.remove('active');
+                navLink.classList.add('active');
+                // Esconde todas as views principais
+                document.querySelectorAll('.main-view').forEach(view => {
+                    view.style.display = 'none';
+                });
+                // Mostra a view correta
+                document.querySelector(`#${viewId}`).style.display = 'block';
+            }
+
+            // 2. Navegar para a aba interna (se houver) e expandir o accordion
             const expandAccordionAndScroll = () => {
                 let collapseElement = collapseId ? document.getElementById(collapseId) : null;
 
@@ -1522,6 +1606,7 @@
                 }
             };
 
+            // Se houver uma aba interna (dentro de 'Mesas de Trabalho'), navega para ela primeiro
             if (tabId) {
                 const tabEl = document.querySelector(`button[data-bs-target="#${tabId}"]`);
                 if (tabEl && !tabEl.classList.contains('active')) {
@@ -1690,6 +1775,7 @@
             }
             document.getElementById('card-resumo-geral-container').style.display = 'none';
             document.getElementById('filtro-rota-container').style.display = 'none';
+            document.getElementById('summary-empty-state').style.display = 'block';
 
             document.getElementById('pedidosEspeciaisInput').value = '';
             document.getElementById('bloquearPedidoInput').value = '';
@@ -2074,10 +2160,21 @@
                 document.getElementById('botoes-34').innerHTML = '<div class="empty-state"><i class="bi bi-truck-flatbed"></i><p>Nenhuma rota de 3/4 disponível. Processe um arquivo para começar.</p></div>';
                 return; 
             }
-            const rotasDisponiveis = new Set(Object.keys(grupos));
+
+            const todasAsRotas = Object.keys(grupos);
+            const spRoutesSet = new Set(['2571', '2575', '2705']);
+
+            // Separa as rotas normais das de SP e ordena numericamente
+            const rotasNormais = todasAsRotas.filter(r => !spRoutesSet.has(r)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+            const rotasSP = todasAsRotas.filter(r => spRoutesSet.has(r)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+            // Junta as listas, colocando as de SP por último
+            const rotasOrdenadas = [...rotasNormais, ...rotasSP];
+
             const botoes = { fiorino: '', van: '', tresQuartos: '' };
             const addedButtons = new Set();
-            rotasDisponiveis.forEach(rota => {
+
+            rotasOrdenadas.forEach(rota => {
                 const config = rotaVeiculoMap[rota];
                 if (config && !addedButtons.has(rota)) {
                     let rotaValue = `'${rota}'`;
@@ -2105,7 +2202,8 @@
             document.getElementById('botoes-van').innerHTML = botoes.van || '<div class="empty-state"><i class="bi bi-truck-front-fill"></i><p>Nenhuma rota de Van encontrada.</p></div>';
             document.getElementById('botoes-34').innerHTML = botoes.tresQuartos || '<div class="empty-state"><i class="bi bi-truck-flatbed"></i><p>Nenhuma rota de 3/4 encontrada.</p></div>';
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionGeral">';
-            Object.keys(grupos).sort().forEach((rota, index) => {
+            
+            rotasOrdenadas.forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const veiculo = rotaVeiculoMap[rota]?.type || 'N/D';
@@ -3843,7 +3941,7 @@
             const accordionId = 'accordionExportacao';
             const collapseId = 'collapseExportacao';
             const headerId = 'headingExportacao';
-            const printAreaId = 'exportacao-print-area';
+            const printAreaId = 'exportacao-print-area'; // Este ID é usado no botão de imprimir
 
             let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
                 <div class="accordion-item">
@@ -4117,6 +4215,14 @@
                 // Re-renderizar a UI com os dados carregados
                 statusDiv.innerHTML = `<p class="text-success">Progresso anterior restaurado com sucesso!</p>`;
                 processarBtn.disabled = false;
+
+                // Ativa a primeira aba de navegação e mostra a view correspondente
+                document.querySelectorAll('.main-view').forEach(v => v.style.display = 'none');
+                document.querySelector('#sidebar-nav a.nav-link.active')?.classList.remove('active');
+                const firstLink = document.querySelector('#sidebar-nav a.nav-link');
+                firstLink.classList.add('active');
+                document.querySelector(firstLink.getAttribute('href')).style.display = 'block';
+
                 popularFiltrosDeRota();
                 atualizarListaBloqueados();
                 atualizarListaSemCorte();
