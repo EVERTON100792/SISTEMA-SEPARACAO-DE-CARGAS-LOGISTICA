@@ -21,32 +21,46 @@
     
     <style>
         :root {
-            --dark-bg: #111217; /* Cinza-azulado muito escuro */
-            --dark-surface: rgba(28, 30, 40, 0.75); /* Superfície com tom violeta, efeito vidro */
-            --dark-surface-secondary: rgba(38, 40, 52, 0.85);
-            --dark-border: rgba(120, 111, 255, 0.2); /* Borda com brilho violeta sutil */
-            --dark-primary: #786FFF; /* Violeta vibrante */
-            --dark-primary-hover: #8B84FF;
-            --dark-primary-glow: rgba(120, 111, 255, 0.3);
-            --dark-accent: #00E0C6; /* Ciano para acentos e gráficos */
-            --dark-text-primary: #F0F2F5; /* Branco acinzentado, mais suave */
-            --dark-text-secondary: #A0AEC0; /* Cinza claro para texto secundário */
-            --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); /* Sombra mais pronunciada */
-            --backdrop-blur: 10px;
+            /* Paleta de Cores "Cyber Glow" */
+            --dark-bg: #0D0E18; /* Azul quase preto, profundo */
+            --dark-surface: rgba(22, 24, 40, 0.65); /* Superfície com tom azulado, mais translúcida */
+            --dark-surface-secondary: rgba(30, 33, 52, 0.75);
+            --dark-border: rgba(139, 132, 255, 0.15); /* Borda com brilho violeta mais sutil */
+            --dark-primary: #8B84FF; /* Violeta principal, um pouco mais claro */
+            --dark-primary-hover: #A49EFF;
+            --dark-primary-glow: rgba(139, 132, 255, 0.35);
+            --dark-accent: #00E5FF; /* Ciano elétrico para acentos */
+            --dark-accent-glow: rgba(0, 229, 255, 0.3);
+            --dark-text-primary: #EAEBF0; /* Branco levemente azulado */
+            --dark-text-secondary: #9298B9; /* Cinza-azulado para texto secundário */
+            --box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.35); /* Sombra mais suave e difundida */
+            --backdrop-blur: 12px;
+        }
+
+        /* --- Animação de Fundo "Aurora" --- */
+        @keyframes move-aurora {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         /* --- Melhorias Gerais --- */
         body {
             background-color: var(--dark-bg);
-            /* Gradiente sutil e estático para não cansar a visão */
-            background-image: radial-gradient(circle at 1% 1%, rgba(120, 111, 255, 0.12) 0%, transparent 35%), 
-                              radial-gradient(circle at 99% 99%, rgba(0, 224, 198, 0.1) 0%, transparent 35%);
+            /* Efeito Aurora: gradientes radiais grandes e animados */
+            background-image: 
+                radial-gradient(at 20% 20%, hsla(253, 98%, 77%, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 20%, hsla(187, 100%, 50%, 0.1) 0px, transparent 50%),
+                radial-gradient(at 20% 80%, hsla(253, 98%, 77%, 0.1) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, hsla(187, 100%, 50%, 0.15) 0px, transparent 50%);
+            background-size: 200% 200%;
             font-family: 'Inter', sans-serif;
             color: var(--dark-text-primary);
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
-            background-attachment: fixed; /* Otimização para rolagem mais suave */
+            background-attachment: fixed;
+            animation: move-aurora 25s ease-in-out infinite;
         }        
 
         ::-webkit-scrollbar { width: 8px; }
@@ -55,7 +69,7 @@
         ::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary-hover); }
 
         h1, h2, h3, h4, h5 { font-weight: 700; letter-spacing: -0.5px; }
-        
+
         /* --- Tipografia Responsiva (Valores ajustados para uma aparência mais compacta e profissional) --- */
         h1.h2 { font-size: clamp(1.15rem, 1.8vw, 1.4rem); }
         h3 { font-size: clamp(0.95rem, 1.5vw, 1.1rem); }
@@ -69,9 +83,9 @@
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes glow {
-            0% { box-shadow: 0 0 5px var(--dark-primary-glow); }
-            50% { box-shadow: 0 0 20px var(--dark-primary-glow), 0 0 10px var(--dark-primary-glow); }
-            100% { box-shadow: 0 0 5px var(--dark-primary-glow); }
+            0% { box-shadow: 0 0 8px var(--dark-primary-glow); }
+            50% { box-shadow: 0 0 25px var(--dark-primary-glow), 0 0 15px var(--dark-primary-glow); }
+            100% { box-shadow: 0 0 8px var(--dark-primary-glow); }
         }
         .animated-entry { animation: fadeIn 0.6s ease-out forwards; }
         .animated-entry:nth-child(1) { animation-delay: 0.1s; }
@@ -159,7 +173,7 @@
             transition: all 0.3s ease;
             white-space: nowrap; /* Impede que o texto quebre linha durante a animação */
             border-left: 3px solid transparent; /* Indicador lateral */
-            display: flex; /* Adicionado para alinhar ícone e texto */
+            display: flex; 
             align-items: center; /* Adicionado para alinhar ícone e texto */
         }
         #sidebar .nav-link i {
@@ -171,10 +185,10 @@
             border-left-color: var(--dark-primary-hover);
         }
         #sidebar .nav-link.active {
-            background: linear-gradient(90deg, rgba(120, 111, 255, 0.15), transparent);
+            background: linear-gradient(90deg, rgba(139, 132, 255, 0.2), transparent);
             color: white;
             font-weight: 600;
-            box-shadow: 0 4px 20px var(--dark-primary-glow);
+            box-shadow: 0 0 20px var(--dark-primary-glow);
             border-left-color: var(--dark-primary);
         }
 
@@ -254,21 +268,42 @@
             transition: transform 0.4s ease;
         }
         /* --- Estilo dos Cards --- */
+        /* Efeito de borda com gradiente no hover */
         .card {
+            position: relative;
             background-color: var(--dark-surface);
             border: 1px solid var(--dark-border);
             border-radius: 0.75rem; /* Raio da borda reduzido */
             box-shadow: var(--box-shadow);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
             overflow: hidden;
             backdrop-filter: blur(var(--backdrop-blur));
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
         }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            border-radius: inherit;
+            border: 1px solid transparent;
+            background: radial-gradient(circle at top left, var(--dark-primary), var(--dark-accent)) border-box;
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) padding-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: destination-out;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
         .card:hover {
             transform: translateY(-5px) scale(1.01);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-            border-color: var(--dark-primary-glow);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.5), 0 0 30px var(--dark-primary-glow);
         }
+        .card:hover::before {
+            opacity: 1;
+        }
+
         .card-header {
             background-color: var(--dark-surface-secondary);
             border-bottom: 1px solid var(--dark-border);
@@ -303,12 +338,14 @@
         }
         .btn:hover {
             transform: translateY(-1px); /* Efeito mais sutil */
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
         }
         .btn-primary {
-            background: linear-gradient(45deg, var(--dark-primary), var(--dark-primary-hover));
+            background: linear-gradient(45deg, var(--dark-primary), #a49eff);
             border: none;
+            box-shadow: 0 0 15px var(--dark-primary-glow);
         }
+        .btn-primary:hover { transform: translateY(-2px) scale(1.02); }
         .btn-primary:hover { box-shadow: 0 4px 20px var(--dark-primary-glow); }
         .form-control, .form-select {
             background-color: var(--dark-surface-secondary);
@@ -338,14 +375,19 @@
         .accordion-button {
             background-color: var(--dark-surface-secondary);
             color: var(--dark-text-primary);
+            font-size: 0.9rem;
             font-weight: 600;
-            transition: background 0.3s ease, color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .accordion-button:hover {
+            background-color: rgba(139, 132, 255, 0.1);
         }
         .accordion-button:not(.collapsed) {
-            background: linear-gradient(45deg, var(--dark-primary), var(--dark-primary-hover));
+            background: linear-gradient(45deg, var(--dark-primary), var(--dark-accent));
             color: white;
+            box-shadow: 0 0 15px var(--dark-primary-glow);
         }
-        .accordion-button::after {
+        .accordion-button::after { /* Ícone de seta do Bootstrap */
             transition: transform 0.3s ease-in-out; /* Suaviza a rotação do ícone */
         }
         .accordion-button:focus { box-shadow: 0 0 0 .2rem var(--dark-primary-glow); }
@@ -355,7 +397,7 @@
         thead th { /* Cabeçalho da tabela com a nova cor primária */
             background-color: var(--dark-surface-secondary);
             font-weight: 600; font-size: 0.85rem;
-            border-bottom: 2px solid var(--dark-primary);
+            border-bottom: 2px solid var(--dark-border);
         }
         tbody td { padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.875rem; } /* Padding e fonte reduzidos */
         tbody tr { transition: background-color 0.2s ease; }
@@ -369,9 +411,9 @@
             transition: all 0.3s ease;
         }
         .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
-            color: var(--dark-primary);
+            color: var(--dark-accent);
             background-color: transparent;
-            border-color: var(--dark-primary);
+            border-color: var(--dark-accent);
         }
         .tab-content {
             background-color: var(--dark-surface);
@@ -389,7 +431,7 @@
             border-radius: 0.75rem;
             color: var(--dark-text-secondary);
         }
-        .empty-state .bi { font-size: 2.5rem; color: var(--dark-primary); margin-bottom: 1rem; }
+        .empty-state .bi { font-size: 2.5rem; color: var(--dark-primary-glow); margin-bottom: 1rem; }
         
         tr.client-highlight > td {
             background-color: rgba(120, 111, 255, 0.25) !important;
@@ -397,7 +439,7 @@
         
         .drop-zone-card.drag-over {
             border: 2px dashed var(--dark-primary);
-            animation: glow 1.5s infinite ease-in-out;
+            box-shadow: 0 0 25px var(--dark-primary-glow);
         }
 
         .print-only {
@@ -459,7 +501,7 @@
             position: absolute;
             width: 30px;
             height: 30px;
-            background-color: var(--dark-primary);
+            background-color: var(--dark-accent);
             bottom: 0;
             left: 0;
             border-radius: 5px 5px 0 0;
@@ -469,7 +511,7 @@
             width: 45px;
             height: 35px;
             background-color: var(--dark-surface-secondary);
-            border: 2px solid var(--dark-primary);
+            border: 2px solid var(--dark-accent);
             bottom: 0;
             right: -5px;
             border-radius: 3px;
@@ -478,7 +520,7 @@
             position: absolute;
             bottom: 5px;
             width: 100%; height: 2px;
-            background: linear-gradient(90deg, var(--dark-primary), var(--dark-primary-glow), transparent);
+            background: linear-gradient(90deg, var(--dark-accent), var(--dark-accent-glow), transparent);
             background-size: 20px 2px;
         }
         @keyframes drive {
@@ -491,7 +533,7 @@
     <div class="d-flex">
         <nav id="sidebar" class="text-white no-print p-3">
             <div class="sidebar-header d-flex align-items-center mb-3">
-                <i class="bi bi-box-seam-fill me-3 fs-2" style="color: var(--dark-primary);"></i>
+                <i class="bi bi-box-seam-fill me-3 fs-2" style="color: var(--dark-accent);"></i>
                 <div>
                     <span class="fs-4">ApexLog</span>
                     <span class="badge bg-primary-subtle text-primary-emphasis fw-normal ms-2">v1.1</span>
@@ -605,7 +647,7 @@
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#van-tab-pane"><i class="bi bi-truck-front-fill me-2"></i>Van</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane"><i class="bi bi-truck-flatbed me-2"></i>3/4</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#toco-tab-pane"><i class="bi bi-inboxes-fill me-2"></i>Toco</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cf-tab-pane"><i class="bi bi-truck me-2"></i>Truck/Carreta</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cf-tab-pane"><i class="bi bi-truck me-2"></i>Truck</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#funcionarios-tab-pane"><i class="bi bi-people-fill me-2"></i>Funcionários</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#transferencias-tab-pane"><i class="bi bi-arrow-left-right me-2"></i>Transferências</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#exportacao-tab-pane"><i class="bi bi-globe-americas me-2"></i>Exportação</button></li>
@@ -969,7 +1011,7 @@
                             borderRadius: 5
                         }
                     },
-                    colors: ['#786FFF', '#00E0C6'], /* Nova paleta: Violeta e Ciano */
+                    colors: ['var(--dark-primary)', 'var(--dark-accent)'], /* Paleta dinâmica do CSS */
                     dataLabels: {
                         enabled: true,
                         formatter: function (val, { seriesIndex }) {
@@ -1016,32 +1058,32 @@
                         {
                             seriesName: 'Quantidade',
                             axisTicks: { show: true },
-                            axisBorder: { show: true, color: '#786FFF' },
+                            axisBorder: { show: true, color: 'var(--dark-primary)' },
                             labels: {
-                                style: { colors: '#786FFF' },
+                                style: { colors: 'var(--dark-primary)' },
                                 formatter: function (val) {
                                     return val.toFixed(0);
                                 }
                             },
                             title: {
                                 text: "Quantidade de Veículos",
-                                style: { color: '#786FFF', fontWeight: 600 }
+                                style: { color: 'var(--dark-primary)', fontWeight: 600 }
                             },
                         },
                         {
                             seriesName: 'Peso (kg)',
                             opposite: true,
                             axisTicks: { show: true },
-                            axisBorder: { show: true, color: '#00E0C6' },
+                            axisBorder: { show: true, color: 'var(--dark-accent)' },
                             labels: {
-                                style: { colors: '#00E0C6' },
+                                style: { colors: 'var(--dark-accent)' },
                                 formatter: function (val) {
                                     return (val / 1000).toFixed(1) + "k kg";
                                 }
                             },
                             title: {
                                 text: "Peso Total (kg)",
-                                style: { color: '#00E0C6', fontWeight: 600 }
+                                style: { color: 'var(--dark-accent)', fontWeight: 600 }
                             }
                         }
                     ],
@@ -1114,7 +1156,7 @@
 
         // Função centralizada para ordenar rotas de forma consistente
         function getSortedVarejoRoutes(rotas) {
-            const spRoutesSet = new Set(['2571', '2575', '2705']);
+            const spRoutesSet = new Set(['2560', '2561', '2571', '2575', '2705', '2745']);
             const rotasNormais = rotas.filter(r => !spRoutesSet.has(r)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
             const rotasSP = rotas.filter(r => spRoutesSet.has(r)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
             return [...rotasNormais, ...rotasSP];
@@ -1373,7 +1415,7 @@
 
         const rotaVeiculoMap = {
             // Novas rotas de São Paulo (Varejo - Van/3/4)
-            '2571': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2571' }, '2575': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2575' }, '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' },
+            '2560': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2560' }, '2561': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2561' }, '2571': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2571' }, '2575': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2575' }, '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' }, '2745': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2745' },
             // Rotas do Paraná (Varejo)
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
             '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
@@ -1789,7 +1831,7 @@
 
         document.head.insertAdjacentHTML('beforeend', `<style>
             .search-highlight { animation: highlight-animation 1.5s ease-in-out; }
-            @keyframes highlight-animation { 0% { box-shadow: 0 0 0 0px var(--dark-primary-glow); } 50% { box-shadow: 0 0 12px 4px var(--dark-primary); } 100% { box-shadow: 0 0 0 0px var(--dark-primary-glow); } }
+            @keyframes highlight-animation { 0% { box-shadow: 0 0 0 0px var(--dark-accent-glow); } 50% { box-shadow: 0 0 12px 4px var(--dark-accent); } 100% { box-shadow: 0 0 0 0px var(--dark-accent-glow); } }
         </style>`);
         
         function atualizarListaBloqueados() {
@@ -2332,8 +2374,8 @@
                     }
 
                     // Define o título do botão dinamicamente
-                    let buttonTitle = config.title;
-                    if (['2571', '2575', '2705'].includes(String(rota))) {
+                    let buttonTitle = config.title; // prettier-ignore
+                    if (['2560', '2561', '2571', '2575', '2705', '2745'].includes(String(rota))) {
                         buttonTitle = `${rota} (VAN-3/4- SP)`;
                     }
 
@@ -2356,7 +2398,7 @@
                 const veiculo = rotaVeiculoMap[rota]?.type || 'N/D';
                 
                 let rotaDisplay; // Rota: 11101 (Fiorino)
-                if (['2571', '2575', '2705'].includes(String(rota))) {
+                if (['2560', '2561', '2571', '2575', '2705', '2745'].includes(String(rota))) {
                     rotaDisplay = `Rota: ${rota} (VAN-3/4- SP)`;
                 } else {
                     const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
@@ -2496,8 +2538,8 @@
                 let isSaoPauloRoute = false;
                 for (const card of cardsParaImprimir) {
                     const loadId = card.dataset.loadId;
-                    // Verifica se a carga tem pedidos das rotas de SP
-                    if (activeLoads[loadId] && activeLoads[loadId].pedidos.some(p => ['2571', '2575', '2705'].includes(String(p.Cod_Rota)))) {
+                    // Verifica se a carga tem pedidos das rotas de SP // prettier-ignore
+                    if (activeLoads[loadId] && activeLoads[loadId].pedidos.some(p => ['2560', '2561', '2571', '2575', '2705', '2745'].includes(String(p.Cod_Rota)))) {
                         isSaoPauloRoute = true;
                         break; // Encontrou uma, já pode parar
                     }
@@ -3334,8 +3376,8 @@
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)) || pedidosRecall.includes(String(p.Num_Pedido)));
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">CARGA COM PRIORIDADE</span>' : '';
             const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
-            
-            const isSaoPauloRoute = load.pedidos.some(p => ['2571', '2575', '2705'].includes(String(p.Cod_Rota)));
+            // prettier-ignore
+            const isSaoPauloRoute = load.pedidos.some(p => ['2560', '2561', '2571', '2575', '2705', '2745'].includes(String(p.Cod_Rota)));
             const spDescription = isSaoPauloRoute ? ' (São Paulo)' : '';
 
             const config = getVehicleConfig(vehicleType);
@@ -3424,7 +3466,7 @@
             const chaveCarreta = "Pedidos de Carreta/Truck sem CF";
             const chaveCondor = "Pedidos Condor (Truck)";
 
-            if (pedidosCarreta && pedidosCarreta.length > 0) {
+            if (pedidosCarreta?.length > 0) {
                 todosOsGrupos[chaveCarreta] = {
                     pedidos: pedidosCarreta,
                     totalKg: pedidosCarreta.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
@@ -3432,7 +3474,7 @@
                 };
                 gruposPorCFGlobais[chaveCarreta] = todosOsGrupos[chaveCarreta];
             }
-            if (pedidosCondor && pedidosCondor.length > 0) {
+            if (pedidosCondor?.length > 0) {
                 todosOsGrupos[chaveCondor] = {
                     pedidos: pedidosCondor,
                     totalKg: pedidosCondor.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
@@ -3442,7 +3484,7 @@
             }
 
             if (Object.keys(todosOsGrupos).length === 0) {
-                div.innerHTML = '<div class="empty-state"><i class="bi bi-truck"></i><p>Nenhum grupo de carga maior encontrado. Processe um arquivo.</p></div>';
+                div.innerHTML = '<div class="empty-state"><i class="bi bi-truck"></i><p>Nenhum grupo de carga Truck encontrado. Processe um arquivo.</p></div>';
                 return;
             }
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasPorCF">';
@@ -4155,7 +4197,7 @@
             doc.setTextColor(40);
             doc.text("Relatório de Previsão de Expedição", 105, 20, { align: 'center' });
             doc.setFontSize(10);
-            doc.setTextColor(100);
+            doc.setTextColor(120);
             doc.text(`Data de Geração: ${today}`, 200, 26, { align: 'right' });
             doc.setLineWidth(0.5);
             doc.setDrawColor('#00bfa5');
@@ -4176,7 +4218,7 @@
                 ],
                 theme: 'striped',
                 styles: { fontSize: 10, cellPadding: 2.5 },
-                headStyles: { fillColor: [30, 33, 48] },
+                bodyStyles: { fillColor: false }, // Fundo transparente para o corpo
                 columnStyles: { 0: { fontStyle: 'bold' } }
             });
 
