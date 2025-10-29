@@ -211,15 +211,12 @@
         .sidebar-collapsed #sidebar .nav-link .submenu-arrow, /* Oculta a seta do submenu */
         .sidebar-collapsed #sidebar .form-label,
         .sidebar-collapsed #sidebar .form-check-label,
-        .sidebar-collapsed #sidebar #sidebar-controls, /* Oculta toda a seção de controles */
-        .sidebar-collapsed #sidebar #sidebar-footer span, /* Oculta texto nos botões do rodapé */
+        .sidebar-collapsed #sidebar #sidebar-controls,
+        .sidebar-collapsed #sidebar #sidebar-footer span,
         .sidebar-collapsed #sidebar .sidebar-header .badge {
-            opacity: 0;
-            visibility: hidden;
-            width: 0;
-            display: inline-block; /* Adicionado para transição suave */
-            transition: opacity 0.2s ease, visibility 0.2s ease, width 0.2s ease;
+            display: none !important; /* Garante que os elementos sejam completamente removidos do layout */
         }
+
         .sidebar-collapsed #sidebar .nav-link i {
             font-size: 1.5rem; /* Aumenta o ícone no modo recolhido */
             margin-right: 0 !important; /* Remove margem para centralizar ícone */
