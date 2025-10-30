@@ -1285,10 +1285,21 @@
 
         // Função centralizada para ordenar rotas de forma consistente
         function getSortedVarejoRoutes(rotas) {
-            const spRoutesSet = new Set(['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745']);
-            const rotasNormais = rotas.filter(r => !spRoutesSet.has(r)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-            const rotasSP = rotas.filter(r => spRoutesSet.has(r)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-            return [...rotasNormais, ...rotasSP];
+            const rotasParana = [];
+            const rotasSaoPaulo = [];
+
+            rotas.forEach(rota => {
+                const config = rotaVeiculoMap[rota];
+                // Se a rota não está mapeada OU se está mapeada como 'van' e não é do Paraná (não começa com 'Rota 1'), é de SP.
+                if (!config || (config.type === 'van' && !config.title.startsWith('Rota 1'))) {
+                    rotasSaoPaulo.push(rota);
+                } else {
+                    rotasParana.push(rota);
+                }
+            });
+
+            const numericSort = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+            return [...rotasParana.sort(numericSort), ...rotasSaoPaulo.sort(numericSort)];
         }
 
         function normalizeClientId(id) {
