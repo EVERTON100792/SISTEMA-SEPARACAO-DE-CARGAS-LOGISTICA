@@ -1159,7 +1159,7 @@
 
         // Função centralizada para ordenar rotas de forma consistente
         function getSortedVarejoRoutes(rotas) {
-            const spRoutesSet = new Set(['2560', '2561', '2571', '2575', '2705', '2745']);
+            const spRoutesSet = new Set(['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745']);
             const rotasNormais = rotas.filter(r => !spRoutesSet.has(r)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
             const rotasSP = rotas.filter(r => spRoutesSet.has(r)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
             return [...rotasNormais, ...rotasSP];
@@ -1418,7 +1418,7 @@
 
         const rotaVeiculoMap = {
             // Novas rotas de São Paulo (Varejo - Van/3/4)
-            '2560': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2560' }, '2561': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2561' }, '2571': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2571' }, '2575': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2575' }, '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' }, '2745': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2745' },
+            '2555': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2555' }, '2560': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2560' }, '2561': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2561' }, '2571': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2571' }, '2575': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2575' }, '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' }, '2735': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2735' }, '2745': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2745' },
             // Rotas do Paraná (Varejo)
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
             '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
@@ -1782,7 +1782,7 @@
             };
 
             // 1. Navegar para a View principal (Resumo, Mesas, etc.)
-            const targetLink = document.querySelector(`#sidebar-nav a[href="#${viewId}"]`);
+            const targetLink = document.querySelector(`#sidebar-nav a.nav-link[href="#${viewId}"]`);
             if (targetLink && !targetLink.classList.contains('active')) {
                 // Remove active de todos os links
                 document.querySelectorAll('#sidebar-nav a.nav-link.active').forEach(l => l.classList.remove('active'));
@@ -2378,12 +2378,12 @@
 
                     // Define o título do botão dinamicamente
                     let buttonTitle = config.title; // prettier-ignore
-                    if (['2560', '2561', '2571', '2575', '2705', '2745'].includes(String(rota))) {
+                    if (['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745'].includes(String(rota))) {
                         buttonTitle = `${rota} (VAN-3/4- SP)`;
                     }
 
                     const vehicleType = config.type;
-                    const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
+                    const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning'); // prettier-ignore
                     const functionCall = vehicleType === 'fiorino' ? 'separarCargasFiorino' : (vehicleType === 'van' ? 'separarCargasVan' : 'separarCargas34');
                     const divId = vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : (vehicleType === 'van' ? 'resultado-van-geral' : 'resultado-34-geral');
                     const btnId = `btn-${vehicleType}-${rota}`;
@@ -2401,7 +2401,7 @@
                 const veiculo = rotaVeiculoMap[rota]?.type || 'N/D';
                 
                 let rotaDisplay; // Rota: 11101 (Fiorino)
-                if (['2560', '2561', '2571', '2575', '2705', '2745'].includes(String(rota))) {
+                if (['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745'].includes(String(rota))) {
                     rotaDisplay = `Rota: ${rota} (VAN-3/4- SP)`;
                 } else {
                     const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
@@ -2542,7 +2542,7 @@
                 for (const card of cardsParaImprimir) {
                     const loadId = card.dataset.loadId;
                     // Verifica se a carga tem pedidos das rotas de SP // prettier-ignore
-                    if (activeLoads[loadId] && activeLoads[loadId].pedidos.some(p => ['2560', '2561', '2571', '2575', '2705', '2745'].includes(String(p.Cod_Rota)))) {
+                    if (activeLoads[loadId] && activeLoads[loadId].pedidos.some(p => ['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745'].includes(String(p.Cod_Rota)))) {
                         isSaoPauloRoute = true;
                         break; // Encontrou uma, já pode parar
                     }
@@ -3380,7 +3380,7 @@
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">CARGA COM PRIORIDADE</span>' : '';
             const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
             // prettier-ignore
-            const isSaoPauloRoute = load.pedidos.some(p => ['2560', '2561', '2571', '2575', '2705', '2745'].includes(String(p.Cod_Rota)));
+            const isSaoPauloRoute = load.pedidos.some(p => ['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745'].includes(String(p.Cod_Rota)));
             const spDescription = isSaoPauloRoute ? ' (São Paulo)' : '';
 
             const config = getVehicleConfig(vehicleType);
