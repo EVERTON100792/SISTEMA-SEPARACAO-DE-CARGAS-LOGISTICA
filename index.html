@@ -124,17 +124,6 @@
             display: flex;
             flex-direction: column;
         }
-        
-        /* Nova área de conteúdo rolável da sidebar */
-        .sidebar-scrollable-content {
-            flex: 1 1 auto; /* Permite que este elemento cresça e encolha */
-            overflow-y: auto;
-            min-height: 0; /* Essencial para que o overflow funcione em um flex child */
-            padding: 0 1rem; /* Padding lateral padrão */
-            /* Estilo para a barra de rolagem personalizada (Firefox) */
-            scrollbar-width: thin; /* "auto" ou "thin" */
-            scrollbar-color: rgba(120, 111, 255, 0.15) transparent; /* thumb e track color */
-        }
 
         /* Estilo para a barra de rolagem personalizada (Chrome, Edge, Safari) - CORRIGIDO */
         .sidebar-scrollable-content::-webkit-scrollbar { width: 6px; }
@@ -142,8 +131,23 @@
         .sidebar-scrollable-content::-webkit-scrollbar-thumb { background-color: rgba(120, 111, 255, 0.15); border-radius: 10px; transition: background-color 0.3s ease; }
         .sidebar-scrollable-content::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary); }
 
-        #sidebar .sidebar-header { padding: 1rem 1.25rem; }
-        #sidebar .sidebar-header { margin-bottom: 0.5rem; } /* Menos espaço */
+        /* --- Nova Estrutura da Sidebar --- */
+        #sidebar-process-section {
+            padding: 0 1rem 1rem 1rem;
+            border-bottom: 1px solid var(--dark-border);
+        }
+        #sidebar-nav-section {
+            flex: 1 1 auto; /* Ocupa o espaço restante */
+            overflow-y: auto; /* Rolagem apenas se necessário */
+            min-height: 0;
+            padding: 1rem;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(120, 111, 255, 0.15) transparent;
+        }
+
+        #sidebar .sidebar-header { 
+            padding: 1rem 1.25rem 1rem 1rem; 
+        }
         #sidebar .sidebar-header .fs-4 { font-weight: 700; transition: opacity 0.3s ease; }
         #sidebar .sidebar-step { margin-bottom: 1rem; }
         #sidebar .step-number { /* Tamanho do número do passo reduzido */
@@ -225,8 +229,8 @@
         .sidebar-collapsed #sidebar .nav-link .submenu-arrow, /* Oculta a seta do submenu */
         .sidebar-collapsed #sidebar .form-label,
         .sidebar-collapsed #sidebar .form-check-label,
-        .sidebar-collapsed #sidebar #sidebar-controls,
-        .sidebar-collapsed #sidebar #sidebar-footer span,
+        .sidebar-collapsed #sidebar #sidebar-process-section,
+        .sidebar-collapsed #sidebar #sidebar-header-actions, /* Esconde os botões de ação */
         .sidebar-collapsed #sidebar .sidebar-header .badge {
             display: none !important; /* Garante que os elementos sejam completamente removidos do layout */
         }
@@ -249,14 +253,14 @@
             transform: rotate(180deg);
         }
         .sidebar-collapsed #sidebar .sidebar-header {
-            justify-content: center;
+            justify-content: center; /* Centraliza o ícone principal quando os botões somem */
             padding: 1rem 0.5rem; /* Padding ajustado para ícone centralizado */
         }
         .sidebar-collapsed #sidebar .sidebar-header i {
             margin-right: 0 !important; /* Remove margem do ícone do cabeçalho */
         }
-        .sidebar-collapsed #sidebar .sidebar-scrollable-content {
-            padding: 0; /* Remove padding para centralizar ícones */
+        .sidebar-collapsed #sidebar #sidebar-nav-section {
+            padding: 1rem 0; /* Remove padding para centralizar ícones */
             overflow-y: hidden; /* Esconde a rolagem no modo recolhido */
         }
 
@@ -348,6 +352,10 @@
             border: none;
             box-shadow: 0 0 15px var(--dark-primary-glow);
         }
+        .btn-primary#processarBtn {
+            animation: glow 2.5s ease-in-out infinite;
+        }
+
         .btn-primary:hover { transform: translateY(-2px) scale(1.02); }
         .btn-primary:hover { box-shadow: 0 4px 20px var(--dark-primary-glow); }
         .form-control, .form-select {
@@ -453,7 +461,7 @@
         @media (max-width: 992px) {
             body { display: flex; flex-direction: column; }
             #sidebar {
-                position: relative;
+                position: static; /* Alterado de relative */
                 width: 100%;
                 height: auto; /* Alterado de min-height */
                 margin-bottom: 1.5rem;
@@ -461,6 +469,7 @@
                 border-bottom: 1px solid var(--dark-border);
             }
             .sidebar-scrollable-content { overflow-y: visible; } /* Desativa a rolagem no mobile */
+            #sidebar-nav-section { overflow-y: visible; }
             #main-content { margin-left: 0; width: 100%; }
         }
         
@@ -485,67 +494,175 @@
 </head>
 
     <style>
-        /* --- Animação do Caminhão de Carregamento --- */
-        .truck-loader-container {
+        /* --- Animação de Carregamento V2 - Mais Realista --- */
+        .loading-animation-container {
             position: relative;
             width: 100%;
-            height: 60px;
+            height: 120px; /* Aumenta a altura para acomodar a animação */
             overflow: hidden;
+            margin-bottom: 1rem;
         }
-        .truck {
+
+        .loading-truck {
             position: absolute;
             bottom: 10px;
-            left: -80px; /* Começa fora da tela */
-            width: 70px;
-            height: 40px;
-            animation: drive 3s ease-in-out infinite;
+            left: 55%;
+            width: 120px;
+            height: 70px;
         }
-        .truck-cab {
+
+        .loading-truck-cab {
             position: absolute;
-            width: 30px;
-            height: 30px;
+            width: 45px;
+            height: 50px;
             background-color: var(--dark-accent);
             bottom: 0;
             left: 0;
-            border-radius: 5px 5px 0 0;
+            border-radius: 10px 15px 0 0;
         }
-        .truck-trailer {
+        .loading-truck-cab::before { /* Janela */
+            content: '';
             position: absolute;
-            width: 45px;
-            height: 35px;
+            top: 8px; right: 6px;
+            width: 25px; height: 20px;
+            background: #0D0E18;
+            border-radius: 3px;
+            border: 2px solid var(--dark-accent-glow);
+        }
+
+        .loading-truck-trailer {
+            position: absolute;
+            width: 80px;
+            height: 65px;
             background-color: var(--dark-surface-secondary);
             border: 2px solid var(--dark-accent);
-            bottom: 0;
-            right: -5px;
-            border-radius: 3px;
+            bottom: 20px;
+            right: -15px;
+            border-radius: 5px 8px 8px 5px;
         }
-        .road {
+
+        .wheel {
             position: absolute;
-            bottom: 5px;
-            width: 100%; height: 2px;
-            background: linear-gradient(90deg, var(--dark-accent), var(--dark-accent-glow), transparent);
-            background-size: 20px 2px;
+            bottom: 10px;
+            width: 22px; height: 22px;
+            background: #222;
+            border-radius: 50%;
+            border: 3px solid #444;
+            animation: spin 1s linear infinite;
         }
-        @keyframes drive {
-            0% { left: -80px; }
-            80%, 100% { left: 110%; }
+        .wheel::after { /* Calota */
+            content: '';
+            position: absolute;
+            width: 8px; height: 8px;
+            background: #777;
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .wheel-front { left: 10px; }
+        .wheel-rear { right: 5px; }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .person {
+            position: absolute;
+            bottom: 10px;
+            left: 10%;
+            width: 25px;
+            height: 50px;
+            animation: walk-and-load 4s ease-in-out infinite;
+        }
+
+        .person-head {
+            width: 15px; height: 15px; background-color: var(--dark-primary); border-radius: 50%; margin: 0 auto; position: relative;
+        }
+
+        .person-body {
+            width: 18px; height: 25px; background-color: var(--dark-primary); border-radius: 10px 10px 0 0; margin: 0 auto; position: relative;
+        }
+
+        .person-arm, .person-leg {
+            position: absolute;
+            background-color: var(--dark-primary);
+            border-radius: 5px;
+        }
+        .person-arm { width: 6px; height: 22px; top: 5px; }
+        .person-leg { width: 7px; height: 15px; bottom: -13px; }
+        .arm-left { left: -4px; }
+        .arm-right { right: -4px; }
+        .leg-left { left: 2px; animation: walk-leg-left 4s ease-in-out infinite; }
+        .leg-right { right: 2px; animation: walk-leg-right 4s ease-in-out infinite; }
+
+        .box-carried {
+            position: absolute;
+            width: 25px; height: 25px;
+            background-color: #c5a880; /* Cor de caixa de papelão */
+            border: 2px solid #8b6e4b;
+            opacity: 0; /* Começa invisível */
+            animation: carry-box 4s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        .box-stack {
+            position: absolute; bottom: 10px; left: 10%;
+        }
+        .box-stack .box-item {
+            position: relative; opacity: 1; animation: none; margin-top: -10px;
+            width: 25px; height: 25px; background-color: #c5a880; border: 2px solid #8b6e4b;
+        }
+
+        @keyframes walk-and-load {
+            0%, 100% { left: 10%; } /* Posição inicial na pilha */
+            20% { left: 10%; } /* Pega a caixa */
+            45% { left: 48%; } /* Caminha até o caminhão */
+            55% { left: 48%; } /* Coloca a caixa */
+            80% { left: 10%; } /* Volta para a pilha */
+        }
+
+        @keyframes carry-box {
+            0%, 20%, 60%, 100% { opacity: 0; transform: translate(0, 0); }
+            25% { opacity: 1; transform: translate(5px, -30px); } /* Pega a caixa */
+            45% { opacity: 1; transform: translate(180px, -30px); } /* Leva até o caminhão */
+            55% { opacity: 0; transform: translate(180px, 20px); } /* Solta no caminhão */
+        }
+
+        @keyframes walk-leg-left {
+            0%, 20%, 55%, 80%, 100% { transform: rotate(0deg); }
+            32% { transform: rotate(25deg); }
+            45% { transform: rotate(-25deg); }
+            67% { transform: rotate(25deg); }
+        }
+        @keyframes walk-leg-right {
+            0%, 20%, 55%, 80%, 100% { transform: rotate(0deg); }
+            32% { transform: rotate(-25deg); }
+            45% { transform: rotate(25deg); }
+            67% { transform: rotate(-25deg); }
         }
     </style>
 <body>
     
     <div class="d-flex">
-        <nav id="sidebar" class="text-white no-print p-3">
-            <div class="sidebar-header d-flex align-items-center mb-3">
-                <i class="bi bi-box-seam-fill me-3 fs-2" style="color: var(--dark-accent);"></i>
-                <div>
+        <nav id="sidebar" class="text-white no-print">
+            <div class="sidebar-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-box-seam-fill me-3 fs-2" style="color: var(--dark-accent);"></i>
                     <span class="fs-4">ApexLog</span>
                     <span class="badge bg-primary-subtle text-primary-emphasis fw-normal ms-2">v1.1</span>
                 </div>
+                <!-- Ações movidas para o cabeçalho -->
+                <div class="d-flex align-items-center" id="sidebar-header-actions">
+                    <button class="btn btn-sm btn-outline-info me-2" data-bs-toggle="modal" data-bs-target="#configModal" title="Configurações & Ações"><i class="bi bi-sliders"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" id="limparResultadosBtn" title="Limpar Tudo"><i class="bi bi-eraser-fill"></i></button>
+                </div>
             </div>
             
-            <div class="sidebar-scrollable-content">
+            <!-- Seção de Processo (Fixa no topo) -->
+            <div id="sidebar-process-section">
                 <!-- Seção 1: Processo Principal -->
-                <h6 class="form-label text-uppercase small fw-bold mt-4">Processo Principal</h6>
+                <h6 class="form-label text-uppercase small fw-bold mt-3">Processo Principal</h6>
                 <div id="sidebar-controls">
                     <div class="sidebar-step">
                         <label for="fileInput" class="form-label small"><span class="step-number">1</span> Carregar Arquivo</label>
@@ -579,9 +696,10 @@
                         <div id="status" class="mt-2 status-message small text-center"></div>
                     </div>
                 </div>
-                
+            </div>
+            <!-- Seção de Navegação (Rolável se necessário) -->
+            <div id="sidebar-nav-section">
                 <!-- Seção 2: Navegação -->
-                <hr class="my-3">
                 <h6 class="form-label text-uppercase small fw-bold">Navegação</h6>
                 <ul class="nav nav-pills flex-column" id="sidebar-nav">
                     <li class="nav-item mb-1"><a href="#summary-view" class="nav-link active"><i class="bi bi-pie-chart-fill me-2 fs-5"></i><span>Resumo</span></a></li>
@@ -605,13 +723,7 @@
                 </ul>
             </div>
 
-            <!-- Seção 3: Ações e Configurações (Rodapé) -->
-            <div class="d-grid gap-2 mt-auto pt-3" style="border-color: var(--dark-border) !important;" id="sidebar-footer">
-                <h6 class="form-label text-uppercase small fw-bold">Ações</h6>
-                <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#configModal"><i class="bi bi-sliders me-2"></i><span>Configurações & Ações</span></button>
-                <button class="btn btn-outline-danger" id="limparResultadosBtn"><i class="bi bi-eraser-fill me-2"></i><span>Limpar Tudo</span></button>
-            </div>
-            <div class="sidebar-footer-toggle no-print">
+            <div class="sidebar-footer-toggle no-print mt-auto">
                 <a href="#" id="sidebar-toggle" class="nav-link text-center">
                     <i class="bi bi-chevron-double-left fs-5"></i>
                 </a>
@@ -907,16 +1019,30 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="background-color: var(--dark-surface); backdrop-filter: blur(12px);">
                 <div class="modal-body text-center p-4">
-                    <!-- Animação do Caminhão -->
-                    <div class="truck-loader-container mb-4">
-                        <div class="truck">
-                            <div class="truck-cab"></div>
-                            <div class="truck-trailer"></div>
+                    <!-- Nova Animação de Carregamento -->
+                    <div class="loading-animation-container">
+                        <!-- Pilha de caixas no chão -->
+                        <div class="box-stack">
+                            <div class="box-item"></div>
+                            <div class="box-item"></div>
                         </div>
-                        <div class="road"></div>
+                        <!-- Personagem -->
+                        <div class="person">
+                            <div class="person-head"></div>
+                            <div class="person-body">
+                                <div class="person-arm arm-left"></div>
+                                <div class="person-arm arm-right"></div>
+                                <div class="person-leg leg-left"></div>
+                                <div class="person-leg leg-right"></div>
+                            </div>
+                        </div>
+                        <div class="box-carried"></div> <!-- Caixa que o personagem carrega -->
+                        <div class="loading-truck">
+                            <div class="loading-truck-cab"></div><div class="loading-truck-trailer"></div><div class="wheel wheel-front"></div><div class="wheel wheel-rear"></div>
+                        </div>
                     </div>
 
-                    <h5 id="processing-status-text" class="mb-2">Otimizando Cargas...</h5>
+                    <h5 id="processing-status-text" class="mb-2">Montando Cargas...</h5>
                     <p id="thinking-text" class="text-muted small mb-3" style="height: 20px;"></p>
                     <div class="progress" role="progressbar" style="height: 6px; background-color: rgba(255,255,255,0.1);"><div id="processing-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%; background-color: var(--dark-primary);"></div></div>
                 </div>
