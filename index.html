@@ -2248,11 +2248,12 @@
 
                     let pedidosParaProcessamentoVarejo = [];
                     let gruposPorCF = {};
-                    pedidosComCFNumericoIsolado = [];
+                    pedidosComCFNumericoIsolado = []; // prettier-ignore
                     
+                    const truckColuna4Values = new Set(['15', '17', '21', '23']);
                     pedidos.forEach(p => {
                         if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
-                        if (['21', '23', '17'].includes(String(p.Coluna4))) return;
+                        if (truckColuna4Values.has(String(p.Coluna4))) return;
                         
                         if (isNumeric(p.CF)) {
                             const cf = String(p.CF).trim();
@@ -2493,10 +2494,16 @@
             const addedButtons = new Set();
 
             rotasOrdenadas.forEach(rota => {
-                const config = rotaVeiculoMap[rota];
+                let config = rotaVeiculoMap[rota];
+                // Lógica para tratar rotas não mapeadas como rotas de São Paulo (Van/3/4)
+                if (!config) {
+                    config = { type: 'van', title: `Van / 3/4 São Paulo - Rota ${rota}` };
+                }
+
                 if (config && !addedButtons.has(rota)) {
                     let rotaValue = `'${rota}'`;
                     if (config.combined) {
+                        // prettier-ignore
                         const combinedRoutes = [rota, ...config.combined];
                         rotaValue = `[${combinedRoutes.map(r => `'${r}'`).join(', ')}]`;
                         combinedRoutes.forEach(r => addedButtons.add(r));
@@ -2504,7 +2511,7 @@
 
                     // Define o título do botão dinamicamente
                     let buttonTitle = config.title; // prettier-ignore
-                    if (['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745'].includes(String(rota))) {
+                    if (config.type === 'van' && !config.title.startsWith('Rota 1')) { // Se for van e não for do Paraná
                         buttonTitle = `${rota} (VAN-3/4- SP)`;
                     }
 
@@ -2524,10 +2531,10 @@
             rotasOrdenadas.forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const veiculo = rotaVeiculoMap[rota]?.type || 'N/D';
+                const veiculo = rotaVeiculoMap[rota]?.type || 'van'; // Assume 'van' para rotas não mapeadas
                 
                 let rotaDisplay; // Rota: 11101 (Fiorino)
-                if (['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745'].includes(String(rota))) {
+                if (veiculo === 'van' && !rotaVeiculoMap[rota]?.title.startsWith('Rota 1')) {
                     rotaDisplay = `Rota: ${rota} (VAN-3/4- SP)`;
                 } else {
                     const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
