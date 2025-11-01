@@ -2230,6 +2230,13 @@
                     const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
                     displayRota1(resultadoRota1Div, rota1SemCarga);
 
+                    // Adiciona os pedidos da rota 11000 ao grupo de cargas de Truck e os remove do processamento geral
+                    const pedidosRota11000 = pedidosDisponiveis.filter(p => String(p.Cod_Rota) === '11000');
+                    if (pedidosRota11000.length > 0) {
+                        gruposPorCFGlobais['Rota 11000 (Truck)'] = { pedidos: pedidosRota11000, totalKg: pedidosRota11000.reduce((s, p) => s + p.Quilos_Saldo, 0), totalCubagem: pedidosRota11000.reduce((s, p) => s + p.Cubagem, 0) };
+                        pedidosDisponiveis = pedidosDisponiveis.filter(p => String(p.Cod_Rota) !== '11000');
+                    }
+
                     let pedidosParaProcessamentoGeral = pedidosDisponiveis.filter(p => !rota1PedidoIds.has(p.Num_Pedido));
 
                     const pedidos = pedidosParaProcessamentoGeral.filter(p => String(p.Coluna4) != '500');
@@ -2286,7 +2293,7 @@
                     gruposPorCFGlobais = gruposPorCF;
                     displayCargasCfAccordion(resultadoCfAccordionDiv, gruposPorCFGlobais, pedidosCarretaSemCF, pedidosCondorTruck);
                     displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
-
+                    
                     pedidosGeraisAtuais = [...pedidosParaProcessamentoVarejo]; 
                     const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
                         const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
@@ -3268,29 +3275,31 @@
             let leftoverGroups = remainingLeftovers; // O que sobrou após o encaixe simples
             let secondaryLoads = [];
             let tertiaryLoads = [];
-
-            // Lógica para tentar usar as sobras em outros tipos de veículos (ex: sobras de Fiorino em uma Van)
+            
+            // Lógica de cascata para sobras
             if (vehicleType === 'fiorino' && leftoverGroups.length > 0) {
-                const totalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
-                const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
-                if (totalLeftoverKg >= vanMin && leftoverGroups.length > 0) {
-                    const { loads: vanLoads, leftovers: newLeftovers } = runHeuristicOptimization(leftoverGroups, 'van');
-                    secondaryLoads = vanLoads.map(l => ({ ...l, vehicleType: 'van' }));
-                    leftoverGroups = newLeftovers;
+                // Sobras de Fiorino -> Tenta montar Van
+                console.log(`Sobras de Fiorino (${leftoverGroups.reduce((s,g)=>s+g.totalKg,0).toFixed(2)}kg) tentando virar Van.`);
+                const vanResult = runHeuristicOptimization(leftoverGroups, 'van');
+                secondaryLoads = vanResult.loads.map(l => ({ ...l, vehicleType: 'van' }));
+                leftoverGroups = vanResult.leftovers; // O que sobrou da tentativa de Van
+            }
+
+            if ((vehicleType === 'fiorino' || vehicleType === 'van') && leftoverGroups.length > 0) {
+                // Sobras de Fiorino (que não viraram Van) OU sobras de Van -> Tenta montar 3/4
+                console.log(`Sobras de ${vehicleType} (${leftoverGroups.reduce((s,g)=>s+g.totalKg,0).toFixed(2)}kg) tentando virar 3/4.`);
+                const tqResult = runHeuristicOptimization(leftoverGroups, 'tresQuartos');
+                
+                // Adiciona as novas cargas de 3/4 na lista apropriada
+                if (vehicleType === 'fiorino') {
+                    tertiaryLoads = tqResult.loads.map(l => ({ ...l, vehicleType: 'tresQuartos' }));
+                } else { // vehicleType === 'van'
+                    secondaryLoads = tqResult.loads.map(l => ({ ...l, vehicleType: 'tresQuartos' }));
                 }
+                
+                leftoverGroups = tqResult.leftovers; // Sobra final
             }
             
-            const totalFinalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
-            const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
-            if (totalFinalLeftoverKg >= tresQuartosMin && leftoverGroups.length > 0) {
-                                                     const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
-                if(vehicleForTertiary) {
-                    const { loads: tqLoads, leftovers: newLeftovers } = runHeuristicOptimization(leftoverGroups, vehicleForTertiary);
-                    tertiaryLoads = tqLoads.map(l => ({ ...l, vehicleType: 'tresQuartos' }));
-                    leftoverGroups = newLeftovers;
-                }
-            }
-
             const allPotentialLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads ];
             const finalValidLoads = [];
             let finalLeftoverGroups = [...leftoverGroups];
@@ -3610,6 +3619,7 @@
 
         function displayCargasCfAccordion(div, grupos, pedidosCarreta, pedidosCondor) {
             let todosOsGrupos = {...grupos};
+            const chaveRota11000 = "Rota 11000 (Truck)";
             const chaveCarreta = "Pedidos de Carreta/Truck sem CF";
             const chaveCondor = "Pedidos Condor (Truck)";
 
@@ -3636,7 +3646,7 @@
             }
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasPorCF">';
             
-            const specialKeysOrder = [chaveCondor, chaveCarreta];
+            const specialKeysOrder = [chaveCondor, chaveCarreta, chaveRota11000];
             const sortedKeys = Object.keys(todosOsGrupos).sort((a,b) => {
                 const aIsSpecial = specialKeysOrder.includes(a);
                 const bIsSpecial = specialKeysOrder.includes(b);
