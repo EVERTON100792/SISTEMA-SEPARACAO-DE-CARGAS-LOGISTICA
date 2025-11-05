@@ -474,6 +474,19 @@
             animation: flash-success 0.7s ease-out;
         }
 
+        /* --- Melhoria de Usabilidade: Menu de Contexto --- */
+        #context-menu {
+            position: absolute;
+            display: none;
+            z-index: 1056; /* Acima dos modais */
+            background-color: var(--dark-surface-secondary);
+            border: 1px solid var(--dark-border);
+        }
+        #context-menu .dropdown-item {
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+        }
+
         .print-only {
             display: none;
         }
@@ -515,155 +528,136 @@
 </head>
 
     <style>
-        /* --- Animação de Carregamento V2 - Mais Realista --- */
+        /* --- Animação de Carregamento V4 - "Neural Matrix" --- */
         .loading-animation-container {
             position: relative;
             width: 100%;
-            height: 120px; /* Aumenta a altura para acomodar a animação */
+            height: 180px; /* Aumenta a altura para o efeito 3D */
             overflow: hidden;
             margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 800px; /* Habilita o espaço 3D */
         }
 
-        .loading-truck {
+        .optimizer-core {
+            width: 150px;
+            height: 150px;
             position: absolute;
-            bottom: 10px;
-            left: 55%;
-            width: 120px;
-            height: 70px;
+            transform-style: preserve-3d;
+            animation: rotate-3d-slow 20s linear infinite;
         }
 
-        .loading-truck-cab {
-            position: absolute;
-            width: 45px;
-            height: 50px;
-            background-color: var(--dark-accent);
-            bottom: 0;
-            left: 0;
-            border-radius: 10px 15px 0 0;
-        }
-        .loading-truck-cab::before { /* Janela */
+        .core-ring {
             content: '';
             position: absolute;
-            top: 8px; right: 6px;
-            width: 25px; height: 20px;
-            background: #0D0E18;
-            border-radius: 3px;
-            border: 2px solid var(--dark-accent-glow);
-        }
-
-        .loading-truck-trailer {
-            position: absolute;
-            width: 80px;
-            height: 65px;
-            background-color: var(--dark-surface-secondary);
-            border: 2px solid var(--dark-accent);
-            bottom: 20px;
-            right: -15px;
-            border-radius: 5px 8px 8px 5px;
-        }
-
-        .wheel {
-            position: absolute;
-            bottom: 10px;
-            width: 22px; height: 22px;
-            background: #222;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             border-radius: 50%;
-            border: 3px solid #444;
-            animation: spin 1s linear infinite;
-        }
-        .wheel::after { /* Calota */
-            content: '';
-            position: absolute;
-            width: 8px; height: 8px;
-            background: #777;
-            border-radius: 50%;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        .wheel-front { left: 10px; }
-        .wheel-rear { right: 5px; }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            border: 2px solid;
+            animation: core-pulse 3s ease-in-out infinite;
         }
 
-        .person {
-            position: absolute;
-            bottom: 10px;
-            left: 10%;
-            width: 25px;
-            height: 50px;
-            animation: walk-and-load 4s ease-in-out infinite;
+        .core-ring-1 {
+            border-color: var(--dark-primary-glow);
+            transform: rotateY(70deg) rotateX(20deg);
+            animation-delay: -1s;
+        }
+        .core-ring-2 {
+            border-color: var(--dark-accent-glow);
+            transform: rotateY(-70deg) rotateX(-20deg);
+            animation-delay: -2s;
+        }
+        .core-ring-3 {
+            border-color: var(--dark-primary);
+            transform: rotateX(90deg);
+            animation-delay: -3s;
         }
 
-        .person-head {
-            width: 15px; height: 15px; background-color: var(--dark-primary); border-radius: 50%; margin: 0 auto; position: relative;
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 30px);
+            grid-template-rows: repeat(5, 30px);
+            gap: 10px;
+            transform-style: preserve-3d;
+            transform: rotateX(60deg) rotateZ(0deg);
+            animation: rotate-3d-grid 30s linear infinite;
         }
 
-        .person-body {
-            width: 18px; height: 25px; background-color: var(--dark-primary); border-radius: 10px 10px 0 0; margin: 0 auto; position: relative;
-        }
-
-        .person-arm, .person-leg {
-            position: absolute;
+        .data-node {
+            width: 8px;
+            height: 8px;
             background-color: var(--dark-primary);
-            border-radius: 5px;
+            border-radius: 50%;
+            box-shadow: 0 0 5px var(--dark-primary-glow);
+            animation: node-flicker 5s ease-in-out infinite;
+            transform: scale(0.8);
         }
-        .person-arm { width: 6px; height: 22px; top: 5px; }
-        .person-leg { width: 7px; height: 15px; bottom: -13px; }
-        .arm-left { left: -4px; }
-        .arm-right { right: -4px; }
-        .leg-left { left: 2px; animation: walk-leg-left 4s ease-in-out infinite; }
-        .leg-right { right: 2px; animation: walk-leg-right 4s ease-in-out infinite; }
 
-        .box-carried {
+        /* Animação de ativação em cascata */
+        .data-node:nth-child(5n + 1) { animation-delay: -0.1s; }
+        .data-node:nth-child(5n + 2) { animation-delay: -0.2s; }
+        .data-node:nth-child(5n + 3) { animation-delay: -0.3s; }
+        .data-node:nth-child(5n + 4) { animation-delay: -0.4s; }
+        .data-node:nth-child(5n + 5) { animation-delay: -0.5s; }
+
+        .scan-pulse {
             position: absolute;
-            width: 25px; height: 25px;
-            background-color: #c5a880; /* Cor de caixa de papelão */
-            border: 2px solid #8b6e4b;
-            opacity: 0; /* Começa invisível */
-            animation: carry-box 4s ease-in-out infinite;
-            z-index: 10;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--dark-accent);
+            box-shadow: 0 0 30px 15px var(--dark-accent-glow);
+            animation: pulse-expand 4s ease-out infinite;
+            opacity: 0;
         }
 
-        .box-stack {
-            position: absolute; bottom: 10px; left: 10%;
+        @keyframes rotate-3d-slow {
+            from { transform: rotate3d(1, 1, 1, 0deg); }
+            to { transform: rotate3d(1, 1, 1, 360deg); }
         }
-        .box-stack .box-item {
-            position: relative; opacity: 1; animation: none; margin-top: -10px;
-            width: 25px; height: 25px; background-color: #c5a880; border: 2px solid #8b6e4b;
-        }
-
-        @keyframes walk-and-load {
-            0%, 100% { left: 10%; } /* Posição inicial na pilha */
-            20% { left: 10%; } /* Pega a caixa */
-            45% { left: 48%; } /* Caminha até o caminhão */
-            55% { left: 48%; } /* Coloca a caixa */
-            80% { left: 10%; } /* Volta para a pilha */
+        @keyframes rotate-3d-grid {
+            0% { transform: rotateX(60deg) rotateZ(0deg); }
+            50% { transform: rotateX(50deg) rotateZ(10deg); }
+            100% { transform: rotateX(60deg) rotateZ(0deg); }
         }
 
-        @keyframes carry-box {
-            0%, 20%, 60%, 100% { opacity: 0; transform: translate(0, 0); }
-            25% { opacity: 1; transform: translate(5px, -30px); } /* Pega a caixa */
-            45% { opacity: 1; transform: translate(180px, -30px); } /* Leva até o caminhão */
-            55% { opacity: 0; transform: translate(180px, 20px); } /* Solta no caminhão */
+        @keyframes core-pulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
         }
 
-        @keyframes walk-leg-left {
-            0%, 20%, 55%, 80%, 100% { transform: rotate(0deg); }
-            32% { transform: rotate(25deg); }
-            45% { transform: rotate(-25deg); }
-            67% { transform: rotate(25deg); }
+        @keyframes node-flicker {
+            0%, 100% { opacity: 0.6; transform: scale(0.8); }
+            20% { opacity: 1; transform: scale(1); background-color: var(--dark-accent); box-shadow: 0 0 10px var(--dark-accent-glow); }
+            40% { opacity: 0.8; transform: scale(0.9); }
+            60% { opacity: 1; transform: scale(1.1); background-color: var(--dark-primary-hover); box-shadow: 0 0 15px var(--dark-primary-glow); }
+            80% { opacity: 0.7; transform: scale(0.85); }
         }
-        @keyframes walk-leg-right {
-            0%, 20%, 55%, 80%, 100% { transform: rotate(0deg); }
-            32% { transform: rotate(-25deg); }
-            45% { transform: rotate(25deg); }
-            67% { transform: rotate(-25deg); }
+
+        @keyframes pulse-expand {
+            0% { transform: scale(0); opacity: 1; }
+            80% { transform: scale(25); opacity: 0; }
+            100% { opacity: 0; }
+        }
+
+        #thinking-text {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            color: var(--dark-accent);
+            animation: text-glitch 3s linear infinite;
+        }
+
+        @keyframes text-glitch {
+            2%, 64% { transform: translate(2px, 0) skew(0deg); }
+            4%, 60% { transform: translate(-2px, 0) skew(0deg); }
+            62% { transform: translate(0, 0) skew(5deg); }
         }
     </style>
 <body>
+
+    <!-- Menu de Contexto (inicialmente vazio e oculto) -->
+    <div id="context-menu" class="dropdown-menu"></div>
     
     <div class="d-flex">
         <nav id="sidebar" class="text-white no-print">
@@ -987,32 +981,32 @@
                         <div class="card-body">
                              <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
                                  <div class="col-md-12"><strong class="text-success fs-5">Fiorino</strong></div>
-                                 <div class="col-md-3"><label class="form-label">Peso Mín (kg)</label><input type="number" class="form-control" id="fiorinoMinCapacity" value="300" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control" id="fiorinoMaxCapacity" value="500" step="10"></div>                                 <div class="col-md-3"><label class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control" id="fiorinoCubage" value="1.5" step="0.1"></div>
+                                 <div class="col-md-3"><label class="form-label" data-bs-toggle="tooltip" title="Peso mínimo para que uma carga seja considerada válida e não vire sobra.">Peso Mín (kg)</label><input type="number" class="form-control" id="fiorinoMinCapacity" value="300" step="10"></div>
+                                 <div class="col-md-3"><label class="form-label" data-bs-toggle="tooltip" title="O peso ideal que o algoritmo tentará atingir. A carga pode passar um pouco deste valor.">Peso Pref. (kg)</label><input type="number" class="form-control" id="fiorinoMaxCapacity" value="500" step="10"></div>                                 <div class="col-md-3"><label class="form-label" data-bs-toggle="tooltip" title="A cubagem preferencial que o algoritmo tentará atingir.">Cubagem Pref. (m³)</label><input type="number" class="form-control" id="fiorinoCubage" value="1.5" step="0.1"></div>
                                  <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetFiorino" onclick="resetFiorino()">Reset</button></div>
                                  <div class="col-md-3"></div>
-                                 <div class="col-md-3"><label class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control" id="fiorinoHardMaxCapacity" value="560" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control" id="fiorinoHardCubage" value="1.7" step="0.1"></div>
+                                 <div class="col-md-3"><label class="form-label fw-bold" data-bs-toggle="tooltip" title="Limite máximo absoluto. Nenhuma carga, nem mesmo manualmente, poderá ultrapassar este peso.">Peso Máx Final (kg)</label><input type="number" class="form-control" id="fiorinoHardMaxCapacity" value="560" step="10"></div>
+                                 <div class="col-md-3"><label class="form-label fw-bold" data-bs-toggle="tooltip" title="Limite de cubagem máximo absoluto.">Cubagem Máx Final (m³)</label><input type="number" class="form-control" id="fiorinoHardCubage" value="1.7" step="0.1"></div>
                              </div>
                             <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
                                  <div class="col-md-12"><strong class="text-primary fs-5">Van</strong></div>
-                                 <div class="col-md-3"><label class="form-label">Peso Mín (kg)</label><input type="number" class="form-control" id="vanMinCapacity" value="1100" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control" id="vanMaxCapacity" value="1560" step="10"></div>                                 <div class="col-md-3"><label class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control" id="vanCubage" value="5.0" step="0.1"></div>                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetVan" onclick="resetVan()">Reset</button></div>
+                                 <div class="col-md-3"><label class="form-label" data-bs-toggle="tooltip" title="Peso mínimo para que uma carga seja considerada válida e não vire sobra.">Peso Mín (kg)</label><input type="number" class="form-control" id="vanMinCapacity" value="1100" step="10"></div>
+                                 <div class="col-md-3"><label class="form-label" data-bs-toggle="tooltip" title="O peso ideal que o algoritmo tentará atingir. A carga pode passar um pouco deste valor.">Peso Pref. (kg)</label><input type="number" class="form-control" id="vanMaxCapacity" value="1560" step="10"></div>                                 <div class="col-md-3"><label class="form-label" data-bs-toggle="tooltip" title="A cubagem preferencial que o algoritmo tentará atingir.">Cubagem Pref. (m³)</label><input type="number" class="form-control" id="vanCubage" value="5.0" step="0.1"></div>                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetVan" onclick="resetVan()">Reset</button></div>
                                  <div class="col-md-3"></div>
-                                 <div class="col-md-3"><label class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control" id="vanHardMaxCapacity" value="1600" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control" id="vanHardCubage" value="5.6" step="0.1"></div>
+                                 <div class="col-md-3"><label class="form-label fw-bold" data-bs-toggle="tooltip" title="Limite máximo absoluto. Nenhuma carga, nem mesmo manualmente, poderá ultrapassar este peso.">Peso Máx Final (kg)</label><input type="number" class="form-control" id="vanHardMaxCapacity" value="1600" step="10"></div>
+                                 <div class="col-md-3"><label class="form-label fw-bold" data-bs-toggle="tooltip" title="Limite de cubagem máximo absoluto.">Cubagem Máx Final (m³)</label><input type="number" class="form-control" id="vanHardCubage" value="5.6" step="0.1"></div>
                              </div>
                             <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
                                  <div class="col-md-12"><strong class="text-warning fs-5">3/4</strong></div>
-                                 <div class="col-md-3"><label class="form-label">Peso Mín (kg)</label><input type="number" class="form-control" id="tresQuartosMinCapacity" value="2300" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label">Peso Máx (kg)</label><input type="number" class="form-control" id="tresQuartosMaxCapacity" value="4100" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control" id="tresQuartosCubage" value="15.0" step="0.1"></div>                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetTresQuartos" onclick="resetTresQuartos()">Reset</button></div>
+                                 <div class="col-md-3"><label class="form-label" data-bs-toggle="tooltip" title="Peso mínimo para que uma carga seja considerada válida e não vire sobra.">Peso Mín (kg)</label><input type="number" class="form-control" id="tresQuartosMinCapacity" value="2300" step="10"></div>
+                                 <div class="col-md-3"><label class="form-label" data-bs-toggle="tooltip" title="Peso máximo que o algoritmo tentará atingir.">Peso Máx (kg)</label><input type="number" class="form-control" id="tresQuartosMaxCapacity" value="4100" step="10"></div>
+                                 <div class="col-md-3"><label class="form-label" data-bs-toggle="tooltip" title="Cubagem máxima que o algoritmo tentará atingir.">Cubagem Máx (m³)</label><input type="number" class="form-control" id="tresQuartosCubage" value="15.0" step="0.1"></div>                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetTresQuartos" onclick="resetTresQuartos()">Reset</button></div>
                              </div>
                             <div class="row g-3">
                                  <div class="col-md-12"><strong class="fs-5">Toco</strong></div>
-                                 <div class="col-md-3"><label class="form-label">Peso Mín (kg)</label><input type="number" class="form-control" id="tocoMinCapacity" value="5000" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label">Peso Máx (kg)</label><input type="number" class="form-control" id="tocoMaxCapacity" value="8500" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control" id="tocoCubage" value="30.0" step="0.1"></div>                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetToco" onclick="resetToco()">Reset</button></div>
+                                 <div class="col-md-3"><label class="form-label" data-bs-toggle="tooltip" title="Peso mínimo para que uma carga seja considerada válida.">Peso Mín (kg)</label><input type="number" class="form-control" id="tocoMinCapacity" value="5000" step="10"></div>
+                                 <div class="col-md-3"><label class="form-label" data-bs-toggle="tooltip" title="Peso máximo que o algoritmo tentará atingir.">Peso Máx (kg)</label><input type="number" class="form-control" id="tocoMaxCapacity" value="8500" step="10"></div>
+                                 <div class="col-md-3"><label class="form-label" data-bs-toggle="tooltip" title="Cubagem máxima que o algoritmo tentará atingir.">Cubagem Máx (m³)</label><input type="number" class="form-control" id="tocoCubage" value="30.0" step="0.1"></div>                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetToco" onclick="resetToco()">Reset</button></div>
                              </div>
                             <div class="mt-4 d-flex justify-content-end"><button class="btn btn-success me-2" id="saveConfig"><i class="bi bi-check-circle-fill me-2"></i>Salvar Tudo</button><button class="btn btn-danger" id="resetAllConfigs" onclick="resetAll()"><i class="bi bi-arrow-clockwise me-2"></i>Resetar Tudo</button></div>
                             <div id="configStatus" class="mt-2 status-message text-end"></div>
@@ -1054,27 +1048,18 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="background-color: var(--dark-surface); backdrop-filter: blur(12px);">
                 <div class="modal-body text-center p-4">
-                    <!-- Nova Animação de Carregamento -->
+                    <!-- Nova Animação de Carregamento V4 -->
                     <div class="loading-animation-container">
-                        <!-- Pilha de caixas no chão -->
-                        <div class="box-stack">
-                            <div class="box-item"></div>
-                            <div class="box-item"></div>
+                        <div class="optimizer-core">
+                            <div class="core-ring core-ring-1"></div>
+                            <div class="core-ring core-ring-2"></div>
+                            <div class="core-ring core-ring-3"></div>
                         </div>
-                        <!-- Personagem -->
-                        <div class="person">
-                            <div class="person-head"></div>
-                            <div class="person-body">
-                                <div class="person-arm arm-left"></div>
-                                <div class="person-arm arm-right"></div>
-                                <div class="person-leg leg-left"></div>
-                                <div class="person-leg leg-right"></div>
-                            </div>
+                        <div class="data-grid">
+                            <!-- 25 nós de dados gerados dinamicamente ou estaticamente -->
+                            <script>for(let i=0; i<25; i++) document.write('<div class="data-node"></div>');</script>
                         </div>
-                        <div class="box-carried"></div> <!-- Caixa que o personagem carrega -->
-                        <div class="loading-truck">
-                            <div class="loading-truck-cab"></div><div class="loading-truck-trailer"></div><div class="wheel wheel-front"></div><div class="wheel wheel-rear"></div>
-                        </div>
+                        <div class="scan-pulse"></div>
                     </div>
 
                     <h5 id="processing-status-text" class="mb-2">Montando Cargas...</h5>
@@ -1480,6 +1465,10 @@
                 }
             });
 
+            // Inicializa os tooltips do Bootstrap
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
             // Lógica de navegação por abas/views na sidebar
             document.querySelectorAll('#sidebar-nav a[href^="#"]').forEach(link => {
                 link.addEventListener('click', function(e) {
@@ -1513,6 +1502,9 @@
                     const targetViewId = this.getAttribute('href');
                     document.querySelector(targetViewId).style.display = 'block';
 
+                    // Salva a última view ativa
+                    localStorage.setItem('lastActiveView', targetViewId);
+
                     if (targetViewId === '#summary-view' && resumoChart) { updateAndRenderChart(); }
                 });
             });
@@ -1539,7 +1531,25 @@
                 body.classList.add('sidebar-collapsed');
             }
 
+            // Lógica para salvar a aba ativa da Mesa de Trabalho
+            const vehicleTabs = document.querySelectorAll('#vehicleTabs button[data-bs-toggle="tab"]');
+            vehicleTabs.forEach(tab => {
+                tab.addEventListener('shown.bs.tab', event => {
+                    localStorage.setItem('lastActiveTab', event.target.getAttribute('data-bs-target'));
+                });
+            });
+
             loadStateFromLocalStorage();
+
+            // Restaura a última view e aba ativas
+            const lastView = localStorage.getItem('lastActiveView');
+            if (lastView) {
+                document.querySelector(`#sidebar-nav a[href="${lastView}"]`)?.click();
+            }
+            const lastTab = localStorage.getItem('lastActiveTab');
+            if (lastTab) {
+                document.querySelector(`button[data-bs-target="${lastTab}"]`)?.click();
+            }
 
             document.addEventListener('shown.bs.collapse', function (event) {
                 const accordionCollapse = event.target;
@@ -1568,7 +1578,46 @@
                     }
                 }, 150); // Delay para garantir que a animação de abertura não interfira na rolagem.
             });
+
+            // --- Lógica para Menu de Contexto ---
+            const contextMenu = document.getElementById('context-menu');
+
+            document.addEventListener('contextmenu', function (e) {
+                const targetRow = e.target.closest('tr[data-pedido-id]');
+                if (!targetRow) {
+                    contextMenu.style.display = 'none';
+                    return;
+                }
+
+                e.preventDefault();
+                const pedidoId = targetRow.dataset.pedidoId;
+
+                contextMenu.innerHTML = `
+                    <a class="dropdown-item" href="#" onclick="priorizarPedido('${pedidoId}')"><i class="bi bi-star-fill text-warning me-2"></i>Priorizar Pedido</a>
+                    <a class="dropdown-item" href="#" onclick="priorizarRecall('${pedidoId}')"><i class="bi bi-arrow-repeat text-info me-2"></i>Marcar para Recall</a>
+                    <a class="dropdown-item" href="#" onclick="bloquearPedido('${pedidoId}')"><i class="bi bi-slash-circle-fill text-danger me-2"></i>Bloquear Pedido</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#" onclick="copiarParaClipboard('${pedidoId}')"><i class="bi bi-clipboard-check me-2"></i>Copiar Nº do Pedido</a>
+                `;
+
+                contextMenu.style.display = 'block';
+                contextMenu.style.left = `${e.pageX}px`;
+                contextMenu.style.top = `${e.pageY}px`;
+            });
+
+            document.addEventListener('click', function () {
+                contextMenu.style.display = 'none';
+            });
         });
+
+        function copiarParaClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Opcional: mostrar uma notificação de sucesso
+                // alert(`'${text}' copiado para a área de transferência!`);
+            }).catch(err => {
+                console.error('Erro ao copiar texto: ', err);
+            });
+        };
 
         function updateOptimizationDescription() {
             const level = document.getElementById('optimizationLevelSelect').value;
@@ -1872,11 +1921,11 @@
         }
 
         function priorizarPedido(numPedido) {
-            numPedido = String(numPedido);
+            numPedido = String(numPedido).trim();
             if (!pedidosPrioritarios.includes(numPedido)) {
                 console.log(`Priorizando pedido: ${numPedido}`);
                 pedidosPrioritarios.push(numPedido);
-                // Se a planilha já foi processada, reprocessa para aplicar a prioridade
+                // Se a planilha já foi processada, reprocessa para aplicar a prioridade.
                 saveStateToLocalStorage(); // Salva a prioridade imediatamente
                 if (planilhaData.length > 0) processar();
             }
@@ -2021,12 +2070,16 @@
             divLista.appendChild(list);
         }
 
-        function bloquearPedido() {
-            const input = document.getElementById('bloquearPedidoInput');
-            const numPedido = input.value.trim();
-            if (numPedido) {
-                pedidosBloqueados.add(numPedido);
-                input.value = '';
+        function bloquearPedido(numPedido) {
+            let pedidoParaBloquear = numPedido;
+            if (!pedidoParaBloquear) { // Se nenhum pedido for passado, pega do input (comportamento antigo)
+                const input = document.getElementById('bloquearPedidoInput');
+                pedidoParaBloquear = input.value.trim();
+                input.value = ''; // Limpa o input
+            }
+
+            if (pedidoParaBloquear) {
+                pedidosBloqueados.add(String(pedidoParaBloquear));
                 saveStateToLocalStorage();
                 atualizarListaBloqueados();
                 if (planilhaData.length > 0) processar();
@@ -4586,7 +4639,8 @@
                     activeLoads,
                     kpiData,
                     processedRoutes: Array.from(processedRoutes), // Salva as rotas processadas
-                    processedRouteContexts: processedRouteContexts // Salva os contextos
+                    processedRouteContexts: processedRouteContexts, // Salva os contextos
+                    lastActiveTab: localStorage.getItem('lastActiveTab') || '#fiorino-tab-pane' // Salva a aba ativa
                 };
                 localStorage.setItem('logisticsAppState', JSON.stringify(state));
                 console.log("Estado da aplicação salvo no Local Storage.");
@@ -4653,6 +4707,7 @@
                 kpiData = savedState.kpiData || {};
                 processedRoutes = new Set(savedState.processedRoutes || []);
                 processedRouteContexts = savedState.processedRouteContexts || {};
+                localStorage.setItem('lastActiveTab', savedState.lastActiveTab); // Restaura a aba salva
 
                 // Reconverte as strings de data para objetos Date em todas as listas relevantes
                 planilhaData = reviveDates(planilhaData);
@@ -4816,6 +4871,37 @@
             }
         }
 
+        // --- Script para a nova animação "Synaptic Core" ---
+        const processingModal = document.getElementById('processing-modal');
+        const particleField = document.getElementById('particle-field');
+        const numParticles = 20;
+
+        function createParticles() {
+            if (!particleField) return;
+            particleField.innerHTML = ''; // Limpa partículas antigas
+            for (let i = 0; i < numParticles; i++) {
+                const node = document.createElement('div');
+                node.className = 'data-node';
+
+                // Posição inicial aleatória nas bordas
+                const angle = Math.random() * 2 * Math.PI;
+                const radius = 150; // Metade do tamanho do particle-field
+                node.style.setProperty('--start-x', `${50 + (radius * Math.cos(angle)) / 3}%`);
+                node.style.setProperty('--start-y', `${50 + (radius * Math.sin(angle)) / 3}%`);
+
+                // Posição final em órbita
+                const orbitRadius = 60 + Math.random() * 30;
+                const orbitAngle = Math.random() * 2 * Math.PI;
+                node.style.setProperty('--orbit-x', `${orbitRadius * Math.cos(orbitAngle)}px`);
+                node.style.setProperty('--orbit-y', `${orbitRadius * Math.sin(orbitAngle)}px`);
+                node.style.setProperty('--angle', `${Math.random() * 360}deg`);
+                node.style.setProperty('--delay', `-${(Math.random() * 10).toFixed(2)}s`);
+                
+                particleField.appendChild(node);
+            }
+        }
+        // Recria as partículas sempre que o modal for exibido
+        processingModal.addEventListener('show.bs.modal', createParticles);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
