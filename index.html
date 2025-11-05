@@ -453,6 +453,27 @@
             box-shadow: 0 0 25px var(--dark-primary-glow);
         }
 
+        /* --- Melhorias de Usabilidade para Drag & Drop --- */
+        @keyframes shake-horizontal {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+          20%, 40%, 60%, 80% { transform: translateX(8px); }
+        }
+        @keyframes flash-success {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+          50% { box-shadow: 0 0 15px 5px rgba(25, 135, 84, 0.7); }
+        }
+        @keyframes flash-danger {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+          50% { box-shadow: 0 0 15px 5px rgba(220, 53, 69, 0.7); }
+        }
+        .drop-invalid {
+            animation: shake-horizontal 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        .drop-valid-target {
+            animation: flash-success 0.7s ease-out;
+        }
+
         .print-only {
             display: none;
         }
@@ -818,9 +839,12 @@
                             <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis (Varejo)</h2>
                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
                         </div>
-                       <div class="card-body">
-                           <div class="input-group mb-3 no-print"><input type="text" id="pedidoSearchInput" class="form-control" placeholder="Buscar Pedido, Cliente ou Cidade..."><button id="searchBtn" class="btn btn-outline-secondary" type="button"><i class="bi bi-search"></i></button></div>
-                           <div id="search-result" class="mb-3"></div>
+                       <div class="card-body" onkeyup="liveSearch()"> <!-- Adicionado evento onkeyup -->
+                           <div class="input-group mb-3 no-print">
+                               <span class="input-group-text"><i class="bi bi-search"></i></span>
+                               <input type="text" id="pedidoSearchInput" class="form-control" placeholder="Filtrar em tempo real...">
+                           </div>
+                           <div id="search-result" class="mb-3"></div> <!-- Mantido para a busca global -->
                            <div id="resultado-geral"><div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div></div>
                        </div>
                     </div>
@@ -902,6 +926,22 @@
                  </div>
             </div>
 
+            <!-- Painel de Ações em Massa (inicialmente oculto) -->
+            <div id="bulk-actions-panel" class="card position-fixed bottom-0 start-50 translate-middle-x mb-3 shadow-lg no-print" style="display: none; z-index: 1050; width: auto;">
+                <div class="card-body d-flex align-items-center p-2">
+                    <span class="me-3">
+                        <strong id="bulk-actions-count">0</strong>
+                        <span id="bulk-actions-label"> itens selecionados</span>
+                    </span>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-warning" onclick="bulkAction('prioritize')"><i class="bi bi-star-fill me-1"></i> Priorizar</button>
+                        <button class="btn btn-outline-info" onclick="bulkAction('recall')"><i class="bi bi-arrow-repeat me-1"></i> Marcar Recall</button>
+                        <button class="btn btn-outline-danger" onclick="bulkAction('block')"><i class="bi bi-slash-circle me-1"></i> Bloquear</button>
+                    </div>
+                    <button type="button" class="btn-close ms-3" aria-label="Fechar" onclick="clearBulkSelection()"></button>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -948,9 +988,8 @@
                              <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
                                  <div class="col-md-12"><strong class="text-success fs-5">Fiorino</strong></div>
                                  <div class="col-md-3"><label class="form-label">Peso Mín (kg)</label><input type="number" class="form-control" id="fiorinoMinCapacity" value="300" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control" id="fiorinoMaxCapacity" value="500" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control" id="fiorinoCubage" value="1.5" step="0.1"></div>
-                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetFiorino">Reset</button></div>
+                                 <div class="col-md-3"><label class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control" id="fiorinoMaxCapacity" value="500" step="10"></div>                                 <div class="col-md-3"><label class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control" id="fiorinoCubage" value="1.5" step="0.1"></div>
+                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetFiorino" onclick="resetFiorino()">Reset</button></div>
                                  <div class="col-md-3"></div>
                                  <div class="col-md-3"><label class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control" id="fiorinoHardMaxCapacity" value="560" step="10"></div>
                                  <div class="col-md-3"><label class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control" id="fiorinoHardCubage" value="1.7" step="0.1"></div>
@@ -958,9 +997,7 @@
                             <div class="row g-3 mb-3 border-bottom pb-3 border-secondary">
                                  <div class="col-md-12"><strong class="text-primary fs-5">Van</strong></div>
                                  <div class="col-md-3"><label class="form-label">Peso Mín (kg)</label><input type="number" class="form-control" id="vanMinCapacity" value="1100" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control" id="vanMaxCapacity" value="1560" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control" id="vanCubage" value="5.0" step="0.1"></div>
-                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetVan">Reset</button></div>
+                                 <div class="col-md-3"><label class="form-label">Peso Pref. (kg)</label><input type="number" class="form-control" id="vanMaxCapacity" value="1560" step="10"></div>                                 <div class="col-md-3"><label class="form-label">Cubagem Pref. (m³)</label><input type="number" class="form-control" id="vanCubage" value="5.0" step="0.1"></div>                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetVan" onclick="resetVan()">Reset</button></div>
                                  <div class="col-md-3"></div>
                                  <div class="col-md-3"><label class="form-label fw-bold">Peso Máx Final (kg)</label><input type="number" class="form-control" id="vanHardMaxCapacity" value="1600" step="10"></div>
                                  <div class="col-md-3"><label class="form-label fw-bold">Cubagem Máx Final (m³)</label><input type="number" class="form-control" id="vanHardCubage" value="5.6" step="0.1"></div>
@@ -969,17 +1006,15 @@
                                  <div class="col-md-12"><strong class="text-warning fs-5">3/4</strong></div>
                                  <div class="col-md-3"><label class="form-label">Peso Mín (kg)</label><input type="number" class="form-control" id="tresQuartosMinCapacity" value="2300" step="10"></div>
                                  <div class="col-md-3"><label class="form-label">Peso Máx (kg)</label><input type="number" class="form-control" id="tresQuartosMaxCapacity" value="4100" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control" id="tresQuartosCubage" value="15.0" step="0.1"></div>
-                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetTresQuartos">Reset</button></div>
+                                 <div class="col-md-3"><label class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control" id="tresQuartosCubage" value="15.0" step="0.1"></div>                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetTresQuartos" onclick="resetTresQuartos()">Reset</button></div>
                              </div>
                             <div class="row g-3">
                                  <div class="col-md-12"><strong class="fs-5">Toco</strong></div>
                                  <div class="col-md-3"><label class="form-label">Peso Mín (kg)</label><input type="number" class="form-control" id="tocoMinCapacity" value="5000" step="10"></div>
                                  <div class="col-md-3"><label class="form-label">Peso Máx (kg)</label><input type="number" class="form-control" id="tocoMaxCapacity" value="8500" step="10"></div>
-                                 <div class="col-md-3"><label class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control" id="tocoCubage" value="30.0" step="0.1"></div>
-                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetToco">Reset</button></div>
+                                 <div class="col-md-3"><label class="form-label">Cubagem Máx (m³)</label><input type="number" class="form-control" id="tocoCubage" value="30.0" step="0.1"></div>                                 <div class="col-md-3 d-flex align-items-end"><button class="btn btn-secondary w-100" id="resetToco" onclick="resetToco()">Reset</button></div>
                              </div>
-                            <div class="mt-4 d-flex justify-content-end"><button class="btn btn-success me-2" id="saveConfig"><i class="bi bi-check-circle-fill me-2"></i>Salvar Tudo</button><button class="btn btn-danger" id="resetAllConfigs"><i class="bi bi-arrow-clockwise me-2"></i>Resetar Tudo</button></div>
+                            <div class="mt-4 d-flex justify-content-end"><button class="btn btn-success me-2" id="saveConfig"><i class="bi bi-check-circle-fill me-2"></i>Salvar Tudo</button><button class="btn btn-danger" id="resetAllConfigs" onclick="resetAll()"><i class="bi bi-arrow-clockwise me-2"></i>Resetar Tudo</button></div>
                             <div id="configStatus" class="mt-2 status-message text-end"></div>
                         </div>
                     </div>
@@ -1438,14 +1473,7 @@
             }
 
             document.getElementById('saveConfig').addEventListener('click', saveConfigurations);
-            document.getElementById('resetFiorino').addEventListener('click', resetFiorino);
-            document.getElementById('resetVan').addEventListener('click', resetVan);
-            document.getElementById('resetTresQuartos').addEventListener('click', resetTresQuartos);
-            document.getElementById('resetToco').addEventListener('click', resetToco);
-            document.getElementById('resetAllConfigs').addEventListener('click', resetAll);
-            document.getElementById('limparResultadosBtn').addEventListener('click', limparTudo);
-
-            document.getElementById('searchBtn').addEventListener('click', buscarPedido);
+            document.getElementById('limparResultadosBtn').addEventListener('click', limparTudo);            
             document.getElementById('pedidoSearchInput').addEventListener('keyup', (event) => {
                 if (event.key === 'Enter') {
                     buscarPedido();
@@ -2441,13 +2469,14 @@
         function createTable(pedidos, columnsToDisplay, sourceId = '') {
             if (!pedidos || pedidos.length === 0) return '';
             const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'Predat', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
-            let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped table-hover"><thead><tr>';
+            let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped table-hover"><thead><tr><th><input type="checkbox" class="form-check-input" onclick="toggleAllCheckboxes(this)"></th>';
             colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
                 pedidos.forEach(p => { 
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const isRecallRow = pedidosRecall.includes(String(p.Num_Pedido));
                 let rowClass = isPriorityRow ? 'table-warning' : (isRecallRow ? 'table-info' : '');
+                const isDraggable = sourceId !== ''; // Só permite arrastar se tiver um sourceId
 
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
                 table += `<tr id="pedido-${p.Num_Pedido}"
@@ -2455,8 +2484,9 @@
                                      data-cliente-id="${clienteIdNormalizado}" 
                                      data-pedido-id="${p.Num_Pedido}"
                                      onclick="highlightClientRows(event)"
-                                     draggable="true"
+                                     draggable="${isDraggable}"
                                      ondragstart="dragStart(event, '${p.Num_Pedido}', '${clienteIdNormalizado}', '${sourceId}')">`;
+                table += `<td><input type="checkbox" class="form-check-input row-checkbox" value="${p.Num_Pedido}" onclick="updateBulkActionsPanel(event)"></td>`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
                     if (c === 'Num_Pedido') { 
@@ -3900,14 +3930,24 @@
                 const targetVehicleType = targetLoad.vehicleType;
                 if (targetVehicleType) { 
                     const config = getVehicleConfig(targetVehicleType);
-                    if ((targetLoad.totalKg + clientBlockKg > config.hardMaxKg) || (targetLoad.totalCubagem + clientBlockCubagem > config.hardMaxCubage)) {
+                    const isInvalidMove = (targetLoad.totalKg + clientBlockKg > config.hardMaxKg) || (targetLoad.totalCubagem + clientBlockCubagem > config.hardMaxCubage);
+
+                    if (isInvalidMove) {
                         const overWeight = (targetLoad.totalKg + clientBlockKg) - config.hardMaxKg;
-                        const confirmation = confirm(`AVISO: Mover este grupo excede a capacidade do veículo em ${overWeight.toFixed(2)} kg.\n\nDeseja continuar mesmo assim?`);
-                        if (!confirmation) return;
+                        alert(`Ação inválida! Mover este grupo excede a capacidade máxima do veículo.\nExcesso de peso: ${overWeight > 0 ? overWeight.toFixed(2) + ' kg' : 'N/A'}`);
+                        
+                        // Animação de feedback negativo
+                        dropZoneCard.classList.add('drop-invalid');
+                        setTimeout(() => dropZoneCard.classList.remove('drop-invalid'), 500);
+                        return;
                     }
                 }
             }
             
+            // Animação de feedback positivo
+            dropZoneCard.classList.add('drop-valid-target');
+            setTimeout(() => dropZoneCard.classList.remove('drop-valid-target'), 700);
+
             if (sourceIsLeftovers) {
                 currentLeftoversForPrinting = sourceLoad.pedidos.filter(p => !orderIdsToMove.has(p.Num_Pedido));
             } else if (sourceIsGeral) {
@@ -4174,6 +4214,71 @@
              const startBtn = activeTabPane ? activeTabPane.querySelector('#start-manual-load-btn') : null;
              if(startBtn) startBtn.style.display = 'inline-block'; 
              updateAndRenderKPIs(); // Adicionado para atualizar os KPIs dinâmicos
+        }
+
+        // --- Funções para Ações em Massa ---
+        function toggleAllCheckboxes(source) {
+            const table = source.closest('table');
+            if (!table) return;
+            const checkboxes = table.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = source.checked;
+            });
+            updateBulkActionsPanel();
+        }
+
+        function updateBulkActionsPanel(event) {
+            if(event) event.stopPropagation(); // Impede que o clique no checkbox dispare o highlight da linha
+
+            const panel = document.getElementById('bulk-actions-panel');
+            const countSpan = document.getElementById('bulk-actions-count');
+            const labelSpan = document.getElementById('bulk-actions-label');
+            const selectedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+            
+            if (selectedCheckboxes.length > 0) {
+                countSpan.textContent = selectedCheckboxes.length;
+                labelSpan.textContent = selectedCheckboxes.length > 1 ? ' itens selecionados' : ' item selecionado';
+                panel.style.display = 'block';
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        function clearBulkSelection() {
+            document.querySelectorAll('.row-checkbox:checked').forEach(cb => cb.checked = false);
+            document.querySelectorAll('thead input[type="checkbox"]').forEach(cb => cb.checked = false);
+            updateBulkActionsPanel();
+        }
+
+        function bulkAction(action) {
+            const selectedPedidos = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+            if (selectedPedidos.length === 0) return;
+
+            let actionTaken = false;
+            switch (action) {
+                case 'prioritize':
+                    selectedPedidos.forEach(num => { if (!pedidosPrioritarios.includes(num)) pedidosPrioritarios.push(num); });
+                    actionTaken = true;
+                    break;
+                case 'recall':
+                    selectedPedidos.forEach(num => { if (!pedidosRecall.includes(num)) pedidosRecall.push(num); });
+                    actionTaken = true;
+                    break;
+                case 'block':
+                    selectedPedidos.forEach(num => pedidosBloqueados.add(num));
+                    actionTaken = true;
+                    break;
+            }
+
+            if (actionTaken) {
+                alert(`${selectedPedidos.length} pedidos foram atualizados.`);
+                clearBulkSelection();
+                saveStateToLocalStorage();
+                // Se a planilha já foi processada, reprocessa para aplicar as mudanças
+                if (planilhaData.length > 0) {
+                    processar();
+                }
+            }
         }
 
         function displayPedidosFuncionarios(div, pedidos) {
