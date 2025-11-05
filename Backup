@@ -21,33 +21,47 @@
     
     <style>
         :root {
-            --dark-bg: #111217; /* Cinza-azulado muito escuro */
-            --dark-surface: rgba(28, 30, 40, 0.75); /* Superfície com tom violeta, efeito vidro */
-            --dark-surface-secondary: rgba(38, 40, 52, 0.85);
-            --dark-border: rgba(120, 111, 255, 0.2); /* Borda com brilho violeta sutil */
-            --dark-primary: #786FFF; /* Violeta vibrante */
-            --dark-primary-hover: #8B84FF;
-            --dark-primary-glow: rgba(120, 111, 255, 0.3);
-            --dark-accent: #00E0C6; /* Ciano para acentos e gráficos */
-            --dark-text-primary: #F0F2F5; /* Branco acinzentado, mais suave */
-            --dark-text-secondary: #A0AEC0; /* Cinza claro para texto secundário */
-            --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); /* Sombra mais pronunciada */
-            --backdrop-blur: 10px;
+            /* Paleta de Cores "Cyber Glow" */
+            --dark-bg: #0D0E18; /* Azul quase preto, profundo */
+            --dark-surface: rgba(22, 24, 40, 0.65); /* Superfície com tom azulado, mais translúcida */
+            --dark-surface-secondary: rgba(30, 33, 52, 0.75);
+            --dark-border: rgba(139, 132, 255, 0.15); /* Borda com brilho violeta mais sutil */
+            --dark-primary: #8B84FF; /* Violeta principal, um pouco mais claro */
+            --dark-primary-hover: #A49EFF;
+            --dark-primary-glow: rgba(139, 132, 255, 0.35);
+            --dark-accent: #00E5FF; /* Ciano elétrico para acentos */
+            --dark-accent-glow: rgba(0, 229, 255, 0.3);
+            --dark-text-primary: #EAEBF0; /* Branco levemente azulado */
+            --dark-text-secondary: #9298B9; /* Cinza-azulado para texto secundário */
+            --box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.35); /* Sombra mais suave e difundida */
+            --backdrop-blur: 12px;
+        }
+
+        /* --- Animação de Fundo "Aurora" --- */
+        @keyframes move-aurora {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         /* --- Melhorias Gerais --- */
         body {
             background-color: var(--dark-bg);
-            /* Gradiente sutil e estático para não cansar a visão */
-            background-image: radial-gradient(circle at 1% 1%, rgba(120, 111, 255, 0.12) 0%, transparent 35%), 
-                              radial-gradient(circle at 99% 99%, rgba(0, 224, 198, 0.1) 0%, transparent 35%);
+            /* Efeito Aurora: gradientes radiais grandes e animados */
+            background-image: 
+                radial-gradient(at 20% 20%, hsla(253, 98%, 77%, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 20%, hsla(187, 100%, 50%, 0.1) 0px, transparent 50%),
+                radial-gradient(at 20% 80%, hsla(253, 98%, 77%, 0.1) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, hsla(187, 100%, 50%, 0.15) 0px, transparent 50%);
+            background-size: 200% 200%;
             font-family: 'Inter', sans-serif;
             color: var(--dark-text-primary);
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
-            background-attachment: fixed; /* Otimização para rolagem mais suave */
-        }
+            background-attachment: fixed;
+            animation: move-aurora 25s ease-in-out infinite;
+        }        
 
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--dark-bg); }
@@ -55,23 +69,23 @@
         ::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary-hover); }
 
         h1, h2, h3, h4, h5 { font-weight: 700; letter-spacing: -0.5px; }
-        
+
         /* --- Tipografia Responsiva (Valores ajustados para uma aparência mais compacta e profissional) --- */
-        h1.h2 { font-size: clamp(1.25rem, 2vw, 1.5rem); }
-        h3 { font-size: clamp(1.05rem, 1.7vw, 1.2rem); }
-        .card-title.h5, .modal-title { font-size: clamp(0.95rem, 1.2vw, 1.05rem); }
-        #sidebar .fs-4 { font-size: clamp(1.0rem, 1.5vw, 1.15rem); }
+        h1.h2 { font-size: clamp(1.15rem, 1.8vw, 1.4rem); }
+        h3 { font-size: clamp(0.95rem, 1.5vw, 1.1rem); }
+        .card-title.h5, .modal-title { font-size: clamp(0.85rem, 1.1vw, 0.95rem); }
+        #sidebar .fs-4 { font-size: clamp(0.95rem, 1.4vw, 1.1rem); }
 
 
         /* --- Animações --- */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes glow {
-            0% { box-shadow: 0 0 5px var(--dark-primary-glow); }
-            50% { box-shadow: 0 0 20px var(--dark-primary-glow), 0 0 10px var(--dark-primary-glow); }
-            100% { box-shadow: 0 0 5px var(--dark-primary-glow); }
+            0% { box-shadow: 0 0 8px var(--dark-primary-glow); }
+            50% { box-shadow: 0 0 25px var(--dark-primary-glow), 0 0 15px var(--dark-primary-glow); }
+            100% { box-shadow: 0 0 8px var(--dark-primary-glow); }
         }
         .animated-entry { animation: fadeIn 0.6s ease-out forwards; }
         .animated-entry:nth-child(1) { animation-delay: 0.1s; }
@@ -80,10 +94,18 @@
 
         /* --- Layout Principal --- */
         #main-content {
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* Altura total da viewport */
             --sidebar-width: clamp(250px, 16vw, 300px);
             margin-left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
-            animation: fadeIn 0.5s ease-out;
+            transition: margin-left 0.4s ease, width 0.4s ease; /* Animação fluida */
+            min-width: 0; 
+        }
+
+        .main-view {
+            display: none; /* All views are hidden by default */
             min-width: 0; 
         }
 
@@ -98,26 +120,35 @@
             backdrop-filter: blur(var(--backdrop-blur));
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
             border-right: 1px solid var(--dark-border);
-            transition: all 0.3s ease;
+            transition: all 0.4s ease; /* Animação fluida para width e padding */
             display: flex;
             flex-direction: column;
         }
-        
-        /* Nova área de conteúdo rolável da sidebar */
-        .sidebar-scrollable-content {
-            flex: 1 1 auto; /* Permite que este elemento cresça e encolha */
-            overflow-y: auto;
-            min-height: 0; /* Essencial para que o overflow funcione em um flex child */
-            padding: 0 0.5rem; /* Adiciona um pequeno padding lateral */
-        }
-        
+
+        /* Estilo para a barra de rolagem personalizada (Chrome, Edge, Safari) - CORRIGIDO */
         .sidebar-scrollable-content::-webkit-scrollbar { width: 6px; }
         .sidebar-scrollable-content::-webkit-scrollbar-track { background: transparent; }
-        .sidebar-scrollable-content::-webkit-scrollbar-thumb { background-color: var(--dark-primary); border-radius: 10px; }
-        .sidebar-scrollable-content::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary-hover); }
+        .sidebar-scrollable-content::-webkit-scrollbar-thumb { background-color: rgba(120, 111, 255, 0.15); border-radius: 10px; transition: background-color 0.3s ease; }
+        .sidebar-scrollable-content::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary); }
 
-        #sidebar .sidebar-header { padding: 1rem 1.25rem; }
-        #sidebar .sidebar-header .fs-4 { font-weight: 700; }
+        /* --- Nova Estrutura da Sidebar --- */
+        #sidebar-process-section {
+            padding: 0 1rem 1rem 1rem;
+            border-bottom: 1px solid var(--dark-border);
+        }
+        #sidebar-nav-section {
+            flex: 1 1 auto; /* Ocupa o espaço restante */
+            overflow-y: auto; /* Rolagem apenas se necessário */
+            min-height: 0;
+            padding: 1rem;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(120, 111, 255, 0.15) transparent;
+        }
+
+        #sidebar .sidebar-header { 
+            padding: 1rem 1.25rem 1rem 1rem; 
+        }
+        #sidebar .sidebar-header .fs-4 { font-weight: 700; transition: opacity 0.3s ease; }
         #sidebar .sidebar-step { margin-bottom: 1rem; }
         #sidebar .step-number { /* Tamanho do número do passo reduzido */
             background-color: var(--dark-primary);
@@ -125,51 +156,161 @@
             border-radius: 50%;
             width: 24px;
             height: 24px;
+            font-size: 0.75rem; /* Menor */
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
             margin-right: 0.5rem;
         }
-        #sidebar .form-label { font-weight: 500; color: var(--dark-text-secondary); }
-
+        #sidebar .form-label { 
+            font-weight: 500; color: var(--dark-text-secondary); 
+            font-size: 0.85rem; /* Menor */
+        }
         #sidebar .nav-link {
             color: var(--dark-text-secondary);
             font-weight: 500; font-size: 0.9rem;
             padding: 0.75rem 1.25rem;
             border-radius: 0.5rem;
             position: relative;
+            font-size: 0.9rem; /* Levemente maior para legibilidade */
             transition: all 0.3s ease;
-            border: 1px solid transparent;
+            white-space: nowrap; /* Impede que o texto quebre linha durante a animação */
+            border-left: 3px solid transparent; /* Indicador lateral */
+            display: flex; 
+            align-items: center; /* Adicionado para alinhar ícone e texto */
+        }
+        #sidebar .nav-link i {
+            margin-right: 0.5rem; /* Margem padrão para ícones */
         }
         #sidebar .nav-link:hover {
             background-color: var(--dark-surface-secondary);
             color: var(--dark-text-primary);
-            transform: translateX(5px);
+            border-left-color: var(--dark-primary-hover);
         }
         #sidebar .nav-link.active {
-            background: var(--dark-primary);
+            background: linear-gradient(90deg, rgba(139, 132, 255, 0.2), transparent);
             color: white;
             font-weight: 600;
-            box-shadow: 0 4px 20px var(--dark-primary-glow);
+            box-shadow: 0 0 20px var(--dark-primary-glow);
+            border-left-color: var(--dark-primary);
         }
 
+        /* --- Estilo para Submenu na Sidebar --- */
+        #sidebar .nav-link .submenu-arrow {
+            transition: transform 0.3s ease;
+            float: right;
+        }
+        #sidebar .nav-link.collapsed .submenu-arrow {
+            transform: rotate(-90deg);
+        }
+        #sidebar .nav-submenu {
+            padding-left: 1.5rem; /* Indentação para itens do submenu */
+            background-color: rgba(0,0,0,0.15);
+        }
+        #sidebar .nav-submenu .nav-link {
+            padding: 0.5rem 1.25rem; /* Padding menor para itens de submenu */
+        }
+
+        #sidebar hr {
+            border-color: rgba(120, 111, 255, 0.1); /* HR mais sutil */
+        }
+
+        /* --- Estilos para Sidebar Recolhida --- */
+        .sidebar-collapsed #sidebar {
+            width: 88px; /* Largura suficiente para os ícones e padding */
+        }
+        .sidebar-collapsed #main-content {
+            margin-left: 88px;
+            width: calc(100% - 88px);
+        }
+        .sidebar-collapsed #sidebar .sidebar-header .fs-4,
+        .sidebar-collapsed #sidebar .nav-link span:not(.step-number), /* Oculta o texto dos links */
+        .sidebar-collapsed #sidebar .nav-link .submenu-arrow, /* Oculta a seta do submenu */
+        .sidebar-collapsed #sidebar .form-label,
+        .sidebar-collapsed #sidebar .form-check-label,
+        .sidebar-collapsed #sidebar #sidebar-process-section,
+        .sidebar-collapsed #sidebar #sidebar-header-actions, /* Esconde os botões de ação */
+        .sidebar-collapsed #sidebar .sidebar-header .badge {
+            display: none !important; /* Garante que os elementos sejam completamente removidos do layout */
+        }
+
+        .sidebar-collapsed #sidebar .nav-link i {
+            font-size: 1.5rem; /* Aumenta o ícone no modo recolhido */
+            margin-right: 0 !important; /* Remove margem para centralizar ícone */
+        }
+        .sidebar-collapsed #sidebar .nav-link {
+            justify-content: center;
+            padding: 0.75rem; /* Padding ajustado para apenas ícone */
+        }
+        .sidebar-collapsed #sidebar #sidebar-footer .btn {
+            justify-content: center; /* Centraliza o ícone do botão */
+            display: flex;
+            align-items: center;
+            padding: 0.5rem; /* Padding ajustado para botões com apenas ícone */
+        }
+        .sidebar-collapsed #sidebar #sidebar-toggle i {
+            transform: rotate(180deg);
+        }
+        .sidebar-collapsed #sidebar .sidebar-header {
+            justify-content: center; /* Centraliza o ícone principal quando os botões somem */
+            padding: 1rem 0.5rem; /* Padding ajustado para ícone centralizado */
+        }
+        .sidebar-collapsed #sidebar .sidebar-header i {
+            margin-right: 0 !important; /* Remove margem do ícone do cabeçalho */
+        }
+        .sidebar-collapsed #sidebar #sidebar-nav-section {
+            padding: 1rem 0; /* Remove padding para centralizar ícones */
+            overflow-y: hidden; /* Esconde a rolagem no modo recolhido */
+        }
+
+        /* --- Botão de Toggle da Sidebar --- */
+        .sidebar-footer-toggle {
+            border-top: 1px solid var(--dark-border);
+        }
+        .sidebar-footer-toggle .nav-link i {
+            transition: transform 0.4s ease;
+        }
         /* --- Estilo dos Cards --- */
+        /* Efeito de borda com gradiente no hover */
         .card {
+            position: relative;
             background-color: var(--dark-surface);
             border: 1px solid var(--dark-border);
             border-radius: 0.75rem; /* Raio da borda reduzido */
             box-shadow: var(--box-shadow);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
             overflow: hidden;
             backdrop-filter: blur(var(--backdrop-blur));
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
         }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            border-radius: inherit;
+            border: 1px solid transparent;
+            background: radial-gradient(circle at top left, var(--dark-primary), var(--dark-accent)) border-box;
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) padding-box, 
+                linear-gradient(#fff 0 0);
+            mask:
+                linear-gradient(#fff 0 0) padding-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: destination-out;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
         .card:hover {
             transform: translateY(-5px) scale(1.01);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-            border-color: var(--dark-primary-glow);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.5), 0 0 30px var(--dark-primary-glow);
         }
+        .card:hover::before {
+            opacity: 1;
+        }
+
         .card-header {
             background-color: var(--dark-surface-secondary);
             border-bottom: 1px solid var(--dark-border);
@@ -180,32 +321,46 @@
 
         /* --- Ajuste para card de Pedidos Disponíveis rolável --- */
         #pedidos-disponiveis-card .card-body {
-            max-height: 75vh; /* Altura máxima para ocupar boa parte da tela */
+            max-height: calc(100vh - 220px); /* Altura dinâmica baseada na altura da tela */
             overflow-y: auto;
         }
         @media (max-width: 992px) {
-            #pedidos-disponiveis-card .card-body { max-height: none; overflow-y: visible; } /* Desativa no mobile */
+            #main-content { height: auto; }
+            #pedidos-disponiveis-card .card-body { max-height: 50vh; } /* Limita a altura no mobile */
+        }
+
+        /* --- Ajuste para card de Pedidos Filtrados rolável --- */
+        #pedidos-filtrados-card .card-body {
+            max-height: 35vh; /* Altura máxima para este card */
+            overflow-y: auto;
         }
 
         /* --- Botões e Controles --- */
         .btn {
             font-weight: 600;
+            font-size: 0.85rem; /* Menor */
             transition: all 0.2s ease-in-out;
             border-radius: 0.5rem;
-            padding: 0.5rem 1rem; /* Padding reduzido */
+            padding: 0.4rem 0.8rem; /* Padding reduzido */
         }
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transform: translateY(-1px); /* Efeito mais sutil */
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
         }
         .btn-primary {
-            background: linear-gradient(45deg, var(--dark-primary), var(--dark-primary-hover));
+            background: linear-gradient(45deg, var(--dark-primary), #a49eff);
             border: none;
+            box-shadow: 0 0 15px var(--dark-primary-glow);
         }
+        .btn-primary#processarBtn {
+            animation: glow 2.5s ease-in-out infinite;
+        }
+
+        .btn-primary:hover { transform: translateY(-2px) scale(1.02); }
         .btn-primary:hover { box-shadow: 0 4px 20px var(--dark-primary-glow); }
         .form-control, .form-select {
             background-color: var(--dark-surface-secondary);
-            border: 1px solid var(--dark-border); font-size: 0.9rem;
+            border: 1px solid var(--dark-border); font-size: 0.85rem; /* Menor */
             color: var(--dark-text-primary);
         }
         .form-control:focus, .form-select:focus {
@@ -216,7 +371,7 @@
         }
         
         /* --- Componentes --- */
-        .modal-content {
+        .modal-content { /* Modal mais compacto */
             font-size: 0.9rem;
             background-color: var(--dark-surface);
             backdrop-filter: blur(var(--backdrop-blur));
@@ -231,14 +386,19 @@
         .accordion-button {
             background-color: var(--dark-surface-secondary);
             color: var(--dark-text-primary);
+            font-size: 0.9rem;
             font-weight: 600;
-            transition: background 0.3s ease, color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .accordion-button:hover {
+            background-color: rgba(139, 132, 255, 0.1);
         }
         .accordion-button:not(.collapsed) {
-            background: linear-gradient(45deg, var(--dark-primary), var(--dark-primary-hover));
+            background: linear-gradient(45deg, var(--dark-primary), var(--dark-accent));
             color: white;
+            box-shadow: 0 0 15px var(--dark-primary-glow);
         }
-        .accordion-button::after {
+        .accordion-button::after { /* Ícone de seta do Bootstrap */
             transition: transform 0.3s ease-in-out; /* Suaviza a rotação do ícone */
         }
         .accordion-button:focus { box-shadow: 0 0 0 .2rem var(--dark-primary-glow); }
@@ -248,7 +408,7 @@
         thead th { /* Cabeçalho da tabela com a nova cor primária */
             background-color: var(--dark-surface-secondary);
             font-weight: 600; font-size: 0.85rem;
-            border-bottom: 2px solid var(--dark-primary);
+            border-bottom: 2px solid var(--dark-border);
         }
         tbody td { padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.875rem; } /* Padding e fonte reduzidos */
         tbody tr { transition: background-color 0.2s ease; }
@@ -258,19 +418,19 @@
             border: none;
             border-bottom: 3px solid transparent; /* Transição na borda */
             font-weight: 600;
-            padding: 0.75rem 1rem;
+            padding: 0.6rem 0.9rem; /* Menor */
             transition: all 0.3s ease;
         }
         .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
-            color: var(--dark-primary);
+            color: var(--dark-accent);
             background-color: transparent;
-            border-color: var(--dark-primary);
+            border-color: var(--dark-accent);
         }
         .tab-content {
             background-color: var(--dark-surface);
             border: 1px solid var(--dark-border);
             border-top: none;
-            border-radius: 0 0 0.8rem 0.8rem;
+            border-radius: 0 0 0.75rem 0.75rem; /* Menor */
             padding: 1.25rem; /* Padding reduzido */
         }
 
@@ -279,10 +439,10 @@
             text-align: center;
             padding: 2rem;
             background-color: rgba(0,0,0,0.1);
-            border-radius: 0.8rem;
+            border-radius: 0.75rem;
             color: var(--dark-text-secondary);
         }
-        .empty-state .bi { font-size: 2.5rem; color: var(--dark-primary); margin-bottom: 1rem; }
+        .empty-state .bi { font-size: 2.5rem; color: var(--dark-primary-glow); margin-bottom: 1rem; }
         
         tr.client-highlight > td {
             background-color: rgba(120, 111, 255, 0.25) !important;
@@ -290,7 +450,7 @@
         
         .drop-zone-card.drag-over {
             border: 2px dashed var(--dark-primary);
-            animation: glow 1.5s infinite ease-in-out;
+            box-shadow: 0 0 25px var(--dark-primary-glow);
         }
 
         .print-only {
@@ -301,7 +461,7 @@
         @media (max-width: 992px) {
             body { display: flex; flex-direction: column; }
             #sidebar {
-                position: relative;
+                position: static; /* Alterado de relative */
                 width: 100%;
                 height: auto; /* Alterado de min-height */
                 margin-bottom: 1.5rem;
@@ -309,6 +469,7 @@
                 border-bottom: 1px solid var(--dark-border);
             }
             .sidebar-scrollable-content { overflow-y: visible; } /* Desativa a rolagem no mobile */
+            #sidebar-nav-section { overflow-y: visible; }
             #main-content { margin-left: 0; width: 100%; }
         }
         
@@ -333,66 +494,178 @@
 </head>
 
     <style>
-        /* --- Animação do Caminhão de Carregamento --- */
-        .truck-loader-container {
+        /* --- Animação de Carregamento V2 - Mais Realista --- */
+        .loading-animation-container {
             position: relative;
             width: 100%;
-            height: 60px;
+            height: 120px; /* Aumenta a altura para acomodar a animação */
             overflow: hidden;
+            margin-bottom: 1rem;
         }
-        .truck {
+
+        .loading-truck {
             position: absolute;
             bottom: 10px;
-            left: -80px; /* Começa fora da tela */
-            width: 70px;
-            height: 40px;
-            animation: drive 3s ease-in-out infinite;
+            left: 55%;
+            width: 120px;
+            height: 70px;
         }
-        .truck-cab {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background-color: var(--dark-primary);
-            bottom: 0;
-            left: 0;
-            border-radius: 5px 5px 0 0;
-        }
-        .truck-trailer {
+
+        .loading-truck-cab {
             position: absolute;
             width: 45px;
-            height: 35px;
-            background-color: var(--dark-surface-secondary);
-            border: 2px solid var(--dark-primary);
+            height: 50px;
+            background-color: var(--dark-accent);
             bottom: 0;
-            right: -5px;
-            border-radius: 3px;
+            left: 0;
+            border-radius: 10px 15px 0 0;
         }
-        .road {
+        .loading-truck-cab::before { /* Janela */
+            content: '';
             position: absolute;
-            bottom: 5px;
-            width: 100%; height: 2px;
-            background: linear-gradient(90deg, var(--dark-primary), var(--dark-primary-glow), transparent);
-            background-size: 20px 2px;
+            top: 8px; right: 6px;
+            width: 25px; height: 20px;
+            background: #0D0E18;
+            border-radius: 3px;
+            border: 2px solid var(--dark-accent-glow);
         }
-        @keyframes drive {
-            0% { left: -80px; }
-            80%, 100% { left: 110%; }
+
+        .loading-truck-trailer {
+            position: absolute;
+            width: 80px;
+            height: 65px;
+            background-color: var(--dark-surface-secondary);
+            border: 2px solid var(--dark-accent);
+            bottom: 20px;
+            right: -15px;
+            border-radius: 5px 8px 8px 5px;
+        }
+
+        .wheel {
+            position: absolute;
+            bottom: 10px;
+            width: 22px; height: 22px;
+            background: #222;
+            border-radius: 50%;
+            border: 3px solid #444;
+            animation: spin 1s linear infinite;
+        }
+        .wheel::after { /* Calota */
+            content: '';
+            position: absolute;
+            width: 8px; height: 8px;
+            background: #777;
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .wheel-front { left: 10px; }
+        .wheel-rear { right: 5px; }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .person {
+            position: absolute;
+            bottom: 10px;
+            left: 10%;
+            width: 25px;
+            height: 50px;
+            animation: walk-and-load 4s ease-in-out infinite;
+        }
+
+        .person-head {
+            width: 15px; height: 15px; background-color: var(--dark-primary); border-radius: 50%; margin: 0 auto; position: relative;
+        }
+
+        .person-body {
+            width: 18px; height: 25px; background-color: var(--dark-primary); border-radius: 10px 10px 0 0; margin: 0 auto; position: relative;
+        }
+
+        .person-arm, .person-leg {
+            position: absolute;
+            background-color: var(--dark-primary);
+            border-radius: 5px;
+        }
+        .person-arm { width: 6px; height: 22px; top: 5px; }
+        .person-leg { width: 7px; height: 15px; bottom: -13px; }
+        .arm-left { left: -4px; }
+        .arm-right { right: -4px; }
+        .leg-left { left: 2px; animation: walk-leg-left 4s ease-in-out infinite; }
+        .leg-right { right: 2px; animation: walk-leg-right 4s ease-in-out infinite; }
+
+        .box-carried {
+            position: absolute;
+            width: 25px; height: 25px;
+            background-color: #c5a880; /* Cor de caixa de papelão */
+            border: 2px solid #8b6e4b;
+            opacity: 0; /* Começa invisível */
+            animation: carry-box 4s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        .box-stack {
+            position: absolute; bottom: 10px; left: 10%;
+        }
+        .box-stack .box-item {
+            position: relative; opacity: 1; animation: none; margin-top: -10px;
+            width: 25px; height: 25px; background-color: #c5a880; border: 2px solid #8b6e4b;
+        }
+
+        @keyframes walk-and-load {
+            0%, 100% { left: 10%; } /* Posição inicial na pilha */
+            20% { left: 10%; } /* Pega a caixa */
+            45% { left: 48%; } /* Caminha até o caminhão */
+            55% { left: 48%; } /* Coloca a caixa */
+            80% { left: 10%; } /* Volta para a pilha */
+        }
+
+        @keyframes carry-box {
+            0%, 20%, 60%, 100% { opacity: 0; transform: translate(0, 0); }
+            25% { opacity: 1; transform: translate(5px, -30px); } /* Pega a caixa */
+            45% { opacity: 1; transform: translate(180px, -30px); } /* Leva até o caminhão */
+            55% { opacity: 0; transform: translate(180px, 20px); } /* Solta no caminhão */
+        }
+
+        @keyframes walk-leg-left {
+            0%, 20%, 55%, 80%, 100% { transform: rotate(0deg); }
+            32% { transform: rotate(25deg); }
+            45% { transform: rotate(-25deg); }
+            67% { transform: rotate(25deg); }
+        }
+        @keyframes walk-leg-right {
+            0%, 20%, 55%, 80%, 100% { transform: rotate(0deg); }
+            32% { transform: rotate(-25deg); }
+            45% { transform: rotate(25deg); }
+            67% { transform: rotate(-25deg); }
         }
     </style>
 <body>
     
     <div class="d-flex">
-        <nav id="sidebar" class="p-3 text-white no-print">
-            <div class="sidebar-header d-flex align-items-center mb-3">
-                <i class="bi bi-box-seam-fill me-3 fs-1" style="color: var(--dark-primary);"></i>
-                <span class="fs-4">ApexLog</span>
+        <nav id="sidebar" class="text-white no-print">
+            <div class="sidebar-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-box-seam-fill me-3 fs-2" style="color: var(--dark-accent);"></i>
+                    <span class="fs-4">ApexLog</span>
+                    <span class="badge bg-primary-subtle text-primary-emphasis fw-normal ms-2">v1.1</span>
+                </div>
+                <!-- Ações movidas para o cabeçalho -->
+                <div class="d-flex align-items-center" id="sidebar-header-actions">
+                    <button class="btn btn-sm btn-outline-info me-2" data-bs-toggle="modal" data-bs-target="#configModal" title="Configurações & Ações"><i class="bi bi-sliders"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" id="limparResultadosBtn" title="Limpar Tudo"><i class="bi bi-eraser-fill"></i></button>
+                </div>
             </div>
             
-            <div class="sidebar-scrollable-content">
-                <hr>
+            <!-- Seção de Processo (Fixa no topo) -->
+            <div id="sidebar-process-section">
+                <!-- Seção 1: Processo Principal -->
+                <h6 class="form-label text-uppercase small fw-bold mt-3">Processo Principal</h6>
                 <div id="sidebar-controls">
                     <div class="sidebar-step">
-                        <h6 class="form-label text-uppercase small fw-bold"><span class="step-number">1</span> Carregar Arquivo</h6>
+                        <label for="fileInput" class="form-label small"><span class="step-number">1</span> Carregar Arquivo</label>
                         <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv">
                         <div class="form-check form-switch mt-2">
                             <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
@@ -401,59 +674,85 @@
                     </div>
 
                     <div id="filtro-rota-container" class="sidebar-step" style="display: none;">
-                        <h6 class="form-label text-uppercase small fw-bold"><span class="step-number">2</span> Filtrar Rotas (Opcional)</h6>
+                        <label class="form-label small"><span class="step-number">2</span> Filtrar Rotas (Opcional)</label>
                         <div class="mb-2">
                             <select id="rotaInicioSelect" class="form-select form-select-sm">
                                 <option value="">Rota de Início...</option>
                             </select>
                         </div>
-                        <div class="mb-2">
+                        <div>
                             <select id="rotaFimSelect" class="form-select form-select-sm">
                                 <option value="">Rota de Fim...</option>
                             </select>
                         </div>
-                        <button class="btn btn-outline-secondary btn-sm w-100 mt-1" onclick="limparFiltroDeRota()">Limpar Filtro</button>
+                        <button class="btn btn-outline-secondary btn-sm w-100 mt-2" onclick="limparFiltroDeRota()"><span>Limpar Filtro</span></button>
                     </div>
 
-                    <div class="sidebar-step d-grid mt-4">
-                        <h6 class="form-label text-uppercase small fw-bold"><span class="step-number">3</span> Otimizar</h6>
+                    <div class="sidebar-step d-grid">
+                        <label class="form-label small"><span class="step-number">3</span> Otimizar</label>
                         <button class="btn btn-primary" id="processarBtn" onclick="processar()" disabled>
-                            <i class="bi bi-magic me-2"></i>Processar Cargas
+                            <i class="bi bi-magic me-2"></i><span>Processar Cargas</span>
                         </button>
                         <div id="status" class="mt-2 status-message small text-center"></div>
                     </div>
                 </div>
-
-                <hr>
-
+            </div>
+            <!-- Seção de Navegação (Rolável se necessário) -->
+            <div id="sidebar-nav-section">
+                <!-- Seção 2: Navegação -->
+                <h6 class="form-label text-uppercase small fw-bold">Navegação</h6>
                 <ul class="nav nav-pills flex-column" id="sidebar-nav">
-                    <li class="nav-item mb-1"><a href="#card-resumo-geral-container" class="nav-link"><i class="bi bi-pie-chart-fill me-2 fs-5"></i>Resumo</a></li>
-                    <li class="mb-1"><a href="#workspace-card" class="nav-link"><i class="bi bi-tools me-2 fs-5"></i>Mesas de Trabalho</a></li>
-                    <li class="mb-1"><a href="#additional-results" class="nav-link"><i class="bi bi-clipboard2-data-fill me-2 fs-5"></i>Resultados Adicionais</a></li>
-                    <li class="mb-1"><a href="#relatorios-section" class="nav-link"><i class="bi bi-file-earmark-pdf-fill me-2 fs-5"></i>Relatórios</a></li>
+                    <li class="nav-item mb-1"><a href="#summary-view" class="nav-link active"><i class="bi bi-pie-chart-fill me-2 fs-5"></i><span>Resumo</span></a></li>
+                    <li class="nav-item mb-1"><a href="#workspace-view" class="nav-link main-nav-link"><i class="bi bi-tools me-2 fs-5"></i><span>Mesas de Trabalho</span></a></li>
+                    <li class="nav-item mb-1"><a href="#montagens-especiais-view" class="nav-link main-nav-link"><i class="bi bi-star-fill me-2 fs-5"></i><span>Montagens Especiais</span></a></li>
+                    
+                    <!-- Submenu para Análises -->
+                    <li class="nav-item mb-1">
+                        <a class="nav-link collapsed" data-bs-toggle="collapse" href="#analysis-submenu" role="button" aria-expanded="false" aria-controls="analysis-submenu">
+                            <i class="bi bi-clipboard2-data-fill me-2 fs-5"></i><span>Análises & Alertas</span> <i class="bi bi-chevron-down submenu-arrow"></i>
+                        </a>
+                        <div class="collapse nav-submenu" id="analysis-submenu">
+                            <ul class="nav flex-column">
+                                <li class="nav-item"><a href="#pedidos-bloqueados-view" class="nav-link sub-nav-link"><i class="bi bi-slash-circle-fill me-2"></i><span>Pedidos Bloqueados</span></a></li>
+                                <li class="nav-item"><a href="#alteracao-rota-view" class="nav-link sub-nav-link"><i class="bi bi-sign-turn-right-fill me-2"></i><span>Alteração de Rota</span></a></li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item mb-1"><a href="#reports-view" class="nav-link"><i class="bi bi-file-earmark-pdf-fill me-2 fs-5"></i><span>Relatórios</span></a></li>
                 </ul>
             </div>
-            <div class="d-grid gap-2 mt-auto pt-3 border-top border-secondary">
-                <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#configModal"><i class="bi bi-sliders me-2"></i>Configurações & Ações</button>
-                <button class="btn btn-outline-danger" id="limparResultadosBtn"><i class="bi bi-eraser-fill me-2"></i>Limpar Tudo</button>
+
+            <div class="sidebar-footer-toggle no-print mt-auto">
+                <a href="#" id="sidebar-toggle" class="nav-link text-center">
+                    <i class="bi bi-chevron-double-left fs-5"></i>
+                </a>
             </div>
         </nav>
 
-        <main id="main-content" class="p-4">
+        <main id="main-content">
             
-            <h1 class="h2 mb-4 animated-entry">ApexLog - Dashboard Otimizado</h1>
-
-            <div class="card animated-entry mb-4" id="card-resumo-geral-container" style="display: none;">
-                <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo Geral (Varejo)</div>
-                <div class="card-body">
-                    <div class="row mb-4" id="kpi-container">
-                        <!-- KPIs serão inseridos aqui pelo JavaScript -->
+            <!-- ======================================================================================= -->
+            <!-- VIEW: RESUMO GERAL -->
+            <!-- ======================================================================================= -->
+            <div id="summary-view" class="main-view p-4 overflow-auto" style="display: block;">
+                <h1 class="h2 mb-4 animated-entry">ApexLog - Dashboard Otimizado</h1>
+                <div class="card animated-entry" id="card-resumo-geral-container" style="display: none;">
+                    <div class="card-header"><i class="bi bi-bar-chart-line-fill me-2"></i>Resumo Geral (Varejo)</div>
+                    <div class="card-body">
+                        <div class="row mb-4" id="kpi-container"></div>
+                        <div id="chart-resumo-veiculos" style="min-height: 350px;"></div>
                     </div>
-                    <div id="chart-resumo-veiculos" style="min-height: 350px;"></div>
                 </div>
+                <div id="summary-empty-state" class="empty-state mt-4 animated-entry"><i class="bi bi-pie-chart"></i><p>O resumo geral será exibido aqui após o processamento de um arquivo.</p></div>
             </div>
 
-            <div class="row" id="workspace-card">
+            <!-- ======================================================================================= -->
+            <!-- VIEW: MESAS DE TRABALHO -->
+            <!-- ======================================================================================= -->
+            <div id="workspace-view" class="main-view p-4" style="display: none;">
+                <h1 class="h2 mb-4 animated-entry">Mesas de Trabalho</h1>
+                <div class="row h-100">
                 <div class="col-lg-8 mb-4 animated-entry">
                     <div class="card h-100">
                         <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2></div>
@@ -462,7 +761,8 @@
                                  <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane"><i class="bi bi-box-seam-fill me-2"></i>Fiorino</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#van-tab-pane"><i class="bi bi-truck-front-fill me-2"></i>Van</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane"><i class="bi bi-truck-flatbed me-2"></i>3/4</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cf-tab-pane"><i class="bi bi-truck me-2"></i>Truck/Carreta</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#toco-tab-pane"><i class="bi bi-inboxes-fill me-2"></i>Toco</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cf-tab-pane"><i class="bi bi-truck me-2"></i>Truck</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#funcionarios-tab-pane"><i class="bi bi-people-fill me-2"></i>Funcionários</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#transferencias-tab-pane"><i class="bi bi-arrow-left-right me-2"></i>Transferências</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#exportacao-tab-pane"><i class="bi bi-globe-americas me-2"></i>Exportação</button></li>
@@ -491,6 +791,9 @@
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-34"><div class="empty-state"><i class="bi bi-truck-flatbed"></i><p>Nenhuma rota de 3/4 disponível. Processe um arquivo para começar.</p></div></div>
                                     <hr class="no-print"><div id="resultado-34-geral" class="mt-3"></div>
+                                </div>
+                                <div class="tab-pane fade" id="toco-tab-pane" role="tabpanel">
+                                    <div id="resultado-toco"><div class="empty-state"><i class="bi bi-inboxes-fill"></i><p>Nenhuma carga "Toco" encontrada. Processe um arquivo.</p></div></div>
                                 </div>
                                 <div class="tab-pane fade" id="cf-tab-pane" role="tabpanel">
                                     <div id="resultado-cf-accordion-container"><div class="empty-state"><i class="bi bi-truck"></i><p>Nenhum grupo de carga maior encontrado. Processe um arquivo.</p></div></div>
@@ -521,64 +824,72 @@
                            <div id="resultado-geral"><div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div></div>
                        </div>
                     </div>
+
+                    <!-- CARD DE PEDIDOS FILTRADOS MOVIDO PARA CÁ -->
+                    <div class="card mt-4 animated-entry" id="pedidos-filtrados-card">
+                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (Bloqueio por Regra)</h2></div>
+                        <div class="card-body" id="card-cf-numerico"><div id="resultado-cf-numerico"><div class="empty-state"><i class="bi bi-funnel"></i><p>Aguardando processamento...</p></div></div></div>
+                    </div>
+                </div>
                 </div>
             </div>
 
-            <!-- Seções de Carga Especial e Venda Antecipada movidas para baixo da Mesa de Trabalho -->
-            <div class="row my-4">
-                <div class="col-lg-6 mb-4 mb-lg-0 animated-entry">
-                    <div class="card h-100">
-                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>Venda Antecipada</h2></div>
-                        <div class="card-body d-flex flex-column">
-                            <label for="vendaAntecipadaInput" class="form-label small">Cole os números dos pedidos (um por linha):</label>
-                            <textarea class="form-control flex-grow-1" id="vendaAntecipadaInput" rows="4" placeholder="Ex: 12345&#10;12346&#10;12347"></textarea>
-                            <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaPredefinida('vendaAntecipadaInput', 'resultado-venda-antecipada', pedidosVendaAntecipadaProcessados, 'Venda Antecipada')"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
+            <!-- ======================================================================================= -->
+            <!-- VIEW: RESULTADOS ADICIONAIS -->
+            <!-- ESTA VIEW FOI DESMEMBRADA EM NOVAS VIEWS DEDICADAS -->
+            <!-- ======================================================================================= -->
+            <div id="additional-results-view" class="main-view p-4 overflow-auto" style="display: none;">
+                <!-- Este container está vazio de propósito, pois seu conteúdo foi movido -->
+            </div>
+            <div id="montagens-especiais-view" class="main-view p-4 overflow-auto" style="display: none;">
+                <h1 class="h2 mb-4 animated-entry">Montagens Especiais</h1>
+                <div class="row">
+                    <div class="col-lg-6 mb-4 animated-entry">
+                        <div class="card">
+                            <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>Venda Antecipada</h2></div>
+                            <div class="card-body">
+                                <label for="vendaAntecipadaInput" class="form-label small">Cole os números dos pedidos (um por linha):</label>
+                                <textarea class="form-control" id="vendaAntecipadaInput" rows="4" placeholder="Ex: 12345&#10;12346&#10;12347"></textarea>
+                                <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaPredefinida('vendaAntecipadaInput', 'resultado-venda-antecipada', pedidosVendaAntecipadaProcessados, 'Venda Antecipada')"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
+                            </div>
                         </div>
+                        <div id="resultado-venda-antecipada" class="mt-4"></div>
                     </div>
-                </div>
-                <div class="col-lg-6 animated-entry">
-                    <div class="card h-100">
-                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>Carga Especial</h2></div>
-                        <div class="card-body d-flex flex-column">
-                            <label for="pedidosEspeciaisInput" class="form-label small">Cole os números dos pedidos (um por linha):</label>
-                            <textarea class="form-control flex-grow-1" id="pedidosEspeciaisInput" rows="4" placeholder="Ex: 54321&#10;54322&#10;54323"></textarea>
-                            <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaPredefinida('pedidosEspeciaisInput', 'resultado-carga-especial', pedidosEspeciaisProcessados, 'Especial')"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
+                    <div class="col-lg-6 mb-4 animated-entry">
+                        <div class="card">
+                            <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>Carga Especial</h2></div>
+                            <div class="card-body">
+                                <label for="pedidosEspeciaisInput" class="form-label small">Cole os números dos pedidos (um por linha):</label>
+                                <textarea class="form-control" id="pedidosEspeciaisInput" rows="4" placeholder="Ex: 54321&#10;54322&#10;54323"></textarea>
+                                <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaPredefinida('pedidosEspeciaisInput', 'resultado-carga-especial', pedidosEspeciaisProcessados, 'Especial')"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
+                            </div>
                         </div>
+                        <div id="resultado-carga-especial" class="mt-4"></div>
                     </div>
                 </div>
             </div>
-            <!-- Divs para os resultados das cargas manuais, agora posicionados abaixo dos cards de entrada -->
-            <div id="resultado-venda-antecipada" class="my-4 animated-entry"></div>
-            <div id="resultado-carga-especial" class="my-4 animated-entry"></div>
 
-            <div id="additional-results">
-                <hr class="my-5">
-                <h3 class="mb-4 animated-entry">Resultados Adicionais da Análise</h3>
-                
-                <div class="card mb-4 border-danger animated-entry">
+            <div id="pedidos-bloqueados-view" class="main-view p-4 overflow-auto" style="display: none;">
+                <h1 class="h2 mb-4 animated-entry">Análise: Pedidos Bloqueados Manualmente</h1>
+                <div class="card border-danger animated-entry">
                     <div class="card-header bg-danger-subtle text-danger-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-slash-circle-fill me-2"></i>Pedidos Bloqueados Manualmente</h2></div>
-                    <div class="card-body"><div id="resultado-bloqueados"></div></div>
+                    <div class="card-body" id="card-bloqueados"><div id="resultado-bloqueados"></div></div>
                 </div>
+            </div>
 
-                <div class="card mb-4 border-warning animated-entry">
+            <div id="alteracao-rota-view" class="main-view p-4 overflow-auto" style="display: none;">
+                <h1 class="h2 mb-4 animated-entry">Análise: Alteração de Rota</h1>
+                <div class="card border-warning animated-entry">
                     <div class="card-header bg-warning-subtle text-warning-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-sign-turn-right-fill me-2"></i>Pedidos da Rota 1 para Alteração</h2></div>
                     <div class="card-body"><div id="resultado-rota1"></div></div>
                 </div>
-
-                <div class="card mb-4 animated-entry">
-                    <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-inboxes-fill me-2"></i>Cargas "Toco"</h2></div>
-                    <div class="card-body"><div id="resultado-toco"></div></div>
-                </div>
-                                
-                <div class="card mb-4 animated-entry">
-                    <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (Bloqueio de Varejo por Regra)</h2></div>
-                    <div class="card-body"><div id="resultado-cf-numerico"></div></div>
-                </div>
             </div>
 
-            <div id="relatorios-section">
-                <hr class="my-5">
-                <h3 class="mb-4 animated-entry">Relatórios Gerenciais</h3>
+            <!-- ======================================================================================= -->
+            <!-- VIEW: RELATÓRIOS -->
+            <!-- ======================================================================================= -->
+            <div id="reports-view" class="main-view p-4 overflow-auto" style="display: none;">
+                <h1 class="h2 mb-4 animated-entry">Relatórios Gerenciais</h1>
                 <div class="card animated-entry">
                      <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-file-earmark-pdf-fill me-2"></i>Previsão de Expedição</h2></div>
                      <div class="card-body text-center">
@@ -708,16 +1019,30 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="background-color: var(--dark-surface); backdrop-filter: blur(12px);">
                 <div class="modal-body text-center p-4">
-                    <!-- Animação do Caminhão -->
-                    <div class="truck-loader-container mb-4">
-                        <div class="truck">
-                            <div class="truck-cab"></div>
-                            <div class="truck-trailer"></div>
+                    <!-- Nova Animação de Carregamento -->
+                    <div class="loading-animation-container">
+                        <!-- Pilha de caixas no chão -->
+                        <div class="box-stack">
+                            <div class="box-item"></div>
+                            <div class="box-item"></div>
                         </div>
-                        <div class="road"></div>
+                        <!-- Personagem -->
+                        <div class="person">
+                            <div class="person-head"></div>
+                            <div class="person-body">
+                                <div class="person-arm arm-left"></div>
+                                <div class="person-arm arm-right"></div>
+                                <div class="person-leg leg-left"></div>
+                                <div class="person-leg leg-right"></div>
+                            </div>
+                        </div>
+                        <div class="box-carried"></div> <!-- Caixa que o personagem carrega -->
+                        <div class="loading-truck">
+                            <div class="loading-truck-cab"></div><div class="loading-truck-trailer"></div><div class="wheel wheel-front"></div><div class="wheel wheel-rear"></div>
+                        </div>
                     </div>
 
-                    <h5 id="processing-status-text" class="mb-2">Otimizando Cargas...</h5>
+                    <h5 id="processing-status-text" class="mb-2">Montando Cargas...</h5>
                     <p id="thinking-text" class="text-muted small mb-3" style="height: 20px;"></p>
                     <div class="progress" role="progressbar" style="height: 6px; background-color: rgba(255,255,255,0.1);"><div id="processing-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%; background-color: var(--dark-primary);"></div></div>
                 </div>
@@ -815,7 +1140,7 @@
                             borderRadius: 5
                         }
                     },
-                    colors: ['#786FFF', '#00E0C6'], /* Nova paleta: Violeta e Ciano */
+                    colors: ['var(--dark-primary)', 'var(--dark-accent)'], /* Paleta dinâmica do CSS */
                     dataLabels: {
                         enabled: true,
                         formatter: function (val, { seriesIndex }) {
@@ -862,32 +1187,32 @@
                         {
                             seriesName: 'Quantidade',
                             axisTicks: { show: true },
-                            axisBorder: { show: true, color: '#786FFF' },
+                            axisBorder: { show: true, color: 'var(--dark-primary)' },
                             labels: {
-                                style: { colors: '#786FFF' },
+                                style: { colors: 'var(--dark-primary)' },
                                 formatter: function (val) {
                                     return val.toFixed(0);
                                 }
                             },
                             title: {
                                 text: "Quantidade de Veículos",
-                                style: { color: '#786FFF', fontWeight: 600 }
+                                style: { color: 'var(--dark-primary)', fontWeight: 600 }
                             },
                         },
                         {
                             seriesName: 'Peso (kg)',
                             opposite: true,
                             axisTicks: { show: true },
-                            axisBorder: { show: true, color: '#00E0C6' },
+                            axisBorder: { show: true, color: 'var(--dark-accent)' },
                             labels: {
-                                style: { colors: '#00E0C6' },
+                                style: { colors: 'var(--dark-accent)' },
                                 formatter: function (val) {
                                     return (val / 1000).toFixed(1) + "k kg";
                                 }
                             },
                             title: {
                                 text: "Peso Total (kg)",
-                                style: { color: '#00E0C6', fontWeight: 600 }
+                                style: { color: 'var(--dark-accent)', fontWeight: 600 }
                             }
                         }
                     ],
@@ -921,6 +1246,7 @@
             }
 
             const container = document.getElementById('card-resumo-geral-container');
+            document.getElementById('summary-empty-state').style.display = 'none';
             if (container) container.style.display = 'block';
         }
         
@@ -957,12 +1283,32 @@
             return objCopy;
         }
 
+        // Função centralizada para ordenar rotas de forma consistente
+        function getSortedVarejoRoutes(rotas) {
+            const rotasParana = [];
+            const rotasSaoPaulo = [];
+
+            rotas.forEach(rota => {
+                const config = rotaVeiculoMap[rota];
+                // Se a rota não está mapeada OU se está mapeada como 'van' e não é do Paraná (não começa com 'Rota 1'), é de SP.
+                if (!config || (config.type === 'van' && !config.title.startsWith('Rota 1'))) {
+                    rotasSaoPaulo.push(rota);
+                } else {
+                    rotasParana.push(rota);
+                }
+            });
+
+            const numericSort = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+            return [...rotasParana.sort(numericSort), ...rotasSaoPaulo.sort(numericSort)];
+        }
+
         function normalizeClientId(id) {
             if (id === null || typeof id === 'undefined') return '';
             return String(id).trim().replace(/^0+/, '');
         }
 
         function checkAgendamento(pedido) {
+            if (!pedido) return;
             const normalizedCode = normalizeClientId(pedido.Cliente);
             pedido.Agendamento = agendamentoClientCodes.has(normalizedCode) ? 'Sim' : 'Não';
         }
@@ -1106,34 +1452,67 @@
                 }
             });
 
-            document.querySelectorAll('#sidebar-nav a').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    document.querySelector('#sidebar-nav a.active')?.classList.remove('active');
-                    this.classList.add('active');
-                    const targetId = this.getAttribute('href');
-                    const targetElement = document.querySelector(targetId);
-                    if (targetElement) {
-                        targetElement.scrollIntoView({
-                            behavior: 'smooth'
-                        });
+            // Lógica de navegação por abas/views na sidebar
+            document.querySelectorAll('#sidebar-nav a[href^="#"]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Se o link clicado for um submenu, não faz nada (o bootstrap cuida do collapse)
+                    if (this.getAttribute('data-bs-toggle') === 'collapse') {
+                        return;
                     }
+                    
+                    e.preventDefault();
+                    // Remove 'active' de todos os links e adiciona no que foi clicado
+
+                    // Remove 'active' de TODOS os links de navegação para um reset completo
+                    document.querySelectorAll('#sidebar-nav a.nav-link.active').forEach(activeLink => {
+                        activeLink.classList.remove('active');
+                    });
+                    
+                    // Adiciona 'active' no link clicado
+                    this.classList.add('active');
+
+                    // Se for um sub-link, garante que o pai (o link do submenu) também pareça ativo
+                    const parentCollapse = this.closest('.collapse');
+                    if (parentCollapse) {
+                        parentCollapse.previousElementSibling.classList.add('active');
+                    }
+                    
+                    // Esconde todas as views principais
+                    document.querySelectorAll('.main-view').forEach(view => {
+                        view.style.display = 'none';
+                    });
+                    // Mostra a view correta com base no href do link
+                    const targetViewId = this.getAttribute('href');
+                    document.querySelector(targetViewId).style.display = 'block';
+
+                    if (targetViewId === '#summary-view' && resumoChart) { updateAndRenderChart(); }
                 });
             });
+            
+            document.getElementById('optimizationLevelSelect').addEventListener('change', updateOptimizationDescription);
+            updateOptimizationDescription();
 
-        function updateOptimizationDescription() {
-            const level = document.getElementById('optimizationLevelSelect').value;
-            const descriptionDiv = document.getElementById('optimization-description');
-            if (level === '1') {
-                descriptionDiv.innerHTML = `<p class="mb-1"><strong>Rápido:</strong> Usa uma abordagem direta para agrupar pedidos. Ideal para resultados imediatos com boa qualidade.</p>`;
-            } else {
-                descriptionDiv.innerHTML = `<p class="mb-1"><strong>Especialista (Recomendado):</strong> Simula um profissional experiente. Utiliza múltiplas estratégias, otimização profunda e reconstrução inteligente para minimizar as sobras ao máximo, respeitando todas as regras.</p>`;
+            // --- Lógica para Sidebar Recolhível ---
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const body = document.body;
+
+            sidebarToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                body.classList.toggle('sidebar-collapsed');
+                // Salva o estado no localStorage
+                localStorage.setItem('sidebarCollapsed', body.classList.contains('sidebar-collapsed'));
+                // Redesenha o gráfico se a view de resumo estiver ativa
+                if (document.getElementById('summary-view').style.display === 'block' && resumoChart) {
+                    setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 400); // Atraso para coincidir com a animação
+                }
+            });
+            // Verifica o estado salvo ao carregar a página
+            if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                body.classList.add('sidebar-collapsed');
             }
-        }
-        document.addEventListener('DOMContentLoaded', updateOptimizationDescription);
+
             loadStateFromLocalStorage();
 
-            // Adiciona um listener global para o evento 'shown.bs.collapse' de todos os acordeões
             document.addEventListener('shown.bs.collapse', function (event) {
                 const accordionCollapse = event.target;
                 const accordionHeader = accordionCollapse.previousElementSibling;
@@ -1163,9 +1542,20 @@
             });
         });
 
+        function updateOptimizationDescription() {
+            const level = document.getElementById('optimizationLevelSelect').value;
+            const descriptionDiv = document.getElementById('optimization-description');
+            if (level === '1') {
+                descriptionDiv.innerHTML = `<p class="mb-1"><strong>Rápido:</strong> Usa uma abordagem direta para agrupar pedidos. Ideal para resultados imediatos com boa qualidade.</p>`;
+            } else {
+                descriptionDiv.innerHTML = `<p class="mb-1"><strong>Especialista (Recomendado):</strong> Simula um profissional experiente. Utiliza múltiplas estratégias, otimização profunda e reconstrução inteligente para minimizar as sobras ao máximo, respeitando todas as regras.</p>`;
+            }
+        }
+
+
         const rotaVeiculoMap = {
             // Novas rotas de São Paulo (Varejo - Van/3/4)
-            '2571': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2571' }, '2575': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2575' }, '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' },
+            '2555': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2555' }, '2560': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2560' }, '2561': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2561' }, '2571': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2571' }, '2575': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2575' }, '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' }, '2735': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2735' }, '2745': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2745' },
             // Rotas do Paraná (Varejo)
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
             '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
@@ -1264,155 +1654,173 @@
             rotaFimSelect.innerHTML = '<option value="">Rota de Fim...</option>';
 
             if (planilhaData.length === 0) {
-                container.style.display = 'none';
-                return;
+                container.style.display = 'none'; return;
             }
 
             const rotas = [...new Set(planilhaData.map(p => String(p.Cod_Rota || ''))) ].filter(Boolean);
             rotas.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
             rotas.forEach(rota => {
-                rotaInicioSelect.innerHTML += `<option value="${rota}">${rota}</option>`;
-                rotaFimSelect.innerHTML += `<option value="${rota}">${rota}</option>`;
+                const option = new Option(rota, rota);
+                rotaInicioSelect.add(option.cloneNode(true));
+                rotaFimSelect.add(option);
             });
 
             container.style.display = 'block';
         }
 
         function limparFiltroDeRota() {
-            document.getElementById('rotaInicioSelect').selectedIndex = 0;
-            document.getElementById('rotaFimSelect').selectedIndex = 0;
+            document.getElementById('rotaInicioSelect').value = '';
+            document.getElementById('rotaFimSelect').value = '';
         }
 
         function buscarPedido() {
             const searchTerm = document.getElementById('pedidoSearchInput').value.trim().toLowerCase();
             const searchResultDiv = document.getElementById('search-result');
             searchResultDiv.innerHTML = '';
+
             if (!searchTerm) return;
+
             if (planilhaData.length === 0) {
                 searchResultDiv.innerHTML = '<p class="text-warning">Por favor, carregue e processe a planilha primeiro.</p>';
                 return;
             }
 
-            const searchPredicate = p =>
+            const searchPredicate = p => p && (
                 String(p.Num_Pedido).toLowerCase().includes(searchTerm) ||
                 String(p.Nome_Cliente).toLowerCase().includes(searchTerm) ||
-                String(p.Cidade).toLowerCase().includes(searchTerm);
+                String(p.Cidade).toLowerCase().includes(searchTerm)
+            );
 
             let resultados = [];
 
-            const findInList = (list, location, tabId, accordionId, cardId = null) => {
-                list.filter(searchPredicate).forEach(p => {
-                    resultados.push({ pedido: p, local: location, tabId: tabId, accordionId: accordionId, cardId: cardId });
-                });
+            // Função auxiliar para adicionar resultados
+            const addResult = (pedido, local, viewId, tabId, accordionId, cardId) => {
+                resultados.push({ pedido, local, viewId, tabId, accordionId, cardId });
             };
 
-            // 1. Cargas Ativas (Fiorino, Van, 3/4, Toco, etc)
+            // 1. Cargas Ativas (Varejo, Toco, Manuais)
             for (const loadId in activeLoads) {
                 const load = activeLoads[loadId];
-                const tabMap = { 'fiorino': 'fiorino-tab-pane', 'van': 'van-tab-pane', 'tresQuartos': 'tres-quartos-tab-pane', 'toco': 'cf-tab-pane' };
-                const tabId = tabMap[load.vehicleType] || (String(load.id).startsWith('especial') || String(load.id).startsWith('venda-antecipada') ? null : 'cf-tab-pane');
-                let accordionId = null;
-                if (load.vehicleType === 'toco') {
-                    const cf = load.pedidos[0]?.CF;
-                    const sortedTocoKeys = Object.keys(gruposToco).sort();
-                    const index = sortedTocoKeys.indexOf(String(cf));
-                    if (index !== -1) accordionId = `collapseToco${index}`;
-                }
-                load.pedidos.filter(searchPredicate).forEach(p => {
-                    resultados.push({ pedido: p, local: `Carga #${load.numero || loadId.split('-')[1]} (${load.vehicleType})`, tabId: tabId, accordionId: accordionId, cardId: loadId, inLoad: true });
-                });
-            }
+                const foundPedidos = load.pedidos.filter(searchPredicate);
 
-            // 2. Sobras
-            findInList(currentLeftoversForPrinting, 'Sobras Finais (Mesa de Trabalho)', 'fiorino-tab-pane', null); // Assumes leftovers are in a tab
+                if (foundPedidos.length > 0) {
+                    let viewId = 'workspace-view';
+                    let tabId = null;
+                    let accordionId = null;
+                    const local = `Carga ${load.numero || load.id.split('-')[1]} (${load.vehicleType})`;
 
-            // 3. Pedidos Disponíveis (Varejo)
-            if (pedidosGeraisAtuais.length > 0) {
-                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [] }; } acc[rota].pedidos.push(p); return acc; }, {});
-                const sortedRotasGerais = Object.keys(gruposGerais).sort();
-                pedidosGeraisAtuais.filter(searchPredicate).forEach(p => {
-                    const rota = p.Cod_Rota;
-                    const index = sortedRotasGerais.indexOf(String(rota));
-                    if (index !== -1) {
-                        const collapseId = `collapseGeral${index}`;
-                        resultados.push({ pedido: p, local: `Pedidos Disponíveis (Rota ${rota})`, tabId: null, accordionId: collapseId });
+                    if (['fiorino', 'van', 'tresQuartos'].includes(load.vehicleType)) {
+                        tabId = `${load.vehicleType === 'tresQuartos' ? 'tres-quartos' : load.vehicleType}-tab-pane`;
+                    } else if (load.vehicleType === 'toco') {
+                        tabId = 'cf-tab-pane'; // Toco está na aba de CF
+                        const cf = load.pedidos[0]?.CF;
+                        const sortedTocoKeys = Object.keys(gruposToco).sort();
+                        const index = sortedTocoKeys.indexOf(String(cf));
+                        if (index !== -1) accordionId = `collapseToco${index}`;
+                    } else if (load.id.startsWith('venda-antecipada') || load.id.startsWith('especial')) {
+                        viewId = 'additional-results-view';
                     }
-                });
+
+                    foundPedidos.forEach(p => addResult(p, local, viewId, tabId, accordionId, load.id));
+                }
             }
 
-            // 4. Outras seções
-            findInList(pedidosManualmenteBloqueadosAtuais, 'Bloqueado Manualmente', null, null, 'resultado-bloqueados');
-            findInList(pedidosComCFNumericoIsolado, 'Pedidos Filtrados (Bloqueio Varejo)', null, 'accordionCF');
-            findInList(rota1SemCarga, 'Pedidos da Rota 1 para Alteração', null, null);
-            findInList(pedidosFuncionarios, 'Pedidos de Funcionários', 'funcionarios-tab-pane', 'collapseFuncionarios');
-            findInList(pedidosTransferencias, 'Pedidos de Transferência', 'transferencias-tab-pane', 'collapseTransferencias');
+            // 2. Pedidos Disponíveis (Varejo)
+            const rotasUnicas = [...new Set(pedidosGeraisAtuais.map(p => String(p.Cod_Rota || ''))) ].filter(Boolean);
+            const rotasGerais = getSortedVarejoRoutes(rotasUnicas);
+            pedidosGeraisAtuais.filter(searchPredicate).forEach(p => {
+                const rotaIndex = rotasGerais.indexOf(String(p.Cod_Rota));
+                if (rotaIndex !== -1) {
+                    addResult(p, `Pedidos Disponíveis (Rota ${p.Cod_Rota})`, 'workspace-view', null, `collapseGeral${rotaIndex}`, 'pedidos-disponiveis-card');
+                }
+            });
 
+            // 3. Sobras
+            currentLeftoversForPrinting.filter(searchPredicate).forEach(p => {
+                const activeTabPane = document.querySelector('.workspace-tab-pane.active');
+                const activeTabId = activeTabPane ? activeTabPane.id : null;
+                const leftoversCardId = activeTabPane ? `leftovers-card-${activeTabPane.id}` : null;
+                addResult(p, 'Sobras Finais', 'workspace-view', activeTabId, null, leftoversCardId);
+            });
+
+            // 4. Outras seções (Resultados Adicionais e abas específicas do Workspace)
+            const otherSections = [
+                { list: pedidosManualmenteBloqueadosAtuais, local: 'Bloqueado Manualmente', viewId: 'pedidos-bloqueados-view', cardId: 'card-bloqueados', accordionId: 'collapseBloqueados' },
+                { list: rota1SemCarga, local: 'Pedidos da Rota 1 para Alteração', viewId: 'alteracao-rota-view', cardId: 'resultado-rota1' },
+                { list: pedidosComCFNumericoIsolado, local: 'Pedidos Filtrados (Bloqueio por Regra)', viewId: 'workspace-view', cardId: 'pedidos-filtrados-card', accordionId: 'accordionCF' },
+                { list: pedidosFuncionarios, local: 'Pedidos de Funcionários', viewId: 'workspace-view', tabId: 'funcionarios-tab-pane', accordionId: 'collapseFuncionarios' },
+                { list: pedidosTransferencias, local: 'Pedidos de Transferência', viewId: 'workspace-view', tabId: 'transferencias-tab-pane', accordionId: 'collapseTransferencias' },
+                { list: pedidosExportacao, local: 'Pedidos de Exportação', viewId: 'workspace-view', tabId: 'exportacao-tab-pane', accordionId: 'collapseExportacao' }
+            ];
+
+            otherSections.forEach(section => {
+                section.list.filter(searchPredicate).forEach(p => {
+                    addResult(p, section.local, section.viewId, section.tabId, section.accordionId, section.cardId);
+                });
+            });
+
+            // 5. Cargas de Truck/Carreta (CF)
             const specialKeysOrder = ["Pedidos Condor (Truck)", "Pedidos de Carreta/Truck sem CF"];
             const sortedCfKeys = Object.keys(gruposPorCFGlobais).sort((a,b) => {
                 const aIsSpecial = specialKeysOrder.includes(a);
                 const bIsSpecial = specialKeysOrder.includes(b);
                 if (aIsSpecial && bIsSpecial) return specialKeysOrder.indexOf(a) - specialKeysOrder.indexOf(b);
-                if (aIsSpecial) return -1;
-                if (bIsSpecial) return 1;
+                if (aIsSpecial) return -1; if (bIsSpecial) return 1;
                 return a.localeCompare(b, undefined, {numeric: true});
             });
 
             for (const cf in gruposPorCFGlobais) {
                 gruposPorCFGlobais[cf].pedidos.filter(searchPredicate).forEach(p => {
                     const index = sortedCfKeys.indexOf(cf);
-                    const collapseId = `collapseCF-Mesa-${index}`;
-                    resultados.push({ pedido: p, local: `Carga Truck/Carreta (${cf})`, tabId: 'cf-tab-pane', accordionId: collapseId });
+                    if (index !== -1) {
+                        addResult(p, `Carga Truck/Carreta (${cf})`, 'workspace-view', 'cf-tab-pane', `collapseCF-Mesa-${index}`);
+                    }
                 });
             }
 
             // Remover duplicatas baseadas no número do pedido
             const uniqueResultados = [];
             const seenPedidos = new Set();
-            for (const res of resultados) {
-                if (!seenPedidos.has(res.pedido.Num_Pedido)) {
-                    uniqueResultados.push(res);
-                    seenPedidos.add(res.pedido.Num_Pedido);
-                }
-            }
+            resultados.forEach(res => {
+                if (!seenPedidos.has(res.pedido.Num_Pedido)) { uniqueResultados.push(res); seenPedidos.add(res.pedido.Num_Pedido); }
+            });
 
             if (uniqueResultados.length === 0) {
                 searchResultDiv.innerHTML = '<div class="alert alert-warning">Nenhum pedido encontrado para o termo buscado.</div>';
             } else {
                 let html = `<div class="alert alert-info d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">${uniqueResultados.length} resultado(s) encontrado(s):</h5>
-                                <button type="button" class="btn-close" aria-label="Recolher" onclick="recolherBusca()"></button>
+                                <button type="button" class="btn-close" aria-label="Fechar Busca" onclick="recolherBusca()"></button>
                             </div>`;
                 html += '<ul class="list-group">';
                 uniqueResultados.forEach((res, index) => {
-                    const { pedido, local, tabId, accordionId, cardId } = res;
-                    const isPriority = pedidosPrioritarios.includes(String(pedido.Num_Pedido)); // Mantido para outras lógicas
+                    const { pedido, local, viewId, tabId, accordionId, cardId } = res;
+                    const isPriority = pedidosPrioritarios.includes(String(pedido.Num_Pedido));
                     const isRecall = pedidosRecall.includes(String(pedido.Num_Pedido));
+                    const isInLoad = Object.values(activeLoads).some(load => load.pedidos.some(p => p.Num_Pedido === pedido.Num_Pedido));
 
                     const priorityButtonHtml = isPriority
-                        ? `<button class="btn btn-sm btn-outline-secondary" onclick="despriorizarPedido('${pedido.Num_Pedido}')"><i class="bi bi-star-slash-fill me-1"></i>Remover Prioridade</button>`
-                        : `<button class="btn btn-sm btn-outline-warning" onclick="priorizarPedido('${pedido.Num_Pedido}')"><i class="bi bi-star-fill me-1"></i>Priorizar</button>`;
+                        ? `<button class="btn btn-sm btn-outline-secondary" onclick="despriorizarPedido('${res.pedido.Num_Pedido}')"><i class="bi bi-star-slash-fill me-1"></i>Remover Prioridade</button>`
+                        : `<button class="btn btn-sm btn-outline-warning" onclick="priorizarPedido('${res.pedido.Num_Pedido}')"><i class="bi bi-star-fill me-1"></i>Priorizar</button>`;
 
                     const recallButtonHtml = isRecall
-                        ? `<button class="btn btn-sm btn-outline-secondary" onclick="despriorizarRecall('${pedido.Num_Pedido}')"><i class="bi bi-arrow-repeat me-1"></i>Remover Recall</button>`
-                        : `<button class="btn btn-sm btn-outline-info" onclick="priorizarRecall('${pedido.Num_Pedido}')"><i class="bi bi-arrow-repeat me-1"></i>Priorizar Recall</button>`;
-                    
+                        ? `<button class="btn btn-sm btn-outline-secondary" onclick="despriorizarRecall('${res.pedido.Num_Pedido}')"><i class="bi bi-arrow-repeat me-1"></i>Remover Recall</button>`
+                        : `<button class="btn btn-sm btn-outline-info" onclick="priorizarRecall('${res.pedido.Num_Pedido}')"><i class="bi bi-arrow-repeat me-1"></i>Priorizar Recall</button>`;
+
                     let blockInfoHtml = '';
                     const blockType = String(pedido['BLOQ.'] || '').trim().toUpperCase();
-                    if (blockType === 'C') {
-                        blockInfoHtml = '<span class="badge bg-danger ms-2">Bloqueado: Comercial</span>'; // Alterado para Comercial
-                    } else if (blockType === 'V') {
-                        blockInfoHtml = '<span class="badge bg-danger ms-2">Bloqueado: Financeiro</span>'; // Alterado para Financeiro
-                    }
+                    if (blockType === 'C') blockInfoHtml = '<span class="badge bg-danger ms-2">Bloqueado: Financeiro</span>';
+                    else if (blockType === 'V') blockInfoHtml = '<span class="badge bg-danger ms-2">Bloqueado: Comercial</span>';
 
-                    const params = `\'${pedido.Num_Pedido}\', ${tabId ? `\'${tabId}\'` : null}, ${accordionId ? `\'${accordionId}\'` : null}, ${cardId ? `\'${cardId}\'` : null}`;
+                    const params = `\'${pedido.Num_Pedido}\', \'${viewId}\', ${tabId ? `'${tabId}'` : 'null'}, ${accordionId ? `'${accordionId}'` : 'null'}, ${cardId ? `'${cardId}'` : 'null'}`;
                     const clickableAreaStyle = 'cursor: pointer;';
 
                     html += `
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div onclick="highlightPedido(${params})" style="${clickableAreaStyle}" class="flex-grow-1 me-3">
                                 <strong>Pedido:</strong> ${pedido.Num_Pedido} 
-                                ${res.inLoad ? '<span class="badge bg-success ms-2">Em Carga Montada</span>' : ''}
+                                ${isInLoad ? '<span class="badge bg-success ms-2">Em Carga Montada</span>' : ''}
                                 ${isPriority ? '<span class="badge bg-warning text-dark ms-2">Prioridade</span>' : ''}
                                 ${isRecall ? '<span class="badge bg-info ms-2">Recall</span>' : ''}<br>
                                 ${blockInfoHtml}
@@ -1421,8 +1829,8 @@
                                 <small class="text-muted"><strong>Local:</strong> ${local}</small>
                             </div>
                             <div class="btn-group">
-                                ${priorityButtonHtml}
-                                ${recallButtonHtml}
+                                ${!isInLoad ? priorityButtonHtml : ''}
+                                ${!isInLoad ? recallButtonHtml : ''}
                             </div>
                         </li>`;
                 });
@@ -1479,13 +1887,20 @@
             }
         }
 
-        function highlightPedido(numPedido, tabId, collapseId, cardId = null) {
+        function highlightPedido(numPedido, viewId, tabId, collapseId, cardId = null) {
             const scrollToTarget = () => {
-                setTimeout(() => { // Pequeno delay final para garantir a renderização
-                    let targetElement = document.getElementById(`pedido-${numPedido}`);
-                    if (!targetElement) {
+                setTimeout(() => { // Delay para garantir que todas as animações de UI (abas, accordions) terminaram
+                    let targetElement;
+                    // Prioridade 1: Tenta encontrar a linha da tabela (TR) do pedido pelo seu ID único.
+                    targetElement = document.getElementById(`pedido-${numPedido}`);
+
+                    // Prioridade 2: Se não encontrar a linha, tenta o card ou container onde o pedido está.
+                    if (!targetElement && cardId) {
                         targetElement = document.getElementById(cardId);
                     }
+
+                    // Prioridade 3 (Fallback): Se ainda não encontrou, tenta o cabeçalho do accordion.
+                    // Isso é útil para seções que não têm um cardId, mas têm um collapseId.
                     if (!targetElement && collapseId) {
                         const collapseEl = document.getElementById(collapseId);
                         if (collapseEl) targetElement = collapseEl.previousElementSibling;
@@ -1500,21 +1915,38 @@
                         }
                         targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
-                }, 150); // Aumentado um pouco para garantir renderização
+                }, 300); // Aumentado ligeiramente para garantir a renderização em todas as situações
             };
 
-            const expandAccordionAndScroll = () => {
-                let collapseElement = collapseId ? document.getElementById(collapseId) : null;
+            // 1. Navegar para a View principal (Resumo, Mesas, etc.)
+            const targetLink = document.querySelector(`#sidebar-nav a.nav-link[href="#${viewId}"]`);
+            if (targetLink && !targetLink.classList.contains('active')) {
+                // Remove active de todos os links
+                document.querySelectorAll('#sidebar-nav a.nav-link.active').forEach(l => l.classList.remove('active'));
+                
+                // Ativa o link alvo
+                targetLink.classList.add('active');
 
-                // Fallback: Se o ID for do accordion-container, tenta achar o collapse dentro dele
-                if (collapseElement && !collapseElement.classList.contains('accordion-collapse')) {
-                    const innerCollapse = collapseElement.querySelector('.accordion-collapse');
-                    if (innerCollapse) {
-                        collapseElement = innerCollapse;
+                // Se o link alvo está dentro de um submenu, expande o submenu e ativa o link pai
+                const parentCollapse = targetLink.closest('.collapse');
+                if (parentCollapse) {
+                    const parentCollapseInstance = bootstrap.Collapse.getOrCreateInstance(parentCollapse);
+                    parentCollapseInstance.show();
+                    const parentLink = parentCollapse.previousElementSibling;
+                    if (parentLink) {
+                        parentLink.classList.add('active');
                     }
                 }
 
-                if (collapseElement && !collapseElement.classList.contains('show')) {
+                // Mostra a view correta
+                document.querySelectorAll('.main-view').forEach(view => view.style.display = 'none');
+                document.getElementById(viewId).style.display = 'block';
+            }
+
+            // 2. Navegar para a aba interna (se houver) e expandir o accordion
+            const expandAccordionAndScroll = () => {
+                const collapseElement = collapseId ? document.getElementById(collapseId) : null;
+                if (collapseElement && !collapseElement.classList.contains('show') && bootstrap.Collapse.getOrCreateInstance(collapseElement)) {
                     collapseElement.addEventListener('shown.bs.collapse', scrollToTarget, { once: true });
                     bootstrap.Collapse.getOrCreateInstance(collapseElement).show();
                 } else {
@@ -1522,6 +1954,7 @@
                 }
             };
 
+            // Se houver uma aba interna (dentro de 'Mesas de Trabalho'), navega para ela primeiro
             if (tabId) {
                 const tabEl = document.querySelector(`button[data-bs-target="#${tabId}"]`);
                 if (tabEl && !tabEl.classList.contains('active')) {
@@ -1538,21 +1971,8 @@
 
         document.head.insertAdjacentHTML('beforeend', `<style>
             .search-highlight { animation: highlight-animation 1.5s ease-in-out; }
-            @keyframes highlight-animation { 0% { box-shadow: 0 0 0 0px var(--dark-primary-glow); } 50% { box-shadow: 0 0 0 4px var(--dark-primary); } 100% { box-shadow: 0 0 0 0px var(--dark-primary-glow); } }
+            @keyframes highlight-animation { 0% { box-shadow: 0 0 0 0px var(--dark-accent-glow); } 50% { box-shadow: 0 0 12px 4px var(--dark-accent); } 100% { box-shadow: 0 0 0 0px var(--dark-accent-glow); } }
         </style>`);
-
-        function highlightPedido_OLD(numPedido) {
-            document.querySelectorAll('tr.table-info').forEach(r => r.classList.remove('table-info'));
-            const row = document.getElementById(`pedido-${numPedido}`);
-            if (row) {
-                row.classList.add('table-info');
-                const collapseEl = row.closest('.accordion-collapse');
-                if (collapseEl && !collapseEl.classList.contains('show')) { 
-                    bootstrap.Collapse.getOrCreateInstance(collapseEl).show(); 
-                }
-                setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 350);
-            }
-        }
         
         function atualizarListaBloqueados() {
             const divLista = document.getElementById('lista-pedidos-bloqueados');
@@ -1664,15 +2084,16 @@
             const idsParaLimpar = [
                 'resultado-venda-antecipada', 'resultado-carga-especial', 'resultado-bloqueados', 'resultado-geral', 
                 'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral',
-                'resultado-rota1', 'resultado-toco', 'kpi-container',
-                'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result', 
+                'resultado-rota1', 'kpi-container',
+                'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result',
                 'resultado-funcionarios-tab', 'resultado-transferencias-tab', 'resultado-exportacao-tab'
             ];
             const emptyStateMessages = {
                 'resultado-geral': '<div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div>',
                 'botoes-fiorino': '<div class="empty-state"><i class="bi bi-box"></i><p>Nenhuma rota de Fiorino disponível. Processe um arquivo para começar.</p></div>',
                 'botoes-van': '<div class="empty-state"><i class="bi bi-truck-front-fill"></i><p>Nenhuma rota de Van disponível. Processe um arquivo para começar.</p></div>',
-                'botoes-34': '<div class="empty-state"><i class="bi bi-truck-flatbed"></i><p>Nenhuma rota de 3/4 disponível. Processe um arquivo para começar.</p></div>'
+                'botoes-34': '<div class="empty-state"><i class="bi bi-truck-flatbed"></i><p>Nenhuma rota de 3/4 disponível. Processe um arquivo para começar.</p></div>',
+                'resultado-toco': '<div class="empty-state"><i class="bi bi-inboxes-fill"></i><p>Nenhuma carga "Toco" encontrada. Processe um arquivo.</p></div>'
             };
 
             idsParaLimpar.forEach(id => {
@@ -1690,6 +2111,7 @@
             }
             document.getElementById('card-resumo-geral-container').style.display = 'none';
             document.getElementById('filtro-rota-container').style.display = 'none';
+            document.getElementById('summary-empty-state').style.display = 'block';
 
             document.getElementById('pedidosEspeciaisInput').value = '';
             document.getElementById('bloquearPedidoInput').value = '';
@@ -1808,6 +2230,13 @@
                     const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
                     displayRota1(resultadoRota1Div, rota1SemCarga);
 
+                    // Adiciona os pedidos da rota 11000 ao grupo de cargas de Truck e os remove do processamento geral
+                    const pedidosRota11000 = pedidosDisponiveis.filter(p => String(p.Cod_Rota) === '11000');
+                    if (pedidosRota11000.length > 0) {
+                        gruposPorCFGlobais['Rota 11000 (Truck)'] = { pedidos: pedidosRota11000, totalKg: pedidosRota11000.reduce((s, p) => s + p.Quilos_Saldo, 0), totalCubagem: pedidosRota11000.reduce((s, p) => s + p.Cubagem, 0) };
+                        pedidosDisponiveis = pedidosDisponiveis.filter(p => String(p.Cod_Rota) !== '11000');
+                    }
+
                     let pedidosParaProcessamentoGeral = pedidosDisponiveis.filter(p => !rota1PedidoIds.has(p.Num_Pedido));
 
                     const pedidos = pedidosParaProcessamentoGeral.filter(p => String(p.Coluna4) != '500');
@@ -1837,11 +2266,12 @@
 
                     let pedidosParaProcessamentoVarejo = [];
                     let gruposPorCF = {};
-                    pedidosComCFNumericoIsolado = [];
+                    pedidosComCFNumericoIsolado = []; // prettier-ignore
                     
+                    const truckColuna4Values = new Set(['15', '17', '21', '23']);
                     pedidos.forEach(p => {
                         if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
-                        if (['21', '23', '17'].includes(String(p.Coluna4))) return;
+                        if (truckColuna4Values.has(String(p.Coluna4))) return;
                         
                         if (isNumeric(p.CF)) {
                             const cf = String(p.CF).trim();
@@ -1863,7 +2293,7 @@
                     gruposPorCFGlobais = gruposPorCF;
                     displayCargasCfAccordion(resultadoCfAccordionDiv, gruposPorCFGlobais, pedidosCarretaSemCF, pedidosCondorTruck);
                     displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
-
+                    
                     pedidosGeraisAtuais = [...pedidosParaProcessamentoVarejo]; 
                     const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
                         const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
@@ -2074,27 +2504,37 @@
                 document.getElementById('botoes-34').innerHTML = '<div class="empty-state"><i class="bi bi-truck-flatbed"></i><p>Nenhuma rota de 3/4 disponível. Processe um arquivo para começar.</p></div>';
                 return; 
             }
-            const rotasDisponiveis = new Set(Object.keys(grupos));
+
+            // Usa a função centralizada para garantir a mesma ordem da busca
+            const rotasOrdenadas = getSortedVarejoRoutes(Object.keys(grupos));
+
             const botoes = { fiorino: '', van: '', tresQuartos: '' };
             const addedButtons = new Set();
-            rotasDisponiveis.forEach(rota => {
-                const config = rotaVeiculoMap[rota];
+
+            rotasOrdenadas.forEach(rota => {
+                let config = rotaVeiculoMap[rota];
+                // Lógica para tratar rotas não mapeadas como rotas de São Paulo (Van/3/4)
+                if (!config) {
+                    config = { type: 'van', title: `Van / 3/4 São Paulo - Rota ${rota}` };
+                }
+
                 if (config && !addedButtons.has(rota)) {
                     let rotaValue = `'${rota}'`;
                     if (config.combined) {
+                        // prettier-ignore
                         const combinedRoutes = [rota, ...config.combined];
                         rotaValue = `[${combinedRoutes.map(r => `'${r}'`).join(', ')}]`;
                         combinedRoutes.forEach(r => addedButtons.add(r));
                     }
 
                     // Define o título do botão dinamicamente
-                    let buttonTitle = config.title;
-                    if (['2571', '2575', '2705'].includes(String(rota))) {
+                    let buttonTitle = config.title; // prettier-ignore
+                    if (config.type === 'van' && !config.title.startsWith('Rota 1')) { // Se for van e não for do Paraná
                         buttonTitle = `${rota} (VAN-3/4- SP)`;
                     }
 
                     const vehicleType = config.type;
-                    const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
+                    const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning'); // prettier-ignore
                     const functionCall = vehicleType === 'fiorino' ? 'separarCargasFiorino' : (vehicleType === 'van' ? 'separarCargasVan' : 'separarCargas34');
                     const divId = vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : (vehicleType === 'van' ? 'resultado-van-geral' : 'resultado-34-geral');
                     const btnId = `btn-${vehicleType}-${rota}`;
@@ -2105,13 +2545,14 @@
             document.getElementById('botoes-van').innerHTML = botoes.van || '<div class="empty-state"><i class="bi bi-truck-front-fill"></i><p>Nenhuma rota de Van encontrada.</p></div>';
             document.getElementById('botoes-34').innerHTML = botoes.tresQuartos || '<div class="empty-state"><i class="bi bi-truck-flatbed"></i><p>Nenhuma rota de 3/4 encontrada.</p></div>';
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionGeral">';
-            Object.keys(grupos).sort().forEach((rota, index) => {
+            
+            rotasOrdenadas.forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const veiculo = rotaVeiculoMap[rota]?.type || 'N/D';
+                const veiculo = rotaVeiculoMap[rota]?.type || 'van'; // Assume 'van' para rotas não mapeadas
                 
-                let rotaDisplay;
-                if (['2571', '2575', '2705'].includes(String(rota))) {
+                let rotaDisplay; // Rota: 11101 (Fiorino)
+                if (veiculo === 'van' && !rotaVeiculoMap[rota]?.title.startsWith('Rota 1')) {
                     rotaDisplay = `Rota: ${rota} (VAN-3/4- SP)`;
                 } else {
                     const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
@@ -2129,13 +2570,21 @@
             }
             const totalKg = pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
             const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            let html = `<div class="alert alert-danger"><strong>Total Bloqueado:</strong> ${pedidos.length} pedidos / ${totalKgFormatado} kg</div>`;
-            html += createTable(pedidos);
+            
+            const accordionId = 'accordionBloqueados';
+            const collapseId = 'collapseBloqueados';
+
+            let html = `<div class="accordion accordion-flush" id="${accordionId}">
+                <div class="accordion-item">
+                    <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}"><strong>Total Bloqueado:</strong> ${pedidos.length} pedidos / ${totalKgFormatado} kg</button></h2>
+                    <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}"><div class="accordion-body p-0">${createTable(pedidos)}</div></div>
+                </div>
+            </div>`;
             div.innerHTML = html;
         }
 
         function displayPedidosCFNumerico(div, pedidos) {
-            if (pedidos.length === 0) { div.innerHTML = '<div class="empty-state"><i class="bi bi-funnel"></i><p>Nenhum pedido de varejo filtrado por regra de bloqueio.</p></div>'; return; }
+            if (pedidos.length === 0) { div.innerHTML = '<div class="empty-state"><i class="bi bi-funnel"></i><p>Nenhum pedido filtrado por esta regra.</p></div>'; return; }
             const grupos = pedidos.reduce((acc, p) => {
                 const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
             }, {});
@@ -2243,8 +2692,8 @@
                 let isSaoPauloRoute = false;
                 for (const card of cardsParaImprimir) {
                     const loadId = card.dataset.loadId;
-                    // Verifica se a carga tem pedidos das rotas de SP
-                    if (activeLoads[loadId] && activeLoads[loadId].pedidos.some(p => ['2571', '2575', '2705'].includes(String(p.Cod_Rota)))) {
+                    // Verifica se a carga tem pedidos das rotas de SP // prettier-ignore
+                    if (activeLoads[loadId] && activeLoads[loadId].pedidos.some(p => ['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745'].includes(String(p.Cod_Rota)))) {
                         isSaoPauloRoute = true;
                         break; // Encontrou uma, já pode parar
                     }
@@ -2826,29 +3275,31 @@
             let leftoverGroups = remainingLeftovers; // O que sobrou após o encaixe simples
             let secondaryLoads = [];
             let tertiaryLoads = [];
-
-            // Lógica para tentar usar as sobras em outros tipos de veículos (ex: sobras de Fiorino em uma Van)
+            
+            // Lógica de cascata para sobras
             if (vehicleType === 'fiorino' && leftoverGroups.length > 0) {
-                const totalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
-                const vanMin = parseFloat(document.getElementById('vanMinCapacity').value);
-                if (totalLeftoverKg >= vanMin && leftoverGroups.length > 0) {
-                    const { loads: vanLoads, leftovers: newLeftovers } = runHeuristicOptimization(leftoverGroups, 'van');
-                    secondaryLoads = vanLoads.map(l => ({ ...l, vehicleType: 'van' }));
-                    leftoverGroups = newLeftovers;
+                // Sobras de Fiorino -> Tenta montar Van
+                console.log(`Sobras de Fiorino (${leftoverGroups.reduce((s,g)=>s+g.totalKg,0).toFixed(2)}kg) tentando virar Van.`);
+                const vanResult = runHeuristicOptimization(leftoverGroups, 'van');
+                secondaryLoads = vanResult.loads.map(l => ({ ...l, vehicleType: 'van' }));
+                leftoverGroups = vanResult.leftovers; // O que sobrou da tentativa de Van
+            }
+
+            if ((vehicleType === 'fiorino' || vehicleType === 'van') && leftoverGroups.length > 0) {
+                // Sobras de Fiorino (que não viraram Van) OU sobras de Van -> Tenta montar 3/4
+                console.log(`Sobras de ${vehicleType} (${leftoverGroups.reduce((s,g)=>s+g.totalKg,0).toFixed(2)}kg) tentando virar 3/4.`);
+                const tqResult = runHeuristicOptimization(leftoverGroups, 'tresQuartos');
+                
+                // Adiciona as novas cargas de 3/4 na lista apropriada
+                if (vehicleType === 'fiorino') {
+                    tertiaryLoads = tqResult.loads.map(l => ({ ...l, vehicleType: 'tresQuartos' }));
+                } else { // vehicleType === 'van'
+                    secondaryLoads = tqResult.loads.map(l => ({ ...l, vehicleType: 'tresQuartos' }));
                 }
+                
+                leftoverGroups = tqResult.leftovers; // Sobra final
             }
             
-            const totalFinalLeftoverKg = leftoverGroups.reduce((sum, g) => sum + g.totalKg, 0);
-            const tresQuartosMin = parseFloat(document.getElementById('tresQuartosMinCapacity').value);
-            if (totalFinalLeftoverKg >= tresQuartosMin && leftoverGroups.length > 0) {
-                                                     const vehicleForTertiary = (vehicleType === 'fiorino' || vehicleType === 'van') ? 'tresQuartos' : '';
-                if(vehicleForTertiary) {
-                    const { loads: tqLoads, leftovers: newLeftovers } = runHeuristicOptimization(leftoverGroups, vehicleForTertiary);
-                    tertiaryLoads = tqLoads.map(l => ({ ...l, vehicleType: 'tresQuartos' }));
-                    leftoverGroups = newLeftovers;
-                }
-            }
-
             const allPotentialLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads ];
             const finalValidLoads = [];
             let finalLeftoverGroups = [...leftoverGroups];
@@ -3081,8 +3532,8 @@
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)) || pedidosRecall.includes(String(p.Num_Pedido)));
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">CARGA COM PRIORIDADE</span>' : '';
             const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
-            
-            const isSaoPauloRoute = load.pedidos.some(p => ['2571', '2575', '2705'].includes(String(p.Cod_Rota)));
+            // prettier-ignore
+            const isSaoPauloRoute = load.pedidos.some(p => ['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745'].includes(String(p.Cod_Rota)));
             const spDescription = isSaoPauloRoute ? ' (São Paulo)' : '';
 
             const config = getVehicleConfig(vehicleType);
@@ -3130,7 +3581,7 @@
             if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="empty-state"><i class="bi bi-inboxes-fill"></i><p>Nenhuma carga "Toco" encontrada.</p></div>'; return; }
             
             const maxKg = parseFloat(document.getElementById('tocoMaxCapacity').value);
-            let accordionHtml = '<div class="accordion accordion-flush" id="accordionToco">';
+            let accordionHtml = '<div class="accordion accordion-flush" id="accordionTocoMesa">'; // ID alterado para evitar conflito
             
             Object.keys(grupos).sort().forEach((cf, index) => {
                 const grupo = grupos[cf]; 
@@ -3161,17 +3612,18 @@
                 const progressBar = `<div class="progress mb-3" role="progressbar" style="height: 10px;"><div class="progress-bar ${progressColor}" style="width: ${Math.min(pesoPercentual, 100)}%"></div></div>`;
                 const headerColorClass = isOverloaded ? 'bg-danger' : '';
 
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length}</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionToco"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>${progressBar}${createTable(pedidos, null, loadId)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length}</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionTocoMesa"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>${progressBar}${createTable(pedidos, null, loadId)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
         function displayCargasCfAccordion(div, grupos, pedidosCarreta, pedidosCondor) {
             let todosOsGrupos = {...grupos};
+            const chaveRota11000 = "Rota 11000 (Truck)";
             const chaveCarreta = "Pedidos de Carreta/Truck sem CF";
             const chaveCondor = "Pedidos Condor (Truck)";
 
-            if (pedidosCarreta && pedidosCarreta.length > 0) {
+            if (pedidosCarreta?.length > 0) {
                 todosOsGrupos[chaveCarreta] = {
                     pedidos: pedidosCarreta,
                     totalKg: pedidosCarreta.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
@@ -3179,7 +3631,7 @@
                 };
                 gruposPorCFGlobais[chaveCarreta] = todosOsGrupos[chaveCarreta];
             }
-            if (pedidosCondor && pedidosCondor.length > 0) {
+            if (pedidosCondor?.length > 0) {
                 todosOsGrupos[chaveCondor] = {
                     pedidos: pedidosCondor,
                     totalKg: pedidosCondor.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
@@ -3189,12 +3641,12 @@
             }
 
             if (Object.keys(todosOsGrupos).length === 0) {
-                div.innerHTML = '<div class="empty-state"><i class="bi bi-truck"></i><p>Nenhum grupo de carga maior encontrado. Processe um arquivo.</p></div>';
+                div.innerHTML = '<div class="empty-state"><i class="bi bi-truck"></i><p>Nenhum grupo de carga Truck encontrado. Processe um arquivo.</p></div>';
                 return;
             }
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasPorCF">';
             
-            const specialKeysOrder = [chaveCondor, chaveCarreta];
+            const specialKeysOrder = [chaveCondor, chaveCarreta, chaveRota11000];
             const sortedKeys = Object.keys(todosOsGrupos).sort((a,b) => {
                 const aIsSpecial = specialKeysOrder.includes(a);
                 const bIsSpecial = specialKeysOrder.includes(b);
@@ -3302,7 +3754,7 @@
 
             const veiculos = [
                 { tipo: 'fiorino', nome: 'Fiorino', maxKg: parseFloat(document.getElementById('fiorinoHardMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('fiorinoHardCubage').value) },
-                { tipo: 'van', nome: 'Van', maxKg: parseFloat(document.getElementById('vanHardMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('vanHardCubage').value) },
+                { tipo: 'van', nome: 'Van', maxKg: parseFloat(document.getElementById('vanHardMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('vanHardCubage').value) }, // Corrigido para vanHardCubage
                 { tipo: 'tresQuartos', nome: '3/4', maxKg: parseFloat(document.getElementById('tresQuartosMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('tresQuartosCubage').value) },
             ];
 
@@ -3843,7 +4295,7 @@
             const accordionId = 'accordionExportacao';
             const collapseId = 'collapseExportacao';
             const headerId = 'headingExportacao';
-            const printAreaId = 'exportacao-print-area';
+            const printAreaId = 'exportacao-print-area'; // Este ID é usado no botão de imprimir
 
             let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
                 <div class="accordion-item">
@@ -3902,7 +4354,7 @@
             doc.setTextColor(40);
             doc.text("Relatório de Previsão de Expedição", 105, 20, { align: 'center' });
             doc.setFontSize(10);
-            doc.setTextColor(100);
+            doc.setTextColor(120);
             doc.text(`Data de Geração: ${today}`, 200, 26, { align: 'right' });
             doc.setLineWidth(0.5);
             doc.setDrawColor('#00bfa5');
@@ -3923,7 +4375,7 @@
                 ],
                 theme: 'striped',
                 styles: { fontSize: 10, cellPadding: 2.5 },
-                headStyles: { fillColor: [30, 33, 48] },
+                bodyStyles: { fillColor: false }, // Fundo transparente para o corpo
                 columnStyles: { 0: { fontStyle: 'bold' } }
             });
 
@@ -4103,7 +4555,6 @@
                 pedidosComCFNumericoIsolado = reviveDates(pedidosComCFNumericoIsolado);
                 pedidosManualmenteBloqueadosAtuais = reviveDates(pedidosManualmenteBloqueadosAtuais);
                 rota1SemCarga = reviveDates(rota1SemCarga);
-                rota1SemCarga = reviveDates(rota1SemCarga);
                 pedidosFuncionarios = reviveDates(pedidosFuncionarios);
                 pedidosCarretaSemCF = reviveDates(pedidosCarretaSemCF);
                 pedidosTransferencias = reviveDates(pedidosTransferencias);
@@ -4117,6 +4568,22 @@
                 // Re-renderizar a UI com os dados carregados
                 statusDiv.innerHTML = `<p class="text-success">Progresso anterior restaurado com sucesso!</p>`;
                 processarBtn.disabled = false;
+
+                // Ativa a primeira aba de navegação e mostra a view correspondente
+                const activeLink = document.querySelector('#sidebar-nav a.nav-link.active');
+                if (!activeLink) {
+                    document.querySelectorAll('.main-view').forEach(v => v.style.display = 'none');
+                    const firstLink = document.querySelector('#sidebar-nav a.main-nav-link');
+                    if (firstLink) {
+                        firstLink.classList.add('active');
+                        const targetViewId = firstLink.getAttribute('href');
+                        if (targetViewId) {
+                            const targetView = document.querySelector(targetViewId);
+                            if (targetView) targetView.style.display = 'block';
+                        }
+                    }
+                }
+
                 popularFiltrosDeRota();
                 atualizarListaBloqueados();
                 atualizarListaSemCorte();
