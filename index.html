@@ -830,23 +830,30 @@
                 <div class="col-lg-4 mb-4 animated-entry">
                     <div class="card" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos Disponíveis (Varejo)</h2>
+                            <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos para Montagem (Varejo)</h2>
                             <div class="no-print"><button class="btn btn-sm btn-outline-danger" onclick="exportarPedidosAtrasados()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Atrasados</button></div>
                         </div>
-                       <div class="card-body" onkeyup="liveSearch()"> <!-- Adicionado evento onkeyup -->
-                           <div class="input-group mb-3 no-print">
-                               <span class="input-group-text"><i class="bi bi-search"></i></span>
-                               <input type="text" id="pedidoSearchInput" class="form-control" placeholder="Filtrar em tempo real...">
-                           </div>
-                           <div id="search-result" class="mb-3"></div> <!-- Mantido para a busca global -->
-                           <div id="resultado-geral"><div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div></div>
-                       </div>
-                    </div>
-
-                    <!-- CARD DE PEDIDOS FILTRADOS MOVIDO PARA CÁ -->
-                    <div class="card mt-4 animated-entry" id="pedidos-filtrados-card">
-                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-funnel-fill me-2"></i>Pedidos Filtrados (Bloqueio por Regra)</h2></div>
-                        <div class="card-body" id="card-cf-numerico"><div id="resultado-cf-numerico"><div class="empty-state"><i class="bi bi-funnel"></i><p>Aguardando processamento...</p></div></div></div>
+                        <div class="card-body p-0">
+                            <div class="p-3 border-bottom no-print">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" id="pedidoSearchInput" class="form-control" placeholder="Filtrar em tempo real..." onkeyup="liveSearch()">
+                                </div>
+                                <div id="search-result" class="mt-3"></div>
+                            </div>
+                            <ul class="nav nav-tabs nav-fill px-3 pt-2" id="pedidosDisponiveisTabs" role="tablist">
+                                <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#disponiveis-tab-pane"><i class="bi bi-check-circle-fill me-2"></i>Disponíveis</button></li>
+                                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#bloqueados-regra-tab-pane"><i class="bi bi-funnel-fill me-2"></i>Bloqueados por Regra</button></li>
+                            </ul>
+                            <div class="tab-content" id="pedidosDisponiveisTabsContent">
+                                <div class="tab-pane fade show active p-3" id="disponiveis-tab-pane" role="tabpanel">
+                                    <div id="resultado-geral"><div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div></div>
+                                </div>
+                                <div class="tab-pane fade p-3" id="bloqueados-regra-tab-pane" role="tabpanel">
+                                    <div id="resultado-cf-numerico"><div class="empty-state"><i class="bi bi-funnel"></i><p>Aguardando processamento...</p></div></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 </div>
@@ -1280,6 +1287,11 @@
         //  INÍCIO DO SEU CÓDIGO JAVASCRIPT ORIGINAL (SEM MODIFICAÇÕES NA LÓGICA)
         // ================================================================================================
 
+        // Função para busca em tempo real que chama a função principal de busca
+        function liveSearch() {
+            buscarPedido();
+        }
+
         function deepClone(obj) {
             if (obj === null || typeof obj !== 'object') {
                 return obj;
@@ -1460,9 +1472,12 @@
             document.getElementById('saveConfig').addEventListener('click', saveConfigurations);
             document.getElementById('limparResultadosBtn').addEventListener('click', limparTudo);            
             document.getElementById('pedidoSearchInput').addEventListener('keyup', (event) => {
-                if (event.key === 'Enter') {
-                    buscarPedido();
-                }
+                // A busca em tempo real já é feita pelo onkeyup no HTML.
+                // Esta parte pode ser usada para ações específicas do Enter, se necessário,
+                // mas com a busca em tempo real, geralmente não é preciso.
+                // if (event.key === 'Enter') {
+                //     buscarPedido();
+                // }
             });
 
             // Inicializa os tooltips do Bootstrap
@@ -2387,6 +2402,9 @@
                     
                     statusDiv.innerHTML = `<p class="text-success">Processamento concluído!</p>`;
                 } catch (error) { 
+                    // Garante que a lista de bloqueados seja exibida mesmo em caso de erro parcial
+                    const resultadoBloqueadosDiv = document.getElementById('resultado-bloqueados');
+                    displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueadosAtuais);
                     statusDiv.innerHTML = `<p class="text-danger"><strong>Ocorreu um erro:</strong></p><pre>${error.stack}</pre>`; 
                     console.error(error); 
                 } finally {
@@ -2675,7 +2693,7 @@
             Object.keys(grupos).sort().forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body">${createTable(grupo.pedidos)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>Rota: ${rota}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body p-0">${createTable(grupo.pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
