@@ -21,21 +21,21 @@
     
     <style>
         :root {
-            /* Paleta de Cores "Cyber Glow" */
-            --dark-bg: #0D0E18; /* Azul quase preto, profundo */
-            --dark-surface: rgba(22, 24, 40, 0.65); /* Superfície com tom azulado, mais translúcida */
-            --dark-surface-secondary: rgba(30, 33, 52, 0.75);
-            --dark-border: rgba(139, 132, 255, 0.15); /* Borda com brilho violeta mais sutil */
-            --dark-primary: #8B84FF; /* Violeta principal, um pouco mais claro */
-            --dark-primary-hover: #A49EFF;
-            --dark-primary-glow: rgba(139, 132, 255, 0.35);
-            --dark-accent: #00E5FF; /* Ciano elétrico para acentos */
-            --dark-accent-secondary: #FF00E5; /* Novo acento magenta para mais impacto */
-            --dark-accent-glow: rgba(0, 229, 255, 0.3);
-            --dark-text-primary: #EAEBF0; /* Branco levemente azulado */
-            --dark-text-secondary: #9298B9; /* Cinza-azulado para texto secundário */
-            --box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.35); /* Sombra mais suave e difundida */
-            --backdrop-blur: 12px;
+            /* Paleta de Cores "Onyx" */
+            --dark-bg: #0a0a0a;
+            --dark-surface: rgba(28, 28, 30, 0.7);
+            --dark-surface-secondary: rgba(44, 44, 46, 0.8);
+            --dark-border: rgba(72, 72, 74, 0.5);
+            --dark-primary: #0A84FF;
+            --dark-primary-hover: #3399FF;
+            --dark-primary-glow: rgba(10, 132, 255, 0.3);
+            --dark-accent: #5E5CE6;
+            --dark-accent-secondary: #BF5AF2;
+            --dark-accent-glow: rgba(94, 92, 230, 0.3);
+            --dark-text-primary: #FFFFFF;
+            --dark-text-secondary: #8A8A8E;
+            --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --backdrop-blur: 10px;
         }
 
         /* --- Animação de Fundo "Aurora" --- */
@@ -48,25 +48,22 @@
         /* --- Melhorias Gerais --- */
         body {
             background-color: var(--dark-bg);
-            /* Efeito Aurora + Grid de Fundo */
+            /* Efeito de Grid e Brilho Sutil */
             background-image: 
-                /* Grid sutil */
-                linear-gradient(rgba(139, 132, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(139, 132, 255, 0.05) 1px, transparent 1px),
-                /* Aurora */
-                radial-gradient(at 20% 20%, hsla(253, 98%, 77%, 0.15) 0px, transparent 50%),
-                radial-gradient(at 80% 20%, hsla(187, 100%, 50%, 0.1) 0px, transparent 50%),
-                radial-gradient(at 20% 80%, hsla(253, 98%, 77%, 0.1) 0px, transparent 50%),
-                radial-gradient(at 80% 80%, hsla(253, 98%, 77%, 0.2) 0px, transparent 50%);
-            background-size: 200% 200%;
+                /* Grid */
+                linear-gradient(var(--dark-border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--dark-border) 1px, transparent 1px),
+                /* Brilho */
+                radial-gradient(at 15% 85%, hsla(210, 100%, 50%, 0.1), transparent 50%),
+                radial-gradient(at 85% 15%, hsla(265, 88%, 60%, 0.1), transparent 50%);
+            background-size: 60px 60px, 60px 60px, 150% 150%, 150% 150%;
             font-family: 'Inter', sans-serif;
             color: var(--dark-text-primary);
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
             background-attachment: fixed;
-            background-size: 50px 50px, 50px 50px, 200% 200%, 200% 200%, 200% 200%, 200% 200%;
-            animation: move-aurora 25s ease-in-out infinite;
+            animation: move-aurora 20s ease-in-out infinite;
         }        
 
         ::-webkit-scrollbar { width: 8px; }
