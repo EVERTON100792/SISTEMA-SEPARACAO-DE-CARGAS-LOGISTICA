@@ -1151,6 +1151,7 @@
 
                     <h5 id="processing-status-text" class="mb-2">Montando Cargas...</h5>
                     <p id="thinking-text" class="text-muted small mb-3" style="height: 20px;"></p>
+                    <p id="processing-details-text" class="text-muted small mb-3" style="height: 20px;"></p>
                     <div class="progress" role="progressbar" style="height: 6px; background-color: rgba(255,255,255,0.1);"><div id="processing-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%; background-color: var(--dark-primary);"></div></div>
                 </div>
             </div>
@@ -2497,7 +2498,8 @@
 
         function updateAndRenderKPIs() {
             // 1. Calcula os pedidos que precisam ser predatados (atrasados e sem bloqueio restritivo)
-            const todosPedidosParaAnalise = [...pedidosGeraisAtuais, ...pedidosComCFNumericoIsolado, ...pedidosManualmenteBloqueadosAtuais, ...rota1SemCarga];
+            const pedidosToco = Object.values(gruposToco).flatMap(g => g.pedidos);
+            const todosPedidosParaAnalise = [...pedidosGeraisAtuais, ...pedidosComCFNumericoIsolado, ...pedidosManualmenteBloqueadosAtuais, ...rota1SemCarga, ...pedidosToco];
             const pedidosAPredatar = todosPedidosParaAnalise.filter(p => {
                 const bloqueio = String(p['BLOQ.'] || '').trim().toUpperCase();
                 return isOverdue(p.Predat) && (bloqueio === '' || bloqueio === 'C');
@@ -2646,7 +2648,7 @@
         
         function createTable(pedidos, columnsToDisplay, sourceId = '') {
             if (!pedidos || pedidos.length === 0) return '';
-            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'Predat', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
+            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'Predat', 'Dat_Ped', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
             let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped table-hover"><thead><tr><th><input type="checkbox" class="form-check-input" onclick="toggleAllCheckboxes(this)"></th>';
             colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
@@ -2830,7 +2832,7 @@
                         <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
                     </button>
                 </div>
-                ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'CF', 'Coluna5'])}
+                ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Dat_Ped', 'CF', 'Coluna5'])}
             `;
             div.innerHTML = html;
         }
@@ -3027,6 +3029,12 @@
             const strategies = [
                 { name: 'priority-weight-desc',
                   sorter: (a, b) => {
+                    if (a.oldestDate && b.oldestDate) {
+                        if (a.oldestDate < b.oldestDate) return -1;
+                        if (a.oldestDate > b.oldestDate) return 1;
+                    } else if (a.oldestDate) { return -1; } 
+                      else if (b.oldestDate) { return 1; }
+
                     const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
                     const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
                     if (aHasPrio && !bHasPrio) return -1;
@@ -3036,6 +3044,12 @@
                 },
                 { name: 'scheduled-weight-desc',
                   sorter: (a, b) => {
+                    if (a.oldestDate && b.oldestDate) {
+                        if (a.oldestDate < b.oldestDate) return -1;
+                        if (a.oldestDate > b.oldestDate) return 1;
+                    } else if (a.oldestDate) { return -1; } 
+                      else if (b.oldestDate) { return 1; }
+
                     const aHasSched = a.pedidos.some(p => p.Agendamento === 'Sim');
                     const bHasSched = b.pedidos.some(p => p.Agendamento === 'Sim');
                     if (aHasSched && !bHasSched) return -1;
@@ -3043,8 +3057,22 @@
                     return b.totalKg - a.totalKg;
                   }
                 },
-                { name: 'weight-desc', sorter: (a, b) => b.totalKg - a.totalKg },
-                { name: 'weight-asc', sorter: (a, b) => a.totalKg - b.totalKg }
+                { name: 'weight-desc', sorter: (a, b) => {
+                    if (a.oldestDate && b.oldestDate) {
+                        if (a.oldestDate < b.oldestDate) return -1;
+                        if (a.oldestDate > b.oldestDate) return 1;
+                    } else if (a.oldestDate) { return -1; } 
+                      else if (b.oldestDate) { return 1; }
+                    return b.totalKg - a.totalKg;
+                } },
+                { name: 'weight-asc', sorter: (a, b) => {
+                    if (a.oldestDate && b.oldestDate) {
+                        if (a.oldestDate < b.oldestDate) return -1;
+                        if (a.oldestDate > b.oldestDate) return 1;
+                    } else if (a.oldestDate) { return -1; } 
+                      else if (b.oldestDate) { return 1; }
+                    return a.totalKg - b.totalKg;
+                } }
             ];
 
             let bestResult = null;
@@ -3417,6 +3445,18 @@
             const packableGroups = Object.values(clientGroupsMap);
 
             packableGroups.forEach(group => {
+                group.oldestDate = group.pedidos.reduce((oldest, p) => {
+                    const pDate = p.Dat_Ped;
+                    if (pDate && pDate instanceof Date && !isNaN(pDate)) {
+                        if (!oldest || pDate < oldest) {
+                            return pDate;
+                        }
+                    }
+                    return oldest;
+                }, null);
+            });
+
+            packableGroups.forEach(group => {
                 group.Quilos_Saldo = group.totalKg;
                 group.Cubagem = group.totalCubagem;
                 if (group.totalCubagem > 0) group.density = group.totalKg / group.totalCubagem;
@@ -3452,7 +3492,7 @@
 
                         const polished = refinarCargasComTrocas(saResultForPolish.loads, saResultForPolish.leftovers, vehicleType);
                         optimizationResult = { loads: polished.refinedLoads, leftovers: polished.remainingLeftovers };
-                        break; // Este break estava faltando, foi adicionado para corrigir a lógica.
+                        break;
                     case '4':
                         console.log(`Executando Nível 4: Otimização Reconstrutiva para ${vehicleType}...`);
                         const saResultForReconstruction = await runSimulatedAnnealing(packableGroups, vehicleType, 'Otimizando... (Nível 4 - Fase 1/3)');
@@ -3591,7 +3631,7 @@
                                              Pedidos Restantes
                                              <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
                                          </div>
-                                         <div class="card-body">${createTable(sobrasDestaRota, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                         <div class="card-body">${createTable(sobrasDestaRota, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Dat_Ped', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                                      </div>
                                  </div>`;
             }
@@ -4315,7 +4355,7 @@
                                 Pedidos Restantes
                                 <div class="ms-auto">${printButtonHtml}</div>
                             </div>
-                            <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                            <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Dat_Ped', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                         </div>`;
                 }
                 return;
@@ -4501,7 +4541,7 @@
                                     <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
                                 </button>
                             </div>
-                            ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Coluna5', 'BLOQ.'])}
+                            ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Dat_Ped', 'Coluna5', 'BLOQ.'])}
                         </div>
                     </div>
                 </div>
@@ -4550,7 +4590,7 @@
                                     <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
                                 </button>
                             </div>
-                            ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Coluna5', 'BLOQ.'])}
+                            ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Dat_Ped', 'Coluna5', 'BLOQ.'])}
                         </div>
                     </div>
                 </div>
@@ -4592,9 +4632,8 @@
                         </button>
                     </h2>
                     <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
-                        <div class="accordion-body" id="${printAreaId}"><div class="d-flex justify-content-between align-items-center mb-3 no-print"><p class="text-muted small mb-0">Pedidos com a tag "TBL EXPORTACAO" na Coluna 5.</p><button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Exportação')"><i class="bi bi-printer-fill me-1"></i>Imprimir Lista</button></div>${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Coluna5', 'BLOQ.'])}</div>
-                    </div>
-                </div></div>`;
+                        <div class="accordion-body" id="${printAreaId}"><div class="d-flex justify-content-between align-items-center mb-3 no-print"><p class="text-muted small mb-0">Pedidos com a tag "TBL EXPORTACAO" na Coluna 5.</p><button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Exportação')"><i class="bi bi-printer-fill me-1"></i>Imprimir Lista</button></div>${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Dat_Ped', 'Coluna5', 'BLOQ.'])}</div>
+                    </div></div></div>`;
             div.innerHTML = accordionHtml;
         }
 
@@ -4988,7 +5027,7 @@
                                                      Pedidos Restantes
                                                      <div class="ms-auto">${printButtonHtml}</div>
                                                  </div>
-                                                 <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
+                                                 <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Dat_Ped', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                                              </div>
                                          </div>`;
                         resultadoDiv.querySelector('.resultado-container').insertAdjacentHTML('beforeend', leftoversHtml);
