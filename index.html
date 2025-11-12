@@ -2574,12 +2574,18 @@
 
             // Renderiza o card de "Outras Categorias"
             const outrasCategoriasContainer = document.getElementById('outras-categorias-container');
+            
+            // Consolida os dados para o card de "Outras Categorias", incluindo os bloqueios de varejo.
+            const pedidosBloqueadosVarejo = [...pedidosComCFNumericoIsolado, ...pedidosManualmenteBloqueadosAtuais];
+
             const categorias = [
                 { nome: 'Truck/Carreta', pedidos: Object.values(gruposPorCFGlobais).flatMap(g => g.pedidos), peso: Object.values(gruposPorCFGlobais).reduce((s, g) => s + g.totalKg, 0) },
+                { nome: 'Bloqueios Varejo', pedidos: pedidosBloqueadosVarejo, peso: pedidosBloqueadosVarejo.reduce((s, p) => s + p.Quilos_Saldo, 0) },
                 { nome: 'Transferências', pedidos: pedidosTransferencias, peso: pedidosTransferencias.reduce((s, p) => s + p.Quilos_Saldo, 0) },
                 { nome: 'Exportação', pedidos: pedidosExportacao, peso: pedidosExportacao.reduce((s, p) => s + p.Quilos_Saldo, 0) },
                 { nome: 'Funcionários', pedidos: pedidosFuncionarios, peso: pedidosFuncionarios.reduce((s, p) => s + p.Quilos_Saldo, 0) }
             ];
+
             const categoriasComDados = categorias.filter(c => c.pedidos.length > 0);
 
             if (categoriasComDados.length > 0) {
@@ -2594,8 +2600,8 @@
                         <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
                             <span>${cat.nome}</span>
                             <div>
-                                <span class="badge bg-secondary me-2" title="Quantidade de Pedidos">${cat.pedidos.length}</span>
-                                <span class="badge bg-info" title="Peso Total">${(cat.peso / 1000).toFixed(2)} t</span>
+                                <span class="badge bg-secondary me-2" title="Quantidade de Pedidos">${cat.pedidos.length} ped.</span>
+                                <span class="badge bg-info" title="Peso Total">${cat.peso.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</span>
                             </div>
                         </li>`;
                 });
