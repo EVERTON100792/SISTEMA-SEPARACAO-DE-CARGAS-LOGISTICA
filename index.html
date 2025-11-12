@@ -107,12 +107,21 @@
             margin-left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
             transition: margin-left 0.4s ease, width 0.4s ease; /* Animação fluida */
+            position: relative; /* Essencial para conter as views absolutas */
             min-width: 0; 
         }
 
         .main-view {
-            display: none; /* All views are hidden by default */
-            min-width: 0; 
+            /* display: none; */ /* Alterado para permitir transição */
+            min-width: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            position: absolute; /* Empilha as views para a transição */
+            width: 100%;
+            height: 100%;
+            padding: 1.5rem; /* Adiciona padding que estava no p-4 das views */
+            overflow-y: auto; /* Permite rolagem interna em cada view */
         }
 
         #sidebar {
@@ -516,6 +525,11 @@
             #main-content { margin-left: 0; width: 100%; }
         }
         
+        /* Classe para a view ativa */
+        .main-view.active-view {
+            opacity: 1;
+            visibility: visible;
+        }
         /* --- Estilos de Impressão (Ajustes para tabelas mais compactas) --- */
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -807,8 +821,8 @@
             <!-- ======================================================================================= -->
             <!-- VIEW: RESUMO GERAL -->
             <!-- ======================================================================================= -->
-            <div id="summary-view" class="main-view p-4 overflow-auto" style="display: block;">
-                <h1 class="h2 mb-4 animated-entry">Dashboard de Previsão</h1>
+            <div id="summary-view" class="main-view active-view">
+                <h1 class="h2 mb-4 animated-entry">Dashboard de Previsão</h1> <!-- p-4 e overflow-auto removidos, agora estão em .main-view -->
 
                 <!-- Container para o conteúdo do dashboard que aparece após o processamento -->
                 <div id="dashboard-content-container" style="display: none;">
@@ -837,8 +851,8 @@
             <!-- ======================================================================================= -->
             <!-- VIEW: MESAS DE TRABALHO -->
             <!-- ======================================================================================= -->
-            <div id="workspace-view" class="main-view p-4" style="display: none;">
-                <h1 class="h2 mb-4 animated-entry">Mesas de Trabalho</h1>
+            <div id="workspace-view" class="main-view">
+                <h1 class="h2 mb-4 animated-entry">Mesas de Trabalho</h1> <!-- p-4 removido -->
                 <div class="row h-100">
                 <div class="col-lg-8 mb-4 animated-entry">
                     <div class="card h-100">
@@ -943,7 +957,7 @@
                 </div>
             </div>
 
-            <div id="montagens-especiais-view" class="main-view p-4 overflow-auto" style="display: none;">
+            <div id="montagens-especiais-view" class="main-view">
                 <h1 class="h2 mb-4 animated-entry">Montagens Especiais</h1>
                 <div class="row">
                     <div class="col-lg-6 mb-4 animated-entry">
@@ -971,7 +985,7 @@
                 </div>
             </div>
 
-            <div id="pedidos-bloqueados-view" class="main-view p-4 overflow-auto" style="display: none;">
+            <div id="pedidos-bloqueados-view" class="main-view">
                 <h1 class="h2 mb-4 animated-entry">Análise: Pedidos Bloqueados Manualmente</h1>
                 <div class="card border-danger animated-entry">
                     <div class="card-header bg-danger-subtle text-danger-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-slash-circle-fill me-2"></i>Pedidos Bloqueados Manualmente</h2></div>
@@ -979,7 +993,7 @@
                 </div>
             </div>
 
-            <div id="alteracao-rota-view" class="main-view p-4 overflow-auto" style="display: none;">
+            <div id="alteracao-rota-view" class="main-view">
                 <h1 class="h2 mb-4 animated-entry">Análise: Alteração de Rota</h1>
                 <div class="card border-warning animated-entry">
                     <div class="card-header bg-warning-subtle text-warning-emphasis"><h2 class="card-title h5 mb-0"><i class="bi bi-sign-turn-right-fill me-2"></i>Pedidos da Rota 1 para Alteração</h2></div>
@@ -990,7 +1004,7 @@
             <!-- ======================================================================================= -->
             <!-- VIEW: RELATÓRIOS -->
             <!-- ======================================================================================= -->
-            <div id="reports-view" class="main-view p-4 overflow-auto" style="display: none;">
+            <div id="reports-view" class="main-view">
                 <h1 class="h2 mb-4 animated-entry">Relatórios Gerenciais</h1>
                 <div class="card animated-entry">
                      <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-file-earmark-pdf-fill me-2"></i>Previsão de Expedição</h2></div>
@@ -1589,18 +1603,18 @@
                         parentCollapse.previousElementSibling.classList.add('active');
                     }
                     
-                    // Esconde todas as views principais
+                    // Esconde a view ativa atualmente
                     document.querySelectorAll('.main-view').forEach(view => {
-                        view.style.display = 'none';
+                        view.classList.remove('active-view');
                     });
-                    // Mostra a view correta com base no href do link
+                    // Mostra a nova view correta com base no href do link
                     const targetViewId = this.getAttribute('href');
-                    document.querySelector(targetViewId).style.display = 'block';
+                    document.querySelector(targetViewId).classList.add('active-view');
 
                     // Salva a última view ativa
                     localStorage.setItem('lastActiveView', targetViewId);
 
-                    if (targetViewId === '#summary-view' && resumoChart) { updateAndRenderChart(); }
+                    if (targetViewId === '#summary-view' && resumoChart) { setTimeout(() => updateAndRenderChart(), 50); }
                 });
             });
             
@@ -1616,8 +1630,8 @@
                 body.classList.toggle('sidebar-collapsed');
                 // Salva o estado no localStorage
                 localStorage.setItem('sidebarCollapsed', body.classList.contains('sidebar-collapsed'));
-                // Redesenha o gráfico se a view de resumo estiver ativa
-                if (document.getElementById('summary-view').style.display === 'block' && resumoChart) {
+                // Redesenha o gráfico se a view de resumo estiver ativa (agora verifica a classe)
+                if (document.getElementById('summary-view').classList.contains('active-view') && resumoChart) {
                     setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 400); // Atraso para coincidir com a animação
                 }
             });
@@ -2111,8 +2125,8 @@
                 }
 
                 // Mostra a view correta
-                document.querySelectorAll('.main-view').forEach(view => view.style.display = 'none');
-                document.getElementById(viewId).style.display = 'block';
+                document.querySelectorAll('.main-view').forEach(view => view.classList.remove('active-view'));
+                document.getElementById(viewId).classList.add('active-view');
             }
 
             // 2. Navegar para a aba interna (se houver) e expandir o accordion
@@ -2286,7 +2300,7 @@
                 resumoChart = null;
             }
             document.getElementById('dashboard-content-container').style.display = 'none';
-            document.getElementById('filtro-rota-container').style.display = 'none';
+            document.getElementById('filtro-rota-container').style.display = 'none'; // Mantém este display, pois é um controle e não uma view
             document.getElementById('summary-empty-state').style.display = 'block';
 
             document.getElementById('pedidosEspeciaisInput').value = '';
@@ -3397,6 +3411,9 @@
         }
         
         async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
+            // NOVO: Se o painel de carga manual estiver aberto, fecha-o antes de processar uma nova rota.
+            if (document.getElementById('manual-load-builder-wrapper')) cancelManualLoad();
+
             const allRouteButtons = document.querySelectorAll('#botoes-fiorino button, #botoes-van button, #botoes-34 button');
 
             const routesKey = Array.isArray(routeOrRoutes) ? routeOrRoutes.sort().join(',') : String(routeOrRoutes);
@@ -3519,15 +3536,13 @@
                 }
             }
             
-            // A partir daqui, a lógica de pós-processamento é unificada.
-            optimizationResult.loads.forEach(load => { load.vehicleType = vehicleType; });
-            
             // Tenta encaixar sobras em cargas existentes que ainda têm espaço.
             const { refinedLoads, remainingLeftovers } = refineLoadsWithSimpleFit(optimizationResult.loads, optimizationResult.leftovers);
 
             let primaryLoads = refinedLoads; // Cargas do tipo principal (ex: Fiorino)
             let leftoverGroups = remainingLeftovers; // O que sobrou após o encaixe simples
             let secondaryLoads = [];
+            primaryLoads.forEach(l => l.vehicleType = vehicleType); // Garante que o tipo de veículo primário esteja definido
             let tertiaryLoads = [];
             
             // Lógica de cascata para sobras
@@ -3578,10 +3593,6 @@
                 }
             });
 
-            // Limpa as sobras anteriores e define as sobras apenas para esta execução
-            const sobrasDestaRota = finalLeftoverGroups.flatMap(group => group.pedidos);
-            currentLeftoversForPrinting = [...sobrasDestaRota];
-
             
             finalValidLoads.forEach((load, index) => {
                 load.numero = `${load.vehicleType.charAt(0).toUpperCase()}${index + 1}`;
@@ -3589,6 +3600,14 @@
                 load.id = loadId;
                 activeLoads[loadId] = load;
             });
+
+            // NOVO: Identifica todos os pedidos alocados e atualiza a lista de pedidos gerais.
+            const alocatedOrderIds = new Set(finalValidLoads.flatMap(load => load.pedidos.map(p => p.Num_Pedido)));
+            pedidosGeraisAtuais = pedidosGeraisAtuais.filter(p => !alocatedOrderIds.has(p.Num_Pedido));
+
+            // NOVO: Re-renderiza a lista de pedidos disponíveis (que agora contém apenas as sobras).
+            const gruposGeraisRestantes = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
+            displayGerais(document.getElementById('resultado-geral'), gruposGeraisRestantes);
 
             // Salvar o contexto da rota processada para recarregamento
             const routeContext = {
@@ -3612,25 +3631,8 @@
                  html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
             } else {
                 generatedLoads.forEach(load => {
-                    html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType]);
+                    html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType] || vehicleInfo['van']);
                 });
-            }
-            
-            if (sobrasDestaRota.length > 0) {
-                const finalLeftoverKg = sobrasDestaRota.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
-                const manualLoadButton = `<button id="start-manual-load-btn" class="btn btn-success ms-auto no-print" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual</button>`;
-                const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${title}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
-
-                html += `<div id="leftovers-card-${divId}" class="drop-zone-card" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="leftovers" data-vehicle-type="leftovers">
-                                     <h5 class="mt-4">Sobras Finais: ${finalLeftoverKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                                     <div class="card mb-3">
-                                         <div class="card-header bg-danger text-white d-flex align-items-center">
-                                             Pedidos Restantes
-                                             <div class="ms-auto">${manualLoadButton}${printButtonHtml}</div>
-                                         </div>
-                                         <div class="card-body">${createTable(sobrasDestaRota, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Dat_Ped', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                                     </div>
-                                 </div>`;
             }
             resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
             updateAndRenderChart();
@@ -4003,9 +4005,18 @@
                     </div>
                 </div>`;
             
-            activeTabPane.appendChild(builderWrapper);
+            // NOVO: Insere o painel de montagem no topo da área de trabalho, não no final.
+            const insertAfterElement = activeTabPane.querySelector('.mb-3.no-print'); // Encontra o container dos botões de rota
+            if (insertAfterElement && insertAfterElement.nextElementSibling && insertAfterElement.nextElementSibling.tagName === 'HR') {
+                insertAfterElement.insertAdjacentElement('afterend', builderWrapper);
+            } else {
+                // Fallback: se não encontrar, insere no início da aba.
+                activeTabPane.prepend(builderWrapper);
+            }
             
             updateManualBuilderUI(); 
+            // Rola a tela suavemente para o painel recém-criado.
+            builderWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function updateManualBuilderUI() {
@@ -4090,21 +4101,27 @@
             }, 300);
 
             updateAndRenderChart();
-            updateAndRenderKPIs(); // Adicionado para atualizar os KPIs dinâmicos
+            updateAndRenderKPIs();
             saveStateToLocalStorage();
         }
 
         function cancelManualLoad() {
              if (!manualLoadInProgress) return;
-             
-             currentLeftoversForPrinting.push(...manualLoadInProgress.pedidos);
-             
+
+             // Devolve os pedidos do painel manual para a lista de pedidos gerais.
+             if (manualLoadInProgress.pedidos.length > 0) {
+                pedidosGeraisAtuais.push(...manualLoadInProgress.pedidos);
+             }
+
              const builderWrapper = document.getElementById('manual-load-builder-wrapper');
              if (builderWrapper) builderWrapper.remove();
              manualLoadInProgress = null;
 
-             updateLoadUI('leftovers');
-             updateAndRenderKPIs(); // Adicionado para atualizar os KPIs dinâmicos
+             // Re-renderiza a lista de pedidos disponíveis para incluir os itens devolvidos.
+             const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
+             displayGerais(document.getElementById('resultado-geral'), gruposGerais);
+
+             updateAndRenderKPIs();
         }
 
         function dragStart(event, pedidoId, clienteId, sourceId) {
@@ -4229,7 +4246,7 @@
             }
 
             updateAndRenderChart();
-            updateAndRenderKPIs(); // Adicionado para atualizar os KPIs dinâmicos
+            updateAndRenderKPIs();
             saveStateToLocalStorage();
         }
 
@@ -4895,14 +4912,14 @@
                 // Ativa a primeira aba de navegação e mostra a view correspondente
                 const activeLink = document.querySelector('#sidebar-nav a.nav-link.active');
                 if (!activeLink) {
-                    document.querySelectorAll('.main-view').forEach(v => v.style.display = 'none');
+                    document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active-view'));
                     const firstLink = document.querySelector('#sidebar-nav a.main-nav-link');
                     if (firstLink) {
                         firstLink.classList.add('active');
                         const targetViewId = firstLink.getAttribute('href');
                         if (targetViewId) {
                             const targetView = document.querySelector(targetViewId);
-                            if (targetView) targetView.style.display = 'block';
+                            if (targetView) targetView.classList.add('active-view');
                         }
                     }
                 }
