@@ -38,32 +38,52 @@
             --backdrop-blur: 10px;
         }
 
-        /* --- Animação de Fundo "Aurora" --- */
-        @keyframes move-aurora {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* --- Novas Animações de Fundo Cyber --- */
+        @keyframes move-aurora-glow {
+            0% { background-position: 0% 50%, 50% 50%; }
+            50% { background-position: 100% 50%, 50% 50%; }
+            100% { background-position: 0% 50%, 50% 50%; }
+        }
+        @keyframes scanline {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100%; }
         }
 
         /* --- Melhorias Gerais --- */
         body {
             background-color: var(--dark-bg);
-            /* Efeito de Grid e Brilho Sutil */
+            /* Novo Fundo Cyberpunk com Hexágonos e Scanlines */
             background-image: 
-                /* Grid */
-                linear-gradient(var(--dark-border) 1px, transparent 1px),
-                linear-gradient(90deg, var(--dark-border) 1px, transparent 1px),
-                /* Brilho */
-                radial-gradient(at 15% 85%, hsla(210, 100%, 50%, 0.1), transparent 50%),
-                radial-gradient(at 85% 15%, hsla(265, 88%, 60%, 0.1), transparent 50%);
-            background-size: 60px 60px, 60px 60px, 150% 150%, 150% 150%;
+                /* 1. Scanlines (frente) */
+                linear-gradient(to bottom, rgba(10, 10, 10, 0) 50%, rgba(10, 10, 10, 0.7) 51%),
+                /* 2. Brilho Aurora (meio) */
+                radial-gradient(at 15% 85%, hsla(210, 100%, 50%, 0.15), transparent 40%),
+                radial-gradient(at 85% 15%, hsla(265, 88%, 60%, 0.15), transparent 40%),
+                /* 3. Brilho Central Pulsante (meio) */
+                radial-gradient(ellipse at center, rgba(10, 132, 255, 0.1), transparent 70%),
+                /* 4. Hexágonos (fundo) */
+                linear-gradient(30deg, transparent 49.5%, rgba(10, 132, 255, 0.08) 50%, transparent 50.5%),
+                linear-gradient(150deg, transparent 49.5%, rgba(10, 132, 255, 0.08) 50%, transparent 50.5%),
+                linear-gradient(90deg, transparent 49.5%, rgba(10, 132, 255, 0.08) 50%, transparent 50.5%);
+            background-size: 
+                100% 4px, /* Scanlines */
+                150% 150%, /* Aurora 1 */
+                150% 150%, /* Aurora 2 */
+                100% 100%, /* Brilho Central */
+                86px 50px, /* Hex 1 */
+                86px 50px, /* Hex 2 */
+                86px 50px; /* Hex 3 */
+            background-repeat: repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, repeat;
+            background-attachment: fixed;
+            animation: 
+                move-aurora-glow 20s ease-in-out infinite,
+                scanline 10s linear infinite;
+
             font-family: 'Inter', sans-serif;
             color: var(--dark-text-primary);
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
-            background-attachment: fixed;
-            animation: move-aurora 20s ease-in-out infinite;
         }        
 
         ::-webkit-scrollbar { width: 8px; }
@@ -74,10 +94,10 @@
         h1, h2, h3, h4, h5 { font-weight: 700; letter-spacing: -0.5px; }
 
         /* --- Tipografia Responsiva (Valores ajustados para uma aparência mais compacta e profissional) --- */
-        h1.h2 { font-size: clamp(1.15rem, 1.8vw, 1.4rem); }
-        h3 { font-size: clamp(0.95rem, 1.5vw, 1.1rem); }
-        .card-title.h5, .modal-title { font-size: clamp(0.85rem, 1.1vw, 0.95rem); }
-        #sidebar .fs-4 { font-size: clamp(0.95rem, 1.4vw, 1.1rem); }
+        h1.h2 { font-size: clamp(1.1rem, 1.8vw, 1.3rem); } /* Reduzido */
+        h3 { font-size: clamp(0.9rem, 1.5vw, 1.05rem); } /* Reduzido */
+        .card-title.h5, .modal-title { font-size: clamp(0.8rem, 1.1vw, 0.9rem); } /* Reduzido */
+        #sidebar .fs-4 { font-size: clamp(0.9rem, 1.4vw, 1.05rem); } /* Reduzido */
 
 
         /* --- Animações --- */
@@ -120,7 +140,7 @@
             position: absolute; /* Empilha as views para a transição */
             width: 100%;
             height: 100%;
-            padding: 1.5rem; /* Adiciona padding que estava no p-4 das views */
+            padding: 1.25rem; /* Adiciona padding que estava no p-4 das views - Reduzido */
             overflow-y: auto; /* Permite rolagem interna em cada view */
         }
 
@@ -140,28 +160,22 @@
             flex-direction: column;
         }
 
-        /* Estilo para a barra de rolagem personalizada (Chrome, Edge, Safari) - CORRIGIDO */
-        .sidebar-scrollable-content::-webkit-scrollbar { width: 6px; }
-        .sidebar-scrollable-content::-webkit-scrollbar-track { background: transparent; }
-        .sidebar-scrollable-content::-webkit-scrollbar-thumb { background-color: rgba(120, 111, 255, 0.15); border-radius: 10px; transition: background-color 0.3s ease; }
-        .sidebar-scrollable-content::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary); }
-
         /* --- Nova Estrutura da Sidebar --- */
         #sidebar-process-section {
-            padding: 0 1rem 1rem 1rem;
             border-bottom: 1px solid var(--dark-border);
+            padding: 0 1rem 0.75rem 1rem; /* Padding ajustado */
         }
         #sidebar-nav-section {
             flex: 1 1 auto; /* Ocupa o espaço restante */
             overflow-y: auto; /* Rolagem apenas se necessário */
             min-height: 0;
-            padding: 1rem;
+            padding: 0.75rem 1rem; /* Padding vertical reduzido */
             scrollbar-width: thin;
             scrollbar-color: rgba(120, 111, 255, 0.15) transparent;
         }
 
         #sidebar .sidebar-header { 
-            padding: 1rem 1.25rem 1rem 1rem; 
+            padding: 1rem 0.25rem 1rem 0; /* Padding ajustado para dentro da seção */
         }
         #sidebar .sidebar-header .fs-4 { 
             font-weight: 700; 
@@ -189,10 +203,9 @@
         #sidebar .nav-link {
             color: var(--dark-text-secondary);
             font-weight: 500; font-size: 0.9rem;
-            padding: 0.75rem 1.25rem;
+            padding: 0.6rem 1rem; /* Padding reduzido */
             border-radius: 0.5rem;
             position: relative;
-            font-size: 0.9rem; /* Levemente maior para legibilidade */
             transition: all 0.3s ease;
             white-space: nowrap; /* Impede que o texto quebre linha durante a animação */
             border-left: 3px solid transparent; /* Indicador lateral */
@@ -228,7 +241,7 @@
             background-color: rgba(0,0,0,0.15);
         }
         #sidebar .nav-submenu .nav-link {
-            padding: 0.5rem 1.25rem; /* Padding menor para itens de submenu */
+            padding: 0.45rem 1.25rem; /* Padding menor para itens de submenu */
         }
 
         #sidebar hr {
@@ -333,9 +346,9 @@
             background-color: var(--dark-surface-secondary);
             border-bottom: 1px solid var(--dark-border);
             font-weight: 600;
-            padding: 0.75rem 1.25rem; /* Padding reduzido */
+            padding: 0.6rem 1rem; /* Padding reduzido */
         }
-        .card-body { padding: 1.25rem; } /* Padding reduzido */
+        .card-body { padding: 1rem; } /* Padding reduzido */
 
         /* --- Ajuste para card de Pedidos Disponíveis rolável --- */
         #pedidos-disponiveis-card .card-body {
@@ -357,7 +370,7 @@
         .btn {
             font-weight: 600;
             font-size: 0.85rem; /* Menor */
-            transition: all 0.2s ease-in-out;
+            transition: all 0.3s ease-in-out;
             border-radius: 0.5rem;
             padding: 0.4rem 0.8rem; /* Padding reduzido */
         }
@@ -427,8 +440,9 @@
             background-color: var(--dark-surface-secondary);
             font-weight: 600; font-size: 0.85rem;
             border-bottom: 2px solid var(--dark-border);
+            padding: 0.5rem 0.75rem; /* Adicionado padding ao header */
         }
-        tbody td { padding: 0.5rem 0.75rem; vertical-align: middle; font-size: 0.875rem; } /* Padding e fonte reduzidos */
+        tbody td { padding: 0.4rem 0.75rem; vertical-align: middle; font-size: 0.85rem; } /* Padding e fonte reduzidos */
         tbody tr { transition: background-color 0.2s ease; }
 
         .nav-tabs .nav-link { /* Abas mais compactas */
@@ -436,7 +450,7 @@
             border: none;
             border-bottom: 3px solid transparent; /* Transição na borda */
             font-weight: 600;
-            padding: 0.6rem 0.9rem; /* Menor */
+            padding: 0.5rem 0.8rem; /* Menor */
             transition: all 0.3s ease;
         }
         .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
@@ -449,7 +463,7 @@
             border: 1px solid var(--dark-border);
             border-top: none;
             border-radius: 0 0 0.75rem 0.75rem; /* Menor */
-            padding: 1.25rem; /* Padding reduzido */
+            padding: 1rem; /* Padding reduzido */
         }
 
         /* Melhoria de Usabilidade */
@@ -520,7 +534,6 @@
                 border-right: none;
                 border-bottom: 1px solid var(--dark-border);
             }
-            .sidebar-scrollable-content { overflow-y: visible; } /* Desativa a rolagem no mobile */
             #sidebar-nav-section { overflow-y: visible; }
             #main-content { margin-left: 0; width: 100%; }
         }
@@ -555,7 +568,7 @@
             background: var(--dark-surface);
             border: 1px solid var(--dark-border);
             border-radius: 0.75rem;
-            padding: 1.25rem;
+            padding: 1rem; /* Reduzido */
             display: flex;
             align-items: center;
             transition: all 0.3s ease;
@@ -568,10 +581,10 @@
             border-color: var(--dark-primary-hover);
         }
         .stat-card .stat-icon {
-            font-size: 2.5rem;
-            padding: 1rem;
+            font-size: 2.2rem; /* Reduzido */
+            padding: 0.8rem; /* Reduzido */
             border-radius: 50%;
-            margin-right: 1.25rem;
+            margin-right: 1rem; /* Reduzido */
             background: linear-gradient(145deg, var(--dark-surface-secondary), var(--dark-surface));
             color: var(--dark-primary);
             display: flex;
@@ -579,14 +592,14 @@
             justify-content: center;
         }
         .stat-card .stat-info .stat-label {
-            font-size: 0.8rem;
+            font-size: 0.75rem; /* Reduzido */
             font-weight: 600;
             color: var(--dark-text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         .stat-card .stat-info .stat-value {
-            font-size: 1.75rem;
+            font-size: 1.6rem; /* Reduzido */
             font-weight: 700;
             color: var(--dark-text-primary);
             line-height: 1.2;
@@ -731,16 +744,16 @@
     
     <div class="d-flex">
         <nav id="sidebar" class="text-white no-print">
-            <div class="sidebar-header d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-box-seam-fill me-3 fs-2" style="color: var(--dark-accent);"></i>
-                    <span class="fs-4">ApexLog</span>
-                    <span class="badge bg-primary-subtle text-primary-emphasis fw-normal ms-2">v1.1</span>
-                </div>
-            </div>
-            
             <!-- Seção de Processo (Fixa no topo) -->
             <div id="sidebar-process-section">
+                <div class="sidebar-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-box-seam-fill me-3 fs-2" style="color: var(--dark-accent);"></i>
+                        <span class="fs-4">ApexLog</span>
+                        <span class="badge bg-primary-subtle text-primary-emphasis fw-normal ms-2">v1.1</span>
+                    </div>
+                </div>
+
                 <!-- Seção 1: Processo Principal -->
                 <h6 class="form-label text-uppercase small fw-bold mt-3">Processo Principal</h6>
                 <div id="sidebar-controls">
