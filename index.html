@@ -3430,6 +3430,9 @@
         }
         
         async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
+            // NOVO: Remove mensagens de sucesso de rotas anteriores para manter a interface limpa.
+            document.querySelectorAll('.route-success-message').forEach(el => el.remove());
+
             // NOVO: Se o painel de carga manual estiver aberto, fecha-o antes de processar uma nova rota.
             if (document.getElementById('manual-load-builder-wrapper')) cancelManualLoad();
 
@@ -3628,6 +3631,14 @@
             const gruposGeraisRestantes = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
             displayGerais(document.getElementById('resultado-geral'), gruposGeraisRestantes);
 
+            // NOVO: Foca no resultado da rota processada na lista de disponíveis
+            setTimeout(() => {
+                const rotasDisponiveis = getSortedVarejoRoutes(Object.keys(gruposGeraisRestantes));
+                const rotaPrincipal = Array.isArray(routeOrRoutes) ? routeOrRoutes[0] : routeOrRoutes;
+                const indexRota = rotasDisponiveis.indexOf(rotaPrincipal);
+                handlePostProcessingUI(indexRota, title, divId);
+            }, 100);
+
             // Salvar o contexto da rota processada para recarregamento
             const routeContext = {
                 divId: divId,
@@ -3657,6 +3668,29 @@
             updateAndRenderChart();
             updateAndRenderKPIs(); // Adicionado para atualizar os KPIs dinâmicos
             saveStateToLocalStorage();
+        }
+
+        function handlePostProcessingUI(index, routeTitle, resultDivId) {
+            const resultContainer = document.getElementById(resultDivId);
+            if (!resultContainer) return;
+
+            if (index !== -1) {
+                // Se a rota ainda existe nas sobras, expande o acordeão
+                const collapseElement = document.getElementById(`collapseGeral${index}`);
+                if (collapseElement) {
+                    const bsCollapse = new bootstrap.Collapse(collapseElement, { toggle: false });
+                    bsCollapse.show();
+                    setTimeout(() => collapseElement.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+                }
+            } else {
+                // Se a rota não existe mais (sem sobras), mostra uma mensagem de sucesso
+                const successMessage = document.createElement('div');
+                successMessage.className = 'alert alert-success alert-dismissible fade show mt-3 route-success-message';
+                successMessage.role = 'alert';
+                successMessage.innerHTML = `<strong>Sucesso!</strong> Todos os pedidos da rota <strong>${routeTitle}</strong> foram utilizados. Nenhuma sobra. <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+                
+                resultContainer.insertAdjacentElement('beforebegin', successMessage);
+            }
         }
         
         async function runExpertOptimizer(packableGroups, vehicleType) {
@@ -4255,12 +4289,20 @@
             if (sourceIsManualBuilder) {
                 updateManualBuilderUI();
             } else {
-                updateLoadUI(sourceId);
+                // NOVO: Se o alvo for o construtor manual, não redesenha a lista de disponíveis
+                // para manter o acordeão de origem aberto. Apenas atualiza a carga de destino.
+                if (targetIsManualBuilder && sourceIsGeral) {
+                    // Apenas atualiza a UI do construtor manual, pois a origem (disponíveis) não precisa ser redesenhada
+                } else {
+                    updateLoadUI(sourceId);
+                }
             }
             
             if (targetIsManualBuilder) {
                 updateManualBuilderUI();
             } else {
+                // NOVO: Se a origem for o construtor manual, não precisa redesenhar a carga de destino,
+                // pois o updateLoadUI(sourceId) já terá feito isso.
                 updateLoadUI(targetId);
             }
 
