@@ -945,7 +945,7 @@
                                 </li>
                             </ul>
                             <div class="tab-content" id="pedidosDisponiveisTabsContent">
-                                <div class="tab-pane fade show active p-3" id="disponiveis-tab-pane" role="tabpanel">
+                                <div class="tab-pane fade show active p-3 drop-zone-card" id="disponiveis-tab-pane" role="tabpanel" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="geral">
                                     <div id="resultado-geral"><div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div></div>
                                 </div>
                                 <div class="tab-pane fade p-3" id="bloqueados-regra-tab-pane" role="tabpanel">
@@ -1424,21 +1424,31 @@
 
         // Função centralizada para ordenar rotas de forma consistente
         function getSortedVarejoRoutes(rotas) {
-            const rotasParana = [];
-            const rotasSaoPaulo = [];
-
-            rotas.forEach(rota => {
-                const config = rotaVeiculoMap[rota];
-                // Se a rota não está mapeada OU se está mapeada como 'van' e não é do Paraná (não começa com 'Rota 1'), é de SP.
-                if (!config || (config.type === 'van' && !config.title.startsWith('Rota 1'))) {
-                    rotasSaoPaulo.push(rota);
-                } else {
-                    rotasParana.push(rota);
-                }
-            });
-
+            const vehicleOrder = { 'fiorino': 1, 'van': 2, 'tresQuartos': 3 };
             const numericSort = (a, b) => a.localeCompare(b, undefined, { numeric: true });
-            return [...rotasParana.sort(numericSort), ...rotasSaoPaulo.sort(numericSort)];
+
+            return rotas.sort((a, b) => {
+                const typeA = rotaVeiculoMap[a]?.type || 'van';
+                const typeB = rotaVeiculoMap[b]?.type || 'van';
+
+                const orderA = vehicleOrder[typeA] || 99; // 99 para tipos não definidos
+                const orderB = vehicleOrder[typeB] || 99;
+
+                if (orderA !== orderB) {
+                    return orderA - orderB;
+                }
+
+                // Se ambos são 'van', ordena as do Paraná primeiro
+                if (typeA === 'van' && typeB === 'van') {
+                    const isParanaA = rotaVeiculoMap[a]?.title.startsWith('Rota 1');
+                    const isParanaB = rotaVeiculoMap[b]?.title.startsWith('Rota 1');
+                    if (isParanaA && !isParanaB) return -1;
+                    if (!isParanaA && isParanaB) return 1;
+                }
+
+                // Se os tipos são iguais, ordena numericamente pela rota
+                return numericSort(a, b);
+            });
         }
 
         function normalizeClientId(id) {
@@ -4213,6 +4223,7 @@
             let sourceIsLeftovers = sourceId === 'leftovers';
             let targetIsLeftovers = targetId === 'leftovers';
             let sourceIsGeral = sourceId === 'geral';
+            let targetIsGeral = targetId === 'geral'; // NOVO: Identifica se o alvo é a lista de disponíveis
             let targetIsManualBuilder = targetId === 'manual-builder';
             let sourceIsManualBuilder = sourceId === 'manual-builder';
 
@@ -4230,6 +4241,8 @@
                 targetLoad = { pedidos: currentLeftoversForPrinting, totalKg: 0, totalCubagem: 0 };
             } else if (targetIsManualBuilder) {
                 targetLoad = manualLoadInProgress;
+            } else if (targetIsGeral) { // NOVO: Trata a lista de disponíveis como um alvo
+                targetLoad = { pedidos: pedidosGeraisAtuais, totalKg: 0, totalCubagem: 0 };
             } else {
                 targetLoad = activeLoads[targetId];
             }
@@ -4246,7 +4259,8 @@
             const clientBlockKg = clientOrdersToMove.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
             const clientBlockCubagem = clientOrdersToMove.reduce((sum, p) => sum + p.Cubagem, 0);
             
-            if (!targetIsLeftovers && !targetIsManualBuilder) {
+            // NOVO: A validação de capacidade só se aplica se o alvo for uma carga, não a lista de disponíveis.
+            if (!targetIsLeftovers && !targetIsManualBuilder && !targetIsGeral) {
                 const targetVehicleType = targetLoad.vehicleType;
                 if (targetVehicleType) { 
                     const config = getVehicleConfig(targetVehicleType);
@@ -4280,7 +4294,9 @@
 
             if (targetIsLeftovers) {
                 currentLeftoversForPrinting.push(...clientOrdersToMove);
-            } else {
+            } else if (targetIsGeral) { // NOVO: Adiciona os pedidos de volta à lista de disponíveis
+                pedidosGeraisAtuais.push(...clientOrdersToMove);
+            } else { // Se for uma carga normal ou o construtor manual
                 targetLoad.pedidos.push(...clientOrdersToMove);
                 targetLoad.totalKg += clientBlockKg;
                 targetLoad.totalCubagem += clientBlockCubagem;
@@ -4289,23 +4305,14 @@
             if (sourceIsManualBuilder) {
                 updateManualBuilderUI();
             } else {
-                // NOVO: Se o alvo for o construtor manual, não redesenha a lista de disponíveis
-                // para manter o acordeão de origem aberto. Apenas atualiza a carga de destino.
-                if (targetIsManualBuilder && sourceIsGeral) {
-                    // Apenas atualiza a UI do construtor manual, pois a origem (disponíveis) não precisa ser redesenhada
-                } else {
-                    updateLoadUI(sourceId);
-                }
+                updateLoadUI(sourceId);
             }
             
             if (targetIsManualBuilder) {
                 updateManualBuilderUI();
             } else {
-                // NOVO: Se a origem for o construtor manual, não precisa redesenhar a carga de destino,
-                // pois o updateLoadUI(sourceId) já terá feito isso.
                 updateLoadUI(targetId);
             }
-
             updateAndRenderChart();
             updateAndRenderKPIs();
             saveStateToLocalStorage();
@@ -4397,13 +4404,23 @@
         function updateLoadUI(loadId) {
             const activeTabPane = document.querySelector('.tab-pane.active');
             
-            if (loadId === 'leftovers' || loadId === 'geral') {
+            if (loadId === 'geral') {
                 const geraisDiv = document.getElementById('resultado-geral');
                 if (geraisDiv) {
+                    // Salva o ID do acordeão que está aberto antes de redesenhar
+                    const openAccordionItem = geraisDiv.querySelector('.accordion-collapse.show');
+                    const openAccordionId = openAccordionItem ? openAccordionItem.id : null;
+
                     const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
                         const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
                     }, {});
                     displayGerais(geraisDiv, gruposGerais);
+
+                    // Reabre o acordeão que estava aberto
+                    if (openAccordionId) {
+                        const newAccordionItem = document.getElementById(openAccordionId);
+                        if (newAccordionItem) { new bootstrap.Collapse(newAccordionItem).show(); }
+                    }
                 }
                 
                 const leftoversCard = activeTabPane ? activeTabPane.querySelector('[data-load-id="leftovers"]') : null;
