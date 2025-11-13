@@ -611,117 +611,88 @@
     </style>
 
     <style>
-        /* --- Animação de Carregamento V4 - "Neural Matrix" --- */
+        /* --- Animação de Carregamento V5 - "Synaptic Core" --- */
         .loading-animation-container {
             position: relative;
             width: 100%;
-            height: 180px; /* Aumenta a altura para o efeito 3D */
+            height: 200px; /* Altura aumentada para o novo efeito */
             overflow: hidden;
             margin-bottom: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            perspective: 800px; /* Habilita o espaço 3D */
+            background: radial-gradient(ellipse at center, rgba(10, 132, 255, 0.1), transparent 70%);
         }
 
-        .optimizer-core {
-            width: 150px;
-            height: 150px;
-            position: absolute;
-            transform-style: preserve-3d;
-            animation: rotate-3d-slow 20s linear infinite;
-        }
-
-        .core-ring {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+        #synaptic-core {
+            width: 50px;
+            height: 50px;
+            background: var(--dark-primary);
             border-radius: 50%;
-            border: 2px solid;
-            animation: core-pulse 3s ease-in-out infinite;
+            position: absolute;
+            box-shadow: 0 0 20px var(--dark-primary), 0 0 40px var(--dark-primary-glow), inset 0 0 10px rgba(255,255,255,0.5);
+            animation: core-pulse-v2 2s ease-in-out infinite;
         }
 
-        .core-ring-1 {
-            border-color: var(--dark-primary-glow);
-            transform: rotateY(70deg) rotateX(20deg);
-            animation-delay: -1s;
-        }
-        .core-ring-2 {
-            border-color: var(--dark-accent-glow);
-            transform: rotateY(-70deg) rotateX(-20deg);
-            animation-delay: -2s;
-        }
-        .core-ring-3 {
-            border-color: var(--dark-primary);
-            transform: rotateX(90deg);
-            animation-delay: -3s;
-        }
-
-        .data-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 30px);
-            grid-template-rows: repeat(5, 30px);
-            gap: 10px;
-            transform-style: preserve-3d;
-            transform: rotateX(60deg) rotateZ(0deg);
-            animation: rotate-3d-grid 30s linear infinite;
+        #particle-field {
+            width: 300px;
+            height: 300px;
+            position: absolute;
+            animation: rotate-field 30s linear infinite;
         }
 
         .data-node {
-            width: 8px;
-            height: 8px;
-            background-color: var(--dark-primary);
-            border-radius: 50%;
-            box-shadow: 0 0 5px var(--dark-primary-glow);
-            animation: node-flicker 5s ease-in-out infinite;
-            transform: scale(0.8);
-        }
-
-        /* Animação de ativação em cascata */
-        .data-node:nth-child(5n + 1) { animation-delay: -0.1s; }
-        .data-node:nth-child(5n + 2) { animation-delay: -0.2s; }
-        .data-node:nth-child(5n + 3) { animation-delay: -0.3s; }
-        .data-node:nth-child(5n + 4) { animation-delay: -0.4s; }
-        .data-node:nth-child(5n + 5) { animation-delay: -0.5s; }
-
-        .scan-pulse {
             position: absolute;
-            width: 10px; height: 10px;
+            width: 6px;
+            height: 6px;
+            background: var(--dark-accent-secondary);
             border-radius: 50%;
-            background: var(--dark-accent);
-            box-shadow: 0 0 30px 15px var(--dark-accent-glow);
-            animation: pulse-expand 4s ease-out infinite;
+            box-shadow: 0 0 10px var(--dark-accent-glow);
+            /* Posições iniciais e finais são definidas via JS/CSS vars */
+            top: var(--start-y);
+            left: var(--start-x);
+            animation: orbit 10s var(--delay) linear infinite, pulse-node 2s var(--delay) ease-in-out infinite;
+        }
+
+        .data-node::before {
+            content: '';
+            position: absolute;
+            width: 150px; /* Comprimento da linha */
+            height: 1px;
+            background: linear-gradient(to left, var(--dark-accent-secondary), transparent);
+            top: 50%;
+            left: 50%;
+            transform-origin: 0 50%;
+            transform: rotate(var(--angle));
             opacity: 0;
+            animation: connect-line 10s var(--delay) linear infinite;
         }
 
-        @keyframes rotate-3d-slow {
-            from { transform: rotate3d(1, 1, 1, 0deg); }
-            to { transform: rotate3d(1, 1, 1, 360deg); }
-        }
-        @keyframes rotate-3d-grid {
-            0% { transform: rotateX(60deg) rotateZ(0deg); }
-            50% { transform: rotateX(50deg) rotateZ(10deg); }
-            100% { transform: rotateX(60deg) rotateZ(0deg); }
+        @keyframes core-pulse-v2 {
+            0% { transform: scale(1); box-shadow: 0 0 20px var(--dark-primary), 0 0 40px var(--dark-primary-glow), inset 0 0 10px rgba(255,255,255,0.5); }
+            50% { transform: scale(1.1); box-shadow: 0 0 30px var(--dark-primary), 0 0 60px var(--dark-primary-glow), inset 0 0 15px rgba(255,255,255,0.8); }
+            100% { transform: scale(1); box-shadow: 0 0 20px var(--dark-primary), 0 0 40px var(--dark-primary-glow), inset 0 0 10px rgba(255,255,255,0.5); }
         }
 
-        @keyframes core-pulse {
-            0%, 100% { opacity: 0.7; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); }
+        @keyframes rotate-field {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
-        @keyframes node-flicker {
-            0%, 100% { opacity: 0.6; transform: scale(0.8); }
-            20% { opacity: 1; transform: scale(1); background-color: var(--dark-accent); box-shadow: 0 0 10px var(--dark-accent-glow); }
-            40% { opacity: 0.8; transform: scale(0.9); }
-            60% { opacity: 1; transform: scale(1.1); background-color: var(--dark-primary-hover); box-shadow: 0 0 15px var(--dark-primary-glow); }
-            80% { opacity: 0.7; transform: scale(0.85); }
+        @keyframes orbit {
+            from { transform: translate(0, 0); }
+            to { transform: translate(var(--orbit-x), var(--orbit-y)); }
         }
 
-        @keyframes pulse-expand {
-            0% { transform: scale(0); opacity: 1; }
-            80% { transform: scale(25); opacity: 0; }
-            100% { opacity: 0; }
+        @keyframes pulse-node {
+            0%, 100% { opacity: 0.7; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes connect-line {
+            0%, 100% { opacity: 0; }
+            40% { opacity: 0.7; }
+            60% { opacity: 0.7; }
         }
 
         #thinking-text {
@@ -1160,17 +1131,11 @@
             <div class="modal-content" style="background-color: var(--dark-surface); backdrop-filter: blur(12px);">
                 <div class="modal-body text-center p-4">
                     <!-- Nova Animação de Carregamento V4 -->
-                    <div class="loading-animation-container">
-                        <div class="optimizer-core">
-                            <div class="core-ring core-ring-1"></div>
-                            <div class="core-ring core-ring-2"></div>
-                            <div class="core-ring core-ring-3"></div>
+                    <div class="loading-animation-container" id="synaptic-animation-container">
+                        <div id="synaptic-core"></div>
+                        <div id="particle-field">
+                            <!-- Partículas serão geradas pelo JS -->
                         </div>
-                        <div class="data-grid">
-                            <!-- 25 nós de dados gerados dinamicamente ou estaticamente -->
-                            <script>for(let i=0; i<25; i++) document.write('<div class="data-node"></div>');</script>
-                        </div>
-                        <div class="scan-pulse"></div>
                     </div>
 
                     <h5 id="processing-status-text" class="mb-2">Montando Cargas...</h5>
@@ -5128,37 +5093,40 @@
             }
         }
 
-        // --- Script para a nova animação "Synaptic Core" ---
+        // --- Script para a nova animação "Synaptic Core" (V5) ---
         const processingModal = document.getElementById('processing-modal');
         const particleField = document.getElementById('particle-field');
         const numParticles = 20;
 
         function createParticles() {
             if (!particleField) return;
-            particleField.innerHTML = ''; // Limpa partículas antigas
+            particleField.innerHTML = ''; // Limpa partículas antigas para evitar duplicação
             for (let i = 0; i < numParticles; i++) {
                 const node = document.createElement('div');
                 node.className = 'data-node';
 
-                // Posição inicial aleatória nas bordas
+                // Posição inicial aleatória perto do centro
                 const angle = Math.random() * 2 * Math.PI;
-                const radius = 150; // Metade do tamanho do particle-field
-                node.style.setProperty('--start-x', `${50 + (radius * Math.cos(angle)) / 3}%`);
-                node.style.setProperty('--start-y', `${50 + (radius * Math.sin(angle)) / 3}%`);
+                const startRadius = 20; // Começa perto do núcleo
+                node.style.setProperty('--start-x', `${150 + startRadius * Math.cos(angle)}px`);
+                node.style.setProperty('--start-y', `${150 + startRadius * Math.sin(angle)}px`);
 
                 // Posição final em órbita
-                const orbitRadius = 60 + Math.random() * 30;
+                const orbitRadius = 80 + Math.random() * 60; // Raio da órbita
                 const orbitAngle = Math.random() * 2 * Math.PI;
-                node.style.setProperty('--orbit-x', `${orbitRadius * Math.cos(orbitAngle)}px`);
-                node.style.setProperty('--orbit-y', `${orbitRadius * Math.sin(orbitAngle)}px`);
+                node.style.setProperty('--orbit-x', `${150 + orbitRadius * Math.cos(orbitAngle)}px`);
+                node.style.setProperty('--orbit-y', `${150 + orbitRadius * Math.sin(orbitAngle)}px`);
+
+                // Ângulo da linha de conexão
                 node.style.setProperty('--angle', `${Math.random() * 360}deg`);
+                // Atraso aleatório para dessincronizar as animações
                 node.style.setProperty('--delay', `-${(Math.random() * 10).toFixed(2)}s`);
                 
                 particleField.appendChild(node);
             }
         }
-        // Recria as partículas sempre que o modal for exibido
-        processingModal.addEventListener('show.bs.modal', createParticles);
+        // Recria as partículas sempre que o modal de processamento for exibido
+        if (processingModal) processingModal.addEventListener('show.bs.modal', createParticles);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
