@@ -18,7 +18,7 @@
     <!-- Bibliotecas para Geração de PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-    
+
     <style>
         :root {
             /* Paleta de Cores "Onyx" */
@@ -227,6 +227,44 @@
             box-shadow: 0 0 20px var(--dark-primary-glow);
             border-left-color: var(--dark-primary);
         }
+
+        /* --- Estilos para o Novo Logo Animado --- */
+        #logo-container {
+            width: 48px; /* Tamanho do container do logo */
+            height: 48px;
+            margin-right: 0.75rem; /* Margem à direita */
+            transition: transform 0.4s ease;
+        }
+        #logo-container:hover {
+            transform: scale(1.1); /* Efeito de zoom no hover */
+        }
+        #animated-logo .logo-line {
+            stroke: url(#logo-gradient);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            stroke-dasharray: 200; /* Comprimento para a animação de desenho */
+            stroke-dashoffset: 200;
+            animation: draw-line 2s ease-out forwards;
+        }
+        #animated-logo:hover .logo-line {
+            filter: drop-shadow(0 0 8px var(--dark-primary)); /* Efeito de brilho no hover */
+            animation: pulse-glow 1.5s ease-in-out infinite;
+        }
+        /* Animação de desenho das linhas */
+        @keyframes draw-line {
+            to { stroke-dashoffset: 0; }
+        }
+        /* Animação de pulso do brilho */
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 4px var(--dark-primary)); }
+            50% { filter: drop-shadow(0 0 12px var(--dark-primary)); }
+        }
+        /* Atraso para cada parte do logo se desenhar em sequência */
+        #animated-logo #line-1 { animation-delay: 0s; }
+        #animated-logo #line-2 { animation-delay: 0.2s; }
+        #animated-logo #line-3 { animation-delay: 0.4s; }
 
         /* --- Estilo para Submenu na Sidebar --- */
         #sidebar .nav-link .submenu-arrow {
@@ -609,6 +647,23 @@
         .stat-card.stat-alert-danger:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px rgba(220, 53, 69, 0.5); border-color: #dc3545; }
         .stat-card.stat-alert-warning:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 193, 7, 0.5); border-color: #ffc107; }
     </style>
+    <style>
+        /* --- Estilos para o Novo Layout do Dashboard de Resumo --- */
+        .kpi-card-main {
+            background: linear-gradient(145deg, var(--dark-surface-secondary), var(--dark-surface));
+            border: 1px solid var(--dark-border);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            color: var(--dark-text-primary);
+            position: relative;
+            overflow: hidden;
+        }
+        .kpi-card-main .kpi-title { font-size: 0.9rem; font-weight: 600; color: var(--dark-text-secondary); text-transform: uppercase; }
+        .kpi-card-main .kpi-value { font-size: 2.5rem; font-weight: 700; line-height: 1.1; color: var(--dark-primary); }
+        .kpi-card-main .kpi-subvalue { font-size: 1rem; color: var(--dark-text-secondary); }
+        .kpi-card-main.blocked .kpi-value { color: var(--dark-accent-secondary); }
+        .list-group-item-kpi { background-color: transparent; border-color: var(--dark-border); }
+    </style>
 
     <style>
         /* --- Animação de Carregamento V5 - "Synaptic Core" --- */
@@ -719,9 +774,16 @@
             <div id="sidebar-process-section">
                 <div class="sidebar-header d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
-                        <i class="bi bi-box-seam-fill me-3 fs-2" style="color: var(--dark-accent);"></i>
+                        <div id="logo-container">
+                            <svg id="animated-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <defs><linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:var(--dark-accent-secondary);" /><stop offset="100%" style="stop-color:var(--dark-primary);" /></linearGradient></defs>
+                                <path id="line-1" class="logo-line" d="M50 10 L90 30 L90 70 L50 90"></path>
+                                <path id="line-2" class="logo-line" d="M50 10 L10 30 L10 70 L50 90"></path>
+                                <path id="line-3" class="logo-line" d="M10 30 L50 50 L90 30"></path>
+                            </svg>
+                        </div>
                         <span class="fs-4">ApexLog</span>
-                        <span class="badge bg-primary-subtle text-primary-emphasis fw-normal ms-2">v1.1</span>
+                        <span class="badge bg-primary-subtle text-primary-emphasis fw-normal ms-2">v2.0</span>
                     </div>
                 </div>
 
@@ -810,21 +872,26 @@
 
                 <!-- Container para o conteúdo do dashboard que aparece após o processamento -->
                 <div id="dashboard-content-container" style="display: none;">
-                    <div class="row">
-                        <!-- KPIs -->
-                        <div class="col-xl-3 col-md-6 mb-4 animated-entry" id="kpi-total-pedidos"></div>
-                        <div class="col-xl-3 col-md-6 mb-4 animated-entry" id="kpi-peso-disponivel"></div>
-                        <div class="col-xl-3 col-md-6 mb-4 animated-entry" id="kpi-peso-bloqueado"></div>
-                        <div class="col-xl-3 col-md-6 mb-4 animated-entry" id="kpi-pedidos-atraso"></div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xl-8 mb-4 animated-entry">
+                    <div class="row g-4">
+                        <!-- Coluna Esquerda: Gráfico Principal -->
+                        <div class="col-lg-8 animated-entry">
                             <div class="card h-100">
-                                <div class="card-header d-flex justify-content-between align-items-center"><h3 class="h5 mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Previsão de Veículos (Varejo & Toco)</h3><span id="chart-subtitle" class="text-muted small"></span></div>
-                                <div class="card-body"><div id="chart-resumo-veiculos" style="min-height: 365px;"></div></div>
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h3 class="h5 mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Previsão de Veículos</h3>
+                                    <span id="chart-subtitle" class="text-muted small"></span>
+                                </div>
+                                <div class="card-body">
+                                    <div id="chart-resumo-veiculos" style="min-height: 450px;"></div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-xl-4 mb-4 animated-entry" id="outras-categorias-container"></div>
+
+                        <!-- Coluna Direita: KPIs e Informações Rápidas -->
+                        <div class="col-lg-4">
+                            <div class="row g-4" id="kpi-container">
+                                <!-- KPIs serão inseridos aqui pelo JavaScript -->
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -838,23 +905,29 @@
             <div id="workspace-view" class="main-view">
                 <h1 class="h2 mb-4 animated-entry">Mesas de Trabalho</h1> <!-- p-4 removido -->
                 <div class="row h-100">
-                <div class="col-lg-8 mb-4 animated-entry">
-                    <div class="card h-100">
-                        <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2></div>
-                        <div class="card-body p-0">
+                <div class="col-lg-8 mb-4 animated-entry"> 
+                    <div class="card h-100"> 
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2>
+                            <button id="start-manual-load-btn" class="btn btn-sm btn-outline-success" onclick="startManualLoadBuilder()" disabled>
+                                <i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual
+                            </button>
+                        </div>
+                        <div class="card-body p-0"> 
                              <ul class="nav nav-tabs nav-fill px-3 pt-2" id="vehicleTabs" role="tablist">
                                  <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane"><i class="bi bi-box-seam-fill me-2"></i>Fiorino</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#van-tab-pane"><i class="bi bi-truck-front-fill me-2"></i>Van</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane"><i class="bi bi-truck-flatbed me-2"></i>3/4</button></li><li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#toco-tab-pane"><i class="bi bi-inboxes-fill me-2"></i>Toco</button></li>                                 
+                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane"><i class="bi bi-truck-flatbed me-2"></i>3/4</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#toco-tab-pane"><i class="bi bi-inboxes-fill me-2"></i>Toco</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cargas-fechadas-pr-tab-pane"><i class="bi bi-building-fill-check me-2"></i>Cargas Fechadas PR</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cargas-fechadas-rest-br-tab-pane"><i class="bi bi-globe-americas me-2"></i>Cargas Fechadas REST BR</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#outros-pedidos-tab-pane"><i class="bi bi-collection-fill me-2"></i>Outros pedidos</button></li>
                              </ul>
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
                                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 no-print gap-2">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Fiorinos.</p>
-                                        <div>
-                                            <button class="btn btn-sm btn-outline-success" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual</button>
-                                            <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-fiorino-geral', 'Cargas de Fiorino (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
-                                        </div>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Fiorinos ou crie uma carga manual.</p>
+                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-fiorino-geral', 'Cargas de Fiorino (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-fiorino"><div class="empty-state"><i class="bi bi-box"></i><p>Nenhuma rota de Fiorino disponível. Processe um arquivo para começar.</p></div></div>
                                     <hr class="no-print"><div id="resultado-fiorino-geral" class="mt-3"></div>
@@ -862,10 +935,7 @@
                                 <div class="tab-pane fade workspace-tab-pane" id="van-tab-pane" role="tabpanel">
                                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 no-print gap-2">
                                         <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Vans.</p>
-                                        <div>
-                                            <button class="btn btn-sm btn-outline-success" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual</button>
-                                            <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
-                                        </div>
+                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-van"><div class="empty-state"><i class="bi bi-truck-front-fill"></i><p>Nenhuma rota de Van disponível. Processe um arquivo para começar.</p></div></div>
                                     <hr class="no-print"><div id="resultado-van-geral" class="mt-3"></div>
@@ -873,16 +943,30 @@
                                 <div class="tab-pane fade workspace-tab-pane" id="tres-quartos-tab-pane" role="tabpanel">
                                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 no-print gap-2">
                                         <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as cargas 3/4.</p>
-                                        <div>
-                                            <button class="btn btn-sm btn-outline-success" onclick="startManualLoadBuilder()"><i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual</button>
-                                            <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-34-geral', 'Cargas de 3/4 (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
-                                        </div>
+                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-34-geral', 'Cargas de 3/4 (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-34"><div class="empty-state"><i class="bi bi-truck-flatbed"></i><p>Nenhuma rota de 3/4 disponível. Processe um arquivo para começar.</p></div></div>
                                     <hr class="no-print"><div id="resultado-34-geral" class="mt-3"></div>
                                 </div>
                                 <div class="tab-pane fade" id="toco-tab-pane" role="tabpanel">
                                     <div id="resultado-toco"><div class="empty-state"><i class="bi bi-inboxes-fill"></i><p>Nenhuma carga "Toco" encontrada. Processe um arquivo.</p></div></div>
+                                </div>
+                                <div class="tab-pane fade" id="cargas-fechadas-pr-tab-pane" role="tabpanel">
+                                    <div id="resultado-cargas-fechadas-pr"><div class="empty-state"><i class="bi bi-building-fill-check"></i><p>Nenhuma Carga Fechada do Paraná encontrada. Processe um arquivo.</p></div></div>
+                                </div>
+                                <div class="tab-pane fade" id="cargas-fechadas-rest-br-tab-pane" role="tabpanel">
+                                    <div id="resultado-cargas-fechadas-rest-br"><div class="empty-state"><i class="bi bi-globe-americas"></i><p>Nenhuma Carga Fechada (Resto do Brasil) encontrada. Processe um arquivo.</p></div></div>
+                                </div>
+                                <div class="tab-pane fade" id="outros-pedidos-tab-pane" role="tabpanel">
+                                    <div id="resultado-moinho" class="mb-3"><div class="empty-state"><i class="bi bi-gear-wide-connected"></i><p>Nenhum pedido "Moinho" encontrado.</p></div></div>
+                                    <hr>
+                                    <div id="resultado-funcionarios" class="mb-3"><div class="empty-state"><i class="bi bi-people-fill"></i><p>Nenhum pedido de funcionário encontrado.</p></div></div>
+                                    <hr>
+                                    <div id="resultado-transferencias" class="mb-3"><div class="empty-state"><i class="bi bi-arrow-left-right"></i><p>Nenhum pedido de transferência encontrado.</p></div></div>
+                                    <hr>
+                                    <div id="resultado-exportacao" class="mb-3"><div class="empty-state"><i class="bi bi-box-arrow-up-right"></i><p>Nenhum pedido de exportação encontrado.</p></div></div>
+                                    <hr>
+                                    <div id="resultado-marca-propria"><div class="empty-state"><i class="bi bi-tags-fill"></i><p>Nenhum pedido de Marca Própria encontrado.</p></div></div>
                                 </div>
                             </div>
                         </div>
@@ -905,15 +989,6 @@
                             <ul class="nav nav-tabs nav-fill px-3 pt-2" id="pedidosDisponiveisTabs" role="tablist">
                                 <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#disponiveis-tab-pane"><i class="bi bi-check-circle-fill me-2"></i>Disponíveis Varejo</button></li>
                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#bloqueados-regra-tab-pane"><i class="bi bi-funnel-fill me-2"></i>Bloqueados Varejo</button></li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false"><i class="bi bi-three-dots me-2"></i>Outras Consultas</a>
-                                    <ul class="dropdown-menu">
-                                        <li><button class="dropdown-item" data-bs-toggle="tab" data-bs-target="#consulta-truck-tab-pane"><i class="bi bi-truck me-2"></i>Truck</button></li>
-                                        <li><button class="dropdown-item" data-bs-toggle="tab" data-bs-target="#consulta-funcionarios-tab-pane"><i class="bi bi-people-fill me-2"></i>Funcionários</button></li>
-                                        <li><button class="dropdown-item" data-bs-toggle="tab" data-bs-target="#consulta-transferencias-tab-pane"><i class="bi bi-arrow-left-right me-2"></i>Transferências</button></li>
-                                        <li><button class="dropdown-item" data-bs-toggle="tab" data-bs-target="#consulta-exportacao-tab-pane"><i class="bi bi-globe-americas me-2"></i>Exportação</button></li>
-                                    </ul>
-                                </li>
                             </ul>
                             <div class="tab-content" id="pedidosDisponiveisTabsContent">
                                 <div class="tab-pane fade show active p-3 drop-zone-card" id="disponiveis-tab-pane" role="tabpanel" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="geral">
@@ -921,18 +996,6 @@
                                 </div>
                                 <div class="tab-pane fade p-3" id="bloqueados-regra-tab-pane" role="tabpanel">
                                     <div id="resultado-cf-numerico"><div class="empty-state"><i class="bi bi-funnel"></i><p>Nenhum pedido bloqueado por regra.</p></div></div>
-                                </div>
-                                <div class="tab-pane fade p-3" id="consulta-truck-tab-pane" role="tabpanel">
-                                    <div id="resultado-cf-accordion-container"><div class="empty-state"><i class="bi bi-truck"></i><p>Nenhum grupo de carga Truck encontrado.</p></div></div>
-                                </div>
-                                <div class="tab-pane fade p-3" id="consulta-funcionarios-tab-pane" role="tabpanel">
-                                    <div id="resultado-funcionarios-tab"><div class="empty-state"><i class="bi bi-people-fill"></i><p>Nenhum pedido de funcionário encontrado.</p></div></div>
-                                </div>
-                                <div class="tab-pane fade p-3" id="consulta-transferencias-tab-pane" role="tabpanel">
-                                    <div id="resultado-transferencias-tab"><div class="empty-state"><i class="bi bi-arrow-left-right"></i><p>Nenhum pedido de transferência encontrado.</p></div></div>
-                                </div>
-                                <div class="tab-pane fade p-3" id="consulta-exportacao-tab-pane" role="tabpanel">
-                                    <div id="resultado-exportacao-tab"><div class="empty-state"><i class="bi bi-globe-americas"></i><p>Nenhum pedido de exportação encontrado.</p></div></div>
                                 </div>
                             </div>
                         </div>
@@ -1155,12 +1218,12 @@
         let resumoChart = null;
 
         function updateAndRenderChart() {
-            const vehicleCounts = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0 };
-            const vehicleWeights = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0 };
+            const vehicleCounts = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0, outros: 0 };
+            const vehicleWeights = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0, outros: 0 };
 
             for (const loadId in activeLoads) {
                 const load = activeLoads[loadId];
-                if (load.vehicleType === 'fiorino') {
+                if (load.vehicleType === 'fiorino') { // prettier-ignore
                     vehicleCounts.fiorino++;
                     vehicleWeights.fiorino += load.totalKg;
                 } else if (load.vehicleType === 'van') {
@@ -1176,13 +1239,21 @@
             for (const cf in gruposToco) {
                 vehicleWeights.toco += gruposToco[cf].totalKg;
             }
+            
+            // NOVO: Contabiliza as "Outras" categorias
+            vehicleCounts.outros = cargasFechadasPR.length + Object.keys(gruposPorCFGlobais).length + pedidosFuncionarios.length + pedidosTransferencias.length + pedidosExportacao.length;
+            vehicleWeights.outros += cargasFechadasPR.reduce((s, p) => s + p.Quilos_Saldo, 0);
+            vehicleWeights.outros += Object.values(gruposPorCFGlobais).reduce((s, g) => s + g.totalKg, 0);
+            vehicleWeights.outros += pedidosFuncionarios.reduce((s, p) => s + p.Quilos_Saldo, 0);
+            vehicleWeights.outros += pedidosTransferencias.reduce((s, p) => s + p.Quilos_Saldo, 0);
+            vehicleWeights.outros += pedidosExportacao.reduce((s, p) => s + p.Quilos_Saldo, 0);
 
-            const totalVarejoCount = vehicleCounts.fiorino + vehicleCounts.van + vehicleCounts.tresQuartos + vehicleCounts.toco;
-            const totalVarejoWeight = vehicleWeights.fiorino + vehicleWeights.van + vehicleWeights.tresQuartos + vehicleWeights.toco;
+            const totalCount = vehicleCounts.fiorino + vehicleCounts.van + vehicleCounts.tresQuartos + vehicleCounts.toco + vehicleCounts.outros;
+            const totalWeight = vehicleWeights.fiorino + vehicleWeights.van + vehicleWeights.tresQuartos + vehicleWeights.toco + vehicleWeights.outros;
 
-            const countSeriesData = [vehicleCounts.fiorino, vehicleCounts.van, vehicleCounts.tresQuartos, vehicleCounts.toco, totalVarejoCount];
-            const weightSeriesData = [vehicleWeights.fiorino, vehicleWeights.van, vehicleWeights.tresQuartos, vehicleWeights.toco, totalVarejoWeight];
-            const categories = ['Fiorino', 'Van', '3/4', 'Toco', 'Total Varejo'];
+            const countSeriesData = [vehicleCounts.fiorino, vehicleCounts.van, vehicleCounts.tresQuartos, vehicleCounts.toco, vehicleCounts.outros, totalCount];
+            const weightSeriesData = [vehicleWeights.fiorino, vehicleWeights.van, vehicleWeights.tresQuartos, vehicleWeights.toco, vehicleWeights.outros, totalWeight];
+            const categories = ['Fiorino', 'Van', '3/4', 'Toco', 'Outros', 'Total'];
 
             if (resumoChart) {
                 resumoChart.updateSeries([
@@ -1393,6 +1464,10 @@
             const numericSort = (a, b) => a.localeCompare(b, undefined, { numeric: true });
 
             return rotas.sort((a, b) => {
+                // Prioriza a Rota "0" para aparecer sempre em primeiro.
+                if (a === '0' && b !== '0') return -1;
+                if (b === '0' && a !== '0') return 1;
+
                 const typeA = rotaVeiculoMap[a]?.type || 'van';
                 const typeB = rotaVeiculoMap[b]?.type || 'van';
 
@@ -1447,7 +1522,12 @@
         let pedidosCarretaSemCF = [];
         let pedidosTransferencias = [];
         let pedidosExportacao = [];
+        let cargasFechadasPR = [];
+        let pedidosMoinho = [];
+        let pedidosMarcaPropria = [];
+        let cargasFechadasRestBrasil = [];
         let pedidosCondorTruck = [];
+
         let tocoPedidoIds = new Set();
         let currentLeftoversForPrinting = [];
         let activeLoads = {};
@@ -1752,6 +1832,7 @@
             reader.onload = (e) => {
                 try {
                     const data = new Uint8Array(e.target.result);
+                    document.getElementById('start-manual-load-btn').disabled = false;
                     const workbook = XLSX.read(data, {type: 'array', cellDates:true});
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
@@ -1878,25 +1959,28 @@
                 const load = activeLoads[loadId];
                 const foundPedidos = load.pedidos.filter(searchPredicate);
 
-                if (foundPedidos.length > 0) {
-                    let viewId = 'workspace-view';
+                if (foundPedidos.length > 0) { // prettier-ignore
+                    let viewId = 'workspace-view'; // A maioria das cargas está aqui
                     let tabId = null;
                     let accordionId = null;
+                    let cardId = load.id; // O ID do card da carga é o próprio ID da carga.
                     const local = `Carga ${load.numero || load.id.split('-')[1]} (${load.vehicleType})`;
 
                     if (['fiorino', 'van', 'tresQuartos'].includes(load.vehicleType)) {
                         tabId = `${load.vehicleType === 'tresQuartos' ? 'tres-quartos' : load.vehicleType}-tab-pane`;
                     } else if (load.vehicleType === 'toco') {
-                        tabId = 'cf-tab-pane'; // Toco está na aba de CF
+                        tabId = 'toco-tab-pane';
+                        // Para Toco, o accordion é o elemento a ser expandido, e o cardId é o corpo do accordion.
                         const cf = load.pedidos[0]?.CF;
                         const sortedTocoKeys = Object.keys(gruposToco).sort();
                         const index = sortedTocoKeys.indexOf(String(cf));
                         if (index !== -1) accordionId = `collapseToco${index}`;
+                        cardId = `toco-${cf}`; // O corpo do accordion tem o ID `toco-{cf}`
                     } else if (load.id.startsWith('venda-antecipada') || load.id.startsWith('especial')) {
-                        viewId = 'additional-results-view';
+                        viewId = 'montagens-especiais-view';
                     }
 
-                    foundPedidos.forEach(p => addResult(p, local, viewId, tabId, accordionId, load.id));
+                    foundPedidos.forEach(p => addResult(p, local, viewId, tabId, accordionId, cardId));
                 }
             }
 
@@ -1920,12 +2004,13 @@
 
             // 4. Outras seções (Resultados Adicionais e abas específicas do Workspace)
             const otherSections = [
-                { list: pedidosManualmenteBloqueadosAtuais, local: 'Bloqueado Manualmente', viewId: 'pedidos-bloqueados-view', cardId: 'card-bloqueados', accordionId: 'collapseBloqueados' },
-                { list: rota1SemCarga, local: 'Pedidos da Rota 1 para Alteração', viewId: 'alteracao-rota-view', cardId: 'resultado-rota1' },
-                { list: pedidosComCFNumericoIsolado, local: 'Pedidos Filtrados (Bloqueio por Regra)', viewId: 'workspace-view', tabId: 'bloqueados-regra-tab-pane', accordionId: 'accordionCF' },
-                { list: pedidosFuncionarios, local: 'Pedidos de Funcionários', viewId: 'workspace-view', tabId: 'consulta-funcionarios-tab-pane', accordionId: 'collapseFuncionarios' },
-                { list: pedidosTransferencias, local: 'Pedidos de Transferência', viewId: 'workspace-view', tabId: 'consulta-transferencias-tab-pane', accordionId: 'collapseTransferencias' },
-                { list: pedidosExportacao, local: 'Pedidos de Exportação', viewId: 'workspace-view', tabId: 'consulta-exportacao-tab-pane', accordionId: 'collapseExportacao' }
+                { list: pedidosManualmenteBloqueadosAtuais, local: 'Bloqueado Manualmente', viewId: 'pedidos-bloqueados-view', cardId: 'card-bloqueados', accordionId: 'collapseBloqueados' }, // prettier-ignore
+                { list: rota1SemCarga, local: 'Pedidos da Rota 1 para Alteração', viewId: 'alteracao-rota-view', cardId: 'resultado-rota1', accordionId: null },
+                { list: pedidosComCFNumericoIsolado, local: 'Pedidos Filtrados (Bloqueio por Regra)', viewId: 'workspace-view', tabId: 'bloqueados-regra-tab-pane', accordionId: 'accordionCF' }, // prettier-ignore
+                { list: pedidosMoinho, local: 'Outros Pedidos (Moinho)', viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseMoinho' },
+                { list: pedidosFuncionarios, local: 'Outros Pedidos (Funcionários)', viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseFuncionarios' },
+                { list: pedidosTransferencias, local: 'Outros Pedidos (Transferência)', viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseTransferencias' },
+                { list: pedidosExportacao, local: 'Outros Pedidos (Exportação)', viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseExportacao' }
             ];
 
             otherSections.forEach(section => {
@@ -1935,7 +2020,7 @@
             });
 
             // 5. Cargas de Truck/Carreta (CF)
-            const specialKeysOrder = ["Pedidos Condor (Truck)", "Pedidos de Carreta/Truck sem CF"];
+            const specialKeysOrder = ["Pedidos de Carreta/Truck sem CF", "Rota 11000 (Truck)"];
             const sortedCfKeys = Object.keys(gruposPorCFGlobais).sort((a,b) => {
                 const aIsSpecial = specialKeysOrder.includes(a);
                 const bIsSpecial = specialKeysOrder.includes(b);
@@ -1948,7 +2033,32 @@
                 gruposPorCFGlobais[cf].pedidos.filter(searchPredicate).forEach(p => {
                     const index = sortedCfKeys.indexOf(cf);
                     if (index !== -1) {
-                        addResult(p, `Carga Truck/Carreta (${cf})`, 'workspace-view', 'consulta-truck-tab-pane', `collapseCF-Mesa-${index}`);
+                        addResult(p, `Carga Resto BR (${cf})`, 'workspace-view', 'cargas-fechadas-rest-br-tab-pane', `collapseCargasFechadasRestBr-${index}`);
+                    }
+                });
+            }
+            
+            // 6. Cargas Fechadas PR
+            const gruposPR = cargasFechadasPR.reduce((acc, p) => {
+                const coluna5 = String(p.Coluna5 || '').toUpperCase();
+                const isCondor = coluna5.includes('CONDOR (TRUCK)') || coluna5.includes('CONDOR TOD TRUC');
+                const key = isCondor ? 'Condor Truck' : `CF: ${p.CF}`;
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(p);
+                return acc;
+            }, {});
+
+            const sortedPRKeys = Object.keys(gruposPR).sort((a, b) => {
+                if (a === 'Condor Truck') return -1;
+                if (b === 'Condor Truck') return 1;
+                return a.localeCompare(b, undefined, { numeric: true });
+            });
+
+            for (const key in gruposPR) {
+                gruposPR[key].filter(searchPredicate).forEach(p => {
+                    const index = sortedPRKeys.indexOf(key);
+                    if (index !== -1) {
+                        addResult(p, `Carga Fechada PR (${key})`, 'workspace-view', 'cargas-fechadas-pr-tab-pane', `collapseCargasFechadasPR-${index}`);
                     }
                 });
             }
@@ -1961,7 +2071,18 @@
             });
 
             if (uniqueResultados.length === 0) {
-                searchResultDiv.innerHTML = '<div class="alert alert-warning">Nenhum pedido encontrado para o termo buscado.</div>';
+                // Fallback: Se não encontrou em nenhuma seção processada, busca na planilha original completa.
+                const originalResults = planilhaData.filter(searchPredicate);
+                if (originalResults.length > 0) {
+                    let html = `<div class="alert alert-warning">
+                                    <strong>Atenção:</strong> O pedido foi encontrado na planilha original, mas não nos resultados processados.
+                                    <br>Isso pode ocorrer se um filtro de rota estiver ativo ou se o pedido foi classificado em uma categoria não visível.
+                                    <br><strong>Pedido(s) encontrado(s) na planilha:</strong> ${originalResults.map(p => p.Num_Pedido).join(', ')}
+                                </div>`;
+                    searchResultDiv.innerHTML = html;
+                } else {
+                    searchResultDiv.innerHTML = '<div class="alert alert-warning">Nenhum pedido encontrado para o termo buscado.</div>';
+                }
             } else {
                 let html = `<div class="alert alert-info d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">${uniqueResultados.length} resultado(s) encontrado(s):</h5>
@@ -2076,11 +2197,11 @@
                     // Prioridade 3 (Fallback): Se ainda não encontrou, tenta o cabeçalho do accordion.
                     // Isso é útil para seções que não têm um cardId, mas têm um collapseId.
                     if (!targetElement && collapseId) {
-                        const collapseEl = document.getElementById(collapseId);
-                        if (collapseEl) targetElement = collapseEl.previousElementSibling;
+                        // Busca o elemento de colapso pelo ID e, em seguida, o cabeçalho do acordeão associado
+                        const collapseEl = document.querySelector(`[data-bs-target="#${collapseId}"]`)?.closest('.accordion-item') || document.getElementById(collapseId)?.closest('.accordion-item');
+                        if (collapseEl) targetElement = collapseEl;
                     }
 
-                    document.querySelectorAll('.search-highlight').forEach(el => el.classList.remove('search-highlight', 'table-info'));
 
                     if (targetElement) {
                         targetElement.classList.add('search-highlight');
@@ -2088,6 +2209,10 @@
                             targetElement.classList.add('table-info');
                         }
                         targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else {
+                        // Se nenhum elemento específico for encontrado, pelo menos rola para o card principal
+                        const cardElement = document.getElementById(cardId);
+                        if (cardElement) cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 }, 300); // Aumentado ligeiramente para garantir a renderização em todas as situações
             };
@@ -2144,7 +2269,10 @@
         }
 
         document.head.insertAdjacentHTML('beforeend', `<style>
-            .search-highlight { animation: highlight-animation 1.5s ease-in-out; }
+            .search-highlight { 
+                box-shadow: 0 0 12px 4px var(--dark-accent) !important;
+                border-color: var(--dark-accent) !important;
+            }
             @keyframes highlight-animation { 0% { box-shadow: 0 0 0 0px var(--dark-accent-glow); } 50% { box-shadow: 0 0 12px 4px var(--dark-accent); } 100% { box-shadow: 0 0 0 0px var(--dark-accent-glow); } }
         </style>`);
         
@@ -2235,7 +2363,9 @@
             pedidosCarretaSemCF = [];
             pedidosTransferencias = [];
             pedidosExportacao = [];
-            pedidosCondorTruck = [];
+            cargasFechadasPR = [];
+            pedidosMoinho = [];
+            pedidosMarcaPropria = [];
             pedidosManualmenteBloqueadosAtuais = [];
             tocoPedidoIds.clear();
             currentLeftoversForPrinting = [];
@@ -2261,17 +2391,24 @@
             
             const idsParaLimpar = [
                 'resultado-venda-antecipada', 'resultado-carga-especial', 'resultado-bloqueados', 'resultado-geral', 
-                'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral',
-                'resultado-rota1', 'kpi-container',
-                'resultado-cf-accordion-container', 'resultado-cf-numerico', 'search-result', 'resultado-toco',
-                'resultado-funcionarios-tab', 'resultado-transferencias-tab', 'resultado-exportacao-tab'
+                'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'botoes-fiorino', 'botoes-van', 'botoes-34',
+                'resultado-rota1', 'kpi-container', 'search-result', 'resultado-cf-numerico', 
+                'resultado-toco', 'resultado-cargas-fechadas-pr', 'resultado-cargas-fechadas-rest-br', 'resultado-funcionarios', 'resultado-moinho',
+                'resultado-transferencias', 'resultado-exportacao', 'resultado-marca-propria'
             ];
             const emptyStateMessages = {
                 'resultado-geral': '<div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div>',
                 'botoes-fiorino': '<div class="empty-state"><i class="bi bi-box"></i><p>Nenhuma rota de Fiorino disponível. Processe um arquivo para começar.</p></div>',
                 'botoes-van': '<div class="empty-state"><i class="bi bi-truck-front-fill"></i><p>Nenhuma rota de Van disponível. Processe um arquivo para começar.</p></div>',
                 'botoes-34': '<div class="empty-state"><i class="bi bi-truck-flatbed"></i><p>Nenhuma rota de 3/4 disponível. Processe um arquivo para começar.</p></div>',
-                'resultado-toco': '<div class="empty-state"><i class="bi bi-inboxes-fill"></i><p>Nenhuma carga "Toco" encontrada. Processe um arquivo.</p></div>'
+                'resultado-toco': '<div class="empty-state"><i class="bi bi-inboxes-fill"></i><p>Nenhuma carga "Toco" encontrada. Processe um arquivo.</p></div>',
+                'resultado-cargas-fechadas-pr': '<div class="empty-state"><i class="bi bi-building-fill-check"></i><p>Nenhuma Carga Fechada do Paraná encontrada. Processe um arquivo.</p></div>',
+                'resultado-cargas-fechadas-rest-br': '<div class="empty-state"><i class="bi bi-globe-americas"></i><p>Nenhuma Carga Fechada (Resto do Brasil) encontrada.</p></div>',
+                'resultado-funcionarios': '<div class="empty-state"><i class="bi bi-people-fill"></i><p>Nenhum pedido de funcionário encontrado.</p></div>',
+                'resultado-transferencias': '<div class="empty-state"><i class="bi bi-arrow-left-right"></i><p>Nenhum pedido de transferência encontrado.</p></div>',
+                'resultado-exportacao': '<div class="empty-state"><i class="bi bi-box-arrow-up-right"></i><p>Nenhum pedido de exportação encontrado.</p></div>',
+                'resultado-marca-propria': '<div class="empty-state"><i class="bi bi-tags-fill"></i><p>Nenhum pedido de Marca Própria encontrado.</p></div>',
+                'resultado-moinho': '<div class="empty-state"><i class="bi bi-gear-wide-connected"></i><p>Nenhum pedido "Moinho" encontrado.</p></div>'
             };
 
             idsParaLimpar.forEach(id => {
@@ -2318,10 +2455,13 @@
                 const resultadoCfNumericoDiv = document.getElementById('resultado-cf-numerico');
                 const resultadoRota1Div = document.getElementById('resultado-rota1');
                 const resultadoBloqueadosDiv = document.getElementById('resultado-bloqueados');
-                const resultadoCfAccordionDiv = document.getElementById('resultado-cf-accordion-container');
-                const resultadoFuncionariosDiv = document.getElementById('resultado-funcionarios-tab');
-                const resultadoTransferenciasDiv = document.getElementById('resultado-transferencias-tab');
-                const resultadoExportacaoDiv = document.getElementById('resultado-exportacao-tab');
+                const resultadoFuncionariosDiv = document.getElementById('resultado-funcionarios');
+                const resultadoTransferenciasDiv = document.getElementById('resultado-transferencias');
+                const resultadoExportacaoDiv = document.getElementById('resultado-exportacao');
+                const resultadoCargasFechadasPRDiv = document.getElementById('resultado-cargas-fechadas-pr');
+                const resultadoMoinhoDiv = document.getElementById('resultado-moinho');
+                const resultadoMarcaPropriaDiv = document.getElementById('resultado-marca-propria');
+                const resultadoCargasFechadasRestBrDiv = document.getElementById('resultado-cargas-fechadas-rest-br');
                 
                 try {
                     if (planilhaData.length === 0) { throw new Error("Nenhum dado de planilha carregado."); }
@@ -2334,9 +2474,9 @@
 
                     if (rotaInicio && rotaFim) {
                         dadosParaProcessar = planilhaData.filter(p => {
-                            const rotaPedido = String(p.Cod_Rota || '');
-                            return rotaPedido.localeCompare(rotaInicio, undefined, { numeric: true }) >= 0 &&
-                                   rotaPedido.localeCompare(rotaFim, undefined, { numeric: true }) <= 0;
+                            const rotaPedido = String(p.Cod_Rota || ''); // prettier-ignore
+                            return rotaPedido.localeCompare(rotaInicio, undefined, { numeric: true }) >= 0 && // prettier-ignore
+                                   rotaPedido.localeCompare(rotaFim, undefined, { numeric: true }) <= 0; // prettier-ignore
                         });
                         statusDiv.innerHTML = `<p class="text-info">Processando ${dadosParaProcessar.length} pedidos entre as rotas ${rotaInicio} e ${rotaFim}...</p>`;
                     }
@@ -2344,8 +2484,8 @@
                     [
                         'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 
                         'resultado-toco', 'resultado-cf-accordion-container', 'resultado-cf-numerico', 
-                        'resultado-rota1', 'resultado-bloqueados', 'resultado-funcionarios-tab', 
-                        'resultado-transferencias-tab', 'resultado-exportacao-tab'
+                        'resultado-rota1', 'resultado-bloqueados', 'resultado-cargas-fechadas-pr', 'resultado-moinho', 'resultado-marca-propria',
+                        'resultado-cargas-fechadas-rest-br', 'resultado-funcionarios', 'resultado-transferencias', 'resultado-exportacao'
                     ].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.innerHTML = '';
@@ -2357,43 +2497,55 @@
                         if(coluna5.includes('TBL FUNCIONARIO')) {
                             pedidosFuncionarios.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (coluna5.includes('TBL ESP CARRETA') && !isNumeric(p.CF)) {
-                            pedidosCarretaSemCF.push(p);
-                            pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (coluna5.includes('TABELA TRANSFER') || coluna5.includes('TRANSF. TODESCH')) {
+                        } else if (coluna5.includes('TABELA TRANSFER') || coluna5.includes('TRANSF. TODESCH') || coluna5.includes('INSTITUCIONAL')) {
                             pedidosTransferencias.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
                         } else if (coluna5.includes('TBL EXPORTACAO')) {
                             pedidosExportacao.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (coluna5.includes('CONDOR (TRUCK)') || coluna5.includes('CONDOR TOD TRUC')) {
-                            pedidosCondorTruck.push(p);
+                        } else if (coluna5.includes('MOINHO')) {
+                            pedidosMoinho.push(p);
+                            pedidosExcluidos.add(p.Num_Pedido);
+                        } else if (coluna5.includes('MARCA PROPRIA')) {
+                            pedidosMarcaPropria.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
                         }
                     });
                     
-                    displayPedidosFuncionarios(resultadoFuncionariosDiv, pedidosFuncionarios);
-                    displayPedidosTransferencias(resultadoTransferenciasDiv, pedidosTransferencias);
-                    displayPedidosExportacao(resultadoExportacaoDiv, pedidosExportacao);
+                    const hasMoinho = displayPedidosMoinho(resultadoMoinhoDiv, pedidosMoinho); // prettier-ignore
+                    const hasFuncionarios = displayPedidosFuncionarios(resultadoFuncionariosDiv, pedidosFuncionarios); // prettier-ignore
+                    const hasTransferencias = displayPedidosTransferencias(resultadoTransferenciasDiv, pedidosTransferencias); // prettier-ignore
+                    const hasExportacao = displayPedidosExportacao(resultadoExportacaoDiv, pedidosExportacao); // prettier-ignore
+                    const hasMarcaPropria = displayPedidosMarcaPropria(resultadoMarcaPropriaDiv, pedidosMarcaPropria); // prettier-ignore
+
+                    // Se nenhuma das categorias especiais tiver pedidos, mostra um estado vazio unificado.
+                    if (!hasMoinho && !hasFuncionarios && !hasTransferencias && !hasExportacao && !hasMarcaPropria) {
+                        const outrosPedidosTab = document.getElementById('outros-pedidos-tab-pane');
+                        if (outrosPedidosTab) {
+                            outrosPedidosTab.innerHTML = '<div class="empty-state"><i class="bi bi-collection"></i><p>Nenhum pedido para as categorias especiais foi encontrado.</p></div>';
+                        }
+                    }
+
                     
                     let dadosFiltrados = dadosParaProcessar.filter(p => !pedidosExcluidos.has(p.Num_Pedido));
                     
-                    let pedidosDisponiveis = [];
+                    let pedidosAindaNaoProcessados = [];
                     dadosFiltrados.filter(p => p.Num_Pedido).forEach(p => {
                         if (pedidosBloqueados.has(String(p.Num_Pedido))) {
                             pedidosManualmenteBloqueadosAtuais.push(p);
                         } else {
-                            pedidosDisponiveis.push(p);
+                            pedidosAindaNaoProcessados.push(p);
                         }
                     });
                     displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueadosAtuais);
                     
-                    pedidosDisponiveis = pedidosDisponiveis.filter(p => 
+                    pedidosAindaNaoProcessados = pedidosAindaNaoProcessados.filter(p => 
                         !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)) &&
                         !pedidosVendaAntecipadaProcessados.has(String(p.Num_Pedido))
                     );
+                    pedidosAindaNaoProcessados = pedidosAindaNaoProcessados.filter(p => !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)) && !pedidosVendaAntecipadaProcessados.has(String(p.Num_Pedido)));
 
-                    rota1SemCarga = pedidosDisponiveis.filter(p => {
+                    rota1SemCarga = pedidosAindaNaoProcessados.filter(p => {
                         const codRota = String(p.Cod_Rota || '').trim();
                         const cfValue = p.CF;
                         const coluna5Value = String(p.Coluna5 || '').trim().toUpperCase();
@@ -2408,29 +2560,18 @@
                     const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
                     displayRota1(resultadoRota1Div, rota1SemCarga);
 
-                    // Adiciona os pedidos da rota 11000 ao grupo de cargas de Truck e os remove do processamento geral
-                    const pedidosRota11000 = pedidosDisponiveis.filter(p => String(p.Cod_Rota) === '11000');
-                    if (pedidosRota11000.length > 0) {
-                        gruposPorCFGlobais['Rota 11000 (Truck)'] = { pedidos: pedidosRota11000, totalKg: pedidosRota11000.reduce((s, p) => s + p.Quilos_Saldo, 0), totalCubagem: pedidosRota11000.reduce((s, p) => s + p.Cubagem, 0) };
-                        pedidosDisponiveis = pedidosDisponiveis.filter(p => String(p.Cod_Rota) !== '11000');
-                    }
+                    // Remove os pedidos da Rota 1 da lista principal
+                    pedidosAindaNaoProcessados = pedidosAindaNaoProcessados.filter(p => !rota1PedidoIds.has(p.Num_Pedido));
 
-                    let pedidosParaProcessamentoGeral = pedidosDisponiveis.filter(p => !rota1PedidoIds.has(p.Num_Pedido));
+                    // Filtra pedidos com Coluna4 == '500' (são ignorados no processamento de cargas)
+                    const pedidosIgnorados500 = pedidosAindaNaoProcessados.filter(p => String(p.Coluna4) == '500');
+                    let pedidosParaProcessamentoGeral = pedidosAindaNaoProcessados.filter(p => String(p.Coluna4) != '500');
 
-                    const pedidos = pedidosParaProcessamentoGeral.filter(p => String(p.Coluna4) != '500');
-
-                    const clientesComBloqueio = new Set();
-                    pedidos.forEach(p => {
-                        if (String(p['BLOQ.']).trim()) { 
-                            clientesComBloqueio.add(normalizeClientId(p.Cliente));
-                        }
-                    });
-
-                    const pedidosTocoBase = pedidos.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
-                    const cfCounts = {};
-                    pedidosTocoBase.forEach(p => { if (p.CF && isNumeric(p.CF)) { cfCounts[p.CF] = (cfCounts[p.CF] || 0) + 1; } });
-                    const cfsRepetidos = Object.keys(cfCounts).filter(cf => cfCounts[cf] > 1);
-                    const pedidosTocoFiltrados = pedidosTocoBase.filter(p => cfsRepetidos.includes(String(p.CF)));
+                    // Separa Pedidos Toco (PRIORIDADE)
+                    // Simplificado: Todos os pedidos marcados como TOCO são considerados.
+                    const pedidosTocoFiltrados = pedidosParaProcessamentoGeral.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
+                    tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
+                    pedidosParaProcessamentoGeral = pedidosParaProcessamentoGeral.filter(p => !tocoPedidoIds.has(p.Num_Pedido));
                     gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
                         const cf = p.CF;
                         if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0, totalCubagem: 0 }; } 
@@ -2438,39 +2579,57 @@
                         acc[cf].totalKg += p.Quilos_Saldo;
                         acc[cf].totalCubagem += p.Cubagem;
                         return acc;
-                    }, {});                    
+                    }, {});
                     displayToco(resultadoTocoDiv, gruposToco);
-                    tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
 
+                    // Identifica clientes com qualquer tipo de bloqueio na planilha
+                    const clientesComBloqueio = new Set();
+                    pedidosParaProcessamentoGeral.forEach(p => {
+                        if (String(p['BLOQ.']).trim()) { 
+                            clientesComBloqueio.add(normalizeClientId(p.Cliente));
+                        }
+                    });
+
+                    // Separa Cargas Fechadas PR (Condor e CFs numéricos do PR)
+                    cargasFechadasPR = pedidosParaProcessamentoGeral.filter(p => {
+                        const coluna5 = String(p.Coluna5 || '').toUpperCase();
+                        const isCondor = coluna5.includes('CONDOR (TRUCK)') || coluna5.includes('CONDOR TOD TRUC');
+                        const isPR = String(p.UF).trim().toUpperCase() === 'PR';
+                        return isCondor || (isPR && isNumeric(p.CF));
+                    });
+                    const cargasFechadasPRIds = new Set(cargasFechadasPR.map(p => p.Num_Pedido));
+                    pedidosParaProcessamentoGeral = pedidosParaProcessamentoGeral.filter(p => !cargasFechadasPRIds.has(p.Num_Pedido));
+                    displayCargasFechadasPR(resultadoCargasFechadasPRDiv, cargasFechadasPR);
+
+                    // Separa Cargas Fechadas (Resto do Brasil) e Pedidos de Varejo
                     let pedidosParaProcessamentoVarejo = [];
-                    let gruposPorCF = {};
-                    pedidosComCFNumericoIsolado = []; // prettier-ignore
-                    
-                    const truckColuna4Values = new Set(['15', '17', '21', '23']);
-                    pedidos.forEach(p => {
-                        if (tocoPedidoIds.has(String(p.Num_Pedido))) return;
-                        if (truckColuna4Values.has(String(p.Coluna4))) return;
-                        
-                        if (isNumeric(p.CF)) {
+                    gruposPorCFGlobais = {};
+                    pedidosComCFNumericoIsolado = [];
+
+                    // Adiciona os pedidos TBL ESPECIAL SEM CF ao grupo de cargas fechadas globais
+                    pedidosCarretaSemCF = pedidosParaProcessamentoGeral.filter(p => String(p.Coluna5 || '').toUpperCase().includes('TBL ESPECIAL') && !isNumeric(p.CF));
+                    const pedidosCarretaSemCFIds = new Set(pedidosCarretaSemCF.map(p => p.Num_Pedido));
+                    pedidosParaProcessamentoGeral = pedidosParaProcessamentoGeral.filter(p => !pedidosCarretaSemCFIds.has(p.Num_Pedido));
+
+
+                    pedidosParaProcessamentoGeral.forEach(p => {
+                        if (isNumeric(p.CF)) { // CF numérico (fora do PR) -> Carga Fechada Resto BR
                             const cf = String(p.CF).trim();
-                            if (!gruposPorCF[cf]) {
-                                gruposPorCF[cf] = { pedidos: [], totalKg: 0, totalCubagem: 0 };
-                            }
-                            gruposPorCF[cf].pedidos.push(p);
-                            gruposPorCF[cf].totalKg += p.Quilos_Saldo;
-                            gruposPorCF[cf].totalCubagem += p.Cubagem;
+                            if (!gruposPorCFGlobais[cf]) gruposPorCFGlobais[cf] = { pedidos: [], totalKg: 0, totalCubagem: 0 };
+                            gruposPorCFGlobais[cf].pedidos.push(p);
+                            gruposPorCFGlobais[cf].totalKg += p.Quilos_Saldo;
+                            gruposPorCFGlobais[cf].totalCubagem += p.Cubagem;
                         } else {
-                            if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) {
+                            if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) { // Cliente com bloqueio -> Bloqueados por Regra
                                 pedidosComCFNumericoIsolado.push(p);
-                            } else {
+                            } else { // O que sobra é Varejo
                                 pedidosParaProcessamentoVarejo.push(p);
                             }
                         }
                     });
                     
-                    gruposPorCFGlobais = gruposPorCF;
-                    displayCargasCfAccordion(resultadoCfAccordionDiv, gruposPorCFGlobais, pedidosCarretaSemCF, pedidosCondorTruck);
                     displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
+                    displayCargasFechadasRestBrasil(resultadoCargasFechadasRestBrDiv, gruposPorCFGlobais, pedidosCarretaSemCF);
                     
                     pedidosGeraisAtuais = [...pedidosParaProcessamentoVarejo]; 
                     const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
@@ -2507,86 +2666,129 @@
             // 2. Separa os grupos de Toco em disponíveis e bloqueados
             const clientesComBloqueio = new Set(pedidosComCFNumericoIsolado.map(p => normalizeClientId(p.Cliente)));
             let pesoTocoDisponivel = 0;
-            let pesoTocoBloqueado = 0;
             let pedidosTocoDisponiveis = 0;
+            let pesoTocoBloqueado = 0;
+            let pedidosTocoBloqueados = 0;
             Object.values(gruposToco).forEach(grupo => {
-                const clienteId = normalizeClientId(grupo.pedidos[0]?.Cliente);
-                if (clienteId && clientesComBloqueio.has(clienteId)) {
+                // Um grupo Toco é considerado bloqueado se QUALQUER pedido dentro dele atender a uma das condições de bloqueio.
+                const isGrupoBloqueado = grupo.pedidos.some(p => {
+                    const clienteId = normalizeClientId(p.Cliente);
+                    const bloqueioPlanilha = String(p['BLOQ.'] || '').trim().toUpperCase();
+                    
+                    return (clienteId && clientesComBloqueio.has(clienteId)) || // Cliente tem outro pedido bloqueado por regra
+                           (bloqueioPlanilha === 'C' || bloqueioPlanilha === 'V') || // Bloqueio direto na planilha
+                           pedidosBloqueados.has(String(p.Num_Pedido)); // Bloqueado manualmente
+                });
+
+                if (isGrupoBloqueado) {
                     pesoTocoBloqueado += grupo.totalKg;
+                    pedidosTocoBloqueados += grupo.pedidos.length;
                 } else {
                     pesoTocoDisponivel += grupo.totalKg;
                     pedidosTocoDisponiveis += grupo.pedidos.length;
                 }
             });
 
-            // 3. Calcula os novos KPIs
-            const pesoVarejoDisponivel = pedidosGeraisAtuais.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
-            const pesoTotalDisponivel = pesoVarejoDisponivel + pesoTocoDisponivel;
-
-            const pesoVarejoBloqueado = pedidosComCFNumericoIsolado.reduce((s, p) => s + p.Quilos_Saldo, 0) + pedidosManualmenteBloqueadosAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0);
-            const pesoTotalBloqueado = pesoVarejoBloqueado + pesoTocoBloqueado;
-
-            // 4. Consolida os dados para os KPIs e armazena
-            const totalPedidosToco = Object.values(gruposToco).reduce((sum, g) => sum + g.pedidos.length, 0);
-            const totalPedidosVarejo = pedidosGeraisAtuais.length;
-            const pesoTotalVarejo = pedidosGeraisAtuais.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
-            const pesoTotalToco = Object.values(gruposToco).reduce((sum, g) => sum + g.totalKg, 0);
-
-            kpiData.totalPedidos = totalPedidosVarejo + totalPedidosToco;
-            kpiData.pesoTotal = pesoTotalVarejo + pesoTotalToco;
+            // 3. Consolida os dados para os novos KPIs
+            const kpis = {
+                varejoDisponivel: {
+                    pedidos: pedidosGeraisAtuais.length + pedidosTocoDisponiveis,
+                    peso: pedidosGeraisAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + pesoTocoDisponivel
+                },
+                varejoBloqueado: {
+                    pedidos: pedidosComCFNumericoIsolado.length + pedidosManualmenteBloqueadosAtuais.length + pedidosTocoBloqueados,
+                    peso: pedidosComCFNumericoIsolado.reduce((s, p) => s + p.Quilos_Saldo, 0) + pedidosManualmenteBloqueadosAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + pesoTocoBloqueado
+                },
+                cargasFechadasPR: {
+                    pedidos: cargasFechadasPR.length,
+                    peso: cargasFechadasPR.reduce((s, p) => s + p.Quilos_Saldo, 0)
+                },
+                cargasFechadasRestBR: {
+                    pedidos: Object.values(gruposPorCFGlobais).reduce((s, g) => s + g.pedidos.length, 0),
+                    peso: Object.values(gruposPorCFGlobais).reduce((s, g) => s + g.totalKg, 0)
+                },
+                transferencias: {
+                    pedidos: pedidosTransferencias.length,
+                    peso: pedidosTransferencias.reduce((s, p) => s + p.Quilos_Saldo, 0)
+                },
+                exportacao: {
+                    pedidos: pedidosExportacao.length,
+                    peso: pedidosExportacao.reduce((s, p) => s + p.Quilos_Saldo, 0)
+                },
+                funcionarios: {
+                    pedidos: pedidosFuncionarios.length,
+                    peso: pedidosFuncionarios.reduce((s, p) => s + p.Quilos_Saldo, 0)
+                }
+            };
+        
             kpiData.pedidosAPredatar = pedidosAPredatar; // Armazena a lista completa
 
-            // Renderiza os KPIs no HTML
-            document.getElementById('kpi-total-pedidos').innerHTML = `<div class="stat-card h-100"><div class="stat-icon"><i class="bi bi-box-seam"></i></div><div class="stat-info"><div class="stat-label">Total Pedidos</div><div class="stat-value">${kpiData.totalPedidos}</div></div></div>`;
-            document.getElementById('kpi-peso-disponivel').innerHTML = `<div class="stat-card h-100"><div class="stat-icon" style="color: var(--dark-accent);"><i class="bi bi-check2-circle"></i></div><div class="stat-info"><div class="stat-label">Peso Disponível p/ Montagem</div><div class="stat-value">${(pesoTotalDisponivel / 1000).toFixed(2)}<small> t</small></div></div></div>`;
-            document.getElementById('kpi-peso-bloqueado').innerHTML = `<div class="stat-card stat-alert-warning h-100"><div class="stat-icon"><i class="bi bi-slash-circle"></i></div><div class="stat-info"><div class="stat-label">Peso Total Bloqueado</div><div class="stat-value">${(pesoTotalBloqueado / 1000).toFixed(2)}<small> t</small></div></div></div>`;
-            document.getElementById('kpi-pedidos-atraso').innerHTML = `<div class="stat-card stat-alert-danger h-100" onclick="exportarPedidosAtrasados()" style="cursor: pointer;" title="Clique para exportar a lista de pedidos a predatar"><div class="stat-icon"><i class="bi bi-calendar-x"></i></div><div class="stat-info"><div class="stat-label">Pedidos a Predatar</div><div class="stat-value">${kpiData.pedidosAPredatar.length}</div></div></div>`;
+            // 4. Renderiza os KPIs no HTML
+            const kpiContainer = document.getElementById('kpi-container');
+            kpiContainer.innerHTML = `
+                <!-- KPIs Principais -->
+                <div class="col-12 animated-entry">${renderMainKpiCard('Varejo Disponível', kpis.varejoDisponivel.peso, kpis.varejoDisponivel.pedidos, 'available')}</div>
+                <div class="col-12 animated-entry">${renderMainKpiCard('Varejo Bloqueado', kpis.varejoBloqueado.peso, kpis.varejoBloqueado.pedidos, 'blocked')}</div>
+                <!-- Alerta -->
+                <div class="col-12 animated-entry">${renderKpiCard('Pedidos a Predatar', null, kpiData.pedidosAPredatar.length, 'bi-calendar-x', 'danger', true)}</div>
+                <!-- Outras Categorias -->
+                <div class="col-12 animated-entry">${renderOtherCategoriesCard(kpis)}</div>
+            `;
 
             // Renderiza o subtítulo do gráfico
-            const totalVeiculos = Object.values(activeLoads).filter(l => ['fiorino', 'van', 'tresQuartos', 'toco'].includes(l.vehicleType)).length;
-            const pesoTotalGrafico = Object.values(activeLoads).filter(l => ['fiorino', 'van', 'tresQuartos', 'toco'].includes(l.vehicleType)).reduce((s, l) => s + l.totalKg, 0);
-            document.getElementById('chart-subtitle').textContent = `${totalVeiculos} veículos | ${(pesoTotalGrafico / 1000).toFixed(2)} toneladas`;
+            const totalVeiculosMontados = Object.keys(activeLoads).length;
+            const pesoTotalMontado = Object.values(activeLoads).reduce((s, l) => s + (l.totalKg || 0), 0);
+            document.getElementById('chart-subtitle').textContent = `${totalVeiculosMontados} veículos montados | ${(pesoTotalMontado / 1000).toFixed(2)} toneladas`;
 
-            // Renderiza o card de "Outras Categorias"
-            const outrasCategoriasContainer = document.getElementById('outras-categorias-container');
-            
-            // Consolida os dados para o card de "Outras Categorias", incluindo os bloqueios de varejo.
-            const pedidosBloqueadosVarejo = [...pedidosComCFNumericoIsolado, ...pedidosManualmenteBloqueadosAtuais];
+        }
 
-            const categorias = [
-                { nome: 'Truck/Carreta', pedidos: Object.values(gruposPorCFGlobais).flatMap(g => g.pedidos), peso: Object.values(gruposPorCFGlobais).reduce((s, g) => s + g.totalKg, 0) },
-                { nome: 'Bloqueios Varejo', pedidos: pedidosBloqueadosVarejo, peso: pedidosBloqueadosVarejo.reduce((s, p) => s + p.Quilos_Saldo, 0) },
-                { nome: 'Transferências', pedidos: pedidosTransferencias, peso: pedidosTransferencias.reduce((s, p) => s + p.Quilos_Saldo, 0) },
-                { nome: 'Exportação', pedidos: pedidosExportacao, peso: pedidosExportacao.reduce((s, p) => s + p.Quilos_Saldo, 0) },
-                { nome: 'Funcionários', pedidos: pedidosFuncionarios, peso: pedidosFuncionarios.reduce((s, p) => s + p.Quilos_Saldo, 0) }
+        function renderMainKpiCard(title, weight, count, type) {
+            const weightText = `${(weight / 1000).toFixed(2)}<small class="fw-normal"> t</small>`;
+            const countText = `${count} pedidos`;
+            return `
+                <div class="kpi-card-main ${type}">
+                    <div class="kpi-title">${title}</div>
+                    <div class="kpi-value">${weightText}</div>
+                    <div class="kpi-subvalue">${countText}</div>
+                </div>
+            `;
+        }
+
+        function renderOtherCategoriesCard(kpis) {
+            const categories = [
+                { label: 'Cargas Fechadas PR', data: kpis.cargasFechadasPR, icon: 'bi-building-fill-check' },
+                { label: 'Cargas Fechadas Resto BR', data: kpis.cargasFechadasRestBR, icon: 'bi-globe-americas' },
+                { label: 'Transferências', data: kpis.transferencias, icon: 'bi-arrow-left-right' },
+                { label: 'Exportação', data: kpis.exportacao, icon: 'bi-box-arrow-up-right' },
+                { label: 'Funcionários', data: kpis.funcionarios, icon: 'bi-people-fill' }
             ];
 
-            const categoriasComDados = categorias.filter(c => c.pedidos.length > 0);
+            const items = categories.map(cat => `
+                <li class="list-group-item list-group-item-kpi d-flex justify-content-between align-items-center">
+                    <span><i class="${cat.icon} me-2 text-secondary"></i>${cat.label}</span>
+                    <span class="badge bg-light text-dark rounded-pill">${(cat.data.peso / 1000).toFixed(2)} t</span>
+                </li>`).join('');
 
-            if (categoriasComDados.length > 0) {
-                let cardHtml = `
-                    <div class="card h-100">
-                        <div class="card-header"><h3 class="h5 mb-0"><i class="bi bi-grid-3x3-gap-fill me-2"></i>Sumário de Outras Categorias</h3></div>
-                        <div class="card-body">
-                            <ul class="list-group list-group-flush">`;
-                
-                categoriasComDados.forEach(cat => {
-                    cardHtml += `
-                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
-                            <span>${cat.nome}</span>
-                            <div>
-                                <span class="badge bg-secondary me-2" title="Quantidade de Pedidos">${cat.pedidos.length} ped.</span>
-                                <span class="badge bg-info" title="Peso Total">${cat.peso.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</span>
-                            </div>
-                        </li>`;
-                });
+            return `<div class="card"><div class="card-header"><h3 class="h6 mb-0"><i class="bi bi-grid-3x3-gap-fill me-2"></i>Outras Categorias</h3></div><ul class="list-group list-group-flush">${items}</ul></div>`;
+        }
 
-                cardHtml += `</ul></div></div>`;
-                outrasCategoriasContainer.innerHTML = cardHtml;
-                outrasCategoriasContainer.style.display = 'block';
-            } else {
-                outrasCategoriasContainer.style.display = 'none';
-            }
+        function renderKpiCard(title, weight, count, icon, colorClass, isClickable = false) {
+            const weightText = weight !== null ? `${(weight / 1000).toFixed(2)}<small> t</small>` : `${count}`;
+            const countText = weight !== null ? `<div class="stat-sub-value">${count} pedidos</div>` : '';
+            const clickableClass = isClickable ? 'stat-card-clickable' : '';
+            const onClickAction = isClickable ? 'onclick="exportarPedidosAtrasados()"' : '';
+            const titleAttr = isClickable ? 'title="Clique para exportar a lista"' : '';
+
+            return `
+                <div class="stat-card stat-alert-${colorClass} h-100 ${clickableClass}" ${onClickAction} ${titleAttr}>
+                    <div class="stat-icon"><i class="bi ${icon}"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-label">${title}</div>
+                        <div class="stat-value">${weightText}</div>
+                        ${countText}
+                    </div>
+                </div>
+            `;
         }
 
         function isOverdue(predat) {
@@ -2653,7 +2855,7 @@
         
         function createTable(pedidos, columnsToDisplay, sourceId = '') {
             if (!pedidos || pedidos.length === 0) return '';
-            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'Predat', 'Dat_Ped', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
+            const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'UF', 'Predat', 'Dat_Ped', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
             let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped table-hover"><thead><tr><th><input type="checkbox" class="form-check-input" onclick="toggleAllCheckboxes(this)"></th>';
             colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
@@ -2750,10 +2952,16 @@
 
                     const vehicleType = config.type;
                     const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning'); // prettier-ignore
-                    const functionCall = vehicleType === 'fiorino' ? 'separarCargasFiorino' : (vehicleType === 'van' ? 'separarCargasVan' : 'separarCargas34');
                     const divId = vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : (vehicleType === 'van' ? 'resultado-van-geral' : 'resultado-34-geral');
                     const btnId = `btn-${vehicleType}-${rota}`;
-                    botoes[vehicleType] += `<button id="${btnId}" class="btn btn-outline-${colorClass} mt-2 me-2" onclick="${functionCall}(${rotaValue}, '${divId}', '${buttonTitle}', this)">${buttonTitle}</button>`;
+
+                    // Verifica se a rota já foi processada para renderizar o botão no estado correto
+                    if (processedRoutes.has(rotaValue.replace(/'/g, ""))) {
+                        botoes[vehicleType] += `<button id="${btnId}" class="btn btn-${colorClass} active mt-2 me-2" disabled><i class="bi bi-check-circle-fill me-2"></i>${buttonTitle}</button>`;
+                    } else {
+                        const functionCall = vehicleType === 'fiorino' ? 'separarCargasFiorino' : (vehicleType === 'van' ? 'separarCargasVan' : 'separarCargas34');
+                        botoes[vehicleType] += `<button id="${btnId}" class="btn btn-outline-${colorClass} mt-2 me-2" onclick="${functionCall}(${rotaValue}, '${divId}', '${buttonTitle}', this)">${buttonTitle}</button>`;
+                    }
                 }
             });
             document.getElementById('botoes-fiorino').innerHTML = botoes.fiorino || '<div class="empty-state"><i class="bi bi-box"></i><p>Nenhuma rota de Fiorino encontrada.</p></div>';
@@ -2773,7 +2981,7 @@
                     const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
                     rotaDisplay = `Rota: ${rota} (${veiculoNome})`;
                 }
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -2816,7 +3024,7 @@
                     const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
                     rotaDisplay = `Rota: ${rota} (${veiculoNome})`;
                 }
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body p-0">${createTable(grupo.pedidos)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body p-0">${createTable(pedidos)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -3414,12 +3622,14 @@
             const allRouteButtons = document.querySelectorAll('#botoes-fiorino button, #botoes-van button, #botoes-34 button');
 
             const routesKey = Array.isArray(routeOrRoutes) ? routeOrRoutes.sort().join(',') : String(routeOrRoutes);
-            if (processedRoutes.has(routesKey)) {
-                alert('Esta rota já foi processada. Para reprocessar, limpe os resultados usando o botão "Limpar Tudo".');
-                return;
-            }
             
             allRouteButtons.forEach(btn => btn.disabled = true);
+            
+            if (processedRoutes.has(routesKey)) {
+                alert('Esta rota já foi processada. Para reprocessar, limpe os resultados usando o botão "Limpar Tudo".');
+                allRouteButtons.forEach(btn => btn.disabled = false); // Re-habilita os botões se a rota já foi processada
+                return;
+            }
             processedRoutes.add(routesKey);
 
             const resultadoDiv = document.getElementById(divId);
@@ -3524,7 +3734,10 @@
                         break;
                 }
             } finally {
-                allRouteButtons.forEach(btn => btn.disabled = false);
+                // Reabilita apenas os botões de rotas que ainda não foram processadas.
+                allRouteButtons.forEach(btn => {
+                    if (!btn.classList.contains('active')) btn.disabled = false;
+                });
                 if(optimizationLevel !== '1') {
                     modal.hide();
                 } else {
@@ -3837,7 +4050,15 @@
             
             const headerColorClass = isOverloaded ? 'bg-danger' : vInfo.colorClass;
             
-            const printButton = String(load.id).startsWith('manual-') ? `<button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirCargaManualIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Esta Carga</button>` : '';
+            const printButton = String(load.id).startsWith('manual-') ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargaManualIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>` : '';
+
+            const cardHeaderActions = `
+                <div class="card-header-actions no-print">
+                    ${printButton}
+                </div>
+            `;
+
+            const cardBodyActions = String(load.id).startsWith('manual-') ? '' : ''; // Espaço para futuras ações no corpo do card
 
             const observationForPrint = ` 
                 <div class="print-only-observation mt-2 p-2 border rounded" style="background-color: #f8f9fa; display: none;">
@@ -3854,7 +4075,17 @@
                 initialObservationHtml = `<button class="btn btn-sm btn-outline-info" onclick="toggleObservationEdit('${load.id}', true)"><i class="bi bi-plus-circle me-1"></i>Adicionar Observação</button>`;
             }
 
-            return `<div id="${load.id}" class="card mb-3 drop-zone-card ${isPriorityLoad ? 'border-primary' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}"><div class="card-header ${headerColorClass} ${vInfo.textColor}"><i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero}${spDescription} - <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}</div><div class="card-body">${printButton}${progressBar}<div class="mt-3 no-print" id="obs-container-${load.id}">${initialObservationHtml}</div>${observationForPrint}${createTable(load.pedidos, null, load.id)}</div></div>`;
+            return `<div id="${load.id}" class="card mb-3 drop-zone-card ${isPriorityLoad ? 'border-primary' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}">
+                        <div class="card-header ${headerColorClass} ${vInfo.textColor} d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero}${spDescription} - 
+                                <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / 
+                                <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}
+                            </div>
+                            ${cardHeaderActions}
+                        </div>
+                        <div class="card-body">${cardBodyActions}${progressBar}<div class="mt-3 no-print" id="obs-container-${load.id}">${initialObservationHtml}</div>${observationForPrint}${createTable(load.pedidos, null, load.id)}</div>
+                    </div>`;
         }
         
         function separarCargasFiorino(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'fiorino', buttonElement); }
@@ -3885,8 +4116,8 @@
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const isOverloaded = grupo.totalKg > maxKg;
                 const weightBadge = isOverloaded
-                    ? `<span class="badge bg-danger ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>${totalKgFormatado} kg (ACIMA DO PESO!)</span>`
-                    : `<span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>`;
+                    ? `<span class="badge bg-danger ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>${totalKgFormatado} kg (ACIMA DO PESO!)</span>` 
+                    : `<span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>`;
                 
                 const pesoPercentual = (grupo.totalKg / maxKg) * 100;
                 let progressColor = 'bg-success';
@@ -3901,36 +4132,27 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
 
-        function displayCargasCfAccordion(div, grupos, pedidosCarreta, pedidosCondor) {
+        function displayTruck(div, grupos, pedidosCarreta) {
             let todosOsGrupos = {...grupos};
             const chaveRota11000 = "Rota 11000 (Truck)";
             const chaveCarreta = "Pedidos de Carreta/Truck sem CF";
-            const chaveCondor = "Pedidos Condor (Truck)";
 
             if (pedidosCarreta?.length > 0) {
-                todosOsGrupos[chaveCarreta] = {
+                todosOsGrupos[chaveCarreta] = { // prettier-ignore
                     pedidos: pedidosCarreta,
                     totalKg: pedidosCarreta.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
                     totalCubagem: pedidosCarreta.reduce((sum, p) => sum + p.Cubagem, 0)
                 };
                 gruposPorCFGlobais[chaveCarreta] = todosOsGrupos[chaveCarreta];
             }
-            if (pedidosCondor?.length > 0) {
-                todosOsGrupos[chaveCondor] = {
-                    pedidos: pedidosCondor,
-                    totalKg: pedidosCondor.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
-                    totalCubagem: pedidosCondor.reduce((sum, p) => sum + p.Cubagem, 0)
-                };
-                gruposPorCFGlobais[chaveCondor] = todosOsGrupos[chaveCondor];
-            }
 
             if (Object.keys(todosOsGrupos).length === 0) {
                 div.innerHTML = '<div class="empty-state"><i class="bi bi-truck"></i><p>Nenhum grupo de carga Truck encontrado.</p></div>';
                 return;
             }
-            let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasPorCF">';
+            let accordionHtml = '<div class="accordion accordion-flush" id="accordionTruck">';
             
-            const specialKeysOrder = [chaveCondor, chaveCarreta, chaveRota11000];
+            const specialKeysOrder = [chaveCarreta, chaveRota11000];
             const sortedKeys = Object.keys(todosOsGrupos).sort((a,b) => {
                 const aIsSpecial = specialKeysOrder.includes(a);
                 const bIsSpecial = specialKeysOrder.includes(b);
@@ -3965,7 +4187,7 @@
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
                                 <strong>${isNumeric(cf) ? "CF: " : ""}${cf}</strong> &nbsp;
                                 <span class="badge bg-secondary ms-2" title="Rotas">${rotas || 'N/A'}</span>
-                                <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
+                                <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³</span>
                             </button>
                         </h2>
@@ -3981,6 +4203,137 @@
             });
             accordionHtml += '</div>';
             div.innerHTML = accordionHtml;
+        }
+
+        function displayCargasFechadasPR(div, pedidos) {
+            if (!div) return;
+            if (pedidos.length === 0) {
+                div.innerHTML = '<div class="empty-state"><i class="bi bi-building-fill-check"></i><p>Nenhuma Carga Fechada do Paraná encontrada.</p></div>';
+                return;
+            }
+
+            // Agrupa por CF ou 'Condor'
+            const grupos = pedidos.reduce((acc, p) => {
+                const coluna5 = String(p.Coluna5 || '').toUpperCase();
+                let key;
+                if (coluna5.includes('CONDOR (TRUCK)') || coluna5.includes('CONDOR TOD TRUC')) {
+                    key = 'Condor Truck';
+                } else if (coluna5.includes('TBL ESPECIAL') && !isNumeric(p.CF)) {
+                    key = 'TBL ESPECIAL SEM CF';
+                } else {
+                    key = `CF: ${p.CF}`;
+                }
+                
+                if (!acc[key]) { acc[key] = { pedidos: [], totalKg: 0, totalCubagem: 0 }; }
+                acc[key].pedidos.push(p);
+                acc[key].totalKg += p.Quilos_Saldo;
+                acc[key].totalCubagem += p.Cubagem;
+                return acc;
+            }, {});
+
+            let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasFechadasPR">';
+            
+            const sortedKeys = Object.keys(grupos).sort((a, b) => {
+                if (a === 'Condor Truck') return -1;
+                if (b === 'Condor Truck') return 1;
+                if (a === 'TBL ESPECIAL SEM CF') return -1; // Coloca TBL ESPECIAL depois de Condor
+                if (b === 'TBL ESPECIAL SEM CF') return 1;
+                return a.localeCompare(b, undefined, { numeric: true });
+            });
+
+            sortedKeys.forEach((key, index) => {
+                const grupo = grupos[key];
+                const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].filter(Boolean).join(', ');
+                const collapseId = `collapseCargasFechadasPR-${index}`;
+                const printAreaId = `print-area-pr-${index}`; // ID único para a área de impressão
+
+                accordionHtml += `
+                    <div class="accordion-item" id="${printAreaId}">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                                <strong>${key}</strong> &nbsp;
+                                <span class="badge bg-secondary ms-2" title="Rotas">${rotas || 'N/A'}</span>
+                                <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
+                                <span class="badge bg-light text-dark ms-2"><i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³</span>
+                            </button>
+                        </h2>
+                        <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCargasFechadasPR">
+                            <div class="accordion-body">
+                                <button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirCargaFechadaPRIndividual('${printAreaId}', '${key}')"><i class="bi bi-printer-fill me-1"></i>Imprimir este Grupo</button>
+                                ${createTable(grupo.pedidos)}
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            accordionHtml += '</div>';
+            div.innerHTML = accordionHtml;
+        }
+
+        function displayCargasFechadasRestBrasil(div, grupos, pedidosCarreta) {
+            if (!div) return;
+            
+            let todosOsGrupos = JSON.parse(JSON.stringify(grupos)); // Clona para não modificar o original
+            const chaveCarreta = "Pedidos de Carreta/Truck sem CF";
+            const chaveTblEspecial = "TBL ESPECIAL SEM CF";
+
+            if (pedidosCarreta?.length > 0) {
+                todosOsGrupos[chaveTblEspecial] = {
+                    pedidos: pedidosCarreta,
+                    totalKg: pedidosCarreta.reduce((sum, p) => sum + p.Quilos_Saldo, 0),
+                    totalCubagem: pedidosCarreta.reduce((sum, p) => sum + p.Cubagem, 0)
+                };
+            }
+
+            if (Object.keys(todosOsGrupos).length === 0) {
+                div.innerHTML = '<div class="empty-state"><i class="bi bi-globe-americas"></i><p>Nenhuma Carga Fechada (Resto do Brasil) encontrada.</p></div>';
+                return;
+            }
+
+            let accordionHtml = '<div class="accordion accordion-flush" id="accordionCargasFechadasRestBr">';
+            
+            const specialKeysOrder = [chaveTblEspecial]; // Define a ordem das chaves especiais
+            const sortedKeys = Object.keys(todosOsGrupos).sort((a, b) => {
+                const aIsSpecial = specialKeysOrder.includes(a);
+                const bIsSpecial = specialKeysOrder.includes(b);
+                if (aIsSpecial && bIsSpecial) return specialKeysOrder.indexOf(a) - specialKeysOrder.indexOf(b);
+                if (aIsSpecial) return -1; if (bIsSpecial) return 1;
+                return a.localeCompare(b, undefined, {numeric: true});
+            });
+
+            sortedKeys.forEach((key, index) => {
+                const grupo = todosOsGrupos[key];
+                const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].filter(Boolean).join(', ');
+                const collapseId = `collapseCargasFechadasRestBr-${index}`;
+                const displayName = isNumeric(key) ? `CF: ${key}` : key;
+
+                accordionHtml += `
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                                <strong>${displayName}</strong> &nbsp;
+                                <span class="badge bg-secondary ms-2" title="Rotas">${rotas || 'N/A'}</span>
+                                <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
+                                <span class="badge bg-light text-dark ms-2"><i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³</span>
+                            </button>
+                        </h2>
+                        <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCargasFechadasRestBr">
+                            <div class="accordion-body">
+                                <button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirCargaCFIndividual('${key}')"><i class="bi bi-printer-fill me-1"></i>Imprimir esta Carga</button>
+                                ${createTable(grupo.pedidos)}
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            accordionHtml += '</div>';
+            div.innerHTML = accordionHtml;
+        }
+
+        function imprimirCargaFechadaPRIndividual(printAreaId, key) {
+            imprimirGeneric(printAreaId, `Carga Fechada PR - ${key}`);
         }
 
         function imprimirCargaCFIndividual(cf) {
@@ -4027,7 +4380,7 @@
                         </div>
                         <div id="manual-progress-bar-container"></div>
                         <div id="manual-drop-zone" class="p-3 border rounded drop-zone-card" style="background-color: var(--dark-bg); min-height: 150px;" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="manual-builder">
-                            <p class="text-muted text-center" id="manual-drop-text">Arraste os pedidos da lista de "Sobras" para cá.</p>
+                            <p class="text-muted text-center" id="manual-drop-text">Arraste os pedidos da lista de "Disponíveis Varejo" para cá.</p>
                             <div id="manual-load-table-container"></div>
                         </div>
                     </div>
@@ -4105,10 +4458,16 @@
             const newCardHTML = renderLoadCard(newLoad, vehicleType, vehicleInfo[vehicleType]);
             
             const activeTabPane = document.querySelector('.tab-pane.active');
-            const resultContainer = activeTabPane ? activeTabPane.querySelector('.resultado-container') : null;
+            let resultContainer = activeTabPane ? activeTabPane.querySelector('.resultado-container') : null;
 
-            if(resultContainer) {
-               resultContainer.insertAdjacentHTML('beforeend', newCardHTML);
+            // Se o container de resultados não existir (nenhuma rota foi processada ainda), cria um.
+            if (activeTabPane && !resultContainer) {
+                activeTabPane.insertAdjacentHTML('beforeend', '<div class="resultado-container mt-3"></div>');
+                resultContainer = activeTabPane.querySelector('.resultado-container');
+            }
+
+            if (resultContainer) {
+                resultContainer.insertAdjacentHTML('beforeend', newCardHTML);
                alert(`Carga manual ${newLoad.numero} criada com sucesso para ${vehicleInfo[vehicleType].name} e adicionada à aba atual!`);
             }
 
@@ -4144,10 +4503,6 @@
              const builderWrapper = document.getElementById('manual-load-builder-wrapper');
              if (builderWrapper) builderWrapper.remove();
              manualLoadInProgress = null;
-
-             // Re-renderiza a lista de pedidos disponíveis para incluir os itens devolvidos.
-             const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
-             displayGerais(document.getElementById('resultado-geral'), gruposGerais);
 
              updateAndRenderKPIs();
         }
@@ -4284,7 +4639,8 @@
         }
 
         function highlightClientRows(event) {
-            const clickedRow = event.target.closest('tr');
+            if (event.button === 2) return; // Ignora cliques com o botão direito para não interferir no menu de contexto
+            const clickedRow = event.target.closest('tr[data-cliente-id]');
             if (!clickedRow || !clickedRow.dataset.clienteId) return;
 
             const clienteId = clickedRow.dataset.clienteId;
@@ -4560,11 +4916,11 @@
 
         function displayPedidosFuncionarios(div, pedidos) {
             if (!div) return;
+            div.innerHTML = ''; // Limpa o container
             if (pedidos.length === 0) {
-                div.innerHTML = '<div class="empty-state"><i class="bi bi-people-fill"></i><p>Nenhum pedido de funcionário encontrado.</p></div>';
-                return;
+                return false; // Retorna false se não houver pedidos
             }
-
+            
             pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
                 const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
@@ -4582,16 +4938,16 @@
             const printAreaId = 'funcionarios-print-area';
 
             let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
-                <div class="accordion-item">
+                <div class="accordion-item" id="${printAreaId}">
                     <h2 class="accordion-header" id="${headerId}">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
                             <strong>Pedidos de Funcionários</strong> &nbsp;
                             <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} Pedidos</span>
-                            <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
+                            <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
                         </button>
                     </h2>
                     <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
-                        <div class="accordion-body" id="${printAreaId}">
+                        <div class="accordion-body">
                             <div class="d-flex justify-content-between align-items-center mb-3 no-print">
                                 <p class="text-muted small mb-0">Pedidos com a tag "TBL FUNCIONARIO" na Coluna 5, separados automaticamente.</p>
                                 <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Funcionários')">
@@ -4605,18 +4961,20 @@
             </div>`;
 
             div.innerHTML = accordionHtml;
+            return true; // Retorna true se houver pedidos
         }
 
         function displayPedidosTransferencias(div, pedidos) {
             if (!div) return;
+            div.innerHTML = ''; // Limpa o container
             if (pedidos.length === 0) {
-                div.innerHTML = '<div class="empty-state"><i class="bi bi-arrow-left-right"></i><p>Nenhum pedido de transferência encontrado.</p></div>';
-                return;
+                return false; // Retorna false se não houver pedidos
             }
-
+            
             pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
                 const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
+                
                 const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
                 if (clienteCompare !== 0) return clienteCompare;
                 return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
@@ -4631,18 +4989,18 @@
             const printAreaId = 'transferencias-print-area';
 
             let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
-                <div class="accordion-item">
+                <div class="accordion-item" id="${printAreaId}">
                     <h2 class="accordion-header" id="${headerId}">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
                             <strong>Pedidos de Transferência</strong> &nbsp;
                             <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} Pedidos</span>
-                            <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
+                            <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
                         </button>
                     </h2>
                     <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
-                        <div class="accordion-body" id="${printAreaId}">
+                        <div class="accordion-body">
                             <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-                                <p class="text-muted small mb-0">Pedidos com a tag "TABELA TRANSFER" na Coluna 5, separados automaticamente.</p>
+                                <p class="text-muted small mb-0">Pedidos com as tags "TABELA TRANSFER", "TRANSF. TODESCH" ou "INSTITUCIONAL" na Coluna 5.</p>
                                 <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Transferência')">
                                     <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
                                 </button>
@@ -4654,18 +5012,20 @@
             </div>`;
 
             div.innerHTML = accordionHtml;
+            return true; // Retorna true se houver pedidos
         }
 
         function displayPedidosExportacao(div, pedidos) {
             if (!div) return;
+            div.innerHTML = ''; // Limpa o container
             if (pedidos.length === 0) {
-                div.innerHTML = '<div class="empty-state"><i class="bi bi-globe-americas"></i><p>Nenhum pedido de exportação encontrado.</p></div>';
-                return;
+                return false; // Retorna false se não houver pedidos
             }
-
+            
             pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
                 const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
+                
                 const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
                 if (clienteCompare !== 0) return clienteCompare;
                 return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
@@ -4680,18 +5040,107 @@
             const printAreaId = 'exportacao-print-area'; // Este ID é usado no botão de imprimir
 
             let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
-                <div class="accordion-item">
+                <div class="accordion-item" id="${printAreaId}">
                     <h2 class="accordion-header" id="${headerId}">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
                             <strong>Pedidos de Exportação</strong> &nbsp;
                             <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} Pedidos</span>
-                            <span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
+                            <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
                         </button>
                     </h2>
                     <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
-                        <div class="accordion-body" id="${printAreaId}"><div class="d-flex justify-content-between align-items-center mb-3 no-print"><p class="text-muted small mb-0">Pedidos com a tag "TBL EXPORTACAO" na Coluna 5.</p><button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Exportação')"><i class="bi bi-printer-fill me-1"></i>Imprimir Lista</button></div>${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Dat_Ped', 'Coluna5', 'BLOQ.'])}</div>
+                        <div class="accordion-body"><div class="d-flex justify-content-between align-items-center mb-3 no-print"><p class="text-muted small mb-0">Pedidos com a tag "TBL EXPORTACAO" na Coluna 5.</p><button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Exportação')"><i class="bi bi-printer-fill me-1"></i>Imprimir Lista</button></div>${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Dat_Ped', 'Coluna5', 'BLOQ.'])}</div>
                     </div></div></div>`;
             div.innerHTML = accordionHtml;
+            return true; // Retorna true se houver pedidos
+        }
+
+        function displayPedidosMoinho(div, pedidos) {
+            if (!div) return;
+            div.innerHTML = ''; // Limpa o container
+            if (pedidos.length === 0) {
+                return false; // Retorna false se não houver pedidos
+            }
+            
+            pedidos.sort((a, b) => {
+                const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
+                const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
+                const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
+                if (clienteCompare !== 0) return clienteCompare;
+                return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
+            });
+
+            const totalKg = pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
+            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const accordionId = 'accordionMoinho';
+            const collapseId = 'collapseMoinho';
+            const printAreaId = 'moinho-print-area';
+
+            let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
+                <div class="accordion-item" id="${printAreaId}">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                            <strong>Pedidos "Moinho"</strong> &nbsp;
+                            <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} Pedidos</span>
+                            <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
+                        </button>
+                    </h2>
+                    <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
+                        <div class="accordion-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+                                <p class="text-muted small mb-0">Pedidos com a tag "MOINHO" na Coluna 5.</p>
+                                <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos Moinho')"><i class="bi bi-printer-fill me-1"></i>Imprimir Lista</button>
+                            </div>
+                            ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Dat_Ped', 'Coluna5', 'BLOQ.'])}
+                        </div>
+                    </div></div></div>`;
+            div.innerHTML = accordionHtml;
+            return true; // Retorna true se houver pedidos
+        }
+
+        function displayPedidosMarcaPropria(div, pedidos) {
+            if (!div) return;
+            div.innerHTML = ''; // Limpa o container
+            if (pedidos.length === 0) {
+                return false; // Retorna false se não houver pedidos
+            }
+
+            pedidos.sort((a, b) => {
+                const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
+                const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
+                const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
+                if (clienteCompare !== 0) return clienteCompare;
+                return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
+            });
+
+            const totalKg = pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
+            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const accordionId = 'accordionMarcaPropria';
+            const collapseId = 'collapseMarcaPropria';
+            const printAreaId = 'marcapropria-print-area';
+
+            let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
+                <div class="accordion-item" id="${printAreaId}">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                            <strong>Pedidos "Marca Própria"</strong> &nbsp;
+                            <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} Pedidos</span>
+                            <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
+                        </button>
+                    </h2>
+                    <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
+                        <div class="accordion-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+                                <p class="text-muted small mb-0">Pedidos com a tag "MARCA PROPRIA" na Coluna 5.</p>
+                                <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos Marca Própria')"><i class="bi bi-printer-fill me-1"></i>Imprimir Lista</button>
+                            </div>
+                            ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Dat_Ped', 'Coluna5', 'BLOQ.'])}
+                        </div>
+                    </div></div></div>`;
+            div.innerHTML = accordionHtml;
+            return true; // Retorna true se houver pedidos
         }
 
         function gerarRelatorioPDF() {
@@ -4838,7 +5287,6 @@
             }
             try {
                 const state = {
-                    planilhaData,
                     originalColumnHeaders,
                     pedidosGeraisAtuais,
                     gruposToco,
@@ -4856,7 +5304,9 @@
                     pedidosCarretaSemCF,
                     pedidosTransferencias,
                     pedidosExportacao,
-                    pedidosCondorTruck,
+                    cargasFechadasPR,
+                    pedidosMoinho,
+                    pedidosMarcaPropria,
                     tocoPedidoIds: Array.from(tocoPedidoIds),
                     currentLeftoversForPrinting,
                     activeLoads,
@@ -4904,7 +5354,6 @@
                 };
 
                 planilhaData = savedState.planilhaData || [];
-                if (planilhaData.length === 0) return;
 
                 originalColumnHeaders = savedState.originalColumnHeaders || [];
                 pedidosGeraisAtuais = savedState.pedidosGeraisAtuais || [];
@@ -4923,7 +5372,9 @@
                 pedidosCarretaSemCF = savedState.pedidosCarretaSemCF || [];
                 pedidosTransferencias = savedState.pedidosTransferencias || [];
                 pedidosExportacao = savedState.pedidosExportacao || [];
-                pedidosCondorTruck = savedState.pedidosCondorTruck || [];
+                cargasFechadasPR = savedState.cargasFechadasPR || [];
+                pedidosMoinho = savedState.pedidosMoinho || [];
+                pedidosMarcaPropria = savedState.pedidosMarcaPropria || [];
                 tocoPedidoIds = new Set(savedState.tocoPedidoIds || []);
                 currentLeftoversForPrinting = savedState.currentLeftoversForPrinting || [];
                 activeLoads = savedState.activeLoads || {};
@@ -4933,7 +5384,6 @@
                 localStorage.setItem('lastActiveTab', savedState.lastActiveTab); // Restaura a aba salva
 
                 // Reconverte as strings de data para objetos Date em todas as listas relevantes
-                planilhaData = reviveDates(planilhaData);
                 pedidosGeraisAtuais = reviveDates(pedidosGeraisAtuais);
                 pedidosComCFNumericoIsolado = reviveDates(pedidosComCFNumericoIsolado);
                 pedidosManualmenteBloqueadosAtuais = reviveDates(pedidosManualmenteBloqueadosAtuais);
@@ -4942,11 +5392,19 @@
                 pedidosCarretaSemCF = reviveDates(pedidosCarretaSemCF);
                 pedidosTransferencias = reviveDates(pedidosTransferencias);
                 pedidosExportacao = reviveDates(pedidosExportacao);
-                pedidosCondorTruck = reviveDates(pedidosCondorTruck);
+                cargasFechadasPR = reviveDates(cargasFechadasPR);
+                pedidosMoinho = reviveDates(pedidosMoinho);
+                pedidosMarcaPropria = reviveDates(pedidosMarcaPropria);
                 currentLeftoversForPrinting = reviveDates(currentLeftoversForPrinting);
                 Object.values(activeLoads).forEach(load => load.pedidos = reviveDates(load.pedidos));
                 Object.values(gruposToco).forEach(group => group.pedidos = reviveDates(group.pedidos));
                 Object.values(gruposPorCFGlobais).forEach(group => group.pedidos = reviveDates(group.pedidos));
+
+                // Se não houver dados da planilha, não há estado para restaurar.
+                if (pedidosGeraisAtuais.length === 0 && Object.keys(activeLoads).length === 0 && currentLeftoversForPrinting.length === 0) {
+                    console.log("Nenhum estado processado para restaurar.");
+                    return;
+                }
 
                 // Re-renderizar a UI com os dados carregados
                 statusDiv.innerHTML = `<p class="text-success">Progresso anterior restaurado com sucesso!</p>`;
@@ -4975,15 +5433,18 @@
                 const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
                 displayGerais(document.getElementById('resultado-geral'), gruposGerais);
                 displayToco(document.getElementById('resultado-toco'), gruposToco);
-                displayCargasCfAccordion(document.getElementById('resultado-cf-accordion-container'), gruposPorCFGlobais, pedidosCarretaSemCF, pedidosCondorTruck);
                 
                 // Adicionado para restaurar todas as outras seções da UI
                 displayPedidosBloqueados(document.getElementById('resultado-bloqueados'), pedidosManualmenteBloqueadosAtuais);
                 displayRota1(document.getElementById('resultado-rota1'), rota1SemCarga);
                 displayPedidosCFNumerico(document.getElementById('resultado-cf-numerico'), pedidosComCFNumericoIsolado);
-                displayPedidosFuncionarios(document.getElementById('resultado-funcionarios-tab'), pedidosFuncionarios);
-                displayPedidosTransferencias(document.getElementById('resultado-transferencias-tab'), pedidosTransferencias);
-                displayPedidosExportacao(document.getElementById('resultado-exportacao-tab'), pedidosExportacao);
+                displayCargasFechadasPR(document.getElementById('resultado-cargas-fechadas-pr'), cargasFechadasPR);
+                displayCargasFechadasRestBrasil(document.getElementById('resultado-cargas-fechadas-rest-br'), gruposPorCFGlobais, pedidosCarretaSemCF);
+                displayPedidosFuncionarios(document.getElementById('resultado-funcionarios'), pedidosFuncionarios);
+                displayPedidosTransferencias(document.getElementById('resultado-transferencias'), pedidosTransferencias);
+                displayPedidosExportacao(document.getElementById('resultado-exportacao'), pedidosExportacao);
+                displayPedidosMoinho(document.getElementById('resultado-moinho'), pedidosMoinho);
+                displayPedidosMarcaPropria(document.getElementById('resultado-marca-propria'), pedidosMarcaPropria);
                 reRenderManualLoads();
 
                 reRenderActiveLoads(processedRouteContexts);
