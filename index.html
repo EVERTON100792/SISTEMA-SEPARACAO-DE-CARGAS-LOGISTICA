@@ -648,6 +648,13 @@
         .stat-card.stat-alert-warning:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 193, 7, 0.5); border-color: #ffc107; }
     </style>
     <style>
+        /* --- Ajuste para rolagem na Mesa de Trabalho --- */
+        #vehicleTabsContent {
+            max-height: calc(100vh - 280px); /* Altura dinâmica baseada na altura da tela */
+            overflow-y: auto;
+        }
+    </style>
+    <style>
         /* --- Estilos para o Novo Layout do Dashboard de Resumo --- */
         .kpi-card-main {
             background: linear-gradient(145deg, var(--dark-surface-secondary), var(--dark-surface));
@@ -904,7 +911,7 @@
             <!-- ======================================================================================= -->
             <div id="workspace-view" class="main-view">
                 <h1 class="h2 mb-4 animated-entry">Mesas de Trabalho</h1> <!-- p-4 removido -->
-                <div class="row h-100">
+                <div class="row">
                 <div class="col-lg-8 mb-4 animated-entry"> 
                     <div class="card h-100"> 
                         <div class="card-header d-flex justify-content-between align-items-center">
@@ -974,7 +981,7 @@
                 </div>
 
                 <div class="col-lg-4 mb-4 animated-entry">
-                    <div class="card" id="pedidos-disponiveis-card">
+                    <div class="card h-100" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos & Consultas Rápidas</h2>
                         </div>
@@ -1732,25 +1739,27 @@
                 const accordionCollapse = event.target;
                 const accordionHeader = accordionCollapse.previousElementSibling;
 
-                if (!accordionHeader) return;
-
-                // Verifica se o acordeão está dentro do card de pedidos disponíveis
-                const pedidosDisponiveisCard = accordionCollapse.closest('#pedidos-disponiveis-card');
+                if (!accordionHeader) return; // Sai se não encontrar o cabeçalho
 
                 setTimeout(() => {
-                    if (pedidosDisponiveisCard) {
-                        // Caso especial: acordeão dentro do card com rolagem interna
-                        const cardBody = pedidosDisponiveisCard.querySelector('.card-body');
-                        if (cardBody) {
-                            // Calcula a posição do cabeçalho relativo ao corpo do card e rola
-                            const headerTop = accordionHeader.offsetTop;
-                            cardBody.scrollTo({
-                                top: headerTop - cardBody.offsetTop - 10, // -10 para dar uma pequena margem
-                                behavior: 'smooth'
-                            });
-                        }
+                    // Procura pelo container de rolagem mais próximo. Pode ser um .card-body ou o #vehicleTabsContent.
+                    const scrollableContainer = accordionCollapse.closest('.card-body[style*="overflow-y: auto"], #vehicleTabsContent');
+
+                    if (scrollableContainer) {
+                        // --- NOVO: Lógica para rolagem interna ---
+                        // Calcula a posição do cabeçalho do acordeão em relação ao topo do container de rolagem.
+                        const headerTop = accordionHeader.offsetTop;
+                        // A posição de rolagem do container é a posição do cabeçalho menos a posição inicial do próprio container.
+                        const containerScrollTop = scrollableContainer.offsetTop;
+
+                        scrollableContainer.scrollTo({
+                            // Rola para a posição do cabeçalho, subtraindo a posição do container e um pequeno offset para margem.
+                            top: headerTop - containerScrollTop - 10,
+                            behavior: 'smooth'
+                        });
                     } else {
-                        // Comportamento padrão para todos os outros acordeões
+                        // --- Comportamento antigo (padrão) ---
+                        // Se não estiver dentro de um container com rolagem, usa a rolagem da página principal.
                         accordionHeader.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
                 }, 150); // Delay para garantir que a animação de abertura não interfira na rolagem.
@@ -1941,155 +1950,118 @@
                 return;
             }
 
-            const searchPredicate = p => p && (
-                String(p.Num_Pedido).toLowerCase().includes(searchTerm) ||
-                String(p.Nome_Cliente).toLowerCase().includes(searchTerm) ||
-                String(p.Cidade).toLowerCase().includes(searchTerm)
-            );
+            // --- LÓGICA DE BUSCA REFEITA ---
+            const searchPredicate = p => p && (String(p.Num_Pedido).toLowerCase().includes(searchTerm) || String(p.Nome_Cliente).toLowerCase().includes(searchTerm) || String(p.Cidade).toLowerCase().includes(searchTerm));
+            const foundInPlanilha = planilhaData.filter(searchPredicate);
 
-            let resultados = [];
-
-            // Função auxiliar para adicionar resultados
-            const addResult = (pedido, local, viewId, tabId, accordionId, cardId) => {
-                resultados.push({ pedido, local, viewId, tabId, accordionId, cardId });
-            };
-
-            // 1. Cargas Ativas (Varejo, Toco, Manuais)
-            for (const loadId in activeLoads) {
-                const load = activeLoads[loadId];
-                const foundPedidos = load.pedidos.filter(searchPredicate);
-
-                if (foundPedidos.length > 0) { // prettier-ignore
-                    let viewId = 'workspace-view'; // A maioria das cargas está aqui
-                    let tabId = null;
-                    let accordionId = null;
-                    let cardId = load.id; // O ID do card da carga é o próprio ID da carga.
-                    const local = `Carga ${load.numero || load.id.split('-')[1]} (${load.vehicleType})`;
-
-                    if (['fiorino', 'van', 'tresQuartos'].includes(load.vehicleType)) {
-                        tabId = `${load.vehicleType === 'tresQuartos' ? 'tres-quartos' : load.vehicleType}-tab-pane`;
-                    } else if (load.vehicleType === 'toco') {
-                        tabId = 'toco-tab-pane';
-                        // Para Toco, o accordion é o elemento a ser expandido, e o cardId é o corpo do accordion.
-                        const cf = load.pedidos[0]?.CF;
-                        const sortedTocoKeys = Object.keys(gruposToco).sort();
-                        const index = sortedTocoKeys.indexOf(String(cf));
-                        if (index !== -1) accordionId = `collapseToco${index}`;
-                        cardId = `toco-${cf}`; // O corpo do accordion tem o ID `toco-{cf}`
-                    } else if (load.id.startsWith('venda-antecipada') || load.id.startsWith('especial')) {
-                        viewId = 'montagens-especiais-view';
-                    }
-
-                    foundPedidos.forEach(p => addResult(p, local, viewId, tabId, accordionId, cardId));
-                }
+            if (foundInPlanilha.length === 0) {
+                searchResultDiv.innerHTML = '<div class="alert alert-warning">Nenhum pedido encontrado para o termo buscado.</div>';
+                return;
             }
 
-            // 2. Pedidos Disponíveis (Varejo)
-            const rotasUnicas = [...new Set(pedidosGeraisAtuais.map(p => String(p.Cod_Rota || ''))) ].filter(Boolean);
-            const rotasGerais = getSortedVarejoRoutes(rotasUnicas);
-            pedidosGeraisAtuais.filter(searchPredicate).forEach(p => {
-                const rotaIndex = rotasGerais.indexOf(String(p.Cod_Rota));
-                if (rotaIndex !== -1) {
-                    addResult(p, `Pedidos Disponíveis (Rota ${p.Cod_Rota})`, 'workspace-view', null, `collapseGeral${rotaIndex}`, 'pedidos-disponiveis-card');
-                }
-            });
+            const resultados = foundInPlanilha.map(pedido => {
+                const numPedido = String(pedido.Num_Pedido);
+                let local = "Não processado / Planilha Original";
+                let viewId = null, tabId = null, accordionId = null, cardId = null;
 
-            // 3. Sobras
-            currentLeftoversForPrinting.filter(searchPredicate).forEach(p => {
-                const activeTabPane = document.querySelector('.workspace-tab-pane.active');
-                const activeTabId = activeTabPane ? activeTabPane.id : null;
-                const leftoversCardId = activeTabPane ? `leftovers-card-${activeTabPane.id}` : null;
-                addResult(p, 'Sobras Finais', 'workspace-view', activeTabId, null, leftoversCardId);
-            });
-
-            // 4. Outras seções (Resultados Adicionais e abas específicas do Workspace)
-            const otherSections = [
-                { list: pedidosManualmenteBloqueadosAtuais, local: 'Bloqueado Manualmente', viewId: 'pedidos-bloqueados-view', cardId: 'card-bloqueados', accordionId: 'collapseBloqueados' }, // prettier-ignore
-                { list: rota1SemCarga, local: 'Pedidos da Rota 1 para Alteração', viewId: 'alteracao-rota-view', cardId: 'resultado-rota1', accordionId: null },
-                { list: pedidosComCFNumericoIsolado, local: 'Pedidos Filtrados (Bloqueio por Regra)', viewId: 'workspace-view', tabId: 'bloqueados-regra-tab-pane', accordionId: 'accordionCF' }, // prettier-ignore
-                { list: pedidosMoinho, local: 'Outros Pedidos (Moinho)', viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseMoinho' },
-                { list: pedidosFuncionarios, local: 'Outros Pedidos (Funcionários)', viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseFuncionarios' },
-                { list: pedidosTransferencias, local: 'Outros Pedidos (Transferência)', viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseTransferencias' },
-                { list: pedidosExportacao, local: 'Outros Pedidos (Exportação)', viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseExportacao' }
-            ];
-
-            otherSections.forEach(section => {
-                section.list.filter(searchPredicate).forEach(p => {
-                    addResult(p, section.local, section.viewId, section.tabId, section.accordionId, section.cardId);
-                });
-            });
-
-            // 5. Cargas de Truck/Carreta (CF)
-            const specialKeysOrder = ["Pedidos de Carreta/Truck sem CF", "Rota 11000 (Truck)"];
-            const sortedCfKeys = Object.keys(gruposPorCFGlobais).sort((a,b) => {
-                const aIsSpecial = specialKeysOrder.includes(a);
-                const bIsSpecial = specialKeysOrder.includes(b);
-                if (aIsSpecial && bIsSpecial) return specialKeysOrder.indexOf(a) - specialKeysOrder.indexOf(b);
-                if (aIsSpecial) return -1; if (bIsSpecial) return 1;
-                return a.localeCompare(b, undefined, {numeric: true});
-            });
-
-            for (const cf in gruposPorCFGlobais) {
-                gruposPorCFGlobais[cf].pedidos.filter(searchPredicate).forEach(p => {
-                    const index = sortedCfKeys.indexOf(cf);
-                    if (index !== -1) {
-                        addResult(p, `Carga Resto BR (${cf})`, 'workspace-view', 'cargas-fechadas-rest-br-tab-pane', `collapseCargasFechadasRestBr-${index}`);
+                // 1. Verificar em Cargas Ativas (Varejo, Toco, Manuais)
+                for (const loadId in activeLoads) {
+                    const load = activeLoads[loadId];
+                    if (load.pedidos.some(p => String(p.Num_Pedido) === numPedido)) {
+                        local = `Carga ${load.numero || load.id.split('-')[1]} (${load.vehicleType})`;
+                        viewId = 'workspace-view';
+                        cardId = load.id;
+                        if (['fiorino', 'van', 'tresQuartos'].includes(load.vehicleType)) {
+                            tabId = `${load.vehicleType === 'tresQuartos' ? 'tres-quartos' : load.vehicleType}-tab-pane`;
+                        } else if (load.vehicleType === 'toco') {
+                            tabId = 'toco-tab-pane';
+                            const cf = load.pedidos[0]?.CF;
+                            const index = Object.keys(gruposToco).sort().indexOf(String(cf));
+                            if (index !== -1) accordionId = `collapseToco${index}`;
+                        } else if (load.id.startsWith('venda-antecipada') || load.id.startsWith('especial')) {
+                            viewId = 'montagens-especiais-view';
+                        }
+                        return { pedido, local, viewId, tabId, accordionId, cardId };
                     }
-                });
-            }
-            
-            // 6. Cargas Fechadas PR
-            const gruposPR = cargasFechadasPR.reduce((acc, p) => {
-                const coluna5 = String(p.Coluna5 || '').toUpperCase();
-                const isCondor = coluna5.includes('CONDOR (TRUCK)') || coluna5.includes('CONDOR TOD TRUC');
-                const key = isCondor ? 'Condor Truck' : `CF: ${p.CF}`;
-                if (!acc[key]) acc[key] = [];
-                acc[key].push(p);
-                return acc;
-            }, {});
-
-            const sortedPRKeys = Object.keys(gruposPR).sort((a, b) => {
-                if (a === 'Condor Truck') return -1;
-                if (b === 'Condor Truck') return 1;
-                return a.localeCompare(b, undefined, { numeric: true });
-            });
-
-            for (const key in gruposPR) {
-                gruposPR[key].filter(searchPredicate).forEach(p => {
-                    const index = sortedPRKeys.indexOf(key);
-                    if (index !== -1) {
-                        addResult(p, `Carga Fechada PR (${key})`, 'workspace-view', 'cargas-fechadas-pr-tab-pane', `collapseCargasFechadasPR-${index}`);
-                    }
-                });
-            }
-
-            // Remover duplicatas baseadas no número do pedido
-            const uniqueResultados = [];
-            const seenPedidos = new Set();
-            resultados.forEach(res => {
-                if (!seenPedidos.has(res.pedido.Num_Pedido)) { uniqueResultados.push(res); seenPedidos.add(res.pedido.Num_Pedido); }
-            });
-
-            if (uniqueResultados.length === 0) {
-                // Fallback: Se não encontrou em nenhuma seção processada, busca na planilha original completa.
-                const originalResults = planilhaData.filter(searchPredicate);
-                if (originalResults.length > 0) {
-                    let html = `<div class="alert alert-warning">
-                                    <strong>Atenção:</strong> O pedido foi encontrado na planilha original, mas não nos resultados processados.
-                                    <br>Isso pode ocorrer se um filtro de rota estiver ativo ou se o pedido foi classificado em uma categoria não visível.
-                                    <br><strong>Pedido(s) encontrado(s) na planilha:</strong> ${originalResults.map(p => p.Num_Pedido).join(', ')}
-                                </div>`;
-                    searchResultDiv.innerHTML = html;
-                } else {
-                    searchResultDiv.innerHTML = '<div class="alert alert-warning">Nenhum pedido encontrado para o termo buscado.</div>';
                 }
+
+                // 2. Verificar em Pedidos Disponíveis (Varejo)
+                if (pedidosGeraisAtuais.some(p => String(p.Num_Pedido) === numPedido)) {
+                    local = `Pedidos Disponíveis (Rota ${pedido.Cod_Rota})`;
+                    viewId = 'workspace-view';
+                    cardId = 'pedidos-disponiveis-card';
+                    const rotasGerais = getSortedVarejoRoutes([...new Set(pedidosGeraisAtuais.map(p => String(p.Cod_Rota || ''))) ].filter(Boolean));
+                    const rotaIndex = rotasGerais.indexOf(String(pedido.Cod_Rota));
+                    if (rotaIndex !== -1) accordionId = `collapseGeral${rotaIndex}`;
+                    return { pedido, local, viewId, tabId, accordionId, cardId };
+                }
+
+                // 3. Verificar em Sobras
+                if (currentLeftoversForPrinting.some(p => String(p.Num_Pedido) === numPedido)) {
+                    local = 'Sobras Finais';
+                    viewId = 'workspace-view';
+                    const activeTabPane = document.querySelector('.workspace-tab-pane.active');
+                    tabId = activeTabPane ? activeTabPane.id : null;
+                    cardId = activeTabPane ? `leftovers-card-${activeTabPane.id}` : null;
+                    return { pedido, local, viewId, tabId, accordionId, cardId };
+                }
+
+                // 4. Verificar em outras seções
+                const otherSectionsMap = {
+                    'Bloqueado Manualmente': { list: pedidosManualmenteBloqueadosAtuais, viewId: 'pedidos-bloqueados-view', cardId: 'card-bloqueados', accordionId: 'collapseBloqueados' },
+                    'Pedidos da Rota 1 para Alteração': { list: rota1SemCarga, viewId: 'alteracao-rota-view', cardId: 'resultado-rota1' },
+                    'Bloqueados Varejo (Regra)': { list: pedidosComCFNumericoIsolado, viewId: 'workspace-view', tabId: 'bloqueados-regra-tab-pane', accordionId: 'accordionCF' },
+                    'Outros Pedidos (Moinho)': { list: pedidosMoinho, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseMoinho' },
+                    'Outros Pedidos (Funcionários)': { list: pedidosFuncionarios, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseFuncionarios' },
+                    'Outros Pedidos (Transferência)': { list: pedidosTransferencias, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseTransferencias' },
+                    'Outros Pedidos (Exportação)': { list: pedidosExportacao, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseExportacao' },
+                    'Outros Pedidos (Marca Própria)': { list: pedidosMarcaPropria, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseMarcaPropria' },
+                };
+
+                for (const [sectionName, sectionData] of Object.entries(otherSectionsMap)) {
+                    if (sectionData.list.some(p => String(p.Num_Pedido) === numPedido)) {
+                        return { pedido, local: sectionName, ...sectionData };
+                    }
+                }
+
+                // 5. Verificar Cargas Fechadas (PR e Resto BR)
+                for (const cf in gruposPorCFGlobais) {
+                    if (gruposPorCFGlobais[cf].pedidos.some(p => String(p.Num_Pedido) === numPedido)) {
+                        local = `Carga Resto BR (${cf})`;
+                        viewId = 'workspace-view';
+                        tabId = 'cargas-fechadas-rest-br-tab-pane';
+                        const sortedKeys = Object.keys(gruposPorCFGlobais).sort((a,b) => a.localeCompare(b, undefined, {numeric: true}));
+                        const index = sortedKeys.indexOf(cf);
+                        if (index !== -1) accordionId = `collapseCargasFechadasRestBr-${index}`;
+                        return { pedido, local, viewId, tabId, accordionId, cardId };
+                    }
+                }
+                const gruposPR = cargasFechadasPR.reduce((acc, p) => { const key = (String(p.Coluna5 || '').toUpperCase().includes('CONDOR')) ? 'Condor Truck' : `CF: ${p.CF}`; if (!acc[key]) acc[key] = []; acc[key].push(p); return acc; }, {});
+                for (const key in gruposPR) {
+                    if (gruposPR[key].some(p => String(p.Num_Pedido) === numPedido)) {
+                        local = `Carga Fechada PR (${key})`;
+                        viewId = 'workspace-view';
+                        tabId = 'cargas-fechadas-pr-tab-pane';
+                        const sortedKeys = Object.keys(gruposPR).sort((a, b) => (a === 'Condor Truck') ? -1 : (b === 'Condor Truck') ? 1 : a.localeCompare(b, undefined, { numeric: true }));
+                        const index = sortedKeys.indexOf(key);
+                        if (index !== -1) accordionId = `collapseCargasFechadasPR-${index}`;
+                        return { pedido, local, viewId, tabId, accordionId, cardId };
+                    }
+                }
+
+                // Se não encontrou em nenhuma categoria processada, retorna o status padrão
+                return { pedido, local, viewId, tabId, accordionId, cardId };
+            });
+
+            if (resultados.length === 0) {
+                searchResultDiv.innerHTML = '<div class="alert alert-warning">Nenhum pedido encontrado para o termo buscado.</div>';
             } else {
                 let html = `<div class="alert alert-info d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">${uniqueResultados.length} resultado(s) encontrado(s):</h5>
+                                <h5 class="mb-0">${resultados.length} resultado(s) encontrado(s):</h5>
                                 <button type="button" class="btn-close" aria-label="Fechar Busca" onclick="recolherBusca()"></button>
                             </div>`;
                 html += '<ul class="list-group">';
-                uniqueResultados.forEach((res, index) => {
+                resultados.forEach((res, index) => {
                     const { pedido, local, viewId, tabId, accordionId, cardId } = res;
                     const isPriority = pedidosPrioritarios.includes(String(pedido.Num_Pedido));
                     const isRecall = pedidosRecall.includes(String(pedido.Num_Pedido));
@@ -2109,11 +2081,13 @@
                     else if (blockType === 'V') blockInfoHtml = '<span class="badge bg-danger ms-2">Bloqueado: Comercial</span>';
 
                     const params = `\'${pedido.Num_Pedido}\', \'${viewId}\', ${tabId ? `'${tabId}'` : 'null'}, ${accordionId ? `'${accordionId}'` : 'null'}, ${cardId ? `'${cardId}'` : 'null'}`;
-                    const clickableAreaStyle = 'cursor: pointer;';
+                    // A área só é clicável se houver um viewId para navegar
+                    const clickableAreaStyle = viewId ? 'cursor: pointer;' : '';
+                    const onClickHandler = viewId ? `onclick="highlightPedido(${params})"` : '';
 
                     html += `
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div onclick="highlightPedido(${params})" style="${clickableAreaStyle}" class="flex-grow-1 me-3">
+                            <div ${onClickHandler} style="${clickableAreaStyle}" class="flex-grow-1 me-3">
                                 <strong>Pedido:</strong> ${pedido.Num_Pedido} 
                                 ${isInLoad ? '<span class="badge bg-success ms-2">Em Carga Montada</span>' : ''}
                                 ${isPriority ? '<span class="badge bg-warning text-dark ms-2">Prioridade</span>' : ''}
@@ -2133,6 +2107,16 @@
                 searchResultDiv.innerHTML = html;
             }
         }
+        
+        // Adicionado para buscar a seção de Marca Própria
+        const otherSections = [
+            // ... (outras seções)
+            { list: pedidosMarcaPropria, local: 'Outros Pedidos (Marca Própria)', viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseMarcaPropria' }
+        ];
+
+        // ... (resto do código)
+
+
 
         function recolherBusca() {
             document.getElementById('search-result').innerHTML = '';
@@ -2986,6 +2970,30 @@
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
         
+        function displayAccordionGerais(div, grupos) {
+            if (!div) return;
+
+            if (Object.keys(grupos).length === 0) {
+                div.innerHTML = '<div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div>';
+                return;
+            }
+
+            const rotasOrdenadas = getSortedVarejoRoutes(Object.keys(grupos));
+            let accordionHtml = '<div class="accordion accordion-flush" id="accordionGeral">';
+
+            rotasOrdenadas.forEach((rota, index) => {
+                const grupo = grupos[rota];
+                const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const veiculo = rotaVeiculoMap[rota]?.type || 'van';
+                const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
+                const rotaDisplay = `Rota: ${rota} (${veiculoNome})`;
+
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
+            });
+            accordionHtml += '</div>';
+            div.innerHTML = accordionHtml;
+        }
+
         function displayPedidosBloqueados(div, pedidos) {
             if (pedidos.length === 0) {
                 div.innerHTML = '<div class="empty-state"><i class="bi bi-shield-check"></i><p>Nenhum pedido bloqueado manualmente.</p></div>';
@@ -3815,12 +3823,12 @@
             const alocatedOrderIds = new Set(finalValidLoads.flatMap(load => load.pedidos.map(p => p.Num_Pedido)));
             pedidosGeraisAtuais = pedidosGeraisAtuais.filter(p => !alocatedOrderIds.has(p.Num_Pedido));
 
-            // NOVO: Re-renderiza a lista de pedidos disponíveis (que agora contém apenas as sobras).
+            // ATUALIZADO: Re-renderiza apenas a lista de pedidos disponíveis (acordeão), sem mexer nos botões.
             const gruposGeraisRestantes = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
-            displayGerais(document.getElementById('resultado-geral'), gruposGeraisRestantes);
+            displayAccordionGerais(document.getElementById('resultado-geral'), gruposGeraisRestantes);
 
             // NOVO: Foca no resultado da rota processada na lista de disponíveis
-            setTimeout(() => {
+            setTimeout(() => { // Adicionado um pequeno atraso para garantir que a UI esteja pronta
                 const rotasDisponiveis = getSortedVarejoRoutes(Object.keys(gruposGeraisRestantes));
                 const rotaPrincipal = Array.isArray(routeOrRoutes) ? routeOrRoutes[0] : routeOrRoutes;
                 const indexRota = rotasDisponiveis.indexOf(rotaPrincipal);
