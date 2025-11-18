@@ -2615,15 +2615,8 @@
                     displayPedidosCFNumerico(resultadoCfNumericoDiv, pedidosComCFNumericoIsolado);
                     displayCargasFechadasRestBrasil(resultadoCargasFechadasRestBrDiv, gruposPorCFGlobais, pedidosCarretaSemCF);
                     
-                    pedidosGeraisAtuais = [...pedidosParaProcessamentoVarejo]; 
-                    const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
-                        const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
-                    }, {});
-                    displayGerais(resultadoGeralDiv, gruposGerais);
-                    
-                    updateAndRenderChart();
-                    updateAndRenderKPIs();
-                    saveStateToLocalStorage();
+                    pedidosGeraisAtuais = [...pedidosParaProcessamentoVarejo];
+                    renderAllUI(); // NOVO: Chama a função de renderização centralizada
                     
                     statusDiv.innerHTML = `<p class="text-success">Processamento concluído!</p>`;
                 } catch (error) { 
@@ -2636,6 +2629,36 @@
                     processarBtn.disabled = false;
                 }
             }, 50);
+        }
+
+        /**
+         * NOVO: Função central para renderizar toda a interface do usuário.
+         * Garante que todas as partes da tela estejam sempre sincronizadas com o estado atual dos dados.
+         * Esta é a "fonte única da verdade" para a renderização, eliminando bugs de inconsistência.
+         */
+        function renderAllUI() {
+            console.log("Central UI Render Triggered: Redesenhando a interface...");
+
+            // 1. Renderiza a lista de Pedidos Disponíveis e os botões de rota
+            const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
+            displayGerais(document.getElementById('resultado-geral'), gruposGerais);
+
+            // 2. Renderiza as outras seções da Mesa de Trabalho
+            displayToco(document.getElementById('resultado-toco'), gruposToco);
+            displayCargasFechadasPR(document.getElementById('resultado-cargas-fechadas-pr'), cargasFechadasPR);
+            displayCargasFechadasRestBrasil(document.getElementById('resultado-cargas-fechadas-rest-br'), gruposPorCFGlobais, pedidosCarretaSemCF);
+
+            // 3. Renderiza as seções de Análise
+            displayPedidosBloqueados(document.getElementById('resultado-bloqueados'), pedidosManualmenteBloqueadosAtuais);
+            displayRota1(document.getElementById('resultado-rota1'), rota1SemCarga);
+            displayPedidosCFNumerico(document.getElementById('resultado-cf-numerico'), pedidosComCFNumericoIsolado);
+
+            // 4. Atualiza os KPIs e o Gráfico no Dashboard de Resumo
+            updateAndRenderKPIs();
+            updateAndRenderChart();
+
+            // 5. Salva o estado consistente no Local Storage
+            saveStateToLocalStorage();
         }
 
         function updateAndRenderKPIs() {
@@ -2984,9 +3007,16 @@
             rotasOrdenadas.forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const veiculo = rotaVeiculoMap[rota]?.type || 'van';
-                const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
-                const rotaDisplay = `Rota: ${rota} (${veiculoNome})`;
+                const config = rotaVeiculoMap[rota] || { type: 'van' }; // Fallback para rotas não mapeadas (SP)
+                const veiculo = config.type;
+                
+                let rotaDisplay;
+                if (veiculo === 'van' && !config.title?.startsWith('Rota 1')) {
+                    rotaDisplay = `Rota: ${rota} (VAN-3/4- SP)`;
+                } else {
+                    const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
+                    rotaDisplay = `Rota: ${rota} (${veiculoNome})`;
+                }
 
                 accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
             });
@@ -3127,22 +3157,20 @@
 
             let finalTitle = title; // Começa com o título padrão
 
-            // Verifica se o título é o da aba de Van e se as cargas são de SP
-            if (title === 'Cargas de Van (Varejo)') {
-                let isSaoPauloRoute = false;
-                for (const card of cardsParaImprimir) {
-                    const loadId = card.dataset.loadId;
-                    // Verifica se a carga tem pedidos das rotas de SP // prettier-ignore
-                    if (activeLoads[loadId] && activeLoads[loadId].pedidos.some(p => ['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745'].includes(String(p.Cod_Rota)))) {
-                        isSaoPauloRoute = true;
-                        break; // Encontrou uma, já pode parar
-                    }
+            // LÓGICA APRIMORADA: Verifica se QUALQUER carga a ser impressa contém rotas de SP, independentemente da aba.
+            let isSaoPauloRoute = false;
+            const spRoutes = new Set(['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745']);
+            for (const card of cardsParaImprimir) {
+                const loadId = card.dataset.loadId;
+                if (activeLoads[loadId] && activeLoads[loadId].pedidos.some(p => spRoutes.has(String(p.Cod_Rota)))) {
+                    isSaoPauloRoute = true;
+                    break; // Encontrou uma, já pode parar
                 }
+            }
 
-                // Se for uma rota de SP, altera o título
-                if (isSaoPauloRoute) {
-                    finalTitle = 'Cargas de Van (Varejo) São Paulo';
-                }
+            // Se for uma rota de SP, altera o título para refletir isso.
+            if (isSaoPauloRoute) {
+                finalTitle = `${title} (São Paulo)`;
             }
 
             cardsParaImprimir.forEach(originalCard => {
@@ -3823,11 +3851,8 @@
             const alocatedOrderIds = new Set(finalValidLoads.flatMap(load => load.pedidos.map(p => p.Num_Pedido)));
             pedidosGeraisAtuais = pedidosGeraisAtuais.filter(p => !alocatedOrderIds.has(p.Num_Pedido));
 
-            // ATUALIZADO: Re-renderiza apenas a lista de pedidos disponíveis (acordeão), sem mexer nos botões.
+            // ATUALIZADO: A renderização agora é centralizada, mas a lógica de foco na UI permanece.
             const gruposGeraisRestantes = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
-            displayAccordionGerais(document.getElementById('resultado-geral'), gruposGeraisRestantes);
-
-            // NOVO: Foca no resultado da rota processada na lista de disponíveis
             setTimeout(() => { // Adicionado um pequeno atraso para garantir que a UI esteja pronta
                 const rotasDisponiveis = getSortedVarejoRoutes(Object.keys(gruposGeraisRestantes));
                 const rotaPrincipal = Array.isArray(routeOrRoutes) ? routeOrRoutes[0] : routeOrRoutes;
@@ -3859,11 +3884,9 @@
                 generatedLoads.forEach(load => {
                     html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType] || vehicleInfo['van']);
                 });
-            }
-            resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
-            updateAndRenderChart();
-            updateAndRenderKPIs(); // Adicionado para atualizar os KPIs dinâmicos
-            saveStateToLocalStorage();
+            }            
+            resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;            
+            renderAllUI(); // NOVO: Chama a função de renderização centralizada
         }
 
         function handlePostProcessingUI(index, routeTitle, resultDivId) {
@@ -4456,6 +4479,10 @@
             };
 
             activeLoads[newLoad.id] = newLoad;
+
+            // Remove os pedidos da lista de disponíveis para manter a consistência dos KPIs
+            const usedOrderIds = new Set(newLoad.pedidos.map(p => p.Num_Pedido));
+            pedidosGeraisAtuais = pedidosGeraisAtuais.filter(p => !usedOrderIds.has(p.Num_Pedido));
             
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
@@ -4495,9 +4522,7 @@
                 }
             }, 300);
 
-            updateAndRenderChart();
-            updateAndRenderKPIs();
-            saveStateToLocalStorage();
+            renderAllUI(); // NOVO: Chama a função de renderização centralizada
         }
 
         function cancelManualLoad() {
@@ -4512,7 +4537,7 @@
              if (builderWrapper) builderWrapper.remove();
              manualLoadInProgress = null;
 
-             updateAndRenderKPIs();
+             renderAllUI(); // NOVO: Chama a função de renderização centralizada
         }
 
         function dragStart(event, pedidoId, clienteId, sourceId) {
@@ -4641,9 +4666,7 @@
             } else {
                 updateLoadUI(targetId);
             }
-            updateAndRenderChart();
-            updateAndRenderKPIs();
-            saveStateToLocalStorage();
+            renderAllUI(); // NOVO: Chama a função de renderização centralizada
         }
 
         function highlightClientRows(event) {
