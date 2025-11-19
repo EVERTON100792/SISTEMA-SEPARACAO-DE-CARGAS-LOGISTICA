@@ -2618,6 +2618,43 @@
         }
 
         /**
+         * NOVO: Renderiza os cards para todas as cargas ativas (Fiorino, Van, 3/4, Manuais).
+         * Esta função é crucial para manter a UI sincronizada após operações de arrastar e soltar.
+         */
+        function renderActiveLoadCards() {
+            const vehicleInfo = {
+                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
+                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
+                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
+            };
+
+            // Limpa os containers de resultado antes de redesenhar para evitar duplicatas.
+            document.getElementById('resultado-fiorino-geral').innerHTML = '';
+            document.getElementById('resultado-van-geral').innerHTML = '';
+            document.getElementById('resultado-34-geral').innerHTML = '';
+
+            for (const loadId in activeLoads) {
+                const load = activeLoads[loadId];
+                // Ignora cargas 'Toco', pois são tratadas por displayToco()
+                if (load.vehicleType === 'toco') continue;
+
+                const vInfo = vehicleInfo[load.vehicleType];
+                if (vInfo) {
+                    const cardHtml = renderLoadCard(load, load.vehicleType, vInfo);
+                    let containerId;
+                    if (load.vehicleType === 'fiorino') containerId = 'resultado-fiorino-geral';
+                    else if (load.vehicleType === 'van') containerId = 'resultado-van-geral';
+                    else if (load.vehicleType === 'tresQuartos') containerId = 'resultado-34-geral';
+
+                    const container = document.getElementById(containerId);
+                    if (container) {
+                        container.insertAdjacentHTML('beforeend', cardHtml);
+                    }
+                }
+            }
+        }
+
+        /**
          * NOVO: Função central para renderizar toda a interface do usuário.
          * Garante que todas as partes da tela estejam sempre sincronizadas com o estado atual dos dados.
          * Esta é a "fonte única da verdade" para a renderização, eliminando bugs de inconsistência.
@@ -2629,6 +2666,7 @@
             const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
             displayGerais(document.getElementById('resultado-geral'), gruposGerais);
 
+            renderActiveLoadCards(); // NOVO: Renderiza os cards de cargas ativas (Fiorino, Van, 3/4)
             // 2. Renderiza as outras seções da Mesa de Trabalho
             displayToco(document.getElementById('resultado-toco'), gruposToco);
             displayCargasFechadasPR(document.getElementById('resultado-cargas-fechadas-pr'), cargasFechadasPR);
@@ -2915,6 +2953,14 @@
                 return; 
             }
 
+            // --- CORREÇÃO DE UX (Manter Acordeão Aberto) ---
+            // Salva o ID do acordeão que está aberto. O ID agora é baseado na rota (ex: 'collapseGeral-11101'),
+            // que é um identificador estável, ao contrário do índice que mudava a cada redesenho.
+            // Isso garante que o acordeão correto permaneça aberto após arrastar e soltar pedidos.
+            const openAccordionItem = div.querySelector('.accordion-collapse.show');
+            const openAccordionId = openAccordionItem ? openAccordionItem.id : null;
+            // --- FIM DA MELHORIA ---
+
             // Usa a função centralizada para garantir a mesma ordem da busca
             const rotasOrdenadas = getSortedVarejoRoutes(Object.keys(grupos));
 
@@ -2974,9 +3020,22 @@
                     const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
                     rotaDisplay = `Rota: ${rota} (${veiculoNome})`;
                 }
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
+                // CORREÇÃO: O ID do collapse agora usa a rota, que é um identificador estável.
+                const collapseId = `collapseGeral-${rota}`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
             });
-            accordionHtml += '</div>'; div.innerHTML = accordionHtml;
+            accordionHtml += '</div>'; 
+            div.innerHTML = accordionHtml;
+
+            // --- CORREÇÃO DE UX (Manter Acordeão Aberto) ---
+            // Reabre o acordeão que estava aberto antes da atualização, usando o ID estável salvo.
+            if (openAccordionId) {
+                const newAccordionItem = document.getElementById(openAccordionId);
+                if (newAccordionItem) {
+                    const bsCollapse = bootstrap.Collapse.getOrCreateInstance(newAccordionItem, { toggle: false });
+                    bsCollapse.show();
+                }
+            }
         }
         
         function displayAccordionGerais(div, grupos) {
@@ -3843,14 +3902,14 @@
                 const rotasDisponiveis = getSortedVarejoRoutes(Object.keys(gruposGeraisRestantes));
                 const rotaPrincipal = Array.isArray(routeOrRoutes) ? routeOrRoutes[0] : routeOrRoutes;
                 const indexRota = rotasDisponiveis.indexOf(rotaPrincipal);
-                handlePostProcessingUI(indexRota, title, divId);
+            handlePostProcessingUI(indexRota, title, divId, rotaPrincipal); // Passa a rota principal
             }, 100);
 
             // Salvar o contexto da rota processada para recarregamento
             const routeContext = {
                 divId: divId,
                 title: title,
-                routesKey: routesKey,
+            routesKey: routesKey, // prettier-ignore
                 buttonId: buttonElement ? buttonElement.id : null
             };
             saveRouteContext(routeContext);
@@ -3873,26 +3932,33 @@
             }            
             resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;            
             renderAllUI(); // NOVO: Chama a função de renderização centralizada
+            handlePostProcessingUI(finalLeftoverGroups, routeOrRoutes, title, divId); // CORREÇÃO: Chamada ajustada
         }
 
-        function handlePostProcessingUI(index, routeTitle, resultDivId) {
-            const resultContainer = document.getElementById(resultDivId);
-            if (!resultContainer) return;
+        function handlePostProcessingUI(sobras, rotasProcessadas, tituloRota, divId) {
+            const rotas = Array.isArray(rotasProcessadas) ? rotasProcessadas : [String(rotasProcessadas)];
+            const idsPedidosSobras = new Set(sobras.flatMap(g => g.pedidos.map(p => p.Num_Pedido)));
 
-            if (index !== -1) {
-                // Se a rota ainda existe nas sobras, expande o acordeão
-                const collapseElement = document.getElementById(`collapseGeral${index}`);
+            // Verifica se algum pedido das rotas processadas ficou nas sobras
+            const algumaSobraDaRota = pedidosGeraisAtuais.some(p => 
+                rotas.includes(String(p.Cod_Rota)) && idsPedidosSobras.has(p.Num_Pedido)
+            );
+
+            if (algumaSobraDaRota) {
+                // Se sobrou, encontra o acordeão da primeira rota processada e o abre
+                const rotaPrincipal = rotas[0];
+                const collapseElement = document.getElementById(`collapseGeral-${rotaPrincipal}`);
                 if (collapseElement) {
-                    const bsCollapse = new bootstrap.Collapse(collapseElement, { toggle: false });
-                    bsCollapse.show();
-                    setTimeout(() => collapseElement.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+                    const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseElement, { toggle: false });
+                    if (!collapseElement.classList.contains('show')) bsCollapse.show();
                 }
             } else {
-                // Se a rota não existe mais (sem sobras), mostra uma mensagem de sucesso
+                // Se não sobrou nada da rota, mostra a mensagem de sucesso
+                const resultContainer = document.getElementById(divId);
                 const successMessage = document.createElement('div');
                 successMessage.className = 'alert alert-success alert-dismissible fade show mt-3 route-success-message';
                 successMessage.role = 'alert';
-                successMessage.innerHTML = `<strong>Sucesso!</strong> Todos os pedidos da rota <strong>${routeTitle}</strong> foram utilizados. Nenhuma sobra. <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+                successMessage.innerHTML = `<strong>Sucesso!</strong> Todos os pedidos da rota <strong>${tituloRota}</strong> foram alocados. <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
                 
                 resultContainer.insertAdjacentElement('beforebegin', successMessage);
             }
@@ -4706,16 +4772,10 @@
                 targetLoad.totalCubagem += clientBlockCubagem;
             }
 
-            if (sourceIsManualBuilder) {
-                updateManualBuilderUI();
-            } else {
-                updateLoadUI(sourceId);
-            }
-            
             if (targetIsManualBuilder) {
                 updateManualBuilderUI();
             } else {
-                updateLoadUI(targetId);
+                // A renderização do alvo é tratada pela chamada centralizada abaixo.
             }
             renderAllUI(); // NOVO: Chama a função de renderização centralizada
         }
@@ -4742,7 +4802,11 @@
         // --- Funções para Ações em Massa ---
         function toggleAllCheckboxes(source) {
             const table = source.closest('table');
-            if (!table) return;
+        // Adicionado para o caso de não haver tabela (estado vazio) - Simplificado
+        if (!table) {
+            updateBulkActionsPanel();
+            return;
+        }
             const checkboxes = table.querySelectorAll('.row-checkbox');
             checkboxes.forEach(checkbox => {
                 checkbox.checked = source.checked;
@@ -4801,104 +4865,6 @@
                 if (planilhaData.length > 0) {
                     processar();
                 }
-            }
-        }
-
-        function updateLoadUI(loadId) {
-            const activeTabPane = document.querySelector('.tab-pane.active');
-            
-            if (loadId === 'geral') {
-                const geraisDiv = document.getElementById('resultado-geral');
-                if (geraisDiv) {
-                    // Salva o ID do acordeão que está aberto antes de redesenhar
-                    const openAccordionItem = geraisDiv.querySelector('.accordion-collapse.show');
-                    const openAccordionId = openAccordionItem ? openAccordionItem.id : null;
-
-                    const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => {
-                        const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
-                    }, {});
-                    displayGerais(geraisDiv, gruposGerais);
-
-                    // Reabre o acordeão que estava aberto
-                    if (openAccordionId) {
-                        const newAccordionItem = document.getElementById(openAccordionId);
-                        if (newAccordionItem) { new bootstrap.Collapse(newAccordionItem).show(); }
-                    }
-                }
-                
-                const leftoversCard = activeTabPane ? activeTabPane.querySelector('[data-load-id="leftovers"]') : null;
-                if (!leftoversCard) return;
-
-                if (currentLeftoversForPrinting.length === 0) {
-                    leftoversCard.innerHTML = `
-                        <h5 class="mt-4">Sobras Finais: 0,00 kg</h5>
-                        <div class="card mb-3">
-                            <div class="card-header bg-danger text-white d-flex align-items-center">
-                                Pedidos Restantes
-                            </div>
-                            <div class="card-body">
-                                <p class="text-muted text-center py-3">Todos os pedidos foram alocados.</p>
-                            </div>
-                        </div>`;
-                } else {
-                    const totalKgUnassigned = currentLeftoversForPrinting.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
-                    const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
-                    leftoversCard.innerHTML = `
-                        <h5 class="mt-4">Sobras Finais: ${totalKgUnassigned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</h5>
-                        <div class="card mb-3">
-                            <div class="card-header bg-danger text-white d-flex align-items-center">
-                                Pedidos Restantes
-                                <div class="ms-auto">${printButtonHtml}</div>
-                            </div>
-                            <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Dat_Ped', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
-                        </div>`;
-                }
-                return;
-            }
-
-            const load = activeLoads[loadId];
-            if (!load) return;
-
-            const cardElement = document.getElementById(loadId);
-            if (!cardElement) return;
-
-            const vInfoMap = {
-                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
-                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
-                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' },
-                toco: { name: 'Toco', colorClass: 'bg-dark', textColor: 'text-white', icon: 'bi-inboxes-fill'}
-            };
-            const vInfo = vInfoMap[load.vehicleType];
-            
-            if(load.vehicleType !== 'toco') {
-                cardElement.outerHTML = renderLoadCard(load, load.vehicleType, vInfo);
-            } else {
-                const accordionBody = cardElement;
-                const progressBarContainer = accordionBody.querySelector('.progress');
-                const tableContainer = accordionBody.querySelector('.table-responsive');
-                const headerButton = accordionBody.closest('.accordion-item').querySelector('.accordion-button');
-                
-                const maxKg = parseFloat(document.getElementById('tocoMaxCapacity').value);
-                const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const isOverloaded = load.totalKg > maxKg;
-                const pesoPercentual = (load.totalKg / maxKg) * 100;
-                let progressColor = isOverloaded || pesoPercentual > 100 ? 'bg-danger' : (pesoPercentual > 75 ? 'bg-warning' : 'bg-success');
-                
-                progressBarContainer.querySelector('.progress-bar').style.width = `${Math.min(pesoPercentual, 100)}%`;
-                progressBarContainer.querySelector('.progress-bar').className = `progress-bar ${progressColor}`;
-                if(tableContainer) {
-                    tableContainer.outerHTML = createTable(load.pedidos, null, loadId);
-                } else {
-                    accordionBody.insertAdjacentHTML('beforeend', createTable(load.pedidos, null, loadId));
-                }
-
-                const weightBadge = headerButton.querySelector('.badge.bg-info, .badge.bg-danger');
-                if(weightBadge) {
-                    weightBadge.outerHTML = isOverloaded
-                    ? `<span class="badge bg-danger ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>${totalKgFormatado} kg (ACIMA DO PESO!)</span>`
-                    : `<span class="badge bg-info ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>`;
-                }
-                headerButton.classList.toggle('bg-danger', isOverloaded);
             }
         }
 
