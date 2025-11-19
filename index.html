@@ -1225,20 +1225,14 @@
         let resumoChart = null;
 
         function updateAndRenderChart() {
-            const vehicleCounts = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0, outros: 0 };
-            const vehicleWeights = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0, outros: 0 };
+            const vehicleCounts = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0 };
+            const vehicleWeights = { fiorino: 0, van: 0, tresQuartos: 0, toco: 0 };
 
             for (const loadId in activeLoads) {
                 const load = activeLoads[loadId];
-                if (load.vehicleType === 'fiorino') { // prettier-ignore
-                    vehicleCounts.fiorino++;
-                    vehicleWeights.fiorino += load.totalKg;
-                } else if (load.vehicleType === 'van') {
-                    vehicleCounts.van++;
-                    vehicleWeights.van += load.totalKg;
-                } else if (load.vehicleType === 'tresQuartos') {
-                    vehicleCounts.tresQuartos++;
-                    vehicleWeights.tresQuartos += load.totalKg;
+                if (vehicleCounts.hasOwnProperty(load.vehicleType)) {
+                    vehicleCounts[load.vehicleType]++;
+                    vehicleWeights[load.vehicleType] += load.totalKg;
                 }
             }
 
@@ -1247,20 +1241,12 @@
                 vehicleWeights.toco += gruposToco[cf].totalKg;
             }
             
-            // NOVO: Contabiliza as "Outras" categorias
-            vehicleCounts.outros = cargasFechadasPR.length + Object.keys(gruposPorCFGlobais).length + pedidosFuncionarios.length + pedidosTransferencias.length + pedidosExportacao.length;
-            vehicleWeights.outros += cargasFechadasPR.reduce((s, p) => s + p.Quilos_Saldo, 0);
-            vehicleWeights.outros += Object.values(gruposPorCFGlobais).reduce((s, g) => s + g.totalKg, 0);
-            vehicleWeights.outros += pedidosFuncionarios.reduce((s, p) => s + p.Quilos_Saldo, 0);
-            vehicleWeights.outros += pedidosTransferencias.reduce((s, p) => s + p.Quilos_Saldo, 0);
-            vehicleWeights.outros += pedidosExportacao.reduce((s, p) => s + p.Quilos_Saldo, 0);
+            const totalCount = vehicleCounts.fiorino + vehicleCounts.van + vehicleCounts.tresQuartos + vehicleCounts.toco;
+            const totalWeight = vehicleWeights.fiorino + vehicleWeights.van + vehicleWeights.tresQuartos + vehicleWeights.toco;
 
-            const totalCount = vehicleCounts.fiorino + vehicleCounts.van + vehicleCounts.tresQuartos + vehicleCounts.toco + vehicleCounts.outros;
-            const totalWeight = vehicleWeights.fiorino + vehicleWeights.van + vehicleWeights.tresQuartos + vehicleWeights.toco + vehicleWeights.outros;
-
-            const countSeriesData = [vehicleCounts.fiorino, vehicleCounts.van, vehicleCounts.tresQuartos, vehicleCounts.toco, vehicleCounts.outros, totalCount];
-            const weightSeriesData = [vehicleWeights.fiorino, vehicleWeights.van, vehicleWeights.tresQuartos, vehicleWeights.toco, vehicleWeights.outros, totalWeight];
-            const categories = ['Fiorino', 'Van', '3/4', 'Toco', 'Outros', 'Total'];
+            const countSeriesData = [vehicleCounts.fiorino, vehicleCounts.van, vehicleCounts.tresQuartos, vehicleCounts.toco, totalCount];
+            const weightSeriesData = [vehicleWeights.fiorino, vehicleWeights.van, vehicleWeights.tresQuartos, vehicleWeights.toco, totalWeight];
+            const categories = ['Fiorino', 'Van', '3/4', 'Toco', 'Total'];
 
             if (resumoChart) {
                 resumoChart.updateSeries([
