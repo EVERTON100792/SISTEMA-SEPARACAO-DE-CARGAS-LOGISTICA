@@ -4082,10 +4082,12 @@
             const headerColorClass = isOverloaded ? 'bg-danger' : vInfo.colorClass;
             
             const printButton = String(load.id).startsWith('manual-') ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargaManualIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>` : '';
+            const routeButton = `<button class="btn btn-sm btn-outline-light ms-2" onclick="roteirizarCarga('${load.id}')"><i class="bi bi-sign-turn-right-fill me-1"></i>Roteirizar</button>`;
 
             const cardHeaderActions = `
                 <div class="card-header-actions no-print">
                     ${printButton}
+                    ${routeButton}
                 </div>
             `;
 
@@ -4119,6 +4121,69 @@
                     </div>`;
         }
         
+        function roteirizarCarga(loadId) {
+            const load = activeLoads[loadId];
+            if (!load) {
+                alert("Carga não encontrada.");
+                return;
+            }
+        
+            // Extrai cidades únicas com seus respectivos estados (UF) para maior precisão,
+            // buscando os dados completos na planilha original para garantir que 'Cidade' e 'UF' existam.
+            const cidadesMap = new Map();
+            const pedidoIdsNaCarga = new Set(load.pedidos.map(p => String(p.Num_Pedido)));
+
+            planilhaData.forEach(pedidoOriginal => {
+                if (pedidoIdsNaCarga.has(String(pedidoOriginal.Num_Pedido))) {
+                    const cidade = (pedidoOriginal.Cidade || '').split(',')[0].trim();
+                    const uf = (pedidoOriginal.UF || '').trim().toUpperCase();
+
+                    if (cidade && uf) {
+                        // Usa a cidade como chave para evitar duplicatas.
+                        // Assume que uma carga não terá a mesma cidade em estados diferentes.
+                        if (!cidadesMap.has(cidade)) {
+                            cidadesMap.set(cidade, uf);
+                        }
+                    }
+                }
+            });
+            const cidadesComEstado = Array.from(cidadesMap.entries());
+        
+            if (cidadesComEstado.length === 0) {
+                alert("Nenhuma cidade encontrada nos pedidos desta carga para roteirizar.");
+                return;
+            }
+        
+            // Ponto de partida e chegada fixo
+            const origem = "Empresa Selmi, BR-369, 86181-570 Rolândia, Paraná, Brasil";
+            const destino = origem;
+            
+            // Monta a URL do GraphHopper Maps
+            // Formato: https://graphhopper.com/maps/?point=Origem&point=Ponto1&point=Ponto2&...&point=Destino
+            const baseUrl = "https://graphhopper.com/maps/";
+            const params = new URLSearchParams();
+            
+            // Adiciona o ponto de partida
+            params.append('point', origem);
+            // Adiciona as cidades como pontos intermediários, incluindo o estado para precisão
+            cidadesComEstado.forEach(([cidade, uf]) => {
+                let pontoParada = `${cidade}, ${uf}, Brasil`;
+                // Se a cidade for Rolândia, usa um endereço mais genérico para o ponto de parada,
+                // diferenciando-o do endereço específico da Selmi (ponto de partida/chegada).
+                if (cidade.toLowerCase().trim() === 'rolândia') {
+                    pontoParada = `Centro, Rolândia, ${uf}, Brasil`;
+                }
+                params.append('point', pontoParada);
+            });
+            // Adiciona o ponto de chegada (retorno)
+            params.append('point', destino);
+            
+            const url = `${baseUrl}?${params.toString()}&profile=car&layer=OpenStreetMap`;
+            
+            // Abre a URL em uma nova aba
+            window.open(url, '_blank');
+        }
+
         function separarCargasFiorino(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'fiorino', buttonElement); }
         function separarCargasVan(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'van', buttonElement); }
         function separarCargas34(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'tresQuartos', buttonElement); }
