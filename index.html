@@ -597,6 +597,33 @@
             .bg-success, .bg-primary, .bg-danger { color: white !important; }
             .text-danger { color: #dc3545 !important; }
         }
+        /* --- Novas Cores para Rotas de Varejo --- */
+        .route-fiorino { border-left: 4px solid #28a745; }
+        .route-van { border-left: 4px solid var(--dark-primary); }
+        .route-tresQuartos { border-left: 4px solid #ffc107; }
+
+        .route-fiorino:hover > td { background-color: rgba(40, 167, 69, 0.15) !important; }
+        .route-van:hover > td { background-color: rgba(10, 132, 255, 0.15) !important; }
+        .route-tresQuartos:hover > td { background-color: rgba(255, 193, 7, 0.15) !important; }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.2rem 0.6rem;
+            border-radius: 0.5rem;
+            background-color: var(--dark-surface-secondary);
+            border: 1px solid var(--dark-border);
+        }
+        .legend-item .legend-color {
+            margin-right: 0.5rem;
+        }
+        /* --- Novas Cores para Acordeão de Rotas --- */
+        .accordion-button.route-fiorino { border-left: 5px solid #28a745; }
+        .accordion-button.route-van { border-left: 5px solid var(--dark-primary); }
+        .accordion-button.route-tresQuartos { border-left: 5px solid #ffc107; }
+
         @media print { .print-only { display: block !important; } }
     </style>
 </head>
@@ -999,6 +1026,13 @@
                             </ul>
                             <div class="tab-content" id="pedidosDisponiveisTabsContent">
                                 <div class="tab-pane fade show active p-3 drop-zone-card" id="disponiveis-tab-pane" role="tabpanel" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="geral">
+                                    <!-- NOVA LEGENDA DE CORES -->
+                                    <div class="d-flex flex-wrap gap-2 mb-3 no-print">
+                                        <div class="legend-item"><span class="legend-color text-success"><i class="bi bi-circle-fill"></i></span> Fiorino</div>
+                                        <div class="legend-item"><span class="legend-color" style="color: var(--dark-primary);"><i class="bi bi-circle-fill"></i></span> Van</div>
+                                        <div class="legend-item"><span class="legend-color text-warning"><i class="bi bi-circle-fill"></i></span> 3/4</div>
+                                    </div>
+                                    <!-- FIM DA LEGENDA -->
                                     <div id="resultado-geral"><div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div></div>
                                 </div>
                                 <div class="tab-pane fade p-3" id="bloqueados-regra-tab-pane" role="tabpanel">
@@ -1975,10 +2009,8 @@
                 if (pedidosGeraisAtuais.some(p => String(p.Num_Pedido) === numPedido)) {
                     local = `Pedidos Disponíveis (Rota ${pedido.Cod_Rota})`;
                     viewId = 'workspace-view';
-                    cardId = 'pedidos-disponiveis-card';
-                    const rotasGerais = getSortedVarejoRoutes([...new Set(pedidosGeraisAtuais.map(p => String(p.Cod_Rota || ''))) ].filter(Boolean));
-                    const rotaIndex = rotasGerais.indexOf(String(pedido.Cod_Rota));
-                    if (rotaIndex !== -1) accordionId = `collapseGeral${rotaIndex}`;
+                    tabId = 'disponiveis-tab-pane'; // Aba correta
+                    accordionId = `collapseGeral-${pedido.Cod_Rota}`; // ID correto e estável do acordeão
                     return { pedido, local, viewId, tabId, accordionId, cardId };
                 }
 
@@ -1995,8 +2027,7 @@
                 // 4. Verificar em outras seções
                 const otherSectionsMap = {
                     'Bloqueado Manualmente': { list: pedidosManualmenteBloqueadosAtuais, viewId: 'pedidos-bloqueados-view', cardId: 'card-bloqueados', accordionId: 'collapseBloqueados' },
-                    'Pedidos da Rota 1 para Alteração': { list: rota1SemCarga, viewId: 'alteracao-rota-view', cardId: 'resultado-rota1' },
-                    'Bloqueados Varejo (Regra)': { list: pedidosComCFNumericoIsolado, viewId: 'workspace-view', tabId: 'bloqueados-regra-tab-pane', accordionId: 'accordionCF' },
+                    'Pedidos da Rota 1 para Alteração': { list: rota1SemCarga, viewId: 'alteracao-rota-view', cardId: 'resultado-rota1' },                    'Bloqueados Varejo (Regra)': { list: pedidosComCFNumericoIsolado, viewId: 'workspace-view', tabId: 'bloqueados-regra-tab-pane', accordionId: `collapseCF-${pedido.Cod_Rota}` },
                     'Outros Pedidos (Moinho)': { list: pedidosMoinho, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseMoinho' },
                     'Outros Pedidos (Funcionários)': { list: pedidosFuncionarios, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseFuncionarios' },
                     'Outros Pedidos (Transferência)': { list: pedidosTransferencias, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseTransferencias' },
@@ -2154,37 +2185,38 @@
 
         function highlightPedido(numPedido, viewId, tabId, collapseId, cardId = null) {
             const scrollToTarget = () => {
-                setTimeout(() => { // Delay para garantir que todas as animações de UI (abas, accordions) terminaram
+                setTimeout(() => {
                     let targetElement;
-                    // Prioridade 1: Tenta encontrar a linha da tabela (TR) do pedido pelo seu ID único.
                     targetElement = document.getElementById(`pedido-${numPedido}`);
-
-                    // Prioridade 2: Se não encontrar a linha, tenta o card ou container onde o pedido está.
                     if (!targetElement && cardId) {
                         targetElement = document.getElementById(cardId);
                     }
-
-                    // Prioridade 3 (Fallback): Se ainda não encontrou, tenta o cabeçalho do accordion.
-                    // Isso é útil para seções que não têm um cardId, mas têm um collapseId.
                     if (!targetElement && collapseId) {
-                        // Busca o elemento de colapso pelo ID e, em seguida, o cabeçalho do acordeão associado
                         const collapseEl = document.querySelector(`[data-bs-target="#${collapseId}"]`)?.closest('.accordion-item') || document.getElementById(collapseId)?.closest('.accordion-item');
                         if (collapseEl) targetElement = collapseEl;
                     }
-
 
                     if (targetElement) {
                         targetElement.classList.add('search-highlight');
                         if (targetElement.tagName === 'TR') {
                             targetElement.classList.add('table-info');
                         }
-                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // CORREÇÃO: A lógica de rolagem foi aprimorada para encontrar o container correto,
+                        // incluindo os painéis com rolagem interna como o de "Pedidos Disponíveis".
+                        const scrollableContainer = targetElement.closest('.main-view, .card-body[style*="overflow-y: auto"], #vehicleTabsContent');
+                        if (scrollableContainer) {
+                            const targetTop = targetElement.offsetTop;
+                            const containerTop = scrollableContainer.scrollTop; // Posição atual do scroll
+                            // Rola o container para que o topo do elemento alvo fique visível, com um pequeno offset.
+                            scrollableContainer.scrollTo({ top: targetTop - 100, behavior: 'smooth' });
+                        } else {
+                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Fallback
+                        }
                     } else {
-                        // Se nenhum elemento específico for encontrado, pelo menos rola para o card principal
                         const cardElement = document.getElementById(cardId);
                         if (cardElement) cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
-                }, 300); // Aumentado ligeiramente para garantir a renderização em todas as situações
+                }, 350);
             };
 
             // 1. Navegar para a View principal (Resumo, Mesas, etc.)
@@ -2891,11 +2923,20 @@
             colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
             table += '</tr></thead><tbody>';
                 pedidos.forEach(p => { 
+                // Lógica para aplicar a cor da rota
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const isRecallRow = pedidosRecall.includes(String(p.Num_Pedido));
-                let rowClass = isPriorityRow ? 'table-warning' : (isRecallRow ? 'table-info' : '');
-                const isDraggable = sourceId !== ''; // Só permite arrastar se tiver um sourceId
+                let rowClass = '';
+                if (isPriorityRow) rowClass = 'table-warning';
+                else if (isRecallRow) rowClass = 'table-info';
+                else if (sourceId === 'geral') { // Aplica cor apenas na tabela de "Pedidos Disponíveis"
+                    const vehicleType = rotaVeiculoMap[p.Cod_Rota]?.type;
+                    if (vehicleType === 'fiorino') rowClass = 'route-fiorino';
+                    else if (vehicleType === 'van') rowClass = 'route-van';
+                    else if (vehicleType === 'tresQuartos') rowClass = 'route-tresQuartos';
+                }
 
+                const isDraggable = sourceId !== ''; // Só permite arrastar se tiver um sourceId
                 const clienteIdNormalizado = normalizeClientId(p.Cliente);
                 table += `<tr id="pedido-${p.Num_Pedido}"
                                      class="${rowClass}"
@@ -3012,6 +3053,11 @@
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const veiculo = rotaVeiculoMap[rota]?.type || 'van'; // Assume 'van' para rotas não mapeadas
+                let veiculoClass = '';
+                if (veiculo === 'fiorino') veiculoClass = 'route-fiorino';
+                else if (veiculo === 'van') veiculoClass = 'route-van';
+                else if (veiculo === 'tresQuartos') veiculoClass = 'route-tresQuartos';
+
                 
                 let rotaDisplay; // Rota: 11101 (Fiorino)
                 if (veiculo === 'van' && !rotaVeiculoMap[rota]?.title.startsWith('Rota 1')) {
@@ -3022,7 +3068,7 @@
                 }
                 // CORREÇÃO: O ID do collapse agora usa a rota, que é um identificador estável.
                 const collapseId = `collapseGeral-${rota}`;
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed ${veiculoClass}" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
             });
             accordionHtml += '</div>'; 
             div.innerHTML = accordionHtml;
@@ -3091,14 +3137,23 @@
 
         function displayPedidosCFNumerico(div, pedidos) {
             if (pedidos.length === 0) { div.innerHTML = '<div class="empty-state"><i class="bi bi-funnel"></i><p>Nenhum pedido filtrado por esta regra.</p></div>'; return; }
+
             const grupos = pedidos.reduce((acc, p) => {
                 const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc;
             }, {});
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionCF">';
-            Object.keys(grupos).sort().forEach((rota, index) => {
+            
+            // Usa a mesma função de ordenação da lista de disponíveis para manter a consistência
+            const rotasOrdenadas = getSortedVarejoRoutes(Object.keys(grupos));
+            rotasOrdenadas.forEach((rota, index) => {
                 const grupo = grupos[rota];
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const veiculo = rotaVeiculoMap[rota]?.type || 'van'; // Assume 'van' para rotas não mapeadas
+                let veiculoClass = '';
+                if (veiculo === 'fiorino') veiculoClass = 'route-fiorino';
+                else if (veiculo === 'van') veiculoClass = 'route-van';
+                else if (veiculo === 'tresQuartos') veiculoClass = 'route-tresQuartos';
+
                 
                 let rotaDisplay;
                 if (veiculo === 'van' && !rotaVeiculoMap[rota]?.title.startsWith('Rota 1')) {
@@ -3107,7 +3162,10 @@
                     const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
                     rotaDisplay = `Rota: ${rota} (${veiculoNome})`;
                 }
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingCF${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCF${index}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseCF${index}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body p-0">${createTable(pedidos)}</div></div></div>`;
+
+                const collapseId = `collapseCF-${rota}`; // ID estável usando a rota
+
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed ${veiculoClass}" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body p-0">${createTable(grupo.pedidos, null, 'bloqueados-regra')}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -3192,10 +3250,10 @@
             const containerDiv = document.getElementById(divId);
             if (!containerDiv) return;
 
-            // Seleciona apenas os cards de carga montada, excluindo o card de sobras.
-            // O seletor busca por cards que tenham um data-load-id e não sejam o de sobras.
-            const cardsParaImprimir = containerDiv.querySelectorAll('.card[data-load-id]:not([data-load-id="leftovers"])');
-
+            // CORREÇÃO: Busca todos os cards de carga dentro do container geral da aba (ex: 'resultado-fiorino-geral'),
+            // incluindo tanto os gerados pelo sistema quanto os manuais.
+            const cardsParaImprimir = containerDiv.querySelectorAll('.card[data-load-id]');
+ 
             if (cardsParaImprimir.length === 0) { alert(`Nenhuma carga montada para imprimir na seção "${title}".`); return; }
 
             const containerClone = document.createElement('div');
@@ -3576,6 +3634,44 @@
                                        moveMade = true;
                                    }
                                }
+                           } else if (moveType < 0.95 && neighborSolution.loads.length > 0 && neighborSolution.leftovers.length > 0) {
+                               // NOVO: Movimento de "Troca Inteligente" (Swap)
+                               // Tenta trocar um grupo de uma carga com um grupo das sobras.
+                               const loadIndex = Math.floor(Math.random() * neighborSolution.loads.length);
+                               const load = neighborSolution.loads[loadIndex];
+                               const leftoverIndex = Math.floor(Math.random() * neighborSolution.leftovers.length);
+                               const leftoverGroup = neighborSolution.leftovers[leftoverIndex];
+
+                               if (load.pedidos.length > 0) {
+                                   const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, p) => {
+                                       const cId = normalizeClientId(p.Cliente);
+                                       if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                                       acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                                       return acc;
+                                   }, {}));
+
+                                   if (clientGroupsInLoad.length > 0) {
+                                       const groupIndexToSwap = Math.floor(Math.random() * clientGroupsInLoad.length);
+                                       const groupToSwapOut = clientGroupsInLoad[groupIndexToSwap];
+
+                                       // Simula a troca para verificar a validade
+                                       const tempLoadKg = load.totalKg - groupToSwapOut.totalKg + leftoverGroup.totalKg;
+                                       const tempLoadCubagem = load.totalCubagem - groupToSwapOut.totalCubagem + leftoverGroup.totalCubagem;
+                                       const config = getVehicleConfig(vehicleType);
+
+                                       if (tempLoadKg <= config.hardMaxKg && tempLoadCubagem <= config.hardMaxCubage) {
+                                           // A troca é válida, então a executa
+                                           const idsToRemove = new Set(groupToSwapOut.pedidos.map(p => p.Num_Pedido));
+                                           load.pedidos = load.pedidos.filter(p => !idsToRemove.has(p.Num_Pedido));
+                                           load.totalKg -= groupToSwapOut.totalKg; load.totalCubagem -= groupToSwapOut.totalCubagem;
+                                           load.pedidos.push(...leftoverGroup.pedidos);
+                                           load.totalKg += leftoverGroup.totalKg; load.totalCubagem += leftoverGroup.totalCubagem;
+                                           neighborSolution.leftovers.splice(leftoverIndex, 1);
+                                           neighborSolution.leftovers.push(groupToSwapOut);
+                                           moveMade = true;
+                                       }
+                                   }
+                               }
                            }
                            
                            if(moveMade){
@@ -3714,9 +3810,7 @@
             processedRoutes.add(routesKey);
 
             const resultadoDiv = document.getElementById(divId);
-            
-            const autoGeneratedContent = resultadoDiv.querySelector('.resultado-container');
-            if (autoGeneratedContent) { autoGeneratedContent.remove(); }
+            resultadoDiv.innerHTML = ''; // Limpa a área de resultado antes de processar uma nova rota.
 
             // Restaura o feedback visual no botão da rota processada
             if (buttonElement) {
@@ -3830,35 +3924,44 @@
             // Tenta encaixar sobras em cargas existentes que ainda têm espaço.
             const { refinedLoads, remainingLeftovers } = refineLoadsWithSimpleFit(optimizationResult.loads, optimizationResult.leftovers);
 
+            // ========================================================================
+            // INÍCIO DA LÓGICA DE CASCATA (Fiorino -> Van -> 3/4)
+            // ========================================================================
             let primaryLoads = refinedLoads; // Cargas do tipo principal (ex: Fiorino)
             let leftoverGroups = remainingLeftovers; // O que sobrou após o encaixe simples
             let secondaryLoads = [];
             primaryLoads.forEach(l => l.vehicleType = vehicleType); // Garante que o tipo de veículo primário esteja definido
             let tertiaryLoads = [];
             
-            // Lógica de cascata para sobras
+            // PASSO 1: Se a rota original for de Fiorino e houver sobras...
             if (vehicleType === 'fiorino' && leftoverGroups.length > 0) {
-                // Sobras de Fiorino -> Tenta montar Van
+                // ...tenta montar uma ou mais Vans com essas sobras.
                 console.log(`Sobras de Fiorino (${leftoverGroups.reduce((s,g)=>s+g.totalKg,0).toFixed(2)}kg) tentando virar Van.`);
                 const vanResult = runHeuristicOptimization(leftoverGroups, 'van');
                 secondaryLoads = vanResult.loads.map(l => ({ ...l, vehicleType: 'van' }));
                 leftoverGroups = vanResult.leftovers; // O que sobrou da tentativa de Van
             }
 
+            // PASSO 2: Se a rota original for de Fiorino OU Van e ainda houver sobras...
             if ((vehicleType === 'fiorino' || vehicleType === 'van') && leftoverGroups.length > 0) {
-                // Sobras de Fiorino (que não viraram Van) OU sobras de Van -> Tenta montar 3/4
+                // ...tenta montar um ou mais 3/4 com o que restou.
                 console.log(`Sobras de ${vehicleType} (${leftoverGroups.reduce((s,g)=>s+g.totalKg,0).toFixed(2)}kg) tentando virar 3/4.`);
                 const tqResult = runHeuristicOptimization(leftoverGroups, 'tresQuartos');
                 
                 // Adiciona as novas cargas de 3/4 na lista apropriada
                 if (vehicleType === 'fiorino') {
+                    // Se a origem era Fiorino, as cargas 3/4 são terciárias.
                     tertiaryLoads = tqResult.loads.map(l => ({ ...l, vehicleType: 'tresQuartos' }));
                 } else { // vehicleType === 'van'
+                    // Se a origem era Van, as cargas 3/4 são secundárias.
                     secondaryLoads = tqResult.loads.map(l => ({ ...l, vehicleType: 'tresQuartos' }));
                 }
                 
                 leftoverGroups = tqResult.leftovers; // Sobra final
             }
+            // ========================================================================
+            // FIM DA LÓGICA DE CASCATA
+            // ========================================================================
             
             const allPotentialLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads ];
             const finalValidLoads = [];
@@ -3891,8 +3994,12 @@
                 load.id = loadId;
                 activeLoads[loadId] = load;
             });
+            
+            // CORREÇÃO: Isola as cargas geradas nesta execução específica para renderização.
+            // Isso impede que cargas de processamentos anteriores sejam redesenhadas.
+            const loadsGeneratedInThisRun = finalValidLoads;
 
-            // NOVO: Identifica todos os pedidos alocados e atualiza a lista de pedidos gerais.
+            // Atualiza a lista de pedidos disponíveis, removendo os que acabaram de ser alocados.
             const alocatedOrderIds = new Set(finalValidLoads.flatMap(load => load.pedidos.map(p => p.Num_Pedido)));
             pedidosGeraisAtuais = pedidosGeraisAtuais.filter(p => !alocatedOrderIds.has(p.Num_Pedido));
 
@@ -3922,16 +4029,22 @@
             
             let html = `<h5 class="mt-3">Cargas para <strong>${title}</strong></h5>`;
             
-            const generatedLoads = finalValidLoads.filter(l => l.pedidos.length > 0);
-            if(generatedLoads.length === 0){
+            // CORREÇÃO: Renderiza apenas as cargas geradas nesta execução.
+            if(loadsGeneratedInThisRun.length === 0){
                  html += `<div class="alert alert-secondary">Nenhuma carga foi formada para esta rota.</div>`;
             } else {
-                generatedLoads.forEach(load => {
+                loadsGeneratedInThisRun.forEach(load => {
                     html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType] || vehicleInfo['van']);
                 });
             }            
             resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;            
-            renderAllUI(); // NOVO: Chama a função de renderização centralizada
+            
+            // CORREÇÃO: As chamadas de atualização da UI foram movidas para o final,
+            // e a chamada para `handlePostProcessingUI` foi ajustada para lidar com as sobras
+            // desta execução específica.
+            updateAndRenderKPIs();
+            updateAndRenderChart();
+            displayGerais(document.getElementById('resultado-geral'), pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {}));
             handlePostProcessingUI(finalLeftoverGroups, routeOrRoutes, title, divId); // CORREÇÃO: Chamada ajustada
         }
 
@@ -4610,10 +4723,12 @@
             const newCardHTML = renderLoadCard(newLoad, vehicleType, vehicleInfo[vehicleType]);
             
             const activeTabPane = document.querySelector('.tab-pane.active');
-            let resultContainer = activeTabPane ? activeTabPane.querySelector('.resultado-container') : null;
+            // CORREÇÃO: O alvo agora é o container geral da aba, não um sub-container.
+            // Ex: 'resultado-fiorino-geral', 'resultado-van-geral', etc.
+            let resultContainerId = `${vehicleType === 'tresQuartos' ? 'resultado-34-geral' : `resultado-${vehicleType}-geral`}`;
+            let resultContainer = document.getElementById(resultContainerId);
 
-            // Se o container de resultados não existir (nenhuma rota foi processada ainda), cria um.
-            if (activeTabPane && !resultContainer) {
+            if (activeTabPane && !resultContainer) { // Fallback caso o container não exista
                 activeTabPane.insertAdjacentHTML('beforeend', '<div class="resultado-container mt-3"></div>');
                 resultContainer = activeTabPane.querySelector('.resultado-container');
             }
@@ -4639,7 +4754,11 @@
                 }
             }, 300);
 
-            renderAllUI(); // NOVO: Chama a função de renderização centralizada
+            // ATUALIZADO: Em vez de redesenhar tudo, apenas atualizamos o que é necessário.
+            updateAndRenderKPIs();
+            updateAndRenderChart();
+            displayGerais(document.getElementById('resultado-geral'), pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {}));
+            saveStateToLocalStorage();
         }
 
         function cancelManualLoad() {
