@@ -1147,6 +1147,13 @@
                                         <!-- A descrição será inserida aqui pelo JavaScript -->
                                     </div>
                                 </div>
+                                <div class="card-footer">
+                                    <label for="graphhopperApiKey" class="form-label">Chave da API (GraphHopper):</label>
+                                    <input type="text" class="form-control" id="graphhopperApiKey" placeholder="Insira sua chave para cálculo de KM">
+                                    <div class="form-text small">
+                                        <!-- A descrição será inserida aqui pelo JavaScript -->
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="col-lg-6 mb-4">
@@ -1561,6 +1568,7 @@
         let kpiData = {}; // Objeto para armazenar dados dos KPIs
         let processedRoutes = new Set();
         let processedRouteContexts = {};
+        let origemCoords = null; // NOVO: Variável para armazenar as coordenadas da origem em cache
         let manualLoadInProgress = null;
 
         const defaultConfigs = {
@@ -2380,6 +2388,8 @@
         }
 
         function limparTudo(){
+            origemCoords = null; // Limpa o cache da origem
+
             resetarEstadoGlobal();
             originalColumnHeaders = []; 
 
@@ -4226,6 +4236,10 @@
             const totalKgFormatado = load.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = (load.totalCubagem || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)) || pedidosRecall.includes(String(p.Num_Pedido)));
+            
+            // NOVO: Adiciona um placeholder para a distância da rota
+            const distanciaHtml = `<span id="distancia-${load.id}" class="ms-3"></span>`;
+
             const priorityBadge = isPriorityLoad ? '<span class="badge bg-light text-dark ms-3">CARGA COM PRIORIDADE</span>' : '';
             const hardLimitBadge = load.usedHardLimit ? '<span class="badge bg-danger-subtle text-danger-emphasis ms-3"><i class="bi bi-exclamation-triangle-fill"></i> CAPACIDADE EXTRA</span>' : '';
             // prettier-ignore
@@ -4250,12 +4264,15 @@
             const headerColorClass = isOverloaded ? 'bg-danger' : vInfo.colorClass;
             
             const printButton = String(load.id).startsWith('manual-') ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargaManualIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>` : '';
-            const routeButton = `<button class="btn btn-sm btn-outline-light ms-2" onclick="roteirizarCarga('${load.id}')"><i class="bi bi-sign-turn-right-fill me-1"></i>Roteirizar</button>`;
+            // NOVO: Dois botões, um para calcular KM e outro para abrir o mapa.
+            const kmButton = `<button id="btn-km-${load.id}" class="btn btn-sm btn-outline-light ms-2" onclick="calcularDistanciaCarga('${load.id}')"><i class="bi bi-calculator-fill me-1"></i>Calcular KM</button>`;
+            const mapButton = `<button class="btn btn-sm btn-outline-light ms-2" onclick="abrirMapaCarga('${load.id}')"><i class="bi bi-map-fill me-1"></i>Abrir Mapa</button>`;
 
             const cardHeaderActions = `
                 <div class="card-header-actions no-print">
                     ${printButton}
-                    ${routeButton}
+                    ${kmButton}
+                    ${mapButton}
                 </div>
             `;
 
@@ -4281,7 +4298,7 @@
                             <div>
                                 <i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero}${spDescription} - 
                                 <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / 
-                                <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${priorityBadge} ${hardLimitBadge}
+                                <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${distanciaHtml} ${priorityBadge} ${hardLimitBadge}
                             </div>
                             ${cardHeaderActions}
                         </div>
@@ -4289,12 +4306,31 @@
                     </div>`;
         }
         
-        function roteirizarCarga(loadId) {
+        async function calcularDistanciaCarga(loadId, retries = 2) {
+            const apiKey = document.getElementById('graphhopperApiKey').value;
+            if (!apiKey) {
+                alert("Por favor, insira sua chave da API do GraphHopper nas Configurações para calcular a distância.");
+                // Abre o modal de configurações
+                const configModal = new bootstrap.Modal(document.getElementById('configModal'));
+                configModal.show();
+                return;
+            }
+
             const load = activeLoads[loadId];
             if (!load) {
                 alert("Carga não encontrada.");
                 return;
             }
+
+            const kmBtn = document.getElementById(`btn-km-${loadId}`);
+            const distanciaSpan = document.getElementById(`distancia-${load.id}`);
+
+            // Mostra feedback de carregamento
+            if (kmBtn) {
+                kmBtn.disabled = true;
+                kmBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculando...`;
+            }
+            if (distanciaSpan) distanciaSpan.innerHTML = '';
         
             // Extrai cidades únicas com seus respectivos estados (UF) para maior precisão,
             // buscando os dados completos na planilha original para garantir que 'Cidade' e 'UF' existam.
@@ -4303,8 +4339,8 @@
 
             planilhaData.forEach(pedidoOriginal => {
                 if (pedidoIdsNaCarga.has(String(pedidoOriginal.Num_Pedido))) {
-                    const cidade = (typeof pedidoOriginal.Cidade === 'string' ? pedidoOriginal.Cidade : '').split(',')[0].trim();
-                    const uf = (typeof pedidoOriginal.UF === 'string' ? pedidoOriginal.UF : '').trim().toUpperCase();
+                    const cidade = (String(pedidoOriginal.Cidade || '')).split(',')[0].trim();
+                    const uf = (String(pedidoOriginal.UF || '')).trim().toUpperCase();
 
                     if (cidade && uf) {
                         // Usa a cidade como chave para evitar duplicatas.
@@ -4318,34 +4354,147 @@
             const cidadesComEstado = Array.from(cidadesMap.entries());
         
             if (cidadesComEstado.length === 0) {
-                alert("Nenhuma cidade encontrada nos pedidos desta carga para roteirizar.");
+                if (kmBtn) {
+                    kmBtn.disabled = false;
+                    kmBtn.innerHTML = `<i class="bi bi-calculator-fill me-1"></i>Calcular KM`;
+                }
+                alert("Nenhuma cidade válida encontrada nos pedidos desta carga para roteirizar.");
                 return;
             }
         
             // Ponto de partida e chegada fixo
             const origem = "Empresa Selmi, BR-369, 86181-570 Rolândia, Paraná, Brasil";
+
+            try {
+                // 1. Geocodificar a origem (com cache)
+                let origemPoint;
+                if (origemCoords) {
+                    console.log("Usando coordenadas da origem do cache.");
+                    origemPoint = origemCoords;
+                } else {
+                    console.log("Buscando coordenadas da origem pela primeira vez...");
+                    const origemResponse = await fetch(`https://graphhopper.com/api/1/geocode?q=${encodeURIComponent(origem)}&key=${apiKey}`);
+                    if (!origemResponse.ok) {
+                        throw new Error(`Falha ao buscar coordenadas da origem. Status: ${origemResponse.status}`);
+                    }
+                    const origemData = await origemResponse.json();
+                    if (!origemData.hits || origemData.hits.length === 0) {
+                        throw new Error("Não foi possível encontrar as coordenadas da origem (Empresa Selmi). Verifique o endereço ou a chave da API.");
+                    }
+                    origemPoint = origemData.hits[0].point;
+                    origemCoords = origemPoint; // Salva em cache para uso futuro
+                }
+
+                // 2. Geocodificar os destinos (cidades)
+                const locations = [{ id: "start", name: "Origem", ...origemPoint }];
+                for (const [cidade, uf] of cidadesComEstado) {
+                    const query = `${cidade}, ${uf}, Brasil`;
+                    const locResponse = await fetch(`https://graphhopper.com/api/1/geocode?q=${encodeURIComponent(query)}&key=${apiKey}`);
+                    const locData = await locResponse.json();
+                    if (locData.hits && locData.hits.length > 0) {
+                        locations.push({ id: cidade, name: cidade, ...locData.hits[0].point });
+                    }
+                }
+
+                // 3. Montar e chamar a API de Otimização de Rota
+                const requestBody = {
+                    vehicles: [{ vehicle_id: 'veiculo_1', start_address: { location_id: 'start', lon: origemPoint.lng, lat: origemPoint.lat } }],
+                    services: locations.slice(1).map(loc => ({
+                        id: loc.id,
+                        name: loc.name,
+                        address: { location_id: loc.id, lon: loc.lng, lat: loc.lat }
+                    })),
+                    objectives: [{ type: "min-max", value: "completion_time" }]
+                };
+
+                const routeResponse = await fetch(`https://graphhopper.com/api/1/vrp?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const routeData = await routeResponse.json();
+                if (routeData.status !== 'finished') throw new Error(`O cálculo da rota falhou: ${routeData.message || 'Erro desconhecido'}`);
+
+                const totalDistanceMeters = routeData.solution.distance;
+                const totalDistanceKm = (totalDistanceMeters / 1000).toFixed(1);
+
+                // 4. Atualizar o card com a distância
+                if (distanciaSpan) {
+                    distanciaSpan.innerHTML = `<i class="bi bi-geo-alt-fill me-1"></i><strong>${totalDistanceKm} km</strong> (ida e volta)`;
+                }
+
+            } catch (error) {
+                console.error("Erro ao roteirizar:", error);
+                // Se a falha foi na origem e ainda temos tentativas, limpa o cache e tenta de novo.
+                if (error.message.includes("origem") && retries > 0) {
+                    console.warn(`Falha na origem. Limpando cache e tentando novamente... (${retries} tentativas restantes)`);
+                    origemCoords = null; // Limpa o cache para forçar uma nova busca
+                    return calcularDistanciaCarga(loadId, retries - 1);
+                }
+                alert(`Falha ao calcular a rota: ${error.message}`);
+                if (distanciaSpan) distanciaSpan.innerHTML = `<span class="text-danger small">Falha no cálculo</span>`;
+            } finally {
+                // Restaura o botão
+                if (kmBtn) {
+                    kmBtn.disabled = false;
+                    kmBtn.innerHTML = `<i class="bi bi-calculator-fill me-1"></i>Calcular KM`;
+                }
+            }
+        }
+
+        // Limpa o cache da origem ao limpar tudo, para forçar uma nova busca na próxima vez.
+        function limparTudo(){
+            origemCoords = null;
+            // ... resto da função limparTudo ...
+        }
+
+
+        function abrirMapaCarga(loadId) {
+            const load = activeLoads[loadId];
+            if (!load) {
+                alert("Carga não encontrada.");
+                return;
+            }
+
+            const cidadesMap = new Map();
+            const pedidoIdsNaCarga = new Set(load.pedidos.map(p => String(p.Num_Pedido)));
+
+            planilhaData.forEach(pedidoOriginal => {
+                if (pedidoIdsNaCarga.has(String(pedidoOriginal.Num_Pedido))) {
+                    const cidade = (String(pedidoOriginal.Cidade || '')).split(',')[0].trim();
+                    const uf = (String(pedidoOriginal.UF || '')).trim().toUpperCase();
+                    if (cidade && uf && !cidadesMap.has(cidade)) {
+                        cidadesMap.set(cidade, uf);
+                    }
+                }
+            });
+            const cidadesComEstado = Array.from(cidadesMap.entries());
+
+            if (cidadesComEstado.length === 0) {
+                alert("Nenhuma cidade válida encontrada nos pedidos desta carga para roteirizar.");
+                return;
+            }
+
+            const origem = "Empresa Selmi, BR-369, 86181-570 Rolândia, Paraná, Brasil";
             const destino = origem;
             
-            // Monta a URL do GraphHopper Maps
-            // Formato: https://graphhopper.com/maps/?point=Origem&point=Ponto1&point=Ponto2&...&point=Destino
             const baseUrl = "https://graphhopper.com/maps/";
             const params = new URLSearchParams();
             
-            // Adiciona o ponto de partida
             params.append('point', origem);
-            // Adiciona as cidades como pontos intermediários, incluindo o estado para precisão
+            
             cidadesComEstado.forEach(([cidade, uf]) => {
                 let pontoParada = `${cidade}, ${uf}, Brasil`;
-                // Se a cidade for Rolândia, usa um endereço mais genérico para o ponto de parada,
-                // diferenciando-o do endereço específico da Selmi (ponto de partida/chegada).
                 if (cidade.toLowerCase().trim() === 'rolândia') {
                     pontoParada = `Centro, Rolândia, ${uf}, Brasil`;
                 }
                 params.append('point', pontoParada);
             });
-            // Adiciona o ponto de chegada (retorno)
+            
             params.append('point', destino);
             
+            // Usa 'car' como perfil de veículo padrão para roteirização.
             const url = `${baseUrl}?${params.toString()}&profile=car&layer=OpenStreetMap`;
             
             // Abre a URL em uma nova aba
@@ -4355,6 +4504,8 @@
         function separarCargasFiorino(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'fiorino', buttonElement); }
         function separarCargasVan(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'van', buttonElement); }
         function separarCargas34(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'tresQuartos', buttonElement); }
+
+        // ... (código existente) ...
 
         function displayToco(div, grupos) {
             if (Object.keys(grupos).length === 0) { div.innerHTML = '<div class="empty-state"><i class="bi bi-inboxes-fill"></i><p>Nenhuma carga "Toco" encontrada.</p></div>'; return; }
