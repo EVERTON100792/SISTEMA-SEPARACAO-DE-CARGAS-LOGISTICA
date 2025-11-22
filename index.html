@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Separação de Cargas Otimizado</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='grad1' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:%230A84FF;stop-opacity:1' /><stop offset='100%' style='stop-color:%235E5CE6;stop-opacity:1' /></linearGradient></defs><path d='M50 2 L95 25 L95 75 L50 98 L5 75 L5 25 Z' fill='url(%23grad1)' /><text x='50' y='72' font-family='Arial, sans-serif' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>A</text></svg>">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -887,7 +888,7 @@
             <div id="sidebar-footer" class="no-print">
                 <div class="d-grid gap-2">
                     <button class="btn btn-sm btn-outline-info text-start" data-bs-toggle="modal" data-bs-target="#configModal"><i class="bi bi-sliders me-2"></i><span>Configurações</span></button>
-                    <button class="btn btn-sm btn-outline-danger text-start" id="limparResultadosBtn"><i class="bi bi-eraser-fill me-2"></i><span>Limpar Tudo</span></button>
+                    <button class="btn btn-sm btn-outline-danger text-start" onclick="limparTudo()"><i class="bi bi-eraser-fill me-2"></i><span>Limpar Dados</span></button>
                 </div>
                 <a href="#" id="sidebar-toggle" class="btn btn-sm btn-outline-secondary w-100 mt-2 text-start">
                     <i class="bi bi-chevron-double-left fs-5"></i>
@@ -1658,6 +1659,168 @@
             });
             saveConfigurations();
         }
+
+        /**
+         * Limpa o estado atual da aplicação, resetando variáveis e a interface do usuário.
+         */
+        function limparEstadoAtual() {
+    try {
+        // 1. Resetar variáveis globais
+        planilhaData = [];
+        originalColumnHeaders = [];
+        pedidosGeraisAtuais = [];
+        gruposToco = {};
+        gruposPorCFGlobais = {};
+        pedidosComCFNumericoIsolado = [];
+        pedidosManualmenteBloqueadosAtuais = [];
+        pedidosPrioritarios = [];
+        pedidosRecall = [];
+        pedidosBloqueados = new Set();
+        pedidosEspeciaisProcessados = new Set();
+        pedidosSemCorte = new Set();
+        pedidosVendaAntecipadaProcessados = new Set();
+        rota1SemCarga = [];
+        pedidosFuncionarios = [];
+        pedidosCarretaSemCF = [];
+        pedidosTransferencias = [];
+        pedidosExportacao = [];
+        cargasFechadasPR = [];
+        pedidosMoinho = [];
+        pedidosMarcaPropria = [];
+        cargasFechadasRestBrasil = [];
+        pedidosCondorTruck = [];
+        tocoPedidoIds = new Set();
+        currentLeftoversForPrinting = [];
+        activeLoads = {};
+        kpiData = {};
+        processedRoutes = new Set();
+        processedRouteContexts = {};
+        origemCoords = null;
+        manualLoadInProgress = null;
+        console.log('Variáveis globais resetadas.');
+
+        // 2. Resetar estado da UI (com verificações)
+        const resetElement = (id, content = '') => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.innerHTML = content;
+            } else {
+                console.warn(`Elemento com ID "${id}" não encontrado para resetar.`);
+            }
+        };
+
+        const resetValue = (id, value = '') => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.value = value;
+            }
+        };
+
+        const hideElement = (id) => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        };
+
+        const showElement = (id, display = 'block') => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = display;
+        };
+
+        const emptyStateHTML = (icon, text) => `<div class="empty-state"><i class="bi bi-${icon}"></i><p>${text}</p></div>`;
+
+        // Resetar inputs e controles principais
+        resetValue('fileInput');
+        const processarBtn = document.getElementById('processarBtn');
+        if (processarBtn) processarBtn.disabled = true;
+        const startManualLoadBtn = document.getElementById('start-manual-load-btn');
+        if (startManualLoadBtn) startManualLoadBtn.disabled = true;
+        resetElement('status');
+        hideElement('filtro-rota-container');
+        resetElement('rotaInicioSelect', '<option value="">Rota de Início...</option>');
+        resetElement('rotaFimSelect', '<option value="">Rota de Fim...</option>');
+
+        // Resetar Dashboard
+        if (resumoChart) {
+            resumoChart.destroy();
+            resumoChart = null;
+        }
+        hideElement('dashboard-content-container');
+        showElement('summary-empty-state');
+        resetElement('kpi-container');
+        resetElement('chart-subtitle');
+
+        // Resetar Mesas de Trabalho
+        resetElement('botoes-fiorino', emptyStateHTML('box', 'Nenhuma rota de Fiorino disponível.'));
+        resetElement('resultado-fiorino-geral');
+        resetElement('botoes-van', emptyStateHTML('truck-front-fill', 'Nenhuma rota de Van disponível.'));
+        resetElement('resultado-van-geral');
+        resetElement('botoes-34', emptyStateHTML('truck-flatbed', 'Nenhuma rota de 3/4 disponível.'));
+        resetElement('resultado-34-geral');
+        resetElement('resultado-toco', emptyStateHTML('inboxes-fill', 'Nenhuma carga "Toco" encontrada.'));
+        resetElement('resultado-cargas-fechadas-pr', emptyStateHTML('building-fill-check', 'Nenhuma Carga Fechada do Paraná encontrada.'));
+        resetElement('resultado-cargas-fechadas-rest-br', emptyStateHTML('globe-americas', 'Nenhuma Carga Fechada (Resto do Brasil) encontrada.'));
+        resetElement('resultado-moinho', emptyStateHTML('gear-wide-connected', 'Nenhum pedido "Moinho" encontrado.'));
+        resetElement('resultado-funcionarios', emptyStateHTML('people-fill', 'Nenhum pedido de funcionário encontrado.'));
+        resetElement('resultado-transferencias', emptyStateHTML('arrow-left-right', 'Nenhum pedido de transferência encontrado.'));
+        resetElement('resultado-exportacao', emptyStateHTML('box-arrow-up-right', 'Nenhum pedido de exportação encontrado.'));
+        resetElement('resultado-marca-propria', emptyStateHTML('tags-fill', 'Nenhum pedido de Marca Própria encontrado.'));
+        
+        // Adicionado: Resetar a aba "Outros Pedidos" para o estado inicial
+        const outrosPedidosTab = document.getElementById('outros-pedidos-tab-pane');
+        if (outrosPedidosTab) {
+            outrosPedidosTab.innerHTML = `<div id="resultado-moinho" class="mb-3"><div class="empty-state"><i class="bi bi-gear-wide-connected"></i><p>Nenhum pedido "Moinho" encontrado.</p></div></div><hr><div id="resultado-funcionarios" class="mb-3"><div class="empty-state"><i class="bi bi-people-fill"></i><p>Nenhum pedido de funcionário encontrado.</p></div></div><hr><div id="resultado-transferencias" class="mb-3"><div class="empty-state"><i class="bi bi-arrow-left-right"></i><p>Nenhum pedido de transferência encontrado.</p></div></div><hr><div id="resultado-exportacao" class="mb-3"><div class="empty-state"><i class="bi bi-box-arrow-up-right"></i><p>Nenhum pedido de exportação encontrado.</p></div></div><hr><div id="resultado-marca-propria"><div class="empty-state"><i class="bi bi-tags-fill"></i><p>Nenhum pedido de Marca Própria encontrado.</p></div></div>`;
+        }
+
+        // Resetar Pedidos & Consultas
+        resetValue('pedidoSearchInput');
+        resetElement('search-result');
+        resetElement('resultado-geral', emptyStateHTML('file-earmark-excel', 'Nenhum pedido de varejo disponível.'));
+        resetElement('resultado-cf-numerico', emptyStateHTML('funnel', 'Nenhum pedido bloqueado por regra.'));
+
+        // Resetar Montagens Especiais
+        resetValue('vendaAntecipadaInput');
+        resetElement('resultado-venda-antecipada');
+        resetValue('pedidosEspeciaisInput');
+        resetElement('resultado-carga-especial');
+
+        // Resetar Análises
+        resetElement('resultado-bloqueados');
+        resetElement('resultado-rota1');
+
+        // Resetar Modal de Configs
+        resetValue('bloquearPedidoInput');
+        resetElement('lista-pedidos-bloqueados', emptyStateHTML('shield-slash', 'Nenhum pedido bloqueado.'));
+        resetValue('semCorteInput');
+        resetElement('lista-pedidos-sem-corte', emptyStateHTML('scissors', 'Nenhum pedido marcado.'));
+
+        // Limpar estado de persistência
+        localStorage.removeItem('logisticsAppState');
+        localStorage.removeItem('logisticsRouteContexts');
+        localStorage.removeItem('sidebarCollapsed');
+        localStorage.removeItem('lastActiveView');
+        localStorage.removeItem('lastActiveTab');
+        console.log('Estado do LocalStorage limpo.');
+
+        // Navegar para a view de resumo
+        const summaryLink = document.querySelector('#sidebar-nav a[href="#summary-view"]');
+        if (summaryLink) summaryLink.click();
+
+    } catch (e) {
+        console.error('Erro durante a execução de limparTudo:', e);
+        alert('Ocorreu um erro ao tentar limpar os dados. Verifique o console para mais detalhes.');
+    }
+        }
+
+        /**
+         * Função principal de limpeza chamada pelo botão "Limpar Sistema".
+         * Limpa o estado e recarrega a página para um reset completo.
+         */
+        function limparTudo() {
+            console.log('Função "limparTudo" iniciada para reset completo.');
+            limparEstadoAtual(); // Limpa o estado atual
+            location.reload(); // Recarrega a página
+        }
+        
         
         document.addEventListener('DOMContentLoaded', () => {
             try {
@@ -1667,7 +1830,6 @@
             }
 
             document.getElementById('saveConfig').addEventListener('click', saveConfigurations);
-            document.getElementById('limparResultadosBtn').addEventListener('click', limparTudo);            
             document.getElementById('pedidoSearchInput').addEventListener('keyup', (event) => {
                 // A busca em tempo real já é feita pelo onkeyup no HTML.
                 // Esta parte pode ser usada para ações específicas do Enter, se necessário,
@@ -1751,6 +1913,7 @@
                 });
             });
 
+            // Restaura o estado da aplicação a partir do localStorage ao carregar a página.
             loadStateFromLocalStorage();
 
             // Restaura a última view e aba ativas
@@ -1862,7 +2025,7 @@
 
         function handleFile(file) {
             if (!file) return;
-            limparTudo();
+            limparEstadoAtual(); // CORREÇÃO: Limpa o estado atual sem recarregar a página.
             statusDiv.innerHTML = '<p class="text-info">Carregando planilha...</p>';
             processarBtn.disabled = true;
             const reader = new FileReader();
@@ -2382,79 +2545,8 @@
             activeLoads = {};
             kpiData = {};
             processedRoutes.clear();
-            // As prioridades (pedidosPrioritarios, pedidosRecall) não são limpas aqui,
-            // pois são um estado persistente que o usuário controla manualmente.
-            // As prioridades não devem ser limpas aqui, pois são um estado persistente.
-        }
-
-        function limparTudo(){
-            origemCoords = null; // Limpa o cache da origem
-
-            resetarEstadoGlobal();
-            originalColumnHeaders = []; 
-
-            processedRouteContexts = {};
-            pedidosEspeciaisProcessados.clear();
-            pedidosBloqueados.clear();
-            pedidosSemCorte.clear();
-            pedidosRecall = [];
             pedidosPrioritarios = [];
-            pedidosVendaAntecipadaProcessados.clear();
-            
-            const idsParaLimpar = [
-                'resultado-venda-antecipada', 'resultado-carga-especial', 'resultado-bloqueados', 'resultado-geral', 
-                'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'botoes-fiorino', 'botoes-van', 'botoes-34',
-                'resultado-rota1', 'kpi-container', 'search-result', 'resultado-cf-numerico', 
-                'resultado-toco', 'resultado-cargas-fechadas-pr', 'resultado-cargas-fechadas-rest-br', 'resultado-funcionarios', 'resultado-moinho',
-                'resultado-transferencias', 'resultado-exportacao', 'resultado-marca-propria'
-            ];
-            const emptyStateMessages = {
-                'resultado-geral': '<div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div>',
-                'botoes-fiorino': '<div class="empty-state"><i class="bi bi-box"></i><p>Nenhuma rota de Fiorino disponível. Processe um arquivo para começar.</p></div>',
-                'botoes-van': '<div class="empty-state"><i class="bi bi-truck-front-fill"></i><p>Nenhuma rota de Van disponível. Processe um arquivo para começar.</p></div>',
-                'botoes-34': '<div class="empty-state"><i class="bi bi-truck-flatbed"></i><p>Nenhuma rota de 3/4 disponível. Processe um arquivo para começar.</p></div>',
-                'resultado-toco': '<div class="empty-state"><i class="bi bi-inboxes-fill"></i><p>Nenhuma carga "Toco" encontrada. Processe um arquivo.</p></div>',
-                'resultado-cargas-fechadas-pr': '<div class="empty-state"><i class="bi bi-building-fill-check"></i><p>Nenhuma Carga Fechada do Paraná encontrada. Processe um arquivo.</p></div>',
-                'resultado-cargas-fechadas-rest-br': '<div class="empty-state"><i class="bi bi-globe-americas"></i><p>Nenhuma Carga Fechada (Resto do Brasil) encontrada.</p></div>',
-                'resultado-funcionarios': '<div class="empty-state"><i class="bi bi-people-fill"></i><p>Nenhum pedido de funcionário encontrado.</p></div>',
-                'resultado-transferencias': '<div class="empty-state"><i class="bi bi-arrow-left-right"></i><p>Nenhum pedido de transferência encontrado.</p></div>',
-                'resultado-exportacao': '<div class="empty-state"><i class="bi bi-box-arrow-up-right"></i><p>Nenhum pedido de exportação encontrado.</p></div>',
-                'resultado-marca-propria': '<div class="empty-state"><i class="bi bi-tags-fill"></i><p>Nenhum pedido de Marca Própria encontrado.</p></div>',
-                'resultado-moinho': '<div class="empty-state"><i class="bi bi-gear-wide-connected"></i><p>Nenhum pedido "Moinho" encontrado.</p></div>'
-            };
-
-            idsParaLimpar.forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.innerHTML = emptyStateMessages[id] || '';
-            });
-            Object.keys(emptyStateMessages).forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.innerHTML = emptyStateMessages[id];
-            });
-
-            if (resumoChart) {
-                resumoChart.destroy();
-                resumoChart = null;
-            }
-            document.getElementById('dashboard-content-container').style.display = 'none';
-            document.getElementById('filtro-rota-container').style.display = 'none'; // Mantém este display, pois é um controle e não uma view
-            document.getElementById('summary-empty-state').style.display = 'block';
-
-            document.getElementById('pedidosEspeciaisInput').value = '';
-            document.getElementById('bloquearPedidoInput').value = '';
-            document.getElementById('pedidoSearchInput').value = '';
-            document.getElementById('semCorteInput').value = '';
-            document.getElementById('vendaAntecipadaInput').value = '';
-            atualizarListaBloqueados();
-            atualizarListaSemCorte();
-            limparFiltroDeRota();
-            
-            fileInput.value = '';
-            planilhaData = [];
-            processarBtn.disabled = true;
-            localStorage.removeItem('logisticsRouteContexts'); // Limpeza explícita
-            localStorage.removeItem('logisticsAppState');
-            statusDiv.innerHTML = '';
+            pedidosRecall = [];
         }
 
         function processar() {
@@ -4441,12 +4533,6 @@
                     kmBtn.innerHTML = `<i class="bi bi-calculator-fill me-1"></i>Calcular KM`;
                 }
             }
-        }
-
-        // Limpa o cache da origem ao limpar tudo, para forçar uma nova busca na próxima vez.
-        function limparTudo(){
-            origemCoords = null;
-            // ... resto da função limparTudo ...
         }
 
 
