@@ -1745,6 +1745,27 @@
             tocoMinCapacity: 5000, tocoMaxCapacity: 8500, tocoCubage: 30.0
         };
         
+        // --- NOVO: Função de Notificação (Toast) ---
+        // Movida para um escopo global para ser acessível por outras funções como saveConfigurations.
+        function showToast(message, type = 'info') {
+            const toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) return;
+
+            const icons = { success: 'check-circle-fill', danger: 'exclamation-triangle-fill', warning: 'exclamation-triangle-fill', info: 'info-circle-fill' };
+            const toastId = `toast-${Date.now()}`;
+
+            const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body"><i class="bi bi-${icons[type]} me-2"></i>${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>`;
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            const toastEl = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+            toast.show();
+        }
         function saveConfigurations() {
             const configStatus = document.getElementById('configStatus');
             configStatus.innerHTML = '<p class="text-info">Salvando configurações no armazenamento local...</p>';
@@ -2714,8 +2735,6 @@
             activeLoads = {};
             kpiData = {};
             processedRoutes.clear();
-            pedidosPrioritarios = [];
-            pedidosRecall = [];
         }
 
         function processar() {
