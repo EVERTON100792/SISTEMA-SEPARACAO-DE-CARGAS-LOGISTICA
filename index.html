@@ -27,21 +27,21 @@
 
     <style>
         :root {
-            /* Paleta de Cores "Onyx" */
-            --dark-bg: #0a0a0a;
-            --dark-surface: rgba(28, 28, 30, 0.7);
-            --dark-surface-secondary: rgba(44, 44, 46, 0.8);
-            --dark-border: rgba(72, 72, 74, 0.5);
+            /* Paleta de Cores "Onyx" - REFINADA */
+            --dark-bg: #0a0a0a; /* Fundo principal super escuro */
+            --dark-surface: rgba(28, 28, 30, 0.7); /* Superfície principal com transparência para o efeito de vidro */
+            --dark-surface-secondary: rgba(44, 44, 46, 0.8); /* Superfície secundária, um pouco mais opaca */
+            --dark-border: rgba(72, 72, 74, 0.5); /* Borda sutil e semi-transparente */
             --dark-primary: #0A84FF;
             --dark-primary-hover: #3399FF;
-            --dark-primary-glow: rgba(10, 132, 255, 0.3);
+            --dark-primary-glow: rgba(10, 132, 255, 0.3); /* Cor para efeitos de brilho */
             --dark-accent: #5E5CE6;
             --dark-accent-secondary: #BF5AF2;
-            --dark-accent-glow: rgba(94, 92, 230, 0.3);
+            --dark-accent-glow: rgba(94, 92, 230, 0.3); /* Cor de brilho para o acento */
             --dark-text-primary: #FFFFFF;
             --dark-text-secondary: #8A8A8E;
-            --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            --backdrop-blur: 10px;
+            --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); /* Sombra padrão */
+            --backdrop-blur: 10px; /* Intensidade do desfoque de fundo */
         }
 
         /* --- NOVO: Variáveis para o Tema Claro --- */
@@ -62,29 +62,32 @@
             --backdrop-blur: 10px;
         }
 
-        /* --- Novas Animações de Fundo Cyber --- */
+        /* --- NOVAS ANIMAÇÕES DE FUNDO --- */
         @keyframes move-aurora-glow {
             0% { background-position: 0% 50%, 50% 50%; }
             50% { background-position: 100% 50%, 50% 50%; }
             100% { background-position: 0% 50%, 50% 50%; }
         }
         @keyframes scanline {
-            0% { background-position: 0 0; }
-            100% { background-position: 0 100%; }
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50px); }
         }
 
-        /* --- Fundo para Tema Escuro --- */
+        /* --- NOVO FUNDO ANIMADO PARA TEMA ESCURO --- */
         [data-bs-theme="dark"] body {
             background-image: 
-                linear-gradient(to bottom, rgba(10, 10, 10, 0) 50%, rgba(10, 10, 10, 0.7) 51%),
+                /* Efeito de gradiente aurora que se move */
                 radial-gradient(at 15% 85%, hsla(210, 100%, 50%, 0.15), transparent 40%),
                 radial-gradient(at 85% 15%, hsla(265, 88%, 60%, 0.15), transparent 40%),
+                /* Brilho central sutil */
                 radial-gradient(ellipse at center, rgba(10, 132, 255, 0.1), transparent 70%),
+                /* Linhas de grid diagonais */
                 linear-gradient(30deg, transparent 49.5%, rgba(10, 132, 255, 0.08) 50%, transparent 50.5%),
                 linear-gradient(150deg, transparent 49.5%, rgba(10, 132, 255, 0.08) 50%, transparent 50.5%),
+                /* Linhas de grid retas */
                 linear-gradient(90deg, transparent 49.5%, rgba(10, 132, 255, 0.08) 50%, transparent 50.5%);
-            background-size: 100% 4px, 150% 150%, 150% 150%, 100% 100%, 86px 50px, 86px 50px, 86px 50px;
-            animation: move-aurora-glow 20s ease-in-out infinite, scanline 10s linear infinite;
+            background-size: 150% 150%, 150% 150%, 100% 100%, 86px 50px, 86px 50px, 86px 50px;
+            animation: move-aurora-glow 20s ease-in-out infinite;
         }
 
         /* --- Fundo para Tema Claro (mais sutil) --- */
@@ -96,10 +99,10 @@
             animation: move-aurora-glow 20s ease-in-out infinite;
         }
 
-        /* --- Melhorias Gerais --- */
+        /* --- MELHORIAS GERAIS --- */
         body {
             background-color: var(--dark-bg);
-            background-repeat: repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, repeat;
+            background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat, repeat;
             background-attachment: fixed;
             font-family: 'Inter', sans-serif;
             color: var(--dark-text-primary);
@@ -115,24 +118,24 @@
 
         h1, h2, h3, h4, h5 { font-weight: 700; letter-spacing: -0.5px; }
 
-        /* --- Tipografia Responsiva (Valores ajustados para uma aparência mais compacta e profissional) --- */
+        /* --- TIPOGRAFIA RESPONSIVA (Valores ajustados para uma aparência mais compacta e profissional) --- */
         h1.h2 { font-size: clamp(1.1rem, 1.8vw, 1.3rem); } /* Reduzido */
         h3 { font-size: clamp(0.9rem, 1.5vw, 1.05rem); } /* Reduzido */
         .card-title.h5, .modal-title { font-size: clamp(0.8rem, 1.1vw, 0.9rem); } /* Reduzido */
         #sidebar .fs-4 { font-size: clamp(0.9rem, 1.4vw, 1.05rem); } /* Reduzido */
 
 
-        /* --- Animações --- */
+        /* --- ANIMAÇÕES --- */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes glow {
-            0% { box-shadow: 0 0 8px var(--dark-primary-glow); }
-            50% { box-shadow: 0 0 25px var(--dark-primary-glow), 0 0 15px var(--dark-primary-glow); }
-            100% { box-shadow: 0 0 8px var(--dark-primary-glow); }
+            0% { box-shadow: 0 0 8px var(--dark-primary-glow), 0 0 10px var(--dark-accent-glow); }
+            50% { box-shadow: 0 0 25px var(--dark-primary-glow), 0 0 35px var(--dark-accent-glow); }
+            100% { box-shadow: 0 0 8px var(--dark-primary-glow), 0 0 10px var(--dark-accent-glow); }
         }
-        .animated-entry { animation: fadeIn 0.6s ease-out forwards; }
+        .animated-entry { animation: fadeIn 0.6s ease-out forwards; opacity: 0; /* Garante que comece invisível */ }
         .animated-entry:nth-child(1) { animation-delay: 0.1s; }
         .animated-entry:nth-child(2) { animation-delay: 0.2s; }
         .animated-entry:nth-child(3) { animation-delay: 0.3s; }
@@ -140,7 +143,7 @@
         .animated-entry:nth-child(5) { animation-delay: 0.5s; }
         .animated-entry:nth-child(6) { animation-delay: 0.6s; }
 
-        /* --- Layout Principal --- */
+        /* --- LAYOUT PRINCIPAL --- */
         #main-content {
             display: flex;
             flex-direction: column;
@@ -154,7 +157,6 @@
         }
 
         .main-view {
-            /* display: none; */ /* Alterado para permitir transição */
             min-width: 0;
             opacity: 0;
             visibility: hidden;
@@ -168,7 +170,7 @@
 
         #sidebar {
             width: clamp(250px, 16vw, 300px);
-            height: 100vh; /* Alterado de min-height para height */
+            height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
@@ -177,12 +179,12 @@
             backdrop-filter: blur(var(--backdrop-blur));
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
             border-right: 1px solid var(--dark-border);
-            transition: all 0.4s ease; /* Animação fluida para width e padding */
+            transition: all 0.4s ease;
             display: flex;
             flex-direction: column;
         }
 
-        /* --- Nova Estrutura da Sidebar --- */
+        /* --- ESTRUTURA DA SIDEBAR --- */
         #sidebar-process-section {
             border-bottom: 1px solid var(--dark-border);
             padding: 0 1rem 0.75rem 1rem; /* Padding ajustado */
@@ -205,7 +207,7 @@
             text-shadow: 0 0 10px var(--dark-accent-glow);
         }
         #sidebar .sidebar-step { margin-bottom: 1rem; }
-        #sidebar .step-number { /* Tamanho do número do passo reduzido */
+        #sidebar .step-number {
             background-color: var(--dark-primary);
             color: white;
             border-radius: 50%;
@@ -219,18 +221,18 @@
             margin-right: 0.5rem;
         }
         #sidebar .form-label { 
-            font-weight: 500; color: var(--dark-text-secondary); 
-            font-size: 0.85rem; /* Menor */
+            font-weight: 500; 
+            color: var(--dark-text-secondary); 
+            font-size: 0.85rem;
         }
         #sidebar .nav-link {
             color: var(--dark-text-secondary);
             font-weight: 500; font-size: 0.9rem;
-            padding: 0.6rem 1rem; /* Padding reduzido */
+            padding: 0.6rem 1rem;
             border-radius: 0.5rem;
             position: relative;
             transition: all 0.3s ease;
-            white-space: nowrap; /* Impede que o texto quebre linha durante a animação */
-            border-left: 3px solid transparent; /* Indicador lateral */
+            border-left: 3px solid transparent;
             display: flex; 
             align-items: center; /* Adicionado para alinhar ícone e texto */
         }
@@ -250,7 +252,7 @@
             border-left-color: var(--dark-primary);
         }
 
-        /* --- Estilos para o Novo Logo Animado --- */
+        /* --- ESTILOS PARA O NOVO LOGO ANIMADO --- */
         #logo-container {
             width: 48px; /* Tamanho do container do logo */
             height: 48px;
@@ -267,7 +269,7 @@
             stroke-linejoin: round;
             fill: none;
             stroke-dasharray: 200; /* Comprimento para a animação de desenho */
-            stroke-dashoffset: 200;
+            stroke-dashoffset: 200; /* Começa "não desenhado" */
             animation: draw-line 2s ease-out forwards;
         }
         #animated-logo:hover .logo-line {
@@ -288,7 +290,7 @@
         #animated-logo #line-2 { animation-delay: 0.2s; }
         #animated-logo #line-3 { animation-delay: 0.4s; }
 
-        /* --- Estilo para Submenu na Sidebar --- */
+        /* --- ESTILO PARA SUBMENU NA SIDEBAR --- */
         #sidebar .nav-link .submenu-arrow {
             transition: transform 0.3s ease;
             float: right;
@@ -308,14 +310,14 @@
             border-color: rgba(120, 111, 255, 0.1); /* HR mais sutil */
         }
 
-        /* --- Novo Rodapé da Sidebar --- */
+        /* --- RODAPÉ DA SIDEBAR --- */
         #sidebar-footer {
             border-top: 1px solid var(--dark-border);
             padding: 0.75rem;
             margin-top: auto; /* Empurra o rodapé para o final */
         }
 
-        /* --- Estilos para Sidebar Recolhida --- */
+        /* --- ESTILOS PARA SIDEBAR RECOLHIDA --- */
         .sidebar-collapsed #sidebar {
             width: 88px; /* Largura suficiente para os ícones e padding */
         }
@@ -324,13 +326,13 @@
             width: calc(100% - 88px);
         }
         .sidebar-collapsed #sidebar .sidebar-header .fs-4,
-        .sidebar-collapsed #sidebar .nav-link span:not(.step-number), /* Oculta o texto dos links */
-        .sidebar-collapsed #sidebar .nav-link .submenu-arrow, /* Oculta a seta do submenu */
+        .sidebar-collapsed #sidebar .nav-link span:not(.step-number),
+        .sidebar-collapsed #sidebar .nav-link .submenu-arrow,
         .sidebar-collapsed #sidebar .form-label,
         .sidebar-collapsed #sidebar .form-check-label,
         .sidebar-collapsed #sidebar #sidebar-process-section,
-        .sidebar-collapsed #sidebar #sidebar-header-actions, /* Esconde os botões de ação */
         .sidebar-collapsed #sidebar .sidebar-header .badge,
+        .sidebar-collapsed #sidebar #sidebar-header-actions,
         .sidebar-collapsed #sidebar #sidebar-footer .btn span { /* Esconde texto dos botões no rodapé */
             display: none !important; /* Garante que os elementos sejam completamente removidos do layout */
         }
@@ -362,15 +364,14 @@
             overflow-y: hidden; /* Esconde a rolagem no modo recolhido */
         }
 
-        /* --- Estilo dos Cards --- */
-        /* Efeito de borda com gradiente no hover */
+        /* --- ESTILO DOS CARDS (COM EFEITO DE BORDA EM GRADIENTE) --- */
         .card {
             position: relative;
             background-color: var(--dark-surface);
             border: 1px solid var(--dark-border);
-            border-radius: 0.75rem; /* Raio da borda reduzido */
+            border-radius: 0.75rem;
             box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             overflow: hidden;
             backdrop-filter: blur(var(--backdrop-blur));
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
@@ -391,12 +392,12 @@
             -webkit-mask-composite: destination-out;
             mask-composite: exclude;
             opacity: 0;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.3s ease;
             pointer-events: none;
         }
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 40px var(--dark-primary-glow);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 30px var(--dark-primary-glow);
         }
         .card:hover::before {
             opacity: 1;
@@ -406,9 +407,9 @@
             background-color: var(--dark-surface-secondary);
             border-bottom: 1px solid var(--dark-border);
             font-weight: 600;
-            padding: 0.6rem 1rem; /* Padding reduzido */
+            padding: 0.6rem 1rem;
         }
-        .card-body { padding: 1rem; } /* Padding reduzido */
+        .card-body { padding: 1rem; }
 
         /* --- Ajuste para card de Pedidos Disponíveis rolável --- */
         #pedidos-disponiveis-card .card-body {
@@ -426,13 +427,13 @@
             overflow-y: auto;
         }
 
-        /* --- Botões e Controles --- */
+        /* --- BOTÕES E CONTROLES --- */
         .btn {
             font-weight: 600;
-            font-size: 0.85rem; /* Menor */
+            font-size: 0.85rem;
             transition: all 0.3s ease-in-out;
             border-radius: 0.5rem;
-            padding: 0.4rem 0.8rem; /* Padding reduzido */
+            padding: 0.4rem 0.8rem;
         }
         .btn:hover {
             transform: translateY(-1px); /* Efeito mais sutil */
@@ -441,7 +442,7 @@
         .btn-primary {
             background: linear-gradient(45deg, var(--dark-primary), var(--dark-accent-secondary));
             border: none;
-            box-shadow: 0 0 20px rgba(255, 0, 229, 0.4);
+            box-shadow: 0 0 15px var(--dark-accent-glow);
         }
         .btn-primary#processarBtn {
             animation: glow 2s ease-in-out infinite;
@@ -451,17 +452,18 @@
         .btn-primary:hover { box-shadow: 0 4px 20px var(--dark-primary-glow); }
         .form-control, .form-select {
             background-color: var(--dark-surface-secondary);
-            border: 1px solid var(--dark-border); font-size: 0.85rem; /* Menor */
+            border: 1px solid var(--dark-border); 
+            font-size: 0.85rem;
             color: var(--dark-text-primary);
         }
         .form-control:focus, .form-select:focus {
             background-color: var(--dark-surface-secondary);
             border-color: var(--dark-primary);
-            box-shadow: 0 0 0 .2rem var(--dark-primary-glow); /* Sombra de foco reduzida */
+            box-shadow: 0 0 0 .2rem var(--dark-primary-glow);
             color: var(--dark-text-primary);
         }
         
-        /* --- Componentes --- */
+        /* --- COMPONENTES --- */
         .modal-content { /* Modal mais compacto */
             font-size: 0.9rem;
             background-color: var(--dark-surface);
@@ -487,7 +489,7 @@
         .accordion-button:not(.collapsed) {
             background: linear-gradient(45deg, var(--dark-primary), var(--dark-accent));
             color: white;
-            box-shadow: 0 0 15px var(--dark-primary-glow); /* Faltava o fechamento do comentário aqui */
+            box-shadow: 0 0 15px var(--dark-primary-glow);
         }
         .accordion-button::after { /* Ícone de seta do Bootstrap */
             transition: transform 0.3s ease-in-out; /* Suaviza a rotação do ícone */
@@ -509,10 +511,10 @@
         tbody td { padding: 0.4rem 0.75rem; vertical-align: middle; font-size: 0.85rem; } /* Padding e fonte reduzidos */
         tbody tr { transition: background-color 0.2s ease; }
 
-        .nav-tabs .nav-link { /* Abas mais compactas */
+        .nav-tabs .nav-link {
             color: var(--dark-text-secondary);
             border: none;
-            border-bottom: 3px solid transparent; /* Transição na borda */
+            border-bottom: 3px solid transparent;
             font-weight: 600;
             padding: 0.5rem 0.8rem; /* Menor */
             transition: all 0.3s ease;
@@ -525,12 +527,12 @@
         .tab-content {
             background-color: var(--dark-surface);
             border: 1px solid var(--dark-border);
-            border-top: none;
-            border-radius: 0 0 0.75rem 0.75rem; /* Menor */
-            padding: 1rem; /* Padding reduzido */
+            border-top: none; /* Remove a borda superior para se conectar às abas */
+            border-radius: 0 0 0.75rem 0.75rem;
+            padding: 1rem;
         }
 
-        /* Melhoria de Usabilidade */
+        /* MELHORIA DE USABILIDADE */
         .empty-state {
             text-align: center;
             padding: 2rem;
@@ -548,7 +550,7 @@
             background-color: rgba(10, 132, 255, 0.2) !important; /* Azul mais escuro e visível para o tema claro */
         }
         
-        /* --- Correções e Padronização para o Tema Claro --- */
+        /* --- CORREÇÕES E PADRONIZAÇÃO PARA O TEMA CLARO --- */
         [data-bs-theme="light"] .table {
             --bs-table-striped-bg: #f0f2f5; /* Cinza mais sutil para linhas de tabela */
         }
@@ -568,7 +570,7 @@
             box-shadow: 0 0 25px var(--dark-primary-glow);
         }
 
-        /* --- Melhorias de Usabilidade para Drag & Drop --- */
+        /* --- MELHORIAS DE USABILIDADE PARA DRAG & DROP --- */
         @keyframes shake-horizontal {
           0%, 100% { transform: translateX(0); }
           10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
@@ -589,7 +591,7 @@
             animation: flash-success 0.7s ease-out;
         }
 
-        /* --- Melhoria de Usabilidade: Menu de Contexto --- */
+        /* --- MELHORIA DE USABILIDADE: MENU DE CONTEXTO --- */
         #context-menu {
             position: absolute;
             display: none;
@@ -606,7 +608,7 @@
             display: none;
         }
 
-        /* --- Responsividade --- */
+        /* --- RESPONSIVIDADE --- */
         @media (max-width: 992px) {
             body { display: flex; flex-direction: column; }
             #sidebar {
@@ -621,12 +623,12 @@
             #main-content { margin-left: 0; width: 100%; }
         }
         
-        /* Classe para a view ativa */
+        /* CLASSE PARA A VIEW ATIVA */
         .main-view.active-view {
             opacity: 1;
             visibility: visible;
         }
-        /* --- Estilos de Impressão (Ajustes para tabelas mais compactas) --- */
+        /* --- ESTILOS DE IMPRESSÃO (Ajustes para tabelas mais compactas) --- */
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             #main-content { margin-left: 0 !important; width: 100% !important; padding: 0 !important; }
@@ -642,7 +644,7 @@
             .bg-success, .bg-primary, .bg-danger { color: white !important; }
             .text-danger { color: #dc3545 !important; }
         }
-        /* --- Novas Cores para Rotas de Varejo --- */
+        /* --- NOVAS CORES PARA ROTAS DE VAREJO --- */
         .route-fiorino { border-left: 4px solid #28a745; }
         .route-van { border-left: 4px solid var(--dark-primary); }
         .route-tresQuartos { border-left: 4px solid #ffc107; }
@@ -664,7 +666,7 @@
         .legend-item .legend-color {
             margin-right: 0.5rem;
         }
-        /* --- Novas Cores para Acordeão de Rotas --- */
+        /* --- NOVAS CORES PARA ACORDEÃO DE ROTAS --- */
         .accordion-button.route-fiorino { border-left: 5px solid #28a745; }
         .accordion-button.route-van { border-left: 5px solid var(--dark-primary); }
         .accordion-button.route-tresQuartos { border-left: 5px solid #ffc107; }
@@ -673,7 +675,7 @@
     </style>
 </head>
     <style>
-        /* --- Estilos para o Novo Dashboard (Summary View) --- */
+        /* --- ESTILOS PARA O NOVO DASHBOARD (SUMMARY VIEW) --- */
         .stat-card {
             background: var(--dark-surface);
             border: 1px solid var(--dark-border);
@@ -720,7 +722,7 @@
         .stat-card.stat-alert-warning:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 193, 7, 0.5); border-color: #ffc107; }
     </style>
     <style>
-        /* --- Estilos para Notificações Toast --- */
+        /* --- ESTILOS PARA NOTIFICAÇÕES TOAST --- */
         .toast-container {
             z-index: 1100; /* Acima dos modais */
         }
@@ -745,14 +747,14 @@
 
     </style>
     <style>
-        /* --- Ajuste para rolagem na Mesa de Trabalho --- */
+        /* --- AJUSTE PARA ROLAGEM NA MESA DE TRABALHO --- */
         #vehicleTabsContent {
             max-height: calc(100vh - 280px); /* Altura dinâmica baseada na altura da tela */
             overflow-y: auto;
         }
     </style>
     <style>
-        /* --- Estilos para o Novo Layout do Dashboard de Resumo --- */
+        /* --- ESTILOS PARA O NOVO LAYOUT DO DASHBOARD DE RESUMO --- */
         .kpi-card-main {
             background: linear-gradient(145deg, var(--dark-surface-secondary), var(--dark-surface));
             border: 1px solid var(--dark-border);
@@ -770,7 +772,7 @@
     </style>
 
     <style>
-        /* --- Animação de Carregamento V5 - "Synaptic Core" --- */
+        /* --- ANIMAÇÃO DE CARREGAMENTO V5 - "SYNAPTIC CORE" --- */
         .loading-animation-container {
             position: relative;
             width: 100%;
@@ -879,7 +881,7 @@
                 <div class="sidebar-header d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
                         <div id="logo-container">
-                            <svg id="animated-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <svg id="animated-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="cursor: pointer;" onclick="location.reload()">
                                 <defs><linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:var(--dark-accent-secondary);" /><stop offset="100%" style="stop-color:var(--dark-primary);" /></linearGradient></defs>
                                 <path id="line-1" class="logo-line" d="M50 10 L90 30 L90 70 L50 90"></path>
                                 <path id="line-2" class="logo-line" d="M50 10 L10 30 L10 70 L50 90"></path>
