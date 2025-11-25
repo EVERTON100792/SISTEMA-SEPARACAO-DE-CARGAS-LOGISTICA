@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Separação de Cargas Otimizado</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='grad1' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:%230A84FF;stop-opacity:1' /><stop offset='100%' style='stop-color:%235E5CE6;stop-opacity:1' /></linearGradient></defs><path d='M50 2 L95 25 L95 75 L50 98 L5 75 L5 25 Z' fill='url(%23grad1)' /><text x='50' y='72' font-family='Arial, sans-serif' font-size='60' font-weight='bold' fill='white' text-anchor='middle'>A</text></svg>">
+    <title>ApexLog - Dashboard de Separação de Cargas</title>
+    <!-- Ícone principal para a aba do navegador e atalhos -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='grad1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%230A84FF'/><stop offset='100%25' stop-color='%235E5CE6'/></linearGradient></defs><rect width='90' height='90' x='5' y='5' rx='15' fill='url(%23grad1)'/><path d='M50 20 L25 80 L37 80 L45 60 L55 60 L63 80 L75 80 Z' fill='rgba(255,255,255,0.2)'/><path d='M50 25 L35 75 L42 75 L50 55 L58 75 L65 75 Z' fill='white'/></svg>">
+    <!-- Ícones adicionais para melhor integração com o sistema (PWA / "Instalar como App") -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='grad1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%230A84FF'/><stop offset='100%25' stop-color='%235E5CE6'/></linearGradient></defs><rect width='90' height='90' x='5' y='5' rx='15' fill='url(%23grad1)'/><path d='M50 20 L25 80 L37 80 L45 60 L55 60 L63 80 L75 80 Z' fill='rgba(255,255,255,0.2)'/><path d='M50 25 L35 75 L42 75 L50 55 L58 75 L65 75 Z' fill='white'/></svg>">
+    <meta name="apple-mobile-web-app-title" content="ApexLog">
+    <meta name="application-name" content="ApexLog">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -22,64 +27,83 @@
 
     <style>
         :root {
-            /* Paleta de Cores "Onyx" */
-            --dark-bg: #0a0a0a;
-            --dark-surface: rgba(28, 28, 30, 0.7);
-            --dark-surface-secondary: rgba(44, 44, 46, 0.8);
-            --dark-border: rgba(72, 72, 74, 0.5);
+            /* Paleta de Cores "Onyx" - REFINADA */
+            --dark-bg: #0a0a0a; /* Fundo principal super escuro */
+            --dark-surface: rgba(28, 28, 30, 0.7); /* Superfície principal com transparência para o efeito de vidro */
+            --dark-surface-secondary: rgba(44, 44, 46, 0.8); /* Superfície secundária, um pouco mais opaca */
+            --dark-border: rgba(72, 72, 74, 0.5); /* Borda sutil e semi-transparente */
             --dark-primary: #0A84FF;
             --dark-primary-hover: #3399FF;
-            --dark-primary-glow: rgba(10, 132, 255, 0.3);
+            --dark-primary-glow: rgba(10, 132, 255, 0.3); /* Cor para efeitos de brilho */
             --dark-accent: #5E5CE6;
             --dark-accent-secondary: #BF5AF2;
-            --dark-accent-glow: rgba(94, 92, 230, 0.3);
+            --dark-accent-glow: rgba(94, 92, 230, 0.3); /* Cor de brilho para o acento */
             --dark-text-primary: #FFFFFF;
             --dark-text-secondary: #8A8A8E;
-            --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); /* Sombra padrão */
+            --backdrop-blur: 10px; /* Intensidade do desfoque de fundo */
+        }
+
+        /* --- NOVO: Variáveis para o Tema Claro --- */
+        [data-bs-theme="light"] {
+            --dark-bg: #f8f9fa; /* Um cinza muito claro para o fundo geral */
+            --dark-surface: #ffffff; /* Branco para a superfície principal (cards, modais) */
+            --dark-surface-secondary: #e9ecef; /* Um cinza um pouco mais escuro para cabeçalhos e elementos secundários */
+            --dark-border: #dee2e6;
+            --dark-primary: #0A84FF;
+            --dark-primary-hover: #0069d9;
+            --dark-primary-glow: rgba(10, 132, 255, 0.2);
+            --dark-accent: #5E5CE6;
+            --dark-accent-secondary: #BF5AF2;
+            --dark-accent-glow: rgba(94, 92, 230, 0.2);
+            --dark-text-primary: #212529;
+            --dark-text-secondary: #6c757d;
+            --box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.05);
             --backdrop-blur: 10px;
         }
 
-        /* --- Novas Animações de Fundo Cyber --- */
+        /* --- NOVAS ANIMAÇÕES DE FUNDO --- */
         @keyframes move-aurora-glow {
             0% { background-position: 0% 50%, 50% 50%; }
             50% { background-position: 100% 50%, 50% 50%; }
             100% { background-position: 0% 50%, 50% 50%; }
         }
         @keyframes scanline {
-            0% { background-position: 0 0; }
-            100% { background-position: 0 100%; }
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50px); }
         }
 
-        /* --- Melhorias Gerais --- */
-        body {
-            background-color: var(--dark-bg);
-            /* Novo Fundo Cyberpunk com Hexágonos e Scanlines */
+        /* --- NOVO FUNDO ANIMADO PARA TEMA ESCURO --- */
+        [data-bs-theme="dark"] body {
             background-image: 
-                /* 1. Scanlines (frente) */
-                linear-gradient(to bottom, rgba(10, 10, 10, 0) 50%, rgba(10, 10, 10, 0.7) 51%),
-                /* 2. Brilho Aurora (meio) */
+                /* Efeito de gradiente aurora que se move */
                 radial-gradient(at 15% 85%, hsla(210, 100%, 50%, 0.15), transparent 40%),
                 radial-gradient(at 85% 15%, hsla(265, 88%, 60%, 0.15), transparent 40%),
-                /* 3. Brilho Central Pulsante (meio) */
+                /* Brilho central sutil */
                 radial-gradient(ellipse at center, rgba(10, 132, 255, 0.1), transparent 70%),
-                /* 4. Hexágonos (fundo) */
+                /* Linhas de grid diagonais */
                 linear-gradient(30deg, transparent 49.5%, rgba(10, 132, 255, 0.08) 50%, transparent 50.5%),
                 linear-gradient(150deg, transparent 49.5%, rgba(10, 132, 255, 0.08) 50%, transparent 50.5%),
+                /* Linhas de grid retas */
                 linear-gradient(90deg, transparent 49.5%, rgba(10, 132, 255, 0.08) 50%, transparent 50.5%);
-            background-size: 
-                100% 4px, /* Scanlines */
-                150% 150%, /* Aurora 1 */
-                150% 150%, /* Aurora 2 */
-                100% 100%, /* Brilho Central */
-                86px 50px, /* Hex 1 */
-                86px 50px, /* Hex 2 */
-                86px 50px; /* Hex 3 */
-            background-repeat: repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, repeat;
-            background-attachment: fixed;
-            animation: 
-                move-aurora-glow 20s ease-in-out infinite,
-                scanline 10s linear infinite;
+            background-size: 150% 150%, 150% 150%, 100% 100%, 86px 50px, 86px 50px, 86px 50px;
+            animation: move-aurora-glow 20s ease-in-out infinite;
+        }
 
+        /* --- Fundo para Tema Claro (mais sutil) --- */
+        [data-bs-theme="light"] body {
+            background-image: 
+                radial-gradient(at 15% 85%, hsla(210, 100%, 50%, 0.05), transparent 50%),
+                radial-gradient(at 85% 15%, hsla(265, 88%, 60%, 0.05), transparent 50%);
+            background-size: 150% 150%, 150% 150%;
+            animation: move-aurora-glow 20s ease-in-out infinite;
+        }
+
+        /* --- MELHORIAS GERAIS --- */
+        body {
+            background-color: var(--dark-bg);
+            background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat, repeat;
+            background-attachment: fixed;
             font-family: 'Inter', sans-serif;
             color: var(--dark-text-primary);
             text-rendering: optimizeLegibility;
@@ -94,24 +118,24 @@
 
         h1, h2, h3, h4, h5 { font-weight: 700; letter-spacing: -0.5px; }
 
-        /* --- Tipografia Responsiva (Valores ajustados para uma aparência mais compacta e profissional) --- */
+        /* --- TIPOGRAFIA RESPONSIVA (Valores ajustados para uma aparência mais compacta e profissional) --- */
         h1.h2 { font-size: clamp(1.1rem, 1.8vw, 1.3rem); } /* Reduzido */
         h3 { font-size: clamp(0.9rem, 1.5vw, 1.05rem); } /* Reduzido */
         .card-title.h5, .modal-title { font-size: clamp(0.8rem, 1.1vw, 0.9rem); } /* Reduzido */
         #sidebar .fs-4 { font-size: clamp(0.9rem, 1.4vw, 1.05rem); } /* Reduzido */
 
 
-        /* --- Animações --- */
+        /* --- ANIMAÇÕES --- */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes glow {
-            0% { box-shadow: 0 0 8px var(--dark-primary-glow); }
-            50% { box-shadow: 0 0 25px var(--dark-primary-glow), 0 0 15px var(--dark-primary-glow); }
-            100% { box-shadow: 0 0 8px var(--dark-primary-glow); }
+            0% { box-shadow: 0 0 8px var(--dark-primary-glow), 0 0 10px var(--dark-accent-glow); }
+            50% { box-shadow: 0 0 25px var(--dark-primary-glow), 0 0 35px var(--dark-accent-glow); }
+            100% { box-shadow: 0 0 8px var(--dark-primary-glow), 0 0 10px var(--dark-accent-glow); }
         }
-        .animated-entry { animation: fadeIn 0.6s ease-out forwards; }
+        .animated-entry { animation: fadeIn 0.6s ease-out forwards; opacity: 0; /* Garante que comece invisível */ }
         .animated-entry:nth-child(1) { animation-delay: 0.1s; }
         .animated-entry:nth-child(2) { animation-delay: 0.2s; }
         .animated-entry:nth-child(3) { animation-delay: 0.3s; }
@@ -119,7 +143,7 @@
         .animated-entry:nth-child(5) { animation-delay: 0.5s; }
         .animated-entry:nth-child(6) { animation-delay: 0.6s; }
 
-        /* --- Layout Principal --- */
+        /* --- LAYOUT PRINCIPAL --- */
         #main-content {
             display: flex;
             flex-direction: column;
@@ -133,7 +157,6 @@
         }
 
         .main-view {
-            /* display: none; */ /* Alterado para permitir transição */
             min-width: 0;
             opacity: 0;
             visibility: hidden;
@@ -147,7 +170,7 @@
 
         #sidebar {
             width: clamp(250px, 16vw, 300px);
-            height: 100vh; /* Alterado de min-height para height */
+            height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
@@ -156,12 +179,12 @@
             backdrop-filter: blur(var(--backdrop-blur));
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
             border-right: 1px solid var(--dark-border);
-            transition: all 0.4s ease; /* Animação fluida para width e padding */
+            transition: all 0.4s ease;
             display: flex;
             flex-direction: column;
         }
 
-        /* --- Nova Estrutura da Sidebar --- */
+        /* --- ESTRUTURA DA SIDEBAR --- */
         #sidebar-process-section {
             border-bottom: 1px solid var(--dark-border);
             padding: 0 1rem 0.75rem 1rem; /* Padding ajustado */
@@ -184,7 +207,7 @@
             text-shadow: 0 0 10px var(--dark-accent-glow);
         }
         #sidebar .sidebar-step { margin-bottom: 1rem; }
-        #sidebar .step-number { /* Tamanho do número do passo reduzido */
+        #sidebar .step-number {
             background-color: var(--dark-primary);
             color: white;
             border-radius: 50%;
@@ -198,18 +221,18 @@
             margin-right: 0.5rem;
         }
         #sidebar .form-label { 
-            font-weight: 500; color: var(--dark-text-secondary); 
-            font-size: 0.85rem; /* Menor */
+            font-weight: 500; 
+            color: var(--dark-text-secondary); 
+            font-size: 0.85rem;
         }
         #sidebar .nav-link {
             color: var(--dark-text-secondary);
             font-weight: 500; font-size: 0.9rem;
-            padding: 0.6rem 1rem; /* Padding reduzido */
+            padding: 0.6rem 1rem;
             border-radius: 0.5rem;
             position: relative;
             transition: all 0.3s ease;
-            white-space: nowrap; /* Impede que o texto quebre linha durante a animação */
-            border-left: 3px solid transparent; /* Indicador lateral */
+            border-left: 3px solid transparent;
             display: flex; 
             align-items: center; /* Adicionado para alinhar ícone e texto */
         }
@@ -222,14 +245,14 @@
             border-left-color: var(--dark-primary-hover);
         }
         #sidebar .nav-link.active {
-            background: linear-gradient(90deg, rgba(139, 132, 255, 0.2), transparent);
-            color: white;
+            background: linear-gradient(90deg, var(--dark-primary-glow), transparent);
+            color: var(--dark-text-primary);
             font-weight: 600;
             box-shadow: 0 0 20px var(--dark-primary-glow);
             border-left-color: var(--dark-primary);
         }
 
-        /* --- Estilos para o Novo Logo Animado --- */
+        /* --- ESTILOS PARA O NOVO LOGO ANIMADO --- */
         #logo-container {
             width: 48px; /* Tamanho do container do logo */
             height: 48px;
@@ -246,7 +269,7 @@
             stroke-linejoin: round;
             fill: none;
             stroke-dasharray: 200; /* Comprimento para a animação de desenho */
-            stroke-dashoffset: 200;
+            stroke-dashoffset: 200; /* Começa "não desenhado" */
             animation: draw-line 2s ease-out forwards;
         }
         #animated-logo:hover .logo-line {
@@ -267,7 +290,7 @@
         #animated-logo #line-2 { animation-delay: 0.2s; }
         #animated-logo #line-3 { animation-delay: 0.4s; }
 
-        /* --- Estilo para Submenu na Sidebar --- */
+        /* --- ESTILO PARA SUBMENU NA SIDEBAR --- */
         #sidebar .nav-link .submenu-arrow {
             transition: transform 0.3s ease;
             float: right;
@@ -287,14 +310,14 @@
             border-color: rgba(120, 111, 255, 0.1); /* HR mais sutil */
         }
 
-        /* --- Novo Rodapé da Sidebar --- */
+        /* --- RODAPÉ DA SIDEBAR --- */
         #sidebar-footer {
             border-top: 1px solid var(--dark-border);
             padding: 0.75rem;
             margin-top: auto; /* Empurra o rodapé para o final */
         }
 
-        /* --- Estilos para Sidebar Recolhida --- */
+        /* --- ESTILOS PARA SIDEBAR RECOLHIDA --- */
         .sidebar-collapsed #sidebar {
             width: 88px; /* Largura suficiente para os ícones e padding */
         }
@@ -303,13 +326,13 @@
             width: calc(100% - 88px);
         }
         .sidebar-collapsed #sidebar .sidebar-header .fs-4,
-        .sidebar-collapsed #sidebar .nav-link span:not(.step-number), /* Oculta o texto dos links */
-        .sidebar-collapsed #sidebar .nav-link .submenu-arrow, /* Oculta a seta do submenu */
+        .sidebar-collapsed #sidebar .nav-link span:not(.step-number),
+        .sidebar-collapsed #sidebar .nav-link .submenu-arrow,
         .sidebar-collapsed #sidebar .form-label,
         .sidebar-collapsed #sidebar .form-check-label,
         .sidebar-collapsed #sidebar #sidebar-process-section,
-        .sidebar-collapsed #sidebar #sidebar-header-actions, /* Esconde os botões de ação */
         .sidebar-collapsed #sidebar .sidebar-header .badge,
+        .sidebar-collapsed #sidebar #sidebar-header-actions,
         .sidebar-collapsed #sidebar #sidebar-footer .btn span { /* Esconde texto dos botões no rodapé */
             display: none !important; /* Garante que os elementos sejam completamente removidos do layout */
         }
@@ -341,15 +364,14 @@
             overflow-y: hidden; /* Esconde a rolagem no modo recolhido */
         }
 
-        /* --- Estilo dos Cards --- */
-        /* Efeito de borda com gradiente no hover */
+        /* --- ESTILO DOS CARDS (COM EFEITO DE BORDA EM GRADIENTE) --- */
         .card {
             position: relative;
             background-color: var(--dark-surface);
             border: 1px solid var(--dark-border);
-            border-radius: 0.75rem; /* Raio da borda reduzido */
+            border-radius: 0.75rem;
             box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             overflow: hidden;
             backdrop-filter: blur(var(--backdrop-blur));
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
@@ -370,12 +392,12 @@
             -webkit-mask-composite: destination-out;
             mask-composite: exclude;
             opacity: 0;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.3s ease;
             pointer-events: none;
         }
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 40px var(--dark-primary-glow);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 30px var(--dark-primary-glow);
         }
         .card:hover::before {
             opacity: 1;
@@ -385,9 +407,9 @@
             background-color: var(--dark-surface-secondary);
             border-bottom: 1px solid var(--dark-border);
             font-weight: 600;
-            padding: 0.6rem 1rem; /* Padding reduzido */
+            padding: 0.6rem 1rem;
         }
-        .card-body { padding: 1rem; } /* Padding reduzido */
+        .card-body { padding: 1rem; }
 
         /* --- Ajuste para card de Pedidos Disponíveis rolável --- */
         #pedidos-disponiveis-card .card-body {
@@ -405,13 +427,13 @@
             overflow-y: auto;
         }
 
-        /* --- Botões e Controles --- */
+        /* --- BOTÕES E CONTROLES --- */
         .btn {
             font-weight: 600;
-            font-size: 0.85rem; /* Menor */
+            font-size: 0.85rem;
             transition: all 0.3s ease-in-out;
             border-radius: 0.5rem;
-            padding: 0.4rem 0.8rem; /* Padding reduzido */
+            padding: 0.4rem 0.8rem;
         }
         .btn:hover {
             transform: translateY(-1px); /* Efeito mais sutil */
@@ -420,7 +442,7 @@
         .btn-primary {
             background: linear-gradient(45deg, var(--dark-primary), var(--dark-accent-secondary));
             border: none;
-            box-shadow: 0 0 20px rgba(255, 0, 229, 0.4);
+            box-shadow: 0 0 15px var(--dark-accent-glow);
         }
         .btn-primary#processarBtn {
             animation: glow 2s ease-in-out infinite;
@@ -430,17 +452,18 @@
         .btn-primary:hover { box-shadow: 0 4px 20px var(--dark-primary-glow); }
         .form-control, .form-select {
             background-color: var(--dark-surface-secondary);
-            border: 1px solid var(--dark-border); font-size: 0.85rem; /* Menor */
+            border: 1px solid var(--dark-border); 
+            font-size: 0.85rem;
             color: var(--dark-text-primary);
         }
         .form-control:focus, .form-select:focus {
             background-color: var(--dark-surface-secondary);
             border-color: var(--dark-primary);
-            box-shadow: 0 0 0 .2rem var(--dark-primary-glow); /* Sombra de foco reduzida */
+            box-shadow: 0 0 0 .2rem var(--dark-primary-glow);
             color: var(--dark-text-primary);
         }
         
-        /* --- Componentes --- */
+        /* --- COMPONENTES --- */
         .modal-content { /* Modal mais compacto */
             font-size: 0.9rem;
             background-color: var(--dark-surface);
@@ -466,7 +489,7 @@
         .accordion-button:not(.collapsed) {
             background: linear-gradient(45deg, var(--dark-primary), var(--dark-accent));
             color: white;
-            box-shadow: 0 0 15px var(--dark-primary-glow); /* Faltava o fechamento do comentário aqui */
+            box-shadow: 0 0 15px var(--dark-primary-glow);
         }
         .accordion-button::after { /* Ícone de seta do Bootstrap */
             transition: transform 0.3s ease-in-out; /* Suaviza a rotação do ícone */
@@ -474,7 +497,11 @@
         .accordion-button:focus { box-shadow: 0 0 0 .2rem var(--dark-primary-glow); }
         .accordion-body { background-color: var(--dark-surface); }
         
-        .table { --bs-table-hover-bg: rgba(106, 90, 205, 0.15); }
+        .table { 
+            --bs-table-bg: transparent; /* Fundo transparente para herdar do card */
+            --bs-table-striped-bg: rgba(120, 111, 255, 0.04);
+            --bs-table-hover-bg: rgba(120, 111, 255, 0.1);
+        }
         thead th { /* Cabeçalho da tabela com a nova cor primária */
             background-color: var(--dark-surface-secondary);
             font-weight: 600; font-size: 0.85rem;
@@ -484,10 +511,10 @@
         tbody td { padding: 0.4rem 0.75rem; vertical-align: middle; font-size: 0.85rem; } /* Padding e fonte reduzidos */
         tbody tr { transition: background-color 0.2s ease; }
 
-        .nav-tabs .nav-link { /* Abas mais compactas */
+        .nav-tabs .nav-link {
             color: var(--dark-text-secondary);
             border: none;
-            border-bottom: 3px solid transparent; /* Transição na borda */
+            border-bottom: 3px solid transparent;
             font-weight: 600;
             padding: 0.5rem 0.8rem; /* Menor */
             transition: all 0.3s ease;
@@ -500,12 +527,12 @@
         .tab-content {
             background-color: var(--dark-surface);
             border: 1px solid var(--dark-border);
-            border-top: none;
-            border-radius: 0 0 0.75rem 0.75rem; /* Menor */
-            padding: 1rem; /* Padding reduzido */
+            border-top: none; /* Remove a borda superior para se conectar às abas */
+            border-radius: 0 0 0.75rem 0.75rem;
+            padding: 1rem;
         }
 
-        /* Melhoria de Usabilidade */
+        /* MELHORIA DE USABILIDADE */
         .empty-state {
             text-align: center;
             padding: 2rem;
@@ -516,15 +543,34 @@
         .empty-state .bi { font-size: 2.5rem; color: var(--dark-primary-glow); margin-bottom: 1rem; }
         
         tr.client-highlight > td {
-            background-color: rgba(120, 111, 255, 0.25) !important;
+            /* Cor de destaque diferente para cada tema para garantir visibilidade */
+            background-color: rgba(120, 111, 255, 0.2) !important;
+        }
+        [data-bs-theme="light"] tr.client-highlight > td {
+            background-color: rgba(10, 132, 255, 0.2) !important; /* Azul mais escuro e visível para o tema claro */
         }
         
+        /* --- CORREÇÕES E PADRONIZAÇÃO PARA O TEMA CLARO --- */
+        [data-bs-theme="light"] .table {
+            --bs-table-striped-bg: #f0f2f5; /* Cinza mais sutil para linhas de tabela */
+        }
+        [data-bs-theme="light"] .btn-outline-light {
+            --bs-btn-color: #6c757d;
+            --bs-btn-border-color: #6c757d;
+            --bs-btn-hover-bg: #6c757d;
+            --bs-btn-hover-color: #fff;
+        }
+        [data-bs-theme="light"] .badge.bg-light.text-dark {
+            background-color: var(--dark-surface-secondary) !important;
+            color: var(--dark-text-primary) !important;
+        }
+
         .drop-zone-card.drag-over {
             border: 2px dashed var(--dark-primary);
             box-shadow: 0 0 25px var(--dark-primary-glow);
         }
 
-        /* --- Melhorias de Usabilidade para Drag & Drop --- */
+        /* --- MELHORIAS DE USABILIDADE PARA DRAG & DROP --- */
         @keyframes shake-horizontal {
           0%, 100% { transform: translateX(0); }
           10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
@@ -545,7 +591,7 @@
             animation: flash-success 0.7s ease-out;
         }
 
-        /* --- Melhoria de Usabilidade: Menu de Contexto --- */
+        /* --- MELHORIA DE USABILIDADE: MENU DE CONTEXTO --- */
         #context-menu {
             position: absolute;
             display: none;
@@ -562,7 +608,7 @@
             display: none;
         }
 
-        /* --- Responsividade --- */
+        /* --- RESPONSIVIDADE --- */
         @media (max-width: 992px) {
             body { display: flex; flex-direction: column; }
             #sidebar {
@@ -577,12 +623,12 @@
             #main-content { margin-left: 0; width: 100%; }
         }
         
-        /* Classe para a view ativa */
+        /* CLASSE PARA A VIEW ATIVA */
         .main-view.active-view {
             opacity: 1;
             visibility: visible;
         }
-        /* --- Estilos de Impressão (Ajustes para tabelas mais compactas) --- */
+        /* --- ESTILOS DE IMPRESSÃO (Ajustes para tabelas mais compactas) --- */
         @media print {
             body { background-color: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             #main-content { margin-left: 0 !important; width: 100% !important; padding: 0 !important; }
@@ -598,7 +644,7 @@
             .bg-success, .bg-primary, .bg-danger { color: white !important; }
             .text-danger { color: #dc3545 !important; }
         }
-        /* --- Novas Cores para Rotas de Varejo --- */
+        /* --- NOVAS CORES PARA ROTAS DE VAREJO --- */
         .route-fiorino { border-left: 4px solid #28a745; }
         .route-van { border-left: 4px solid var(--dark-primary); }
         .route-tresQuartos { border-left: 4px solid #ffc107; }
@@ -620,7 +666,7 @@
         .legend-item .legend-color {
             margin-right: 0.5rem;
         }
-        /* --- Novas Cores para Acordeão de Rotas --- */
+        /* --- NOVAS CORES PARA ACORDEÃO DE ROTAS --- */
         .accordion-button.route-fiorino { border-left: 5px solid #28a745; }
         .accordion-button.route-van { border-left: 5px solid var(--dark-primary); }
         .accordion-button.route-tresQuartos { border-left: 5px solid #ffc107; }
@@ -629,7 +675,7 @@
     </style>
 </head>
     <style>
-        /* --- Estilos para o Novo Dashboard (Summary View) --- */
+        /* --- ESTILOS PARA O NOVO DASHBOARD (SUMMARY VIEW) --- */
         .stat-card {
             background: var(--dark-surface);
             border: 1px solid var(--dark-border);
@@ -676,14 +722,39 @@
         .stat-card.stat-alert-warning:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 193, 7, 0.5); border-color: #ffc107; }
     </style>
     <style>
-        /* --- Ajuste para rolagem na Mesa de Trabalho --- */
+        /* --- ESTILOS PARA NOTIFICAÇÕES TOAST --- */
+        .toast-container {
+            z-index: 1100; /* Acima dos modais */
+        }
+        .toast {
+            background-color: var(--dark-surface-secondary);
+            border: 1px solid var(--dark-border);
+            border-radius: 0.5rem;
+            box-shadow: var(--box-shadow);
+        }
+        .toast-header {
+            background-color: var(--dark-surface);
+            border-bottom: 1px solid var(--dark-border);
+            color: var(--dark-text-primary);
+        }
+        .toast-header .bi {
+            font-size: 1.2rem;
+        }
+        .toast.text-bg-success { background-color: rgba(25, 135, 84, 0.5) !important; backdrop-filter: blur(5px); }
+        .toast.text-bg-danger { background-color: rgba(220, 53, 69, 0.5) !important; backdrop-filter: blur(5px); }
+        .toast.text-bg-info { background-color: rgba(13, 202, 240, 0.5) !important; backdrop-filter: blur(5px); }
+        .toast.text-bg-warning { background-color: rgba(255, 193, 7, 0.5) !important; backdrop-filter: blur(5px); }
+
+    </style>
+    <style>
+        /* --- AJUSTE PARA ROLAGEM NA MESA DE TRABALHO --- */
         #vehicleTabsContent {
             max-height: calc(100vh - 280px); /* Altura dinâmica baseada na altura da tela */
             overflow-y: auto;
         }
     </style>
     <style>
-        /* --- Estilos para o Novo Layout do Dashboard de Resumo --- */
+        /* --- ESTILOS PARA O NOVO LAYOUT DO DASHBOARD DE RESUMO --- */
         .kpi-card-main {
             background: linear-gradient(145deg, var(--dark-surface-secondary), var(--dark-surface));
             border: 1px solid var(--dark-border);
@@ -701,7 +772,7 @@
     </style>
 
     <style>
-        /* --- Animação de Carregamento V5 - "Synaptic Core" --- */
+        /* --- ANIMAÇÃO DE CARREGAMENTO V5 - "SYNAPTIC CORE" --- */
         .loading-animation-container {
             position: relative;
             width: 100%;
@@ -804,13 +875,13 @@
     <div id="context-menu" class="dropdown-menu"></div>
     
     <div class="d-flex">
-        <nav id="sidebar" class="text-white no-print">
+        <nav id="sidebar" class="no-print text-body">
             <!-- Seção de Processo (Fixa no topo) -->
             <div id="sidebar-process-section">
                 <div class="sidebar-header d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
                         <div id="logo-container">
-                            <svg id="animated-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <svg id="animated-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="cursor: pointer;" onclick="location.reload()">
                                 <defs><linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:var(--dark-accent-secondary);" /><stop offset="100%" style="stop-color:var(--dark-primary);" /></linearGradient></defs>
                                 <path id="line-1" class="logo-line" d="M50 10 L90 30 L90 70 L50 90"></path>
                                 <path id="line-2" class="logo-line" d="M50 10 L10 30 L10 70 L50 90"></path>
@@ -888,7 +959,13 @@
             <div id="sidebar-footer" class="no-print">
                 <div class="d-grid gap-2">
                     <button class="btn btn-sm btn-outline-info text-start" data-bs-toggle="modal" data-bs-target="#configModal"><i class="bi bi-sliders me-2"></i><span>Configurações</span></button>
-                    <button class="btn btn-sm btn-outline-danger text-start" onclick="limparTudo()"><i class="bi bi-eraser-fill me-2"></i><span>Limpar Dados</span></button>
+                    <div class="form-check form-switch d-flex align-items-center justify-content-between ps-0">
+                        <label class="form-check-label small text-muted" for="theme-switcher">
+                            <i class="bi bi-moon-stars-fill me-2"></i><span>Tema</span>
+                        </label>
+                        <input class="form-check-input" type="checkbox" role="switch" id="theme-switcher" onclick="toggleTheme()">
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger text-start" data-bs-toggle="modal" data-bs-target="#confirmClearModal"><i class="bi bi-eraser-fill me-2"></i><span>Limpar Dados</span></button>
                 </div>
                 <a href="#" id="sidebar-toggle" class="btn btn-sm btn-outline-secondary w-100 mt-2 text-start">
                     <i class="bi bi-chevron-double-left fs-5"></i>
@@ -943,10 +1020,15 @@
                 <div class="col-lg-8 mb-4 animated-entry"> 
                     <div class="card h-100"> 
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2>
-                            <button id="start-manual-load-btn" class="btn btn-sm btn-outline-success" onclick="startManualLoadBuilder()" disabled>
-                                <i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual
-                            </button>
+                            <h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2>                           
+                            <div class="btn-group btn-group-sm">
+                                <button id="start-manual-routing-btn" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#manualRoutingModal">
+                                    <i class="bi bi-signpost-split-fill me-1"></i>Roteirização Manual
+                                </button>
+                                <button id="start-manual-load-btn" class="btn btn-outline-success" onclick="startManualLoadBuilder()" disabled>
+                                    <i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body p-0"> 
                              <ul class="nav nav-tabs nav-fill px-3 pt-2" id="vehicleTabs" role="tablist">
@@ -969,8 +1051,15 @@
                                 </div>
                                 <div class="tab-pane fade workspace-tab-pane" id="van-tab-pane" role="tabpanel">
                                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 no-print gap-2">
-                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Vans.</p>
-                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van (Varejo)')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
+                                        <p class="card-subtitle text-body-secondary small mb-0">Selecione uma rota para montar as Vans ou utilize as opções de exportação.</p>
+                                        <div class="btn-group btn-group-sm">
+                                            <button id="export-sobras-sp-btn" class="btn btn-sm btn-outline-warning" onclick="exportarSobrasSP_PDF()" disabled>
+                                                <i class="bi bi-file-earmark-pdf-fill me-1"></i>Exportar Sobras SP (PDF)
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-van-geral', 'Cargas de Van (Varejo)')">
+                                                <i class="bi bi-printer-fill me-1"></i>Imprimir Cargas Montadas
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="mb-3 no-print" id="botoes-van"><div class="empty-state"><i class="bi bi-truck-front-fill"></i><p>Nenhuma rota de Van disponível. Processe um arquivo para começar.</p></div></div>
                                     <hr class="no-print"><div id="resultado-van-geral" class="mt-3"></div>
@@ -1126,6 +1215,32 @@
         </main>
     </div>
 
+    <!-- Modal de Roteirização Manual -->
+    <div class="modal fade" id="manualRoutingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-signpost-split-fill me-2"></i>Roteirização Manual</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Insira uma lista de cidades (uma por linha) para calcular a rota otimizada partindo e retornando para a Selmi.</p>
+                    <div class="mb-3">
+                        <label for="manualRoutingCities" class="form-label">Cidades (e estado por extenso, ex: Cascavel, Paraná):</label>
+                        <textarea class="form-control" id="manualRoutingCities" rows="8" placeholder="Cascavel, Paraná&#10;Maringá, Paraná&#10;São Paulo, São Paulo"></textarea>
+                    </div>
+                    <button class="btn btn-primary w-100" onclick="calculateManualRoute()">
+                        <i class="bi bi-geo-alt-fill me-2"></i>Roteirizar
+                    </button>
+                    <hr>
+                    <div id="manualRoutingResult">
+                        <p class="text-center text-muted">O resultado da roteirização aparecerá aqui.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="configModal" tabindex="-1">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
@@ -1259,6 +1374,56 @@
         </div>
     </div>
 
+    <!-- Modal de Confirmação para Limpar Dados -->
+    <div class="modal fade" id="confirmClearModal" tabindex="-1" aria-labelledby="confirmClearModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-bottom border-danger">
+                    <h5 class="modal-title" id="confirmClearModalLabel"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Confirmar Limpeza de Dados</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Você tem certeza que deseja limpar todos os dados?</p>
+                    <p class="text-danger fw-bold">Todo o progresso, incluindo cargas montadas e configurações, será permanentemente perdido.</p>
+                    <p class="text-muted small">Esta ação é equivalente a recarregar o sistema do zero.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="limparTudo()">Sim, Limpar Tudo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container para as notificações Toast -->
+    <div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+    <script>
+        // --- NOVO: Lógica de Tema (movida para o escopo global) ---
+        function applyInitialTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark'; // Padrão para escuro
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+            const themeSwitcher = document.getElementById('theme-switcher');
+            if (themeSwitcher) {
+                themeSwitcher.checked = savedTheme === 'light';
+            }
+        }
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            // Redesenha o gráfico para se adaptar ao novo tema
+            if (resumoChart) {
+                // Adiciona um pequeno delay para garantir que as variáveis CSS do tema foram aplicadas
+                setTimeout(() => { if (resumoChart) { resumoChart.destroy(); resumoChart = null; updateAndRenderChart(); } }, 100);
+            }
+        }
+
+        // Chama a função para aplicar o tema salvo assim que a página carrega.
+        applyInitialTheme();
+    </script>
+
     <script>
         // ================================================================================================
         //  A LÓGICA DO GRÁFICO FOI ATUALIZADA PARA MELHORAR A VISUALIZAÇÃO DOS NÚMEROS E A ESTÉTICA.
@@ -1304,7 +1469,7 @@
                     chart: {
                         height: 350,
                         type: 'line',
-                        stacked: false,
+                        stacked: false, // prettier-ignore
                         toolbar: { show: false },
                         foreColor: 'var(--dark-text-secondary)',
                         animations: {
@@ -1361,7 +1526,7 @@
                         style: {
                             fontSize: '13px',
                             fontWeight: 'bold',
-                            colors: ['#fff']
+                            colors: [document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'var(--dark-text-primary)' : 'var(--dark-text-primary)']
                         },
                         background: {
                           enabled: true,
@@ -1383,7 +1548,7 @@
                         labels: { 
                             style: { 
                                 fontWeight: 600,
-                                fontSize: '13px'
+                                fontSize: '13px',
                             } 
                         }
                     },
@@ -1392,12 +1557,12 @@
                             seriesName: 'Quantidade',
                             axisTicks: { show: true },
                             axisBorder: { show: true, color: 'var(--dark-primary)' },
-                            labels: {
-                                style: { colors: 'var(--dark-primary)' },
+                            labels: { // Cor do texto do eixo adaptável
+                                style: { colors: 'var(--dark-text-secondary)' },
                                 formatter: function (val) {
                                     return val.toFixed(0);
                                 }
-                            },
+                            }, // prettier-ignore
                             title: {
                                 text: "Quantidade de Veículos",
                                 style: { color: 'var(--dark-primary)', fontWeight: 600 }
@@ -1407,8 +1572,8 @@
                             seriesName: 'Peso (kg)',
                             opposite: true,
                             axisTicks: { show: true },
-                            axisBorder: { show: true, color: 'var(--dark-accent)' },
-                            labels: {
+                            axisBorder: { show: true, color: 'var(--dark-accent)' }, // prettier-ignore
+                            labels: { // CORREÇÃO: Cor do texto do eixo adaptável
                                 style: { colors: 'var(--dark-accent)' },
                                 formatter: function (val) {
                                     return (val / 1000).toFixed(1) + "k kg";
@@ -1421,7 +1586,7 @@
                         }
                     ],
                     tooltip: {
-                        theme: 'dark',
+                        theme: document.documentElement.getAttribute('data-bs-theme'),
                         shared: true,
                         intersect: false,
                         y: {
@@ -1561,6 +1726,7 @@
         let pedidosMoinho = [];
         let pedidosMarcaPropria = [];
         let cargasFechadasRestBrasil = [];
+        let allSaoPauloLeftovers = []; // NOVO: Acumulador para sobras de SP
         let pedidosCondorTruck = [];
 
         let tocoPedidoIds = new Set();
@@ -1579,6 +1745,27 @@
             tocoMinCapacity: 5000, tocoMaxCapacity: 8500, tocoCubage: 30.0
         };
         
+        // --- NOVO: Função de Notificação (Toast) ---
+        // Movida para um escopo global para ser acessível por outras funções como saveConfigurations.
+        function showToast(message, type = 'info') {
+            const toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) return;
+
+            const icons = { success: 'check-circle-fill', danger: 'exclamation-triangle-fill', warning: 'exclamation-triangle-fill', info: 'info-circle-fill' };
+            const toastId = `toast-${Date.now()}`;
+
+            const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body"><i class="bi bi-${icons[type]} me-2"></i>${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>`;
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            const toastEl = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+            toast.show();
+        }
         function saveConfigurations() {
             const configStatus = document.getElementById('configStatus');
             configStatus.innerHTML = '<p class="text-info">Salvando configurações no armazenamento local...</p>';
@@ -1593,16 +1780,17 @@
                 localStorage.setItem('vehicleConfigs', JSON.stringify(configs));
                 configStatus.innerHTML = '<p class="text-success">Configurações salvas com sucesso!</p>';
                 setTimeout(() => { configStatus.innerHTML = ''; }, 3000);
+                showToast('Configurações salvas com sucesso!', 'success');
             } catch (error) {
                 console.error("Erro ao salvar no localStorage:", error);
                 configStatus.innerHTML = `<p class="text-danger">Erro ao salvar as configurações: ${error.message}</p>`;
             }
         }
 
-        function loadConfigurations() {
+        function loadConfigurations() { // prettier-ignore
             const configStatus = document.getElementById('configStatus');
             configStatus.innerHTML = '<p class="text-info">Carregando configurações...</p>';
-            try {
+            try { // prettier-ignore
                 const savedConfigs = localStorage.getItem('vehicleConfigs');
                 const configs = savedConfigs ? JSON.parse(savedConfigs) : defaultConfigs;
 
@@ -1688,6 +1876,7 @@
         pedidosMoinho = [];
         pedidosMarcaPropria = [];
         cargasFechadasRestBrasil = [];
+        allSaoPauloLeftovers = []; // NOVO: Limpa o acumulador
         pedidosCondorTruck = [];
         tocoPedidoIds = new Set();
         currentLeftoversForPrinting = [];
@@ -1762,6 +1951,7 @@
         resetElement('resultado-moinho', emptyStateHTML('gear-wide-connected', 'Nenhum pedido "Moinho" encontrado.'));
         resetElement('resultado-funcionarios', emptyStateHTML('people-fill', 'Nenhum pedido de funcionário encontrado.'));
         resetElement('resultado-transferencias', emptyStateHTML('arrow-left-right', 'Nenhum pedido de transferência encontrado.'));
+        document.getElementById('export-sobras-sp-btn').disabled = true; // NOVO: Desabilita o botão de exportar sobras
         resetElement('resultado-exportacao', emptyStateHTML('box-arrow-up-right', 'Nenhum pedido de exportação encontrado.'));
         resetElement('resultado-marca-propria', emptyStateHTML('tags-fill', 'Nenhum pedido de Marca Própria encontrado.'));
         
@@ -1807,7 +1997,7 @@
 
     } catch (e) {
         console.error('Erro durante a execução de limparTudo:', e);
-        alert('Ocorreu um erro ao tentar limpar os dados. Verifique o console para mais detalhes.');
+        showToast('Ocorreu um erro ao tentar limpar os dados. Verifique o console.', 'error');
     }
         }
 
@@ -2545,8 +2735,6 @@
             activeLoads = {};
             kpiData = {};
             processedRoutes.clear();
-            pedidosPrioritarios = [];
-            pedidosRecall = [];
         }
 
         function processar() {
@@ -2641,7 +2829,6 @@
                             pedidosAindaNaoProcessados.push(p);
                         }
                     });
-                    displayPedidosBloqueados(resultadoBloqueadosDiv, pedidosManualmenteBloqueadosAtuais);
                     
                     pedidosAindaNaoProcessados = pedidosAindaNaoProcessados.filter(p => 
                         !pedidosEspeciaisProcessados.has(String(p.Num_Pedido)) &&
@@ -2812,6 +2999,12 @@
             displayPedidosCFNumerico(document.getElementById('resultado-cf-numerico'), pedidosComCFNumericoIsolado);
 
             // 4. Atualiza os KPIs e o Gráfico no Dashboard de Resumo
+            const hasData = planilhaData && planilhaData.length > 0;
+            document.getElementById('start-manual-load-btn').disabled = !hasData;
+            if (!hasData) {
+                return; // Não renderiza KPIs se não houver dados
+            }
+
             updateAndRenderKPIs();
             updateAndRenderChart();
 
@@ -2971,12 +3164,12 @@
             const pedidosAtrasados = kpiData.pedidosAPredatar || [];
 
             if (planilhaData.length === 0) {
-                alert("Por favor, carregue e processe a planilha primeiro para ter dados para exportar.");
+                showToast("Por favor, carregue e processe a planilha primeiro.", 'warning');
                 return;
             }
 
             if (pedidosAtrasados.length === 0) {
-                alert("Nenhum pedido em atraso (sem bloqueio ou com bloqueio 'C') foi encontrado nos resultados processados.");
+                showToast("Nenhum pedido em atraso foi encontrado para exportar.", 'info');
                 return;
             }
 
@@ -3020,6 +3213,7 @@
         
         function createTable(pedidos, columnsToDisplay, sourceId = '') {
             if (!pedidos || pedidos.length === 0) return '';
+
             const colunasExibir = columnsToDisplay || ['Cod_Rota', 'Cliente', 'Nome_Cliente', 'Agendamento', 'Num_Pedido', 'Quilos_Saldo', 'Cubagem', 'Cidade', 'UF', 'Predat', 'Dat_Ped', 'BLOQ.', 'Coluna4', 'Coluna5', 'CF'];
             let table = '<div class="table-responsive"><table class="table table-sm table-bordered table-striped table-hover"><thead><tr><th><input type="checkbox" class="form-check-input" onclick="toggleAllCheckboxes(this)"></th>';
             colunasExibir.forEach(c => table += `<th>${c.replace('_', ' ')}</th>`);
@@ -3029,9 +3223,8 @@
                 const isPriorityRow = pedidosPrioritarios.includes(String(p.Num_Pedido));
                 const isRecallRow = pedidosRecall.includes(String(p.Num_Pedido));
                 let rowClass = '';
-                if (isPriorityRow) rowClass = 'table-warning';
-                else if (isRecallRow) rowClass = 'table-info';
-                else if (sourceId === 'geral') { // Aplica cor apenas na tabela de "Pedidos Disponíveis"
+                if (isPriorityRow) rowClass = 'table-warning'; else if (isRecallRow) rowClass = 'table-info';
+                else if (sourceId === 'geral') {
                     const vehicleType = rotaVeiculoMap[p.Cod_Rota]?.type;
                     if (vehicleType === 'fiorino') rowClass = 'route-fiorino';
                     else if (vehicleType === 'van') rowClass = 'route-van';
@@ -3050,7 +3243,7 @@
                 table += `<td><input type="checkbox" class="form-check-input row-checkbox" value="${p.Num_Pedido}" onclick="updateBulkActionsPanel(event)"></td>`;
                 colunasExibir.forEach(c => {
                     let cellContent = p[c] === undefined || p[c] === null ? '' : p[c];
-                    if (c === 'Num_Pedido') { 
+                    if (c === 'Num_Pedido') {
                         const isPriority = pedidosPrioritarios.includes(String(p.Num_Pedido));
                         const isRecall = pedidosRecall.includes(String(p.Num_Pedido));
                         const isSemCorte = pedidosSemCorte.has(String(p.Num_Pedido));
@@ -3076,8 +3269,7 @@
                         }
                     } else if (c === 'Quilos_Saldo' || c === 'Cubagem') {
                         table += `<td>${(cellContent || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>`;
-                    }
-                    else {
+                    } else {
                         table += `<td>${cellContent}</td>`;
                     }
                 });
@@ -3170,7 +3362,9 @@
                 }
                 // CORREÇÃO: O ID do collapse agora usa a rota, que é um identificador estável.
                 const collapseId = `collapseGeral-${rota}`;
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed ${veiculoClass}" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed ${veiculoClass}" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2>
+                                  <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral">
+                                    <div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
             });
             accordionHtml += '</div>'; 
             div.innerHTML = accordionHtml;
@@ -3211,7 +3405,9 @@
                     rotaDisplay = `Rota: ${rota} (${veiculoNome})`;
                 }
 
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral"><div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingGeral${index}"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGeral${index}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2>
+                                  <div id="collapseGeral${index}" class="accordion-collapse collapse" data-bs-parent="#accordionGeral">
+                                    <div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
             });
             accordionHtml += '</div>';
             div.innerHTML = accordionHtml;
@@ -3266,8 +3462,9 @@
                 }
 
                 const collapseId = `collapseCF-${rota}`; // ID estável usando a rota
-
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed ${veiculoClass}" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2><div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCF"><div class="accordion-body p-0">${createTable(grupo.pedidos, null, 'bloqueados-regra')}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed ${veiculoClass}" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}"><strong>${rotaDisplay}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${grupo.pedidos.length}</span> <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span></button></h2>
+                                  <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCF">
+                                    <div class="accordion-body p-0">${createTable(grupo.pedidos, null, 'bloqueados-regra')}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -3340,7 +3537,7 @@
         function imprimirSobras(title) {
             if (currentLeftoversForPrinting.length === 0) { alert("Nenhuma sobra para imprimir."); return; }
             const totalKgFormatado = currentLeftoversForPrinting.reduce((sum, p) => sum + p.Quilos_Saldo, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const printWindow = createPrintWindow(title);
+            const printWindow = createPrintWindow(title); // prettier-ignore
             let contentToPrint = `<h3>${title} - Total: ${totalKgFormatado} kg</h3>` + createTable(currentLeftoversForPrinting);
             printWindow.document.body.innerHTML = contentToPrint;
             printWindow.document.close();
@@ -3401,27 +3598,16 @@
         }
 
         function imprimirTocoIndividual(cf) {
-            if (!gruposToco[cf]) { alert(`Nenhuma carga Toco encontrada para o CF: ${cf}`); return; }
+            if (!gruposToco[cf]) { showToast(`Nenhuma carga Toco encontrada para o CF: ${cf}`, 'warning'); return; }
             const grupo = gruposToco[cf];
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const printWindow = createPrintWindow('Imprimir Carga Toco CF: ' + cf);
             let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³</h3>` + createTable(grupo.pedidos, null, `toco-${cf}`);
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus(); 
-            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+            printWindow.document.body.innerHTML = contentToPrint; printWindow.document.close(); printWindow.focus(); setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
 
-        function imprimirCargaManualIndividual(loadId) {
-            const load = activeLoads[loadId];
-            const cardToPrint = document.getElementById(loadId);
-
-            if (!load || !cardToPrint) {
-                alert(`Erro: Carga com ID ${loadId} não encontrada para impressão.`);
-                return;
-            }
-
+        function imprimirCargaManualIndividual(loadId) { const load = activeLoads[loadId]; const cardToPrint = document.getElementById(loadId); if (!load || !cardToPrint) { showToast(`Erro: Carga com ID ${loadId} não encontrada.`, 'error'); return; }
             const cardClone = cardToPrint.cloneNode(true);
             const observationText = load?.observation || '';
             const clonePrintDiv = cardClone.querySelector('.print-only-observation');
@@ -3902,7 +4088,7 @@
             const allRouteButtons = document.querySelectorAll('#botoes-fiorino button, #botoes-van button, #botoes-34 button');
 
             const routesKey = Array.isArray(routeOrRoutes) ? routeOrRoutes.sort().join(',') : String(routeOrRoutes);
-            
+
             allRouteButtons.forEach(btn => btn.disabled = true);
             
             if (processedRoutes.has(routesKey)) {
@@ -3967,6 +4153,17 @@
             const optimizationLevel = document.getElementById('optimizationLevelSelect').value;
             let optimizationResult;
             
+            // ================================================================================================
+            //  NOVA LÓGICA DE PROCESSAMENTO COM WEB WORKER
+            // ================================================================================================
+            let processingWorker = new Worker('worker.js');
+
+            // Reinicia o worker para garantir que não haja estado antigo
+            if (processingWorker) {
+                processingWorker.terminate();
+            }
+            processingWorker = new Worker('worker.js');
+
             const modalElement = document.getElementById('processing-modal');
             const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
             
@@ -3994,7 +4191,7 @@
                         const polished = refinarCargasComTrocas(saResultForPolish.loads, saResultForPolish.leftovers, vehicleType);
                         optimizationResult = { loads: polished.refinedLoads, leftovers: polished.remainingLeftovers };
                         break;
-                    case '4':
+                    case '4.0':
                         console.log(`Executando Nível 4: Otimização Reconstrutiva para ${vehicleType}...`);
                         const saResultForReconstruction = await runSimulatedAnnealing(packableGroups, vehicleType, 'Otimizando... (Nível 4 - Fase 1/3)');
 
@@ -4013,6 +4210,7 @@
                         optimizationResult = await runSimulatedAnnealing(packableGroups, vehicleType, 'Otimizando... (Nível 2)');
                         break;
                 }
+
             } finally {
                 // Reabilita apenas os botões de rotas que ainda não foram processadas.
                 allRouteButtons.forEach(btn => {
@@ -4148,21 +4346,80 @@
             // e a chamada para `handlePostProcessingUI` foi ajustada para lidar com as sobras
             // desta execução específica.
             updateAndRenderKPIs();
-            updateAndRenderChart();
+            updateAndRenderChart();            
             displayGerais(document.getElementById('resultado-geral'), pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {}));
             handlePostProcessingUI(finalLeftoverGroups, routeOrRoutes, title, divId); // CORREÇÃO: Chamada ajustada
         }
 
+        function roteirizarSobrasSP(leftoverPedidos) {
+            if (!leftoverPedidos || leftoverPedidos.length === 0) {
+                showToast("Não há sobras para roteirizar.", 'info');
+                return;
+            }
+
+            const cidadesMap = new Map();
+            leftoverPedidos.forEach(pedido => {
+                const cidade = (String(pedido.Cidade || '')).split(',')[0].trim();
+                const uf = (String(pedido.UF || '')).trim().toUpperCase();
+                if (cidade && uf && !cidadesMap.has(cidade)) {
+                    cidadesMap.set(cidade, uf);
+                }
+            });
+
+            const cidadesComEstado = Array.from(cidadesMap.entries());
+            if (cidadesComEstado.length === 0) {
+                showToast("Nenhuma cidade válida encontrada nas sobras para roteirizar.", 'warning');
+                return;
+            }
+
+            const origem = "Empresa Selmi, BR-369, 86181-570 Rolândia, Paraná, Brasil";
+            const baseUrl = "https://graphhopper.com/maps/";
+            const params = new URLSearchParams();
+            params.append('point', origem);
+            cidadesComEstado.forEach(([cidade, uf]) => params.append('point', `${cidade}, ${uf}, Brasil`));
+            params.append('point', origem); // Ponto de chegada
+            params.append('profile', 'car');
+            params.append('layer', 'OpenStreetMap');
+            window.open(`${baseUrl}?${params.toString()}`, '_blank');
+        }
+
         function handlePostProcessingUI(sobras, rotasProcessadas, tituloRota, divId) {
-            const rotas = Array.isArray(rotasProcessadas) ? rotasProcessadas : [String(rotasProcessadas)];
-            const idsPedidosSobras = new Set(sobras.flatMap(g => g.pedidos.map(p => p.Num_Pedido)));
+            const allSobrasPedidos = sobras.flatMap(g => g.pedidos);
 
-            // Verifica se algum pedido das rotas processadas ficou nas sobras
-            const algumaSobraDaRota = pedidosGeraisAtuais.some(p => 
-                rotas.includes(String(p.Cod_Rota)) && idsPedidosSobras.has(p.Num_Pedido)
+            const resultadoDiv = document.getElementById(divId);
+            if (!resultadoDiv) return;
+
+            const container = resultadoDiv.querySelector('.resultado-container');
+            if (!container) return;
+
+            // Limpa card de sobras anterior, se houver
+            const oldLeftoversCard = container.querySelector('.leftovers-card');
+            if (oldLeftoversCard) oldLeftoversCard.remove();
+
+            // NOVO: Verifica se alguma carga foi realmente criada para esta rota.
+            // Se nenhuma carga foi criada, não mostra o card de sobras, apenas abre o acordeão.
+            const loadsForThisRoute = Object.values(activeLoads).filter(load =>
+                load.pedidos.some(p => rotasProcessadas.includes(String(p.Cod_Rota)))
             );
+            const noLoadsCreated = loadsForThisRoute.length === 0;
 
-            if (algumaSobraDaRota) {
+            if (allSobrasPedidos.length > 0) {
+                currentLeftoversForPrinting = allSobrasPedidos; // Atualiza a variável global de sobras
+                const rotas = Array.isArray(rotasProcessadas) ? rotasProcessadas : [String(rotasProcessadas)];
+
+                const spRoutes = new Set(['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745']);
+                const isSaoPauloRoute = rotas.some(r => spRoutes.has(r));
+                
+                // NOVO: Acumula as sobras de SP e habilita o botão de exportação
+                if (isSaoPauloRoute) {
+                    allSaoPauloLeftovers.push(...allSobrasPedidos);
+                    document.getElementById('export-sobras-sp-btn').disabled = false;
+                }
+                const finalLeftoverKg = allSobrasPedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
+                const printButtonHtml = `<button class="btn btn-info ms-2 no-print" onclick="imprimirSobras('Sobras Finais de ${tituloRota}')"><i class="bi bi-printer-fill me-1"></i>Imprimir Sobras</button>`;
+
+                // O card de sobras foi removido conforme solicitado. As sobras já estão visíveis na lista de "Disponíveis Varejo".
+
                 // Se sobrou, encontra o acordeão da primeira rota processada e o abre
                 const rotaPrincipal = rotas[0];
                 const collapseElement = document.getElementById(`collapseGeral-${rotaPrincipal}`);
@@ -4170,18 +4427,70 @@
                     const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseElement, { toggle: false });
                     if (!collapseElement.classList.contains('show')) bsCollapse.show();
                 }
+
             } else {
-                // Se não sobrou nada da rota, mostra a mensagem de sucesso
-                const resultContainer = document.getElementById(divId);
-                const successMessage = document.createElement('div');
-                successMessage.className = 'alert alert-success alert-dismissible fade show mt-3 route-success-message';
-                successMessage.role = 'alert';
-                successMessage.innerHTML = `<strong>Sucesso!</strong> Todos os pedidos da rota <strong>${tituloRota}</strong> foram alocados. <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
-                
-                resultContainer.insertAdjacentElement('beforebegin', successMessage);
+                // Se não sobrou nada, significa que todos os pedidos foram alocados.
+                // Mostra a mensagem de sucesso apenas se alguma carga foi criada.
+                if (!noLoadsCreated) {
+                    const resultContainer = document.getElementById(divId);
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'alert alert-success alert-dismissible fade show mt-3 route-success-message';
+                    successMessage.role = 'alert';
+                    successMessage.innerHTML = `<strong>Sucesso!</strong> Todos os pedidos da rota <strong>${tituloRota}</strong> foram alocados. <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+                    
+                    // Insere a mensagem antes do container de resultados da rota.
+                    const parentContainer = resultContainer.closest('.tab-pane');
+                    parentContainer.querySelector('.no-print').insertAdjacentElement('afterend', successMessage);
+                }
             }
         }
         
+        function exportarSobrasSP_PDF() {
+            if (allSaoPauloLeftovers.length === 0) {
+                showToast("Não há sobras de rotas de São Paulo para exportar.", 'info');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const title = "Relatório de Sobras - Vans São Paulo";
+            const today = new Date().toLocaleDateString('pt-BR');
+
+            doc.setFontSize(18);
+            doc.text(title, 14, 22);
+            doc.setFontSize(11);
+            doc.setTextColor(100);
+            doc.text(`Gerado em: ${today}`, 14, 30);
+
+            const tableColumn = ["Cod Rota", "Número do Pedido", "Peso (kg)", "Cidade"];
+            const tableRows = [];
+            let totalWeight = 0;
+
+            allSaoPauloLeftovers.forEach(pedido => {
+                const weight = pedido.Quilos_Saldo || 0;
+                totalWeight += weight;
+                const pedidoData = [
+                    String(pedido.Cod_Rota || ''),
+                    String(pedido.Num_Pedido || ''),
+                    weight.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+                    String(pedido.Cidade || '')
+                ];
+                tableRows.push(pedidoData);
+            });
+
+            // Adiciona a linha de rodapé com os totais
+            const footerRow = [
+                { content: `Total de Pedidos: ${allSaoPauloLeftovers.length}`, colSpan: 2, styles: { fontStyle: 'bold', halign: 'right' } },
+                { content: totalWeight.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), styles: { fontStyle: 'bold' } },
+                { content: '', styles: {} }
+            ];
+            tableRows.push(footerRow);
+
+            doc.autoTable({ head: [tableColumn], body: tableRows, startY: 35, theme: 'striped' });
+            doc.save("Sobras_Vans_SP.pdf");
+        }
+
         async function runExpertOptimizer(packableGroups, vehicleType) {
             console.log(`Executando Nível 2: Otimização Especialista para ${vehicleType}...`);
             
@@ -4343,7 +4652,7 @@
 
             const isOverloaded = maxKg > 0 && load.totalKg > maxKg;
             const pesoPercentual = maxKg > 0 ? (load.totalKg / maxKg) * 100 : 0;
-            let progressColor = 'bg-success';
+            let progressColor = 'bg-primary';
             if (isOverloaded || pesoPercentual > 100) progressColor = 'bg-danger';
             else if (pesoPercentual > 95) progressColor = 'bg-danger';
             else if (pesoPercentual > 75) progressColor = 'bg-warning';
@@ -4356,14 +4665,11 @@
             const headerColorClass = isOverloaded ? 'bg-danger' : vInfo.colorClass;
             
             const printButton = String(load.id).startsWith('manual-') ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargaManualIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>` : '';
-            // NOVO: Dois botões, um para calcular KM e outro para abrir o mapa.
-            const kmButton = `<button id="btn-km-${load.id}" class="btn btn-sm btn-outline-light ms-2" onclick="calcularDistanciaCarga('${load.id}')"><i class="bi bi-calculator-fill me-1"></i>Calcular KM</button>`;
-            const mapButton = `<button class="btn btn-sm btn-outline-light ms-2" onclick="abrirMapaCarga('${load.id}')"><i class="bi bi-map-fill me-1"></i>Abrir Mapa</button>`;
+            const mapButton = `<button class="btn btn-sm btn-outline-light ms-2" onclick="abrirMapaCarga('${load.id}')"><i class="bi bi-map-fill me-1"></i>Roteirizar</button>`;
 
             const cardHeaderActions = `
                 <div class="card-header-actions no-print">
                     ${printButton}
-                    ${kmButton}
                     ${mapButton}
                 </div>
             `;
@@ -4398,10 +4704,46 @@
                     </div>`;
         }
         
+        async function calculateManualRoute() {
+            const citiesInput = document.getElementById('manualRoutingCities').value;
+            const cities = citiesInput.split('\n').map(c => c.trim()).filter(Boolean);
+
+            if (cities.length === 0) {
+                showToast("Por favor, insira pelo menos uma cidade.", 'warning');
+                return;
+            }
+            
+            const origem = "Empresa Selmi, BR-369, 86181-570 Rolândia, Paraná, Brasil";
+            const destino = origem; // A rota retorna para a origem
+            const baseUrl = "https://graphhopper.com/maps/";
+            const params = new URLSearchParams();
+
+            params.append('point', origem);
+            cities.forEach(cidade => {
+                params.append('point', cidade);
+            });
+            params.append('point', destino);
+            
+            params.append('profile', 'car');
+            params.append('layer', 'OpenStreetMap');
+
+            const url = `${baseUrl}?${params.toString()}`;
+            
+            // Abre a URL em uma nova aba
+            window.open(url, '_blank');
+
+            // Fecha o modal após abrir a nova aba
+            const manualRoutingModalEl = document.getElementById('manualRoutingModal');
+            const manualRoutingModal = bootstrap.Modal.getInstance(manualRoutingModalEl);
+            if (manualRoutingModal) {
+                manualRoutingModal.hide();
+            }
+        }
+
         async function calcularDistanciaCarga(loadId, retries = 2) {
             const apiKey = document.getElementById('graphhopperApiKey').value;
             if (!apiKey) {
-                alert("Por favor, insira sua chave da API do GraphHopper nas Configurações para calcular a distância.");
+                showToast("Insira sua chave da API do GraphHopper nas Configurações.", 'warning');
                 // Abre o modal de configurações
                 const configModal = new bootstrap.Modal(document.getElementById('configModal'));
                 configModal.show();
@@ -4410,7 +4752,7 @@
 
             const load = activeLoads[loadId];
             if (!load) {
-                alert("Carga não encontrada.");
+                showToast("Carga não encontrada.", 'error');
                 return;
             }
 
@@ -4450,7 +4792,7 @@
                     kmBtn.disabled = false;
                     kmBtn.innerHTML = `<i class="bi bi-calculator-fill me-1"></i>Calcular KM`;
                 }
-                alert("Nenhuma cidade válida encontrada nos pedidos desta carga para roteirizar.");
+                showToast("Nenhuma cidade válida encontrada para roteirizar.", 'warning');
                 return;
             }
         
@@ -4524,7 +4866,7 @@
                     origemCoords = null; // Limpa o cache para forçar uma nova busca
                     return calcularDistanciaCarga(loadId, retries - 1);
                 }
-                alert(`Falha ao calcular a rota: ${error.message}`);
+                showToast(`Falha ao calcular a rota: ${error.message}`, 'error');
                 if (distanciaSpan) distanciaSpan.innerHTML = `<span class="text-danger small">Falha no cálculo</span>`;
             } finally {
                 // Restaura o botão
@@ -4539,7 +4881,7 @@
         function abrirMapaCarga(loadId) {
             const load = activeLoads[loadId];
             if (!load) {
-                alert("Carga não encontrada.");
+                showToast("Carga não encontrada.", 'error');
                 return;
             }
 
@@ -4558,28 +4900,17 @@
             const cidadesComEstado = Array.from(cidadesMap.entries());
 
             if (cidadesComEstado.length === 0) {
-                alert("Nenhuma cidade válida encontrada nos pedidos desta carga para roteirizar.");
+                showToast("Nenhuma cidade válida encontrada para roteirizar.", 'warning');
                 return;
             }
 
             const origem = "Empresa Selmi, BR-369, 86181-570 Rolândia, Paraná, Brasil";
             const destino = origem;
-            
             const baseUrl = "https://graphhopper.com/maps/";
             const params = new URLSearchParams();
-            
             params.append('point', origem);
-            
-            cidadesComEstado.forEach(([cidade, uf]) => {
-                let pontoParada = `${cidade}, ${uf}, Brasil`;
-                if (cidade.toLowerCase().trim() === 'rolândia') {
-                    pontoParada = `Centro, Rolândia, ${uf}, Brasil`;
-                }
-                params.append('point', pontoParada);
-            });
-            
+            cidadesComEstado.forEach(([cidade, uf]) => { let pontoParada = `${cidade}, ${uf}, Brasil`; if (cidade.toLowerCase().trim() === 'rolândia') { pontoParada = `Centro, Rolândia, ${uf}, Brasil`; } params.append('point', pontoParada); });
             params.append('point', destino);
-            
             // Usa 'car' como perfil de veículo padrão para roteirização.
             const url = `${baseUrl}?${params.toString()}&profile=car&layer=OpenStreetMap`;
             
@@ -4625,7 +4956,7 @@
                 const pesoPercentual = (grupo.totalKg / maxKg) * 100;
                 let progressColor = 'bg-success';
                 if (isOverloaded || pesoPercentual > 100) progressColor = 'bg-danger';
-                else if (pesoPercentual > 95) progressColor = 'bg-danger';
+                else if (pesoPercentual > 95) progressColor = 'bg-warning';
                 else if (pesoPercentual > 75) progressColor = 'bg-warning';
                 const progressBar = `<div class="progress mb-3" role="progressbar" style="height: 10px;"><div class="progress-bar ${progressColor}" style="width: ${Math.min(pesoPercentual, 100)}%"></div></div>`;
                 const headerColorClass = isOverloaded ? 'bg-danger' : '';
@@ -4864,7 +5195,7 @@
             
             const activeTabPane = document.querySelector('.tab-pane.active');
             if (!activeTabPane) {
-                alert("Erro: Nenhuma aba de trabalho está ativa.");
+                showToast("Erro: Nenhuma aba de trabalho está ativa.", 'error');
                 return;
             }
 
@@ -4883,8 +5214,7 @@
                         </div>
                         <div id="manual-progress-bar-container"></div>
                         <div id="manual-drop-zone" class="p-3 border rounded drop-zone-card" style="background-color: var(--dark-bg); min-height: 150px;" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="manual-builder">
-                            <p class="text-muted text-center" id="manual-drop-text">Arraste os pedidos da lista de "Disponíveis Varejo" para cá.</p>
-                            <div id="manual-load-table-container"></div>
+                            <p class="text-muted text-center" id="manual-drop-text">Arraste os pedidos da lista de "Disponíveis Varejo" para cá.</p><div id="manual-load-table-container"></div>
                         </div>
                     </div>
                 </div>`;
@@ -4952,9 +5282,10 @@
 
             activeLoads[newLoad.id] = newLoad;
 
-            // Remove os pedidos da lista de disponíveis para manter a consistência dos KPIs
-            const usedOrderIds = new Set(newLoad.pedidos.map(p => p.Num_Pedido));
-            pedidosGeraisAtuais = pedidosGeraisAtuais.filter(p => !usedOrderIds.has(p.Num_Pedido));
+            // NOVO: Remove os pedidos da lista de disponíveis para manter a consistência da UI.
+            const usedOrderIds = new Set(newLoad.pedidos.map(p => String(p.Num_Pedido)));
+            pedidosGeraisAtuais = pedidosGeraisAtuais.filter(p => !usedOrderIds.has(String(p.Num_Pedido)));
+
             
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
@@ -4962,45 +5293,38 @@
                 tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
             };
 
-            const newCardHTML = renderLoadCard(newLoad, vehicleType, vehicleInfo[vehicleType]);
-            
+            // Pega a aba ativa para inserir o card da carga manual
             const activeTabPane = document.querySelector('.tab-pane.active');
-            // CORREÇÃO: O alvo agora é o container geral da aba, não um sub-container.
-            // Ex: 'resultado-fiorino-geral', 'resultado-van-geral', etc.
-            let resultContainerId = `${vehicleType === 'tresQuartos' ? 'resultado-34-geral' : `resultado-${vehicleType}-geral`}`;
-            let resultContainer = document.getElementById(resultContainerId);
-
-            if (activeTabPane && !resultContainer) { // Fallback caso o container não exista
-                activeTabPane.insertAdjacentHTML('beforeend', '<div class="resultado-container mt-3"></div>');
-                resultContainer = activeTabPane.querySelector('.resultado-container');
+            if (!activeTabPane) {
+                showToast("Erro: Nenhuma aba de trabalho ativa para adicionar a carga.", 'error');
+                return;
             }
 
-            if (resultContainer) {
-                resultContainer.insertAdjacentHTML('beforeend', newCardHTML);
-               alert(`Carga manual ${newLoad.numero} criada com sucesso para ${vehicleInfo[vehicleType].name} e adicionada à aba atual!`);
+            // Encontra o container de resultados dentro da aba ativa
+            let resultContainer = activeTabPane.querySelector('[id^="resultado-"]');
+            if (!resultContainer) {
+                // Se não houver um container, cria um (caso de aba vazia)
+                activeTabPane.innerHTML += `<div id="resultado-${vehicleType}-geral" class="mt-3"></div>`;
+                resultContainer = activeTabPane.querySelector('[id^="resultado-"]');
             }
 
-            const builderWrapper = document.getElementById('manual-load-builder-wrapper');
-            if (builderWrapper) builderWrapper.remove();
-            manualLoadInProgress = null;
-            
-            const startBtn = activeTabPane ? activeTabPane.querySelector('#start-manual-load-btn') : null;
-            if(startBtn) startBtn.style.display = 'inline-block';
-            
-            setTimeout(() => {
-                const newCardElement = document.getElementById(newLoad.id);
-                if(newCardElement) {
-                    newCardElement.scrollIntoView({ behavior: 'smooth', block: 'center'});
-                    newCardElement.classList.add('border-info');
-                    setTimeout(() => newCardElement.classList.remove('border-info'), 2500);
-                }
-            }, 300);
+            // Gera o HTML do card e o insere no container correto
+            const newCardHTML = renderLoadCard(newLoad, vehicleType, vehicleInfo[vehicleType]);
+            resultContainer.insertAdjacentHTML('beforeend', newCardHTML);
 
-            // ATUALIZADO: Em vez de redesenhar tudo, apenas atualizamos o que é necessário.
+            // MELHORIA: Em vez de fechar o painel, reinicia-o para permitir a criação de outra carga em sequência.
+            const currentVehicleType = document.getElementById('manualVehicleType').value;
+            manualLoadInProgress = {
+                pedidos: [], totalKg: 0, totalCubagem: 0, vehicleType: currentVehicleType 
+            };
+            updateManualBuilderUI(); // Atualiza a UI do painel para refletir o estado zerado.
+
+            // NOVO: Atualiza a lista de disponíveis e os KPIs sem redesenhar toda a mesa de trabalho.
+            const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
+            displayGerais(document.getElementById('resultado-geral'), gruposGerais);
             updateAndRenderKPIs();
             updateAndRenderChart();
-            displayGerais(document.getElementById('resultado-geral'), pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {}));
-            saveStateToLocalStorage();
+            showToast(`Carga manual ${newLoad.numero} criada para ${vehicleInfo[vehicleType].name}!`, 'success');
         }
 
         function cancelManualLoad() {
@@ -5015,7 +5339,13 @@
              if (builderWrapper) builderWrapper.remove();
              manualLoadInProgress = null;
 
-             renderAllUI(); // NOVO: Chama a função de renderização centralizada
+             // Atualiza apenas as partes necessárias da UI, sem redesenhar tudo.
+             const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
+             displayGerais(document.getElementById('resultado-geral'), gruposGerais);
+             updateAndRenderKPIs();
+             updateAndRenderChart();
+             saveStateToLocalStorage();
+             showToast('Montagem de carga manual cancelada.', 'info');
         }
 
         function dragStart(event, pedidoId, clienteId, sourceId) {
@@ -5133,12 +5463,18 @@
                 targetLoad.totalCubagem += clientBlockCubagem;
             }
 
-            if (targetIsManualBuilder) {
+            // Se a origem OU o destino for o painel manual, usa a renderização otimizada.
+            if (targetIsManualBuilder || sourceIsManualBuilder) {
                 updateManualBuilderUI();
-            } else {
-                // A renderização do alvo é tratada pela chamada centralizada abaixo.
+                // NOVO: Atualiza a lista de disponíveis e os KPIs sem redesenhar toda a mesa de trabalho.
+                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
+                displayGerais(document.getElementById('resultado-geral'), gruposGerais);
+                updateAndRenderKPIs();
+                updateAndRenderChart();
+                saveStateToLocalStorage();
+            } else { 
+                renderAllUI();
             }
-            renderAllUI(); // NOVO: Chama a função de renderização centralizada
         }
 
         function highlightClientRows(event) {
@@ -5220,7 +5556,7 @@
 
             if (actionTaken) {
                 alert(`${selectedPedidos.length} pedidos foram atualizados.`);
-                clearBulkSelection();
+                clearBulkSelection(); // prettier-ignore
                 saveStateToLocalStorage();
                 // Se a planilha já foi processada, reprocessa para aplicar as mudanças
                 if (planilhaData.length > 0) {
@@ -5235,13 +5571,13 @@
             resultadoDiv.innerHTML = '';
 
             if (planilhaData.length === 0) {
-                resultadoDiv.innerHTML = '<div class="alert alert-warning">Por favor, carregue la planilha primeiro.</div>';
+                showToast("Por favor, carregue a planilha primeiro.", 'warning');
                 return;
             }
 
             const numerosPedidos = input.value.split('\n').map(n => n.trim()).filter(Boolean);
 
-            if (numerosPedidos.length === 0) {
+            if (numerosPedidos.length === 0) { // prettier-ignore
                 alert(`Nenhum número de pedido foi inserido para a ${nomeCarga}.`);
                 return;
             }
@@ -5259,7 +5595,7 @@
             });
 
             if (pedidosNaoEncontrados.length > 0) {
-                alert(`Os seguintes pedidos não foram encontrados na planilha: ${pedidosNaoEncontrados.join(', ')}. Verifique os números e tente novamente.`);
+                showToast(`Pedidos não encontrados: ${pedidosNaoEncontrados.join(', ')}`, 'error');
                 return;
             }
 
@@ -5306,7 +5642,7 @@
                     <div class="alert alert-success d-flex justify-content-between align-items-center">
                         <div>
                             <strong>Carga ${nomeCarga} montada com sucesso!</strong> Estes ${pedidosSelecionados.length} pedidos foram agrupados em um(a) <strong>${veiculoEscolhido.nome}</strong>.
-                            <br>Eles serão removidos da análise geral quando você clicar em "Processar Cargas".
+                            <br>Eles serão removidos da análise geral quando você clicar em "Processar Cargas". 
                         </div>
                         <button class="btn btn-light btn-sm no-print" onclick="imprimirGeneric('${resultadoId}', 'Carga ${nomeCarga}')"><i class="bi bi-printer-fill me-1"></i> Imprimir Carga</button>
                     </div>
@@ -5319,7 +5655,7 @@
                 saveStateToLocalStorage();
 
             } else {
-                alert(`Não foi possível montar a carga. O total excede a capacidade dos veículos.\nPeso Total: ${totalKg.toFixed(2)} kg\nCubagem Total: ${totalCubagem.toFixed(2)} m³`);
+                showToast(`Carga excede a capacidade dos veículos. Peso: ${totalKg.toFixed(2)}kg`, 'error');
             }
         }
 
@@ -5361,7 +5697,7 @@
                                 <p class="text-muted small mb-0">Pedidos com a tag "TBL FUNCIONARIO" na Coluna 5, separados automaticamente.</p>
                                 <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Funcionários')">
                                     <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
-                                </button>
+                                </button> 
                             </div>
                             ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Dat_Ped', 'Coluna5', 'BLOQ.'])}
                         </div>
@@ -5412,7 +5748,7 @@
                                 <p class="text-muted small mb-0">Pedidos com as tags "TABELA TRANSFER", "TRANSF. TODESCH" ou "INSTITUCIONAL" na Coluna 5.</p>
                                 <button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Transferência')">
                                     <i class="bi bi-printer-fill me-1"></i>Imprimir Lista
-                                </button>
+                                </button> 
                             </div>
                             ${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Dat_Ped', 'Coluna5', 'BLOQ.'])}
                         </div>
@@ -5459,7 +5795,7 @@
                     </h2>
                     <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
                         <div class="accordion-body"><div class="d-flex justify-content-between align-items-center mb-3 no-print"><p class="text-muted small mb-0">Pedidos com a tag "TBL EXPORTACAO" na Coluna 5.</p><button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos de Exportação')"><i class="bi bi-printer-fill me-1"></i>Imprimir Lista</button></div>${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Dat_Ped', 'Coluna5', 'BLOQ.'])}</div>
-                    </div></div></div>`;
+                    </div></div></div>`; // prettier-ignore
             div.innerHTML = accordionHtml;
             return true; // Retorna true se houver pedidos
         }
@@ -5559,7 +5895,7 @@
             // --- 1. Coleta e Agrupamento de Dados ---
             const allLoads = Object.values(activeLoads);
             if (allLoads.length === 0 && currentLeftoversForPrinting.length === 0 && pedidosTransferencias.length === 0 && pedidosExportacao.length === 0 && pedidosFuncionarios.length === 0) {
-                alert("Não há dados processados para gerar o relatório. Por favor, processe um arquivo primeiro.");
+                showToast("Não há dados processados para gerar o relatório.", 'warning');
                 return;
             }
 
@@ -5717,6 +6053,7 @@
                     pedidosMoinho,
                     pedidosMarcaPropria,
                     tocoPedidoIds: Array.from(tocoPedidoIds),
+                    allSaoPauloLeftovers, // NOVO: Salva as sobras de SP
                     currentLeftoversForPrinting,
                     activeLoads,
                     kpiData,
@@ -5728,7 +6065,7 @@
                 console.log("Estado da aplicação salvo no Local Storage.");
             } catch (e) {
                 console.error("Erro ao salvar o estado no Local Storage:", e);
-                alert("Erro ao salvar o estado. O armazenamento pode estar cheio.");
+                showToast("Erro ao salvar o estado. O armazenamento pode estar cheio.", 'error');
             }
         }
 
@@ -5785,12 +6122,18 @@
                 pedidosMoinho = savedState.pedidosMoinho || [];
                 pedidosMarcaPropria = savedState.pedidosMarcaPropria || [];
                 tocoPedidoIds = new Set(savedState.tocoPedidoIds || []);
+                allSaoPauloLeftovers = savedState.allSaoPauloLeftovers || []; // NOVO: Carrega as sobras de SP
                 currentLeftoversForPrinting = savedState.currentLeftoversForPrinting || [];
                 activeLoads = savedState.activeLoads || {};
                 kpiData = savedState.kpiData || {};
                 processedRoutes = new Set(savedState.processedRoutes || []);
                 processedRouteContexts = savedState.processedRouteContexts || {};
                 localStorage.setItem('lastActiveTab', savedState.lastActiveTab); // Restaura a aba salva
+
+                // NOVO: Habilita o botão se houver sobras de SP salvas
+                if (allSaoPauloLeftovers.length > 0) {
+                    document.getElementById('export-sobras-sp-btn').disabled = false;
+                }
 
                 // Reconverte as strings de data para objetos Date em todas as listas relevantes
                 pedidosGeraisAtuais = reviveDates(pedidosGeraisAtuais);
@@ -5952,7 +6295,7 @@
                                              <div class="card mb-3">
                                                  <div class="card-header bg-danger text-white d-flex align-items-center">
                                                      Pedidos Restantes
-                                                     <div class="ms-auto">${printButtonHtml}</div>
+                                                     <div class="ms-auto">${printButtonHtml}</div> 
                                                  </div>
                                                  <div class="card-body">${createTable(currentLeftoversForPrinting, ['Num_Pedido', 'Quilos_Saldo', 'Agendamento', 'Cubagem', 'Predat', 'Dat_Ped', 'Cliente', 'Nome_Cliente', 'Cidade', 'CF'], 'leftovers')}</div>
                                              </div>
