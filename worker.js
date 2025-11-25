@@ -1,0 +1,359 @@
+// ================================================================================================
+//  WEB WORKER - LÓGICA DE OTIMIZAÇÃO EM SEGUNDO PLANO
+// ================================================================================================
+// Este script é executado em uma thread separada para não travar a interface do usuário.
+
+self.onmessage = async function(e) {
+    const { 
+        command, 
+        packableGroups, 
+        vehicleType, 
+        optimizationLevel, 
+        configs, 
+        pedidosPrioritarios, 
+        pedidosRecall 
+    } = e.data;
+
+    if (command === 'start-optimization') {
+        try {
+            let optimizationResult;
+            switch (optimizationLevel) {
+                case '1':
+                    console.log(`WORKER: Executando Nível 1: Heurística Rápida para ${vehicleType}...`);
+                    optimizationResult = runHeuristicOptimization(packableGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall);
+                    break;
+                case '2':
+                default:
+                    console.log(`WORKER: Executando Nível 2: Otimização Avançada (SA) para ${vehicleType}...`);
+                    optimizationResult = await runSimulatedAnnealing(packableGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall);
+                    break;
+            }
+            self.postMessage({ status: 'complete', result: optimizationResult });
+        } catch (error) {
+            console.error('WORKER: Erro durante a otimização:', error);
+            self.postMessage({ status: 'error', message: error.message, stack: error.stack });
+        }
+    }
+};
+
+const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA', 'CASA VISCARD S/A COM. E IMPORTACAO'];
+
+const rotaVeiculoMap = {
+    // Novas rotas de São Paulo (Varejo - Van/3/4)
+    '2555': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2555' }, '2560': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2560' }, '2561': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2561' }, '2571': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2571' }, '2575': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2575' }, '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' }, '2735': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2735' }, '2745': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2745' },
+    // Rotas do Paraná (Varejo)
+    '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
+    '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
+    '11361': { type: 'tresQuartos', title: 'Rota 11361' }, '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] }, '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] }, '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] }, '11541': { type: 'tresQuartos', title: 'Rota 11541' }
+};
+
+const isNumeric = (str) => str && /^\d+$/.test(String(str).trim());
+
+function normalizeClientId(id) {
+    if (id === null || typeof id === 'undefined') return '';
+    return String(id).trim().replace(/^0+/, '');
+}
+
+function checkAgendamento(pedido) {
+    if (!pedido) return;
+    const normalizedCode = normalizeClientId(pedido.Cliente);
+    pedido.Agendamento = agendamentoClientCodes.has(normalizedCode) ? 'Sim' : 'Não';
+}
+
+const isSpecialClient = (p) => p.Nome_Cliente && specialClientNames.includes(p.Nome_Cliente.toUpperCase().trim());
+
+function getVehicleConfig(vehicleType, configs) {
+    const typeMap = {
+        fiorino: 'fiorino',
+        van: 'van',
+        tresQuartos: 'tresQuartos',
+        '3/4': 'tresQuartos',
+        toco: 'toco'
+    };
+    const configType = typeMap[vehicleType];
+    if (!configType) return null;
+
+    return {
+        minKg: configs[`${configType}MinCapacity`],
+        softMaxKg: configs[`${configType}MaxCapacity`],
+        softMaxCubagem: configs[`${configType}Cubage`],
+        hardMaxKg: configs[`${configType}HardMaxCapacity`] || configs[`${configType}MaxCapacity`],
+        hardMaxCubage: configs[`${configType}HardCubage`] || configs[`${configType}Cubage`]
+    };
+}
+
+function isMoveValid(load, groupToAdd, vehicleType, configs) {
+    const config = getVehicleConfig(vehicleType, configs);
+    if (!config) return false;
+
+    if ((load.totalKg + groupToAdd.totalKg) > config.hardMaxKg) return false;
+    if ((load.totalCubagem + groupToAdd.totalCubagem) > config.hardMaxCubage) return false;
+
+    if (groupToAdd.isSpecial) {
+        const specialClientIdsInLoad = new Set(
+            load.pedidos
+                .filter(isSpecialClient)
+                .map(p => normalizeClientId(p.Cliente))
+        );
+        const groupToAddClientId = normalizeClientId(groupToAdd.pedidos[0].Cliente);
+        if (!specialClientIdsInLoad.has(groupToAddClientId) && specialClientIdsInLoad.size >= 2) {
+            return false;
+        }
+    }
+
+    if (groupToAdd.pedidos.some(p => p.Agendamento === 'Sim') && load.pedidos.some(p => p.Agendamento === 'Sim')) return false;
+
+    return true;
+}
+
+function createSolutionFromHeuristic(itemsParaEmpacotar, vehicleType, configs, pedidosPrioritarios, pedidosRecall) {
+    const config = getVehicleConfig(vehicleType, configs);
+    let loads = [];
+    let leftoverItems = [];
+
+    itemsParaEmpacotar.forEach(item => {
+        if (item.totalKg > config.hardMaxKg || item.totalCubagem > config.hardMaxCubage) {
+            leftoverItems.push(item); return;
+        }
+        
+        let bestFit = null;
+        for (const load of loads) {
+            if (isMoveValid(load, item, vehicleType, configs)) {
+                const remainingCapacity = config.hardMaxKg - (load.totalKg + item.totalKg);
+                if (bestFit === null || remainingCapacity < bestFit.remainingCapacity) {
+                    bestFit = { load: load, remainingCapacity: remainingCapacity };
+                }
+            }
+        }
+
+        if (bestFit) {
+            bestFit.load.pedidos.push(...item.pedidos);
+            bestFit.load.totalKg += item.totalKg;
+            bestFit.load.totalCubagem += item.totalCubagem;
+            bestFit.load.usedHardLimit = bestFit.load.totalKg > config.softMaxKg || bestFit.load.totalCubagem > config.softMaxCubage;
+        } else {
+            loads.push({
+                pedidos: [...item.pedidos],
+                totalKg: item.totalKg,
+                totalCubagem: item.totalCubagem,
+                isSpecial: item.isSpecial,
+                usedHardLimit: (item.totalKg > config.softMaxKg || item.totalCubagem > config.softMaxCubage)
+            });
+        }
+    });
+    
+    let finalLoads = [];
+    let unplacedGroups = [];
+
+    loads.forEach(load => {
+        const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)) || pedidosRecall.includes(String(p.Num_Pedido)));
+        const allowPriorityOverride = true; // Permite para todos os veículos
+
+        if (load.pedidos.length > 0 && (load.totalKg >= config.minKg || (hasPriority && allowPriorityOverride))) {
+            finalLoads.push(load);
+        } else if (load.pedidos.length > 0) {
+            const clientGroupsInFailedLoad = Object.values(load.pedidos.reduce((acc, p) => {
+                const clienteId = normalizeClientId(p.Cliente);
+                if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) }; }
+                acc[clienteId].pedidos.push(p);
+                acc[clienteId].totalKg += p.Quilos_Saldo;
+                acc[clienteId].totalCubagem += p.Cubagem;
+                return acc;
+            }, {}));
+            unplacedGroups.push(...clientGroupsInFailedLoad);
+        }
+    });
+    
+    const leftovers = [...leftoverItems, ...unplacedGroups];
+    return { loads: finalLoads, leftovers };
+}
+
+function runHeuristicOptimization(packableGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall) {
+    const strategies = [
+        { name: 'priority-weight-desc', sorter: (a, b) => {
+            if (a.oldestDate && b.oldestDate) {
+                if (a.oldestDate < b.oldestDate) return -1;
+                if (a.oldestDate > b.oldestDate) return 1;
+            } else if (a.oldestDate) { return -1; } 
+              else if (b.oldestDate) { return 1; }
+            const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+            const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+            if (aHasPrio && !bHasPrio) return -1;
+            if (!aHasPrio && bHasPrio) return 1;
+            return b.totalKg - a.totalKg;
+        }},
+        { name: 'scheduled-weight-desc', sorter: (a, b) => {
+            if (a.oldestDate && b.oldestDate) {
+                if (a.oldestDate < b.oldestDate) return -1;
+                if (a.oldestDate > b.oldestDate) return 1;
+            } else if (a.oldestDate) { return -1; } 
+              else if (b.oldestDate) { return 1; }
+            const aHasSched = a.pedidos.some(p => p.Agendamento === 'Sim');
+            const bHasSched = b.pedidos.some(p => p.Agendamento === 'Sim');
+            if (aHasSched && !bHasSched) return -1;
+            if (!aHasSched && bHasSched) return 1;
+            return b.totalKg - a.totalKg;
+        }},
+        { name: 'weight-desc', sorter: (a, b) => {
+            if (a.oldestDate && b.oldestDate) { if (a.oldestDate < b.oldestDate) return -1; if (a.oldestDate > b.oldestDate) return 1; } else if (a.oldestDate) { return -1; } else if (b.oldestDate) { return 1; }
+            return b.totalKg - a.totalKg;
+        }},
+        { name: 'weight-asc', sorter: (a, b) => {
+            if (a.oldestDate && b.oldestDate) { if (a.oldestDate < b.oldestDate) return -1; if (a.oldestDate > b.oldestDate) return 1; } else if (a.oldestDate) { return -1; } else if (b.oldestDate) { return 1; }
+            return a.totalKg - b.totalKg;
+        }}
+    ];
+
+    let bestResult = null;
+
+    for (const strategy of strategies) {
+        const sortedGroups = [...packableGroups].sort(strategy.sorter);
+        const result = createSolutionFromHeuristic(sortedGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall);
+        
+        const leftoverWeight = result.leftovers.reduce((sum, g) => sum + g.totalKg, 0);
+
+        if (bestResult === null || leftoverWeight < bestResult.leftoverWeight) {
+            bestResult = { ...result, leftoverWeight: leftoverWeight, strategy: strategy.name };
+        }
+    }
+    
+    return bestResult;
+}
+
+function getSolutionEnergy(solution, vehicleType, configs) {
+    const config = getVehicleConfig(vehicleType, configs);
+    const balancingFactor = 0.01;
+
+    const leftoverWeight = solution.leftovers.reduce((sum, group) => sum + group.totalKg, 0);
+    
+    const loadPenalty = solution.loads.reduce((sum, load) => {
+        if (load.totalKg > 0 && load.totalKg < config.minKg) {
+            return sum + 1000 + (config.minKg - load.totalKg);
+        }
+        return sum;
+    }, 0);
+
+    let balancePenalty = 0;
+    if (solution.loads.length > 1) {
+        const weights = solution.loads.map(l => l.totalKg);
+        const averageWeight = weights.reduce((sum, w) => sum + w, 0) / weights.length;
+        const variance = weights.reduce((sum, w) => sum + Math.pow(w - averageWeight, 2), 0) / weights.length;
+        balancePenalty = variance * balancingFactor;
+    }
+
+    return leftoverWeight + loadPenalty + balancePenalty;
+}
+
+async function runSimulatedAnnealing(packableGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall) {
+    return new Promise(async (resolve) => {
+        const initialTemp = 1000;
+        const coolingRate = 0.993;
+        const iterationsPerTemp = 200;
+        
+        const initialSortedGroups = [...packableGroups].sort((a, b) => {
+              if (a.oldestDate && b.oldestDate) {
+                  if (a.oldestDate < b.oldestDate) return -1;
+                  if (a.oldestDate > b.oldestDate) return 1;
+              } else if (a.oldestDate) { return -1; } 
+                else if (b.oldestDate) { return 1; }
+              return b.totalKg - a.totalKg;
+        });
+
+        let bestSolution = createSolutionFromHeuristic(initialSortedGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall);
+        let currentSolution = JSON.parse(JSON.stringify(bestSolution));
+
+        let currentTemp = initialTemp;
+        
+        while (currentTemp > 1) {
+             for (let i = 0; i < iterationsPerTemp; i++) {
+                 let neighborSolution = JSON.parse(JSON.stringify(currentSolution));
+                 let moveMade = false;
+
+                 const moveType = Math.random();
+                 if (moveType < 0.7 && neighborSolution.leftovers.length > 0) {
+                     const leftoverIndex = Math.floor(Math.random() * neighborSolution.leftovers.length);
+                     const groupToPlace = neighborSolution.leftovers[leftoverIndex];
+                     const targetLoadIndex = neighborSolution.loads.length > 0 ? Math.floor(Math.random() * (neighborSolution.loads.length + 1)) : 0;
+
+                     if (targetLoadIndex < neighborSolution.loads.length) {
+                         const targetLoad = neighborSolution.loads[targetLoadIndex];
+                         if(isMoveValid(targetLoad, groupToPlace, vehicleType, configs)) {
+                             targetLoad.pedidos.push(...groupToPlace.pedidos);
+                             targetLoad.totalKg += groupToPlace.totalKg;
+                             targetLoad.totalCubagem += groupToPlace.totalCubagem;
+                             neighborSolution.leftovers.splice(leftoverIndex, 1);
+                             moveMade = true;
+                         }
+                     } else if (isMoveValid({pedidos:[], totalKg:0, totalCubagem:0}, groupToPlace, vehicleType, configs)) { 
+                         neighborSolution.loads.push(groupToPlace);
+                         neighborSolution.leftovers.splice(leftoverIndex, 1);
+                         moveMade = true;
+                     }
+                 } else if (neighborSolution.loads.length > 0) {
+                     const loadIndex = Math.floor(Math.random() * neighborSolution.loads.length);
+                     const load = neighborSolution.loads[loadIndex];
+                     
+                     if (load.pedidos.length > 0) {
+                         const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, p) => {
+                             const cId = normalizeClientId(p.Cliente);
+                             if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                             acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                             return acc;
+                         }, {}));
+
+                         if(clientGroupsInLoad.length > 0) {
+                             const groupIndexToRemove = Math.floor(Math.random() * clientGroupsInLoad.length);
+                             const groupToMove = clientGroupsInLoad[groupIndexToRemove];
+                             
+                             const idsToRemove = new Set(groupToMove.pedidos.map(p => p.Num_Pedido));
+                             load.pedidos = load.pedidos.filter(p => !idsToRemove.has(p.Num_Pedido));
+                             load.totalKg -= groupToMove.totalKg;
+                             load.totalCubagem -= groupToMove.totalCubagem;
+                             if(load.pedidos.length === 0) neighborSolution.loads.splice(loadIndex,1);
+
+                             neighborSolution.leftovers.push(groupToMove);
+                             moveMade = true;
+                         }
+                     }
+                 }
+                 
+                 if(moveMade){
+                     const currentEnergy = getSolutionEnergy(currentSolution, vehicleType, configs);
+                     const neighborEnergy = getSolutionEnergy(neighborSolution, vehicleType, configs);
+
+                     if (neighborEnergy < currentEnergy || Math.random() < Math.exp((currentEnergy - neighborEnergy) / currentTemp)) {
+                         currentSolution = neighborSolution;
+                         if (getSolutionEnergy(currentSolution, vehicleType, configs) < getSolutionEnergy(bestSolution, vehicleType, configs)) {
+                             bestSolution = JSON.parse(JSON.stringify(currentSolution));
+                         }
+                     }
+                 }
+             }
+
+             currentTemp *= coolingRate;
+             const progress = Math.min(100, 100 * (1 - Math.log(currentTemp) / Math.log(initialTemp)));
+             self.postMessage({ status: 'progress', progress: progress });
+             
+             // Pausa brevemente para permitir que a thread do worker envie mensagens e não trave.
+             await new Promise(r => setTimeout(r, 0));
+        }
+
+        const config = getVehicleConfig(vehicleType, configs);
+        let finalLoads = [];
+        let finalLeftovers = [...bestSolution.leftovers];
+        bestSolution.loads.forEach(load => {
+            if (load.pedidos.length > 0 && load.totalKg >= config.minKg) {
+                finalLoads.push(load);
+            } else if (load.pedidos.length > 0) {
+                const groups = Object.values(load.pedidos.reduce((acc, p) => { 
+                    const cId = normalizeClientId(p.Cliente);
+                    if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                    acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                    return acc; 
+                }, {}));
+                finalLeftovers.push(...groups);
+            }
+        });
+        resolve({ loads: finalLoads, leftovers: finalLeftovers });
+    });
+}
