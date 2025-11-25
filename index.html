@@ -3847,169 +3847,6 @@
             return totalSobras;
         }
 
-        function runSimulatedAnnealing(packableGroups, vehicleType, uiText) {
-             return new Promise(resolve => {
-                  const initialTemp = 1000;
-                  const coolingRate = 0.993;
-                  const iterationsPerTemp = 200;
-                  
-                  // CORREÇÃO: A ordenação inicial agora também prioriza a data mais antiga.
-                  const initialSortedGroups = [...packableGroups].sort((a, b) => {
-                        if (a.oldestDate && b.oldestDate) {
-                            if (a.oldestDate < b.oldestDate) return -1;
-                            if (a.oldestDate > b.oldestDate) return 1;
-                        } else if (a.oldestDate) { return -1; } 
-                          else if (b.oldestDate) { return 1; }
-                        return b.totalKg - a.totalKg; // Fallback para o peso
-                  });
-
-                  let bestSolution = createSolutionFromHeuristic(initialSortedGroups, vehicleType);
-                  let currentSolution = deepClone(bestSolution);
-
-                  let currentTemp = initialTemp;
-                  
-                  const progressBar = document.getElementById('processing-progress-bar');
-                  const statusText = document.getElementById('processing-status-text');
-                  startThinkingText();
-
-                  function doTemperatureStep() {
-                       for (let i = 0; i < iterationsPerTemp; i++) {
-                           let neighborSolution = deepClone(currentSolution);
-                           let moveMade = false;
-
-                           const moveType = Math.random();
-                           if (moveType < 0.7 && neighborSolution.leftovers.length > 0) {
-                               const leftoverIndex = Math.floor(Math.random() * neighborSolution.leftovers.length);
-                               const groupToPlace = neighborSolution.leftovers[leftoverIndex];
-                               const targetLoadIndex = neighborSolution.loads.length > 0 ? Math.floor(Math.random() * (neighborSolution.loads.length + 1)) : 0;
-
-                               if (targetLoadIndex < neighborSolution.loads.length) {
-                                   const targetLoad = neighborSolution.loads[targetLoadIndex];
-                                   if(isMoveValid(targetLoad, groupToPlace, vehicleType)) {
-                                       targetLoad.pedidos.push(...groupToPlace.pedidos);
-                                       targetLoad.totalKg += groupToPlace.totalKg;
-                                       targetLoad.totalCubagem += groupToPlace.totalCubagem;
-                                       neighborSolution.leftovers.splice(leftoverIndex, 1);
-                                       moveMade = true;
-                                   }
-                               } else if (isMoveValid({pedidos:[], totalKg:0, totalCubagem:0}, groupToPlace, vehicleType)) { 
-                                   neighborSolution.loads.push(groupToPlace);
-                                   neighborSolution.leftovers.splice(leftoverIndex, 1);
-                                   moveMade = true;
-                               }
-                           } else if (neighborSolution.loads.length > 0) {
-                               const loadIndex = Math.floor(Math.random() * neighborSolution.loads.length);
-                               const load = neighborSolution.loads[loadIndex];
-                               
-                               if (load.pedidos.length > 0) {
-                                   const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, p) => {
-                                       const cId = normalizeClientId(p.Cliente);
-                                       if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
-                                       acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
-                                       return acc;
-                                   }, {}));
-
-                                   if(clientGroupsInLoad.length > 0) {
-                                       const groupIndexToRemove = Math.floor(Math.random() * clientGroupsInLoad.length);
-                                       const groupToMove = clientGroupsInLoad[groupIndexToRemove];
-                                       
-                                       const idsToRemove = new Set(groupToMove.pedidos.map(p => p.Num_Pedido));
-                                       load.pedidos = load.pedidos.filter(p => !idsToRemove.has(p.Num_Pedido));
-                                       load.totalKg -= groupToMove.totalKg;
-                                       load.totalCubagem -= groupToMove.totalCubagem;
-                                       if(load.pedidos.length === 0) neighborSolution.loads.splice(loadIndex,1);
-
-                                       neighborSolution.leftovers.push(groupToMove);
-                                       moveMade = true;
-                                   }
-                               }
-                           } else if (moveType < 0.95 && neighborSolution.loads.length > 0 && neighborSolution.leftovers.length > 0) {
-                               // NOVO: Movimento de "Troca Inteligente" (Swap)
-                               // Tenta trocar um grupo de uma carga com um grupo das sobras.
-                               const loadIndex = Math.floor(Math.random() * neighborSolution.loads.length);
-                               const load = neighborSolution.loads[loadIndex];
-                               const leftoverIndex = Math.floor(Math.random() * neighborSolution.leftovers.length);
-                               const leftoverGroup = neighborSolution.leftovers[leftoverIndex];
-
-                               if (load.pedidos.length > 0) {
-                                   const clientGroupsInLoad = Object.values(load.pedidos.reduce((acc, p) => {
-                                       const cId = normalizeClientId(p.Cliente);
-                                       if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
-                                       acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
-                                       return acc;
-                                   }, {}));
-
-                                   if (clientGroupsInLoad.length > 0) {
-                                       const groupIndexToSwap = Math.floor(Math.random() * clientGroupsInLoad.length);
-                                       const groupToSwapOut = clientGroupsInLoad[groupIndexToSwap];
-
-                                       // Simula a troca para verificar a validade
-                                       const tempLoadKg = load.totalKg - groupToSwapOut.totalKg + leftoverGroup.totalKg;
-                                       const tempLoadCubagem = load.totalCubagem - groupToSwapOut.totalCubagem + leftoverGroup.totalCubagem;
-                                       const config = getVehicleConfig(vehicleType);
-
-                                       if (tempLoadKg <= config.hardMaxKg && tempLoadCubagem <= config.hardMaxCubage) {
-                                           // A troca é válida, então a executa
-                                           const idsToRemove = new Set(groupToSwapOut.pedidos.map(p => p.Num_Pedido));
-                                           load.pedidos = load.pedidos.filter(p => !idsToRemove.has(p.Num_Pedido));
-                                           load.totalKg -= groupToSwapOut.totalKg; load.totalCubagem -= groupToSwapOut.totalCubagem;
-                                           load.pedidos.push(...leftoverGroup.pedidos);
-                                           load.totalKg += leftoverGroup.totalKg; load.totalCubagem += leftoverGroup.totalCubagem;
-                                           neighborSolution.leftovers.splice(leftoverIndex, 1);
-                                           neighborSolution.leftovers.push(groupToSwapOut);
-                                           moveMade = true;
-                                       }
-                                   }
-                               }
-                           }
-                           
-                           if(moveMade){
-                               const currentEnergy = getSolutionEnergy(currentSolution, vehicleType);
-                               const neighborEnergy = getSolutionEnergy(neighborSolution, vehicleType);
-
-                               if (neighborEnergy < currentEnergy || Math.random() < Math.exp((currentEnergy - neighborEnergy) / currentTemp)) {
-                                   currentSolution = neighborSolution;
-                                   if (getSolutionEnergy(currentSolution, vehicleType) < getSolutionEnergy(bestSolution, vehicleType)) {
-                                       bestSolution = deepClone(currentSolution);
-                                   }
-                               }
-                           }
-                       }
-
-                       currentTemp *= coolingRate;
-                       const progress = Math.min(100, 100 * (1 - Math.log(currentTemp) / Math.log(initialTemp)));
-                       progressBar.style.width = `${progress}%`;
-                       statusText.textContent = uiText;
-
-                       if (currentTemp > 1) {
-                           requestAnimationFrame(doTemperatureStep);
-                       } else {
-                           const config = getVehicleConfig(vehicleType);
-                           let finalLoads = [];
-                           let finalLeftovers = [...bestSolution.leftovers];
-                           bestSolution.loads.forEach(load => {
-                               if (load.pedidos.length > 0 && load.totalKg >= config.minKg) {
-                                   finalLoads.push(load);
-                               } else if (load.pedidos.length > 0) {
-                                   const groups = Object.values(load.pedidos.reduce((acc, p) => { 
-                                       const cId = normalizeClientId(p.Cliente);
-                                       if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
-                                       acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
-                                       return acc; 
-                                   }, {}));
-                                   finalLeftovers.push(...groups);
-                               }
-                           });
-                           stopThinkingText();
-                           console.log(`Otimização para ${vehicleType} finalizada com ${finalLeftovers.reduce((s, g) => s + g.totalKg, 0).toFixed(2)}kg de sobra.`);
-                           resolve({ loads: finalLoads, leftovers: finalLeftovers });
-                       }
-                  }
-                  
-                  requestAnimationFrame(doTemperatureStep);
-             });
-        }
-
         function refinarCargasComTrocas(initialLoads, initialLeftovers, vehicleType) {
             let loads = deepClone(initialLoads);
             let leftovers = deepClone(initialLeftovers);
@@ -4153,76 +3990,71 @@
             const optimizationLevel = document.getElementById('optimizationLevelSelect').value;
             let optimizationResult;
             
-            // ================================================================================================
-            //  NOVA LÓGICA DE PROCESSAMENTO COM WEB WORKER
-            // ================================================================================================
-            let processingWorker = new Worker('worker.js');
-
-            // Reinicia o worker para garantir que não haja estado antigo
-            if (processingWorker) {
-                processingWorker.terminate();
-            }
-            processingWorker = new Worker('worker.js');
-
+            // --- LÓGICA DE PROCESSAMENTO COM WEB WORKER ---
+            const processingWorker = new Worker('worker.js');
             const modalElement = document.getElementById('processing-modal');
             const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
-            
-            try {
-                if(optimizationLevel !== '1') {
-                    document.getElementById('processing-progress-bar').style.width = '0%';
-                    modal.show();
-                } else {
-                    resultadoDiv.insertAdjacentHTML('beforeend', '<div id="spinner-temp-container" class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Analisando estratégias e montando cargas...</span></div>');
-                }
+            const progressBar = document.getElementById('processing-progress-bar');
+            const statusText = document.getElementById('processing-status-text');
 
-                switch (optimizationLevel) {
-                    case '1':
-                        console.log(`Executando Nível 1: Heurística Rápida para ${vehicleType}...`);
-                        optimizationResult = runHeuristicOptimization(packableGroups, vehicleType);
-                        break;
-                    case '3':
-                        console.log(`Executando Nível 3: Otimização Exaustiva (SA + Polimento Simples) para ${vehicleType}...`);
-                        const saResultForPolish = await runSimulatedAnnealing(packableGroups, vehicleType, 'Otimizando... (Nível 3 - Fase 1/2)');
-                        
-                        document.getElementById('processing-status-text').textContent = 'Otimizando... (Nível 3 - Fase 2/2)';
-                        document.getElementById('thinking-text').textContent = 'Aplicando polimento com trocas locais.';
-                        document.getElementById('processing-progress-bar').style.width = '100%';
-
-                        const polished = refinarCargasComTrocas(saResultForPolish.loads, saResultForPolish.leftovers, vehicleType);
-                        optimizationResult = { loads: polished.refinedLoads, leftovers: polished.remainingLeftovers };
-                        break;
-                    case '4.0':
-                        console.log(`Executando Nível 4: Otimização Reconstrutiva para ${vehicleType}...`);
-                        const saResultForReconstruction = await runSimulatedAnnealing(packableGroups, vehicleType, 'Otimizando... (Nível 4 - Fase 1/3)');
-
-                        document.getElementById('processing-status-text').textContent = 'Otimizando... (Nível 4 - Fase 2/3)';
-                        document.getElementById('processing-details-text').textContent = 'Reconstruindo cargas ineficientes.';
-                        const reconstructed = await refinarComReconstrucao(saResultForReconstruction.loads, saResultForReconstruction.leftovers, vehicleType);
-
-                        document.getElementById('processing-status-text').textContent = 'Otimizando... (Nível 4 - Fase 3/3)';
-                        document.getElementById('thinking-text').textContent = 'Aplicando polimento final.';
-                        const finalPolished = refinarCargasComTrocas(reconstructed.refinedLoads, reconstructed.remainingLeftovers, vehicleType);
-                        optimizationResult = { loads: finalPolished.refinedLoads, leftovers: finalPolished.remainingLeftovers };
-                        break;
-                    case '2':
-                    default:
-                        console.log(`Executando Nível 2: Otimização Avançada (SA) para ${vehicleType}...`);
-                        optimizationResult = await runSimulatedAnnealing(packableGroups, vehicleType, 'Otimizando... (Nível 2)');
-                        break;
-                }
-
-            } finally {
-                // Reabilita apenas os botões de rotas que ainda não foram processadas.
-                allRouteButtons.forEach(btn => {
-                    if (!btn.classList.contains('active')) btn.disabled = false;
-                });
-                if(optimizationLevel !== '1') {
-                    modal.hide();
-                } else {
-                    const spinner = document.getElementById('spinner-temp-container');
-                    if (spinner) spinner.remove();
-                }
+            // Mostra o modal de processamento para otimizações que demoram
+            if (optimizationLevel !== '1') {
+                progressBar.style.width = '0%';
+                statusText.textContent = `Otimizando ${title}...`;
+                startThinkingText();
+                modal.show();
+            } else {
+                resultadoDiv.insertAdjacentHTML('beforeend', '<div id="spinner-temp-container" class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div><span class="ms-3">Analisando estratégias e montando cargas...</span></div>');
             }
+
+            // Coleta as configurações atuais dos veículos
+            const vehicleConfigs = {
+                fiorinoMinCapacity: parseFloat(document.getElementById('fiorinoMinCapacity').value), fiorinoMaxCapacity: parseFloat(document.getElementById('fiorinoMaxCapacity').value), fiorinoCubage: parseFloat(document.getElementById('fiorinoCubage').value), fiorinoHardMaxCapacity: parseFloat(document.getElementById('fiorinoHardMaxCapacity').value), fiorinoHardCubage: parseFloat(document.getElementById('fiorinoHardCubage').value),
+                vanMinCapacity: parseFloat(document.getElementById('vanMinCapacity').value), vanMaxCapacity: parseFloat(document.getElementById('vanMaxCapacity').value), vanCubage: parseFloat(document.getElementById('vanCubage').value), vanHardMaxCapacity: parseFloat(document.getElementById('vanHardMaxCapacity').value), vanHardCubage: parseFloat(document.getElementById('vanHardCubage').value),
+                tresQuartosMinCapacity: parseFloat(document.getElementById('tresQuartosMinCapacity').value), tresQuartosMaxCapacity: parseFloat(document.getElementById('tresQuartosMaxCapacity').value), tresQuartosCubage: parseFloat(document.getElementById('tresQuartosCubage').value),
+                tocoMinCapacity: parseFloat(document.getElementById('tocoMinCapacity').value), tocoMaxCapacity: parseFloat(document.getElementById('tocoMaxCapacity').value), tocoCubage: parseFloat(document.getElementById('tocoCubage').value)
+            };
+
+            // Envia os dados para o worker
+            processingWorker.postMessage({
+                command: 'start-optimization',
+                packableGroups: packableGroups,
+                vehicleType: vehicleType,
+                optimizationLevel: optimizationLevel,
+                configs: vehicleConfigs,
+                pedidosPrioritarios: pedidosPrioritarios,
+                pedidosRecall: pedidosRecall
+            });
+
+            // Aguarda a resposta do worker
+            optimizationResult = await new Promise((resolve, reject) => {
+                processingWorker.onmessage = function(e) {
+                    const { status, result, message, stack, progress } = e.data;
+                    if (status === 'complete') {
+                        resolve(result);
+                    } else if (status === 'progress') {
+                        progressBar.style.width = `${progress}%`;
+                    } else if (status === 'error') {
+                        console.error("Erro recebido do Worker:", message, stack);
+                        reject(new Error(message));
+                    }
+                };
+                processingWorker.onerror = function(e) {
+                    reject(new Error(`Erro no Worker: ${e.message}`));
+                };
+            });
+
+            // Limpeza após o término
+            allRouteButtons.forEach(btn => { if (!btn.classList.contains('active')) btn.disabled = false; });
+            if (optimizationLevel !== '1') {
+                stopThinkingText();
+                modal.hide();
+            } else {
+                const spinner = document.getElementById('spinner-temp-container');
+                if (spinner) spinner.remove();
+            }
+            processingWorker.terminate();
+            // --- FIM DA LÓGICA DO WORKER ---
             
             // Tenta encaixar sobras em cargas existentes que ainda têm espaço.
             const { refinedLoads, remainingLeftovers } = refineLoadsWithSimpleFit(optimizationResult.loads, optimizationResult.leftovers);
@@ -4237,6 +4069,19 @@
             let tertiaryLoads = [];
             
             // PASSO 1: Se a rota original for de Fiorino e houver sobras...
+            function getVehicleConfig(vehicleType) {
+                const typeMap = { fiorino: 'fiorino', van: 'van', tresQuartos: 'tresQuartos', '3/4': 'tresQuartos', toco: 'toco' };
+                const configType = typeMap[vehicleType];
+                if (!configType) return null;
+                return {
+                    minKg: vehicleConfigs[`${configType}MinCapacity`],
+                    softMaxKg: vehicleConfigs[`${configType}MaxCapacity`],
+                    softMaxCubagem: vehicleConfigs[`${configType}Cubage`],
+                    hardMaxKg: vehicleConfigs[`${configType}HardMaxCapacity`] || vehicleConfigs[`${configType}MaxCapacity`],
+                    hardMaxCubage: vehicleConfigs[`${configType}HardCubage`] || vehicleConfigs[`${configType}Cubage`]
+                };
+            }
+
             if (vehicleType === 'fiorino' && leftoverGroups.length > 0) {
                 // ...tenta montar uma ou mais Vans com essas sobras.
                 console.log(`Sobras de Fiorino (${leftoverGroups.reduce((s,g)=>s+g.totalKg,0).toFixed(2)}kg) tentando virar Van.`);
@@ -4309,20 +4154,14 @@
             // ATUALIZADO: A renderização agora é centralizada, mas a lógica de foco na UI permanece.
             const gruposGeraisRestantes = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
             setTimeout(() => { // Adicionado um pequeno atraso para garantir que a UI esteja pronta
-                const rotasDisponiveis = getSortedVarejoRoutes(Object.keys(gruposGeraisRestantes));
-                const rotaPrincipal = Array.isArray(routeOrRoutes) ? routeOrRoutes[0] : routeOrRoutes;
-                const indexRota = rotasDisponiveis.indexOf(rotaPrincipal);
-            handlePostProcessingUI(indexRota, title, divId, rotaPrincipal); // Passa a rota principal
+                const routeContext = {
+                    divId: divId,
+                    title: title,
+                    routesKey: routesKey,
+                    buttonId: buttonElement ? buttonElement.id : null
+                };
+                saveRouteContext(routeContext);
             }, 100);
-
-            // Salvar o contexto da rota processada para recarregamento
-            const routeContext = {
-                divId: divId,
-                title: title,
-            routesKey: routesKey, // prettier-ignore
-                buttonId: buttonElement ? buttonElement.id : null
-            };
-            saveRouteContext(routeContext);
 
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
@@ -4346,7 +4185,7 @@
             // e a chamada para `handlePostProcessingUI` foi ajustada para lidar com as sobras
             // desta execução específica.
             updateAndRenderKPIs();
-            updateAndRenderChart();            
+            updateAndRenderChart();
             displayGerais(document.getElementById('resultado-geral'), pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {}));
             handlePostProcessingUI(finalLeftoverGroups, routeOrRoutes, title, divId); // CORREÇÃO: Chamada ajustada
         }
