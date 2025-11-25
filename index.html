@@ -5498,20 +5498,25 @@
             const totalCubagem = pedidosSelecionados.reduce((sum, p) => sum + p.Cubagem, 0);
 
             const veiculos = [
-                { tipo: 'fiorino', nome: 'Fiorino', maxKg: parseFloat(document.getElementById('fiorinoHardMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('fiorinoHardCubage').value) },
-                { tipo: 'van', nome: 'Van', maxKg: parseFloat(document.getElementById('vanHardMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('vanHardCubage').value) }, // Corrigido para vanHardCubage
-                { tipo: 'tresQuartos', nome: '3/4', maxKg: parseFloat(document.getElementById('tresQuartosMaxCapacity').value), maxCubagem: parseFloat(document.getElementById('tresQuartosCubage').value) },
+                { tipo: 'fiorino', nome: 'Fiorino', maxKg: getVehicleConfig('fiorino').hardMaxKg, maxCubagem: getVehicleConfig('fiorino').hardMaxCubage },
+                { tipo: 'van', nome: 'Van', maxKg: getVehicleConfig('van').hardMaxKg, maxCubagem: getVehicleConfig('van').hardMaxCubage },
+                { tipo: 'tresQuartos', nome: '3/4', maxKg: getVehicleConfig('tresQuartos').hardMaxKg, maxCubagem: getVehicleConfig('tresQuartos').hardMaxCubage },
+                { tipo: 'toco', nome: 'Toco', maxKg: getVehicleConfig('toco').hardMaxKg, maxCubagem: getVehicleConfig('toco').hardMaxCubage }
             ];
 
             let veiculoEscolhido = null;
-
             for (const veiculo of veiculos) {
                 if (totalKg <= veiculo.maxKg && totalCubagem <= veiculo.maxCubagem) {
                     veiculoEscolhido = veiculo;
                     break;
                 }
             }
-            
+
+            // CORREÇÃO: Se nenhum veículo comportar, classifica como 'Carreta/Truck' e permite a criação.
+            if (!veiculoEscolhido) {
+                veiculoEscolhido = { tipo: 'toco', nome: 'Carreta/Truck (Excedeu Capacidade)' };
+            }
+
             if (veiculoEscolhido) {
                 numerosPedidos.forEach(num => processedSet.add(num));
                 pedidosSelecionados.forEach(p => processedSet.add(String(p.Num_Pedido)));
@@ -5530,7 +5535,8 @@
                 const vehicleInfo = {
                     fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
                     van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
-                    tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
+                    tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' },
+                    toco: { name: 'Carreta/Truck', colorClass: 'bg-secondary', textColor: 'text-white', icon: 'bi-inboxes-fill' }
                 };
 
                 resultadoDiv.innerHTML = `
