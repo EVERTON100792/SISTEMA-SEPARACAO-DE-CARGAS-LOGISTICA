@@ -2898,7 +2898,10 @@
                     pedidosComCFNumericoIsolado = [];
 
                     // Adiciona os pedidos TBL ESPECIAL SEM CF ao grupo de cargas fechadas globais
-                    pedidosCarretaSemCF = pedidosParaProcessamentoGeral.filter(p => String(p.Coluna5 || '').toUpperCase().includes('TBL ESPECIAL') && !isNumeric(p.CF));
+                    pedidosCarretaSemCF = pedidosParaProcessamentoGeral.filter(p => {
+                        const coluna5Upper = String(p.Coluna5 || '').toUpperCase();
+                        return (coluna5Upper.includes('TBL ESPECIAL') || coluna5Upper.includes('TBL ESP CARRETA')) && !isNumeric(p.CF);
+                    });
                     const pedidosCarretaSemCFIds = new Set(pedidosCarretaSemCF.map(p => p.Num_Pedido));
                     pedidosParaProcessamentoGeral = pedidosParaProcessamentoGeral.filter(p => !pedidosCarretaSemCFIds.has(p.Num_Pedido));
 
@@ -5316,22 +5319,21 @@
             const clientBlockKg = clientOrdersToMove.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
             const clientBlockCubagem = clientOrdersToMove.reduce((sum, p) => sum + p.Cubagem, 0);
             
-            // NOVO: A validação de capacidade só se aplica se o alvo for uma carga, não a lista de disponíveis.
-            if (!targetIsLeftovers && !targetIsManualBuilder && !targetIsGeral) {
-                const targetVehicleType = targetLoad.vehicleType;
-                if (targetVehicleType) { 
-                    const config = getVehicleConfig(targetVehicleType);
-                    const isInvalidMove = (targetLoad.totalKg + clientBlockKg > config.hardMaxKg) || (targetLoad.totalCubagem + clientBlockCubagem > config.hardMaxCubage);
+            // CORREÇÃO: A validação de capacidade agora se aplica a qualquer carga de destino, incluindo o painel manual.
+            // A validação é pulada apenas se o destino for a lista de "Disponíveis" ou "Sobras".
+            if (!targetIsGeral && !targetIsLeftovers) {
+                const targetVehicleType = targetLoad.vehicleType; // Funciona para cargas ativas e para o painel manual
+                const config = getVehicleConfig(targetVehicleType);
+                const isInvalidMove = (targetLoad.totalKg + clientBlockKg > config.hardMaxKg) || (targetLoad.totalCubagem + clientBlockCubagem > config.hardMaxCubage);
 
-                    if (isInvalidMove) {
-                        const overWeight = (targetLoad.totalKg + clientBlockKg) - config.hardMaxKg;
-                        alert(`Ação inválida! Mover este grupo excede a capacidade máxima do veículo.\nExcesso de peso: ${overWeight > 0 ? overWeight.toFixed(2) + ' kg' : 'N/A'}`);
-                        
-                        // Animação de feedback negativo
-                        dropZoneCard.classList.add('drop-invalid');
-                        setTimeout(() => dropZoneCard.classList.remove('drop-invalid'), 500);
-                        return;
-                    }
+                if (isInvalidMove) {
+                    const overWeight = (targetLoad.totalKg + clientBlockKg) - config.hardMaxKg;
+                    alert(`Ação inválida! Mover este grupo excede a capacidade máxima do veículo.\nExcesso de peso: ${overWeight > 0 ? overWeight.toFixed(2) + ' kg' : 'N/A'}`);
+                    
+                    // Animação de feedback negativo
+                    dropZoneCard.classList.add('drop-invalid');
+                    setTimeout(() => dropZoneCard.classList.remove('drop-invalid'), 500);
+                    return;
                 }
             }
             
@@ -5358,17 +5360,14 @@
                 targetLoad.totalKg += clientBlockKg;
                 targetLoad.totalCubagem += clientBlockCubagem;
             }
-
-            // Se a origem OU o destino for o painel manual, usa a renderização otimizada.
+            
+            // CORREÇÃO FINAL: Garante que a UI seja atualizada corretamente em ambos os sentidos.
+            // Se a origem OU o destino for o painel manual, sua UI específica é atualizada.
+            // A chamada `renderAllUI()` garante que o resto da interface (cargas automáticas, etc.) também seja redesenhado.
             if (targetIsManualBuilder || sourceIsManualBuilder) {
-                updateManualBuilderUI();
-                // NOVO: Atualiza a lista de disponíveis e os KPIs sem redesenhar toda a mesa de trabalho.
-                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
-                displayGerais(document.getElementById('resultado-geral'), gruposGerais);
-                updateAndRenderKPIs();
-                updateAndRenderChart();
-                saveStateToLocalStorage();
-            } else { 
+                updateManualBuilderUI(); // Atualiza o painel manual, seja ele origem ou destino.
+                renderAllUI(); // Atualiza todo o resto, incluindo a carga automática de origem/destino.
+            }  else {
                 renderAllUI();
             }
         }
