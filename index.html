@@ -3325,16 +3325,21 @@
                     }
 
                     const vehicleType = config.type;
-                    const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning'); // prettier-ignore
+                    const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
                     const divId = vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : (vehicleType === 'van' ? 'resultado-van-geral' : 'resultado-34-geral');
                     const btnId = `btn-${vehicleType}-${rota}`;
+                    const routesKeyString = rotaValue.replace(/\[|\]|'/g, ''); // Transforma ['1','2'] em 1,2
 
                     // Verifica se a rota já foi processada para renderizar o botão no estado correto
-                    if (processedRoutes.has(rotaValue.replace(/'/g, ""))) {
-                        botoes[vehicleType] += `<button id="${btnId}" class="btn btn-${colorClass} active mt-2 me-2" disabled><i class="bi bi-check-circle-fill me-2"></i>${buttonTitle}</button>`;
+                    if (processedRoutes.has(routesKeyString)) {
+                        botoes[vehicleType] += `
+                            <div class="btn-group mt-2 me-2" role="group">
+                                <button id="${btnId}" class="btn btn-${colorClass} active" onclick="exibirCargasDaRota('${routesKeyString}')"><i class="bi bi-eye-fill me-2"></i>${buttonTitle}</button>
+                                <button class="btn btn-${colorClass} active" onclick="reprocessarRota('${routesKeyString}', event)" title="Reprocessar Rota"><i class="bi bi-arrow-clockwise"></i></button>
+                            </div>`;
                     } else {
-                        const functionCall = vehicleType === 'fiorino' ? 'separarCargasFiorino' : (vehicleType === 'van' ? 'separarCargasVan' : 'separarCargas34');
-                        botoes[vehicleType] += `<button id="${btnId}" class="btn btn-outline-${colorClass} mt-2 me-2" onclick="${functionCall}(${rotaValue}, '${divId}', '${buttonTitle}', this)">${buttonTitle}</button>`;
+                        const functionCall = `separarCargasGeneric(${rotaValue}, '${divId}', '${buttonTitle}', '${vehicleType}', this)`;
+                        botoes[vehicleType] += `<button id="${btnId}" class="btn btn-outline-${colorClass} mt-2 me-2" onclick="${functionCall}">${buttonTitle}</button>`;
                     }
                 }
             });
@@ -3926,26 +3931,13 @@
 
             const routesKey = Array.isArray(routeOrRoutes) ? routeOrRoutes.sort().join(',') : String(routeOrRoutes);
 
-            allRouteButtons.forEach(btn => btn.disabled = true);
-            
-            if (processedRoutes.has(routesKey)) {
-                alert('Esta rota já foi processada. Para reprocessar, limpe os resultados usando o botão "Limpar Tudo".');
-                allRouteButtons.forEach(btn => btn.disabled = false); // Re-habilita os botões se a rota já foi processada
-                return;
-            }
             processedRoutes.add(routesKey);
 
+            // CORREÇÃO: Limpa a área de resultado antes de processar uma nova rota.
+            // Isso garante que apenas as cargas da rota atual sejam exibidas.
             const resultadoDiv = document.getElementById(divId);
-            resultadoDiv.innerHTML = ''; // Limpa a área de resultado antes de processar uma nova rota.
-
+            resultadoDiv.innerHTML = '';
             // Restaura o feedback visual no botão da rota processada
-            if (buttonElement) {
-                const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
-                buttonElement.classList.remove(`btn-outline-${colorClass}`);
-                buttonElement.classList.add(`btn-${colorClass}`, 'active');
-                buttonElement.disabled = true; // Desativa o botão para evitar reprocessamento
-                buttonElement.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>${title}`;
-            }
 
             if (planilhaData.length === 0) {
                 resultadoDiv.innerHTML = '<p class="text-danger">Nenhum dado de planilha carregado.</p>'; 
@@ -4185,9 +4177,78 @@
             // e a chamada para `handlePostProcessingUI` foi ajustada para lidar com as sobras
             // desta execução específica.
             updateAndRenderKPIs();
-            updateAndRenderChart();
+            updateAndRenderChart();            
+            // CORREÇÃO: Força a re-renderização dos botões para garantir que o botão de reprocessar apareça.
+            const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
+            displayGerais(document.getElementById('resultado-geral'), gruposGerais);
             displayGerais(document.getElementById('resultado-geral'), pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {}));
             handlePostProcessingUI(finalLeftoverGroups, routeOrRoutes, title, divId); // CORREÇÃO: Chamada ajustada
+        }
+
+        function reprocessarRota(routesKey, event) {
+            event.stopPropagation(); // Impede que o clique dispare a exibição da rota
+
+            if (!confirm(`Tem certeza que deseja reprocessar a rota ${routesKey}? As cargas atuais para esta rota serão desfeitas.`)) {
+                return;
+            }
+
+            // 1. Encontrar as cargas associadas a esta rota
+            const routes = routesKey.split(',');
+            const loadsToUndo = Object.values(activeLoads).filter(load => 
+                load.pedidos.some(p => routes.includes(String(p.Cod_Rota)))
+            );
+
+            if (loadsToUndo.length === 0) {
+                showToast("Nenhuma carga encontrada para esta rota. Resetando o botão.", "info");
+            }
+
+            // 2. Coletar todos os pedidos das cargas a serem desfeitas
+            const pedidosParaDevolver = loadsToUndo.flatMap(load => load.pedidos);
+
+            // 3. Remover as cargas do `activeLoads`
+            loadsToUndo.forEach(load => {
+                delete activeLoads[load.id];
+            });
+
+            // 4. Devolver os pedidos para a lista de `pedidosGeraisAtuais`
+            pedidosGeraisAtuais.push(...pedidosParaDevolver);
+
+            // 5. Remover a rota do conjunto de rotas processadas
+            processedRoutes.delete(routesKey);
+            delete processedRouteContexts[routesKey];
+
+            // 6. Redesenhar a UI para refletir o estado atualizado
+            renderAllUI();
+
+            showToast(`Rota ${routesKey} pronta para ser reprocessada.`, "success");
+        }
+
+        function exibirCargasDaRota(routesKey) {
+            const context = processedRouteContexts[routesKey];
+            if (!context) return;
+        
+            const resultadoDiv = document.getElementById(context.divId);
+            resultadoDiv.innerHTML = ''; // Limpa a área de resultado
+        
+            const vehicleInfo = {
+                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
+                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
+                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
+            };
+        
+            // Encontra as cargas salvas para esta rota
+            const routes = routesKey.split(',');
+            const loadsParaExibir = Object.values(activeLoads).filter(load => 
+                load.pedidos.some(p => routes.includes(String(p.Cod_Rota)))
+            );
+        
+            let html = `<h5 class="mt-3">Cargas para <strong>${context.title}</strong></h5>`;
+            if (loadsParaExibir.length > 0) {
+                loadsParaExibir.forEach(load => {
+                    html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType] || vehicleInfo['van']);
+                });
+            }
+            resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
         }
 
         function roteirizarSobrasSP(leftoverPedidos) {
@@ -4756,10 +4817,6 @@
             // Abre a URL em uma nova aba
             window.open(url, '_blank');
         }
-
-        function separarCargasFiorino(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'fiorino', buttonElement); }
-        function separarCargasVan(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'van', buttonElement); }
-        function separarCargas34(routes, divId, title, buttonElement) { separarCargasGeneric(routes, divId, title, 'tresQuartos', buttonElement); }
 
         // ... (código existente) ...
 
