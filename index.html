@@ -136,6 +136,12 @@
             100% { box-shadow: 0 0 8px var(--dark-primary-glow), 0 0 10px var(--dark-accent-glow); }
         }
         .animated-entry { animation: fadeIn 0.6s ease-out forwards; opacity: 0; /* Garante que comece invisível */ }
+        /* NOVA ANIMAÇÃO PARA DESTAQUE DE MUDANÇA */
+        @keyframes highlight-change {
+            0%, 100% { box-shadow: none; }
+            50% { box-shadow: 0 0 15px 5px var(--dark-accent-glow); border-color: var(--dark-accent); }
+        }
+        .highlight-change-animation { animation: highlight-change 1.2s ease-in-out; }
         .animated-entry:nth-child(1) { animation-delay: 0.1s; }
         .animated-entry:nth-child(2) { animation-delay: 0.2s; }
         .animated-entry:nth-child(3) { animation-delay: 0.3s; }
@@ -1025,9 +1031,6 @@
                                 <button id="start-manual-routing-btn" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#manualRoutingModal">
                                     <i class="bi bi-signpost-split-fill me-1"></i>Roteirização Manual
                                 </button>
-                                <button id="start-manual-load-btn" class="btn btn-outline-success" onclick="startManualLoadBuilder()" disabled>
-                                    <i class="bi bi-plus-circle-fill me-1"></i>Criar Carga Manual
-                                </button>
                             </div>
                         </div>
                         <div class="card-body p-0"> 
@@ -1741,7 +1744,7 @@
         const defaultConfigs = {
             fiorinoMinCapacity: 300, fiorinoMaxCapacity: 500, fiorinoCubage: 1.5, fiorinoHardMaxCapacity: 560, fiorinoHardCubage: 1.7,
             vanMinCapacity: 1100, vanMaxCapacity: 1560, vanCubage: 5.0, vanHardMaxCapacity: 1600, vanHardCubage: 5.6,
-            tresQuartosMinCapacity: 2300, tresQuartosMaxCapacity: 4100, tresQuartosCubage: 15.0,
+            tresQuartosMinCapacity: 2300, tresQuartosMaxCapacity: 4100, tresQuartosCubage: 15.0, tresQuartosHardMaxCapacity: 4100, tresQuartosHardCubage: 15.0,
             tocoMinCapacity: 5000, tocoMaxCapacity: 8500, tocoCubage: 30.0
         };
         
@@ -1832,12 +1835,19 @@
             document.getElementById('tresQuartosMinCapacity').value = defaultConfigs.tresQuartosMinCapacity;
             document.getElementById('tresQuartosMaxCapacity').value = defaultConfigs.tresQuartosMaxCapacity;
             document.getElementById('tresQuartosCubage').value = defaultConfigs.tresQuartosCubage;
+            document.getElementById('tresQuartosHardMaxCapacity').value = defaultConfigs.tresQuartosHardMaxCapacity;
+            document.getElementById('tresQuartosHardCubage').value = defaultConfigs.tresQuartosHardCubage;
             saveConfigurations();
         }
         function resetToco() {
             document.getElementById('tocoMinCapacity').value = defaultConfigs.tocoMinCapacity;
             document.getElementById('tocoMaxCapacity').value = defaultConfigs.tocoMaxCapacity;
             document.getElementById('tocoCubage').value = defaultConfigs.tocoCubage;
+            // Adiciona os campos de peso e cubagem máximos absolutos para o Toco
+            const tocoHardMaxCapacity = document.getElementById('tocoHardMaxCapacity');
+            const tocoHardCubage = document.getElementById('tocoHardCubage');
+            if (tocoHardMaxCapacity) tocoHardMaxCapacity.value = defaultConfigs.tocoHardMaxCapacity;
+            if (tocoHardCubage) tocoHardCubage.value = defaultConfigs.tocoHardCubage;
             saveConfigurations();
         }
         function resetAll() {
@@ -2222,7 +2232,6 @@
             reader.onload = (e) => {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    document.getElementById('start-manual-load-btn').disabled = false;
                     const workbook = XLSX.read(data, {type: 'array', cellDates:true});
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
@@ -2854,23 +2863,60 @@
                     // Remove os pedidos da Rota 1 da lista principal
                     pedidosAindaNaoProcessados = pedidosAindaNaoProcessados.filter(p => !rota1PedidoIds.has(p.Num_Pedido));
 
-                    // Filtra pedidos com Coluna4 == '500' (são ignorados no processamento de cargas)
-                    const pedidosIgnorados500 = pedidosAindaNaoProcessados.filter(p => String(p.Coluna4) == '500');
-                    let pedidosParaProcessamentoGeral = pedidosAindaNaoProcessados.filter(p => String(p.Coluna4) != '500');
+                    let pedidosParaProcessamentoGeral = pedidosAindaNaoProcessados;
 
-                    // Separa Pedidos Toco (PRIORIDADE)
-                    // Simplificado: Todos os pedidos marcados como TOCO são considerados.
-                    const pedidosTocoFiltrados = pedidosParaProcessamentoGeral.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
-                    tocoPedidoIds = new Set(pedidosTocoFiltrados.map(p => String(p.Num_Pedido)));
-                    pedidosParaProcessamentoGeral = pedidosParaProcessamentoGeral.filter(p => !tocoPedidoIds.has(p.Num_Pedido));
-                    gruposToco = pedidosTocoFiltrados.reduce((acc, p) => {
-                        const cf = p.CF;
+                    // CORRIGIDO: Separa Cargas Toco por peso (>= 4500 kg por cliente) APENAS de pedidos de VAREJO.
+                    // Um pedido de varejo é aquele que NÃO tem um CF numérico.
+                    const pedidosDeVarejo = pedidosParaProcessamentoGeral.filter(p => !isNumeric(p.CF));
+                    const outrosPedidos = pedidosParaProcessamentoGeral.filter(p => isNumeric(p.CF));
+
+                    const gruposDeClientesVarejo = pedidosDeVarejo.reduce((acc, p) => {
+                        const clienteId = normalizeClientId(p.Cliente);
+                        if (!acc[clienteId]) {
+                            // Inicializa o grupo para este cliente
+                            acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0 };
+                        }
+                        acc[clienteId].pedidos.push(p);
+                        acc[clienteId].totalKg += p.Quilos_Saldo;
+                        acc[clienteId].totalCubagem += p.Cubagem;
+                        return acc;
+                    }, {});
+
+                    gruposToco = {};
+                    tocoPedidoIds = new Set();
+
+                    Object.entries(gruposDeClientesVarejo).forEach(([clienteId, grupo]) => {
+                        // CONDIÇÃO ATUALIZADA: Verifica se o grupo de cliente tem o peso necessário E se NENHUM de seus pedidos
+                        // contém as palavras-chave de exclusão na Coluna5.
+                        const deveSerExcluido = grupo.pedidos.some(p => {
+                            const coluna5Upper = String(p.Coluna5 || '').toUpperCase();
+                            return coluna5Upper.includes('TBL ESP CARRETA') || coluna5Upper.includes('TRUCK') || coluna5Upper.includes('CARRETA');
+                        });
+
+                        if (grupo.totalKg >= 4500 && !deveSerExcluido) {
+                            const cf = grupo.pedidos[0]?.CF || `CLI-${clienteId}`; // Usa CF ou um ID de cliente
+                            gruposToco[cf] = grupo;
+                            grupo.pedidos.forEach(p => tocoPedidoIds.add(p.Num_Pedido));
+                        }
+                    });
+
+                    // Remonta a lista de processamento geral com os pedidos que não viraram Toco por peso.
+                    pedidosParaProcessamentoGeral = [...outrosPedidos, ...pedidosDeVarejo.filter(p => !tocoPedidoIds.has(p.Num_Pedido))];
+                    
+                    // Adiciona os grupos toco antigos (baseados em flag) se existirem
+                    const pedidosTocoPorFlag = pedidosParaProcessamentoGeral.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
+                    const pedidosTocoPorFlagIds = new Set(pedidosTocoPorFlag.map(p => String(p.Num_Pedido)));
+                    
+                    gruposToco = pedidosTocoPorFlag.reduce((acc, p) => {
+                        const cf = p.CF || `FLAG-${p.Num_Pedido}`;
                         if (!acc[cf]) { acc[cf] = { pedidos: [], totalKg: 0, totalCubagem: 0 }; } 
                         acc[cf].pedidos.push(p); 
                         acc[cf].totalKg += p.Quilos_Saldo;
                         acc[cf].totalCubagem += p.Cubagem;
                         return acc;
-                    }, {});
+                    }, gruposToco); // Inicia o reduce com os gruposToco já existentes (do peso >= 4500kg)
+
+                    pedidosParaProcessamentoGeral = pedidosParaProcessamentoGeral.filter(p => !pedidosTocoPorFlagIds.has(String(p.Num_Pedido)));
                     displayToco(resultadoTocoDiv, gruposToco);
 
                     // Identifica clientes com qualquer tipo de bloqueio na planilha
@@ -3003,7 +3049,6 @@
 
             // 4. Atualiza os KPIs e o Gráfico no Dashboard de Resumo
             const hasData = planilhaData && planilhaData.length > 0;
-            document.getElementById('start-manual-load-btn').disabled = !hasData;
             if (!hasData) {
                 return; // Não renderiza KPIs se não houver dados
             }
@@ -4052,66 +4097,88 @@
             // --- FIM DA LÓGICA DO WORKER ---
             
             // Tenta encaixar sobras em cargas existentes que ainda têm espaço.
-            const { refinedLoads, remainingLeftovers } = refineLoadsWithSimpleFit(optimizationResult.loads, optimizationResult.leftovers);
+            const { refinedLoads: initialRefinedLoads, remainingLeftovers: initialLeftovers } = refineLoadsWithSimpleFit(optimizationResult.loads, optimizationResult.leftovers);
 
             // ========================================================================
-            // INÍCIO DA LÓGICA DE CASCATA (Fiorino -> Van -> 3/4)
+            // INÍCIO DA NOVA LÓGICA DE CASCATA (Fiorino -> Van -> 3/4 -> Toco)
             // ========================================================================
-            let primaryLoads = refinedLoads; // Cargas do tipo principal (ex: Fiorino)
-            let leftoverGroups = remainingLeftovers; // O que sobrou após o encaixe simples
+            let primaryLoads = initialRefinedLoads;
+            let leftoverGroups = initialLeftovers;
             let secondaryLoads = [];
-            primaryLoads.forEach(l => l.vehicleType = vehicleType); // Garante que o tipo de veículo primário esteja definido
             let tertiaryLoads = [];
-            
-            // PASSO 1: Se a rota original for de Fiorino e houver sobras...
-            function getVehicleConfig(vehicleType) {
-                const typeMap = { fiorino: 'fiorino', van: 'van', tresQuartos: 'tresQuartos', '3/4': 'tresQuartos', toco: 'toco' };
-                const configType = typeMap[vehicleType];
-                if (!configType) return null;
-                return {
-                    minKg: vehicleConfigs[`${configType}MinCapacity`],
-                    softMaxKg: vehicleConfigs[`${configType}MaxCapacity`],
-                    softMaxCubagem: vehicleConfigs[`${configType}Cubage`],
-                    hardMaxKg: vehicleConfigs[`${configType}HardMaxCapacity`] || vehicleConfigs[`${configType}MaxCapacity`],
-                    hardMaxCubage: vehicleConfigs[`${configType}HardCubage`] || vehicleConfigs[`${configType}Cubage`]
-                };
+            let quaternaryLoads = [];
+
+            primaryLoads.forEach(l => l.vehicleType = vehicleType);
+
+            // Função auxiliar para chamar a otimização (usando a heurística rápida para as cascatas)
+            const runCascadeOptimization = (groups, cascadeVehicleType) => {
+                if (groups.length === 0) return { loads: [], leftovers: [] };
+                console.log(`CASCATA: Tentando montar ${cascadeVehicleType} com ${groups.length} grupos de sobras.`);
+                // Usamos a heurística simples (Nível 1) para as etapas da cascata para manter a velocidade.
+                return runHeuristicOptimization(groups, cascadeVehicleType);
+            };
+
+            switch (vehicleType) {
+                case 'fiorino':
+                    // Sobras de Fiorino tentam virar Van
+                    const vanResult = runCascadeOptimization(leftoverGroups, 'van');
+                    secondaryLoads = vanResult.loads.map(l => ({ ...l, vehicleType: 'van' }));
+                    leftoverGroups = vanResult.leftovers;
+
+                    // Sobras de Van tentam virar 3/4
+                    const tqResultFromFiorino = runCascadeOptimization(leftoverGroups, 'tresQuartos');
+                    tertiaryLoads = tqResultFromFiorino.loads.map(l => ({ ...l, vehicleType: 'tresQuartos' }));
+                    leftoverGroups = tqResultFromFiorino.leftovers;
+
+                    // Sobras de 3/4 tentam virar Toco
+                    const tocoResultFromFiorino = runCascadeOptimization(leftoverGroups, 'toco');
+                    quaternaryLoads = tocoResultFromFiorino.loads.map(l => ({ ...l, vehicleType: 'toco' }));
+                    leftoverGroups = tocoResultFromFiorino.leftovers;
+                    break;
+
+                case 'van':
+                    // Sobras de Van tentam virar 3/4
+                    const tqResultFromVan = runCascadeOptimization(leftoverGroups, 'tresQuartos');
+                    secondaryLoads = tqResultFromVan.loads.map(l => ({ ...l, vehicleType: 'tresQuartos' }));
+                    leftoverGroups = tqResultFromVan.leftovers;
+
+                    // Sobras de 3/4 tentam virar Toco
+                    const tocoResultFromVan = runCascadeOptimization(leftoverGroups, 'toco');
+                    tertiaryLoads = tocoResultFromVan.loads.map(l => ({ ...l, vehicleType: 'toco' }));
+                    leftoverGroups = tocoResultFromVan.leftovers;
+                    break;
+
+                case 'tresQuartos':
+                    // Sobras de 3/4 tentam virar Toco
+                    const tocoResultFromTQ = runCascadeOptimization(leftoverGroups, 'toco');
+                    secondaryLoads = tocoResultFromTQ.loads.map(l => ({ ...l, vehicleType: 'toco' }));
+                    leftoverGroups = tocoResultFromTQ.leftovers;
+                    break;
             }
 
-            if (vehicleType === 'fiorino' && leftoverGroups.length > 0) {
-                // ...tenta montar uma ou mais Vans com essas sobras.
-                console.log(`Sobras de Fiorino (${leftoverGroups.reduce((s,g)=>s+g.totalKg,0).toFixed(2)}kg) tentando virar Van.`);
-                const vanResult = runHeuristicOptimization(leftoverGroups, 'van');
-                secondaryLoads = vanResult.loads.map(l => ({ ...l, vehicleType: 'van' }));
-                leftoverGroups = vanResult.leftovers; // O que sobrou da tentativa de Van
-            }
-
-            // PASSO 2: Se a rota original for de Fiorino OU Van e ainda houver sobras...
-            if ((vehicleType === 'fiorino' || vehicleType === 'van') && leftoverGroups.length > 0) {
-                // ...tenta montar um ou mais 3/4 com o que restou.
-                console.log(`Sobras de ${vehicleType} (${leftoverGroups.reduce((s,g)=>s+g.totalKg,0).toFixed(2)}kg) tentando virar 3/4.`);
-                const tqResult = runHeuristicOptimization(leftoverGroups, 'tresQuartos');
-                
-                // Adiciona as novas cargas de 3/4 na lista apropriada
-                if (vehicleType === 'fiorino') {
-                    // Se a origem era Fiorino, as cargas 3/4 são terciárias.
-                    tertiaryLoads = tqResult.loads.map(l => ({ ...l, vehicleType: 'tresQuartos' }));
-                } else { // vehicleType === 'van'
-                    // Se a origem era Van, as cargas 3/4 são secundárias.
-                    secondaryLoads = tqResult.loads.map(l => ({ ...l, vehicleType: 'tresQuartos' }));
-                }
-                
-                leftoverGroups = tqResult.leftovers; // Sobra final
-            }
             // ========================================================================
-            // FIM DA LÓGICA DE CASCATA
+            // FIM DA NOVA LÓGICA DE CASCATA
             // ========================================================================
             
-            const allPotentialLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads ];
+            const allPotentialLoads = [ ...primaryLoads, ...secondaryLoads, ...tertiaryLoads, ...quaternaryLoads ];
             const finalValidLoads = [];
             let finalLeftoverGroups = [...leftoverGroups];
 
             allPotentialLoads.forEach(load => {
                 const config = getVehicleConfig(load.vehicleType);
+                if (!config) { // Adiciona uma verificação para o caso de um tipo de veículo inválido
+                    console.warn(`Configuração não encontrada para o tipo de veículo: ${load.vehicleType}. Descartando carga.`);
+                    const clientGroupsInFailedLoad = Object.values(load.pedidos.reduce((acc, p) => {
+                        const clienteId = normalizeClientId(p.Cliente);
+                        if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) }; }
+                        acc[clienteId].pedidos.push(p);
+                        acc[clienteId].totalKg += p.Quilos_Saldo;
+                        acc[clienteId].totalCubagem += p.Cubagem;
+                        return acc;
+                    }, {}));
+                    finalLeftoverGroups.push(...clientGroupsInFailedLoad);
+                    return;
+                }
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)) || pedidosRecall.includes(String(p.Num_Pedido)));
                 const allowPriorityOverride = true; // Permite para todos os veículos
                 
@@ -4161,7 +4228,8 @@
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
                 van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
-                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
+                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' },
+                toco: { name: 'Toco', colorClass: 'bg-secondary', textColor: 'text-white', icon: 'bi-inboxes-fill' }
             };
             
             let html = `<h5 class="mt-3">Cargas para <strong>${title}</strong></h5>`;
@@ -4567,18 +4635,27 @@
             
             const headerColorClass = isOverloaded ? 'bg-danger' : vInfo.colorClass;
             
-            const printButton = String(load.id).startsWith('manual-') ? `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargaManualIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>` : '';
+            // O botão de imprimir agora é genérico para todas as cargas.
+            const printButton = `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargaIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
             const mapButton = `<button class="btn btn-sm btn-outline-light ms-2" onclick="abrirMapaCarga('${load.id}')"><i class="bi bi-map-fill me-1"></i>Roteirizar</button>`;
 
+            // RESTAURADO: Dropdown para alterar o tipo de veículo
+            const vehicleSelectDropdown = `
+                <select class="form-select form-select-sm d-inline-block w-auto ms-2" onchange="changeLoadVehicleType('${load.id}', this.value)">
+                    <option value="fiorino" ${vehicleType === 'fiorino' ? 'selected' : ''}>Fiorino</option>
+                    <option value="van" ${vehicleType === 'van' ? 'selected' : ''}>Van</option>
+                    <option value="tresQuartos" ${vehicleType === 'tresQuartos' ? 'selected' : ''}>3/4</option>
+                    <option value="toco" ${vehicleType === 'toco' ? 'selected' : ''}>Toco</option>
+                </select>`;
+
             const cardHeaderActions = `
-                <div class="card-header-actions no-print">
+                <div class="card-header-actions no-print d-flex align-items-center">
                     ${printButton}
                     ${mapButton}
                 </div>
             `;
 
             const cardBodyActions = String(load.id).startsWith('manual-') ? '' : ''; // Espaço para futuras ações no corpo do card
-
             const observationForPrint = ` 
                 <div class="print-only-observation mt-2 p-2 border rounded" style="background-color: #f8f9fa; display: none;">
                     <p class="mb-0"></p>
@@ -4601,7 +4678,7 @@
                                 <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / 
                                 <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${distanciaHtml} ${priorityBadge} ${hardLimitBadge}
                             </div>
-                            ${cardHeaderActions}
+                            <div class="ms-auto no-print d-flex align-items-center">${vehicleSelectDropdown}${cardHeaderActions}</div>
                         </div>
                         <div class="card-body">${cardBodyActions}${progressBar}<div class="mt-3 no-print" id="obs-container-${load.id}">${initialObservationHtml}</div>${observationForPrint}${createTable(load.pedidos, null, load.id)}</div>
                     </div>`;
@@ -5107,7 +5184,7 @@
                     <div class="card-header bg-info text-dark"><h5 class="mb-0"><i class="bi bi-tools me-2"></i>Painel de Montagem de Carga Manual</h5></div>
                     <div class="card-body">
                         <div class="row align-items-center mb-3">
-                            <div class="col-md-4"><label for="manualVehicleType" class="form-label">Montar para o veículo:</label><select id="manualVehicleType" class="form-select" onchange="updateManualBuilderUI()"><option value="fiorino">Fiorino</option><option value="van">Van</option><option value="tresQuartos">3/4</option></select></div>
+                            <div class="col-md-4"><label for="manualVehicleType" class="form-label">Montar para o veículo:</label><select id="manualVehicleType" class="form-select" onchange="updateManualBuilderUI()"><option value="fiorino">Fiorino</option><option value="van">Van</option><option value="tresQuartos">3/4</option><option value="toco">Toco</option></select></div>
                             <div class="col-md-5"><p class="mb-1"><strong>Peso Total:</strong> <span id="manualLoadKg">0,00</span> kg</p><p class="mb-0"><strong>Cubagem Total:</strong> <span id="manualLoadCubage">0,00</span> m³</p></div>
                             <div class="col-md-3 text-end"><button class="btn btn-danger me-2" onclick="cancelManualLoad()"><i class="bi bi-x-circle me-1"></i>Cancelar</button><button id="finalizeManualLoadBtn" class="btn btn-success" onclick="finalizeManualLoad()" disabled><i class="bi bi-check-circle me-1"></i>Criar</button></div>
                         </div>
@@ -5189,7 +5266,8 @@
             const vehicleInfo = {
                 fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
                 van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
-                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }
+                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' },
+                toco: { name: 'Toco', colorClass: 'bg-secondary', textColor: 'text-white', icon: 'bi-inboxes-fill' }
             };
 
             // Pega a aba ativa para inserir o card da carga manual
@@ -5322,7 +5400,9 @@
             // CORREÇÃO: A validação de capacidade agora se aplica a qualquer carga de destino, incluindo o painel manual.
             // A validação é pulada apenas se o destino for a lista de "Disponíveis" ou "Sobras".
             if (!targetIsGeral && !targetIsLeftovers) {
-                const targetVehicleType = targetLoad.vehicleType; // Funciona para cargas ativas e para o painel manual
+                // CORREÇÃO CRÍTICA: Garante que a validação use o tipo de veículo ATUAL da carga de destino,
+                // que pode ter sido alterado manualmente pelo usuário (ex: de Fiorino para Van).
+                const targetVehicleType = targetLoad.vehicleType;
                 const config = getVehicleConfig(targetVehicleType);
                 const isInvalidMove = (targetLoad.totalKg + clientBlockKg > config.hardMaxKg) || (targetLoad.totalCubagem + clientBlockCubagem > config.hardMaxCubage);
 
@@ -5336,7 +5416,7 @@
                     return;
                 }
             }
-            
+
             // Animação de feedback positivo
             dropZoneCard.classList.add('drop-valid-target');
             setTimeout(() => dropZoneCard.classList.remove('drop-valid-target'), 700);
