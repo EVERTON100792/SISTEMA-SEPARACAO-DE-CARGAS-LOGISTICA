@@ -68,7 +68,8 @@ function getVehicleConfig(vehicleType, configs) {
         van: 'van',
         tresQuartos: 'tresQuartos',
         '3/4': 'tresQuartos',
-        toco: 'toco'
+        toco: 'toco',
+        truck: 'toco'
     };
     const configType = typeMap[vehicleType];
     if (!configType) return null;
@@ -83,7 +84,11 @@ function getVehicleConfig(vehicleType, configs) {
 }
 
 function isMoveValid(load, groupToAdd, vehicleType, configs) {
-    const config = getVehicleConfig(vehicleType, configs);
+    // CORREÇÃO: Usa o tipo de veículo da carga ('load.vehicleType') se ele existir,
+    // caso contrário, usa o tipo de veículo padrão passado para a função.
+    // Isso garante que a validação use o tipo correto após uma transformação manual (ex: Fiorino -> Van).
+    const effectiveVehicleType = load.vehicleType || vehicleType;
+    const config = getVehicleConfig(effectiveVehicleType, configs);
     if (!config) return false;
 
     if ((load.totalKg + groupToAdd.totalKg) > config.hardMaxKg) return false;
