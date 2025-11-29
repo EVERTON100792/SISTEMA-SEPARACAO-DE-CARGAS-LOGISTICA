@@ -343,10 +343,25 @@ async function runSimulatedAnnealing(packableGroups, vehicleType, configs, pedid
              await new Promise(r => setTimeout(r, 0));
         }
 
-        const config = getVehicleConfig(vehicleType, configs);
         let finalLoads = [];
         let finalLeftovers = [...bestSolution.leftovers];
         bestSolution.loads.forEach(load => {
+            const effectiveVehicleType = load.vehicleType || vehicleType;
+            const config = getVehicleConfig(effectiveVehicleType, configs);
+
+            if (!config) {
+                if (load.pedidos.length > 0) {
+                    const groups = Object.values(load.pedidos.reduce((acc, p) => { 
+                        const cId = normalizeClientId(p.Cliente);
+                        if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                        acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                        return acc; 
+                    }, {}));
+                    finalLeftovers.push(...groups);
+                }
+                return;
+            }
+
             if (load.pedidos.length > 0 && load.totalKg >= config.minKg) {
                 finalLoads.push(load);
             } else if (load.pedidos.length > 0) {
