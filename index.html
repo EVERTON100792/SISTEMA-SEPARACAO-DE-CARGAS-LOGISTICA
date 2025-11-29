@@ -5355,13 +5355,13 @@
             const { clienteId, sourceId } = JSON.parse(event.dataTransfer.getData("text/plain"));
             const targetId = dropZoneCard.dataset.loadId;
 
-            if (sourceId === targetId) return; 
+            if (sourceId === targetId) return;
 
             let sourceLoad, targetLoad;
             let sourceIsLeftovers = sourceId === 'leftovers';
             let targetIsLeftovers = targetId === 'leftovers';
             let sourceIsGeral = sourceId === 'geral';
-            let targetIsGeral = targetId === 'geral'; // NOVO: Identifica se o alvo é a lista de disponíveis
+            let targetIsGeral = targetId === 'geral';
             let targetIsManualBuilder = targetId === 'manual-builder';
             let sourceIsManualBuilder = sourceId === 'manual-builder';
 
@@ -5379,12 +5379,12 @@
                 targetLoad = { pedidos: currentLeftoversForPrinting, totalKg: 0, totalCubagem: 0 };
             } else if (targetIsManualBuilder) {
                 targetLoad = manualLoadInProgress;
-            } else if (targetIsGeral) { // NOVO: Trata a lista de disponíveis como um alvo
+            } else if (targetIsGeral) {
                 targetLoad = { pedidos: pedidosGeraisAtuais, totalKg: 0, totalCubagem: 0 };
             } else {
                 targetLoad = activeLoads[targetId];
             }
-            
+
             if (!sourceLoad || !targetLoad) {
                 console.error("ERRO: Carga de origem ou destino não encontrada.", { sourceId, targetId, activeLoads });
                 return;
@@ -5396,12 +5396,8 @@
             const orderIdsToMove = new Set(clientOrdersToMove.map(p => p.Num_Pedido));
             const clientBlockKg = clientOrdersToMove.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
             const clientBlockCubagem = clientOrdersToMove.reduce((sum, p) => sum + p.Cubagem, 0);
-            
-            // CORREÇÃO: A validação de capacidade agora se aplica a qualquer carga de destino, incluindo o painel manual.
-            // A validação é pulada apenas se o destino for a lista de "Disponíveis" ou "Sobras".
+
             if (!targetIsGeral && !targetIsLeftovers) {
-                // CORREÇÃO CRÍTICA: Garante que a validação use o tipo de veículo ATUAL da carga de destino,
-                // que pode ter sido alterado manualmente pelo usuário (ex: de Fiorino para Van).
                 const targetVehicleType = targetLoad.vehicleType;
                 const config = getVehicleConfig(targetVehicleType);
                 const isInvalidMove = (targetLoad.totalKg + clientBlockKg > config.hardMaxKg) || (targetLoad.totalCubagem + clientBlockCubagem > config.hardMaxCubage);
@@ -5410,14 +5406,12 @@
                     const overWeight = (targetLoad.totalKg + clientBlockKg) - config.hardMaxKg;
                     alert(`Ação inválida! Mover este grupo excede a capacidade máxima do veículo.\nExcesso de peso: ${overWeight > 0 ? overWeight.toFixed(2) + ' kg' : 'N/A'}`);
                     
-                    // Animação de feedback negativo
                     dropZoneCard.classList.add('drop-invalid');
                     setTimeout(() => dropZoneCard.classList.remove('drop-invalid'), 500);
                     return;
                 }
             }
 
-            // Animação de feedback positivo
             dropZoneCard.classList.add('drop-valid-target');
             setTimeout(() => dropZoneCard.classList.remove('drop-valid-target'), 700);
 
@@ -5433,23 +5427,50 @@
 
             if (targetIsLeftovers) {
                 currentLeftoversForPrinting.push(...clientOrdersToMove);
-            } else if (targetIsGeral) { // NOVO: Adiciona os pedidos de volta à lista de disponíveis
+            } else if (targetIsGeral) {
                 pedidosGeraisAtuais.push(...clientOrdersToMove);
-            } else { // Se for uma carga normal ou o construtor manual
+            } else {
                 targetLoad.pedidos.push(...clientOrdersToMove);
                 targetLoad.totalKg += clientBlockKg;
                 targetLoad.totalCubagem += clientBlockCubagem;
             }
-            
-            // CORREÇÃO FINAL: Garante que a UI seja atualizada corretamente em ambos os sentidos.
-            // Se a origem OU o destino for o painel manual, sua UI específica é atualizada.
-            // A chamada `renderAllUI()` garante que o resto da interface (cargas automáticas, etc.) também seja redesenhado.
+
+            const vehicleInfo = {
+                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
+                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
+                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' },
+                toco: { name: 'Toco', colorClass: 'bg-secondary', textColor: 'text-white', icon: 'bi-inboxes-fill' }
+            };
+
+            // Instead of calling renderAllUI(), we will manually update the UI
             if (targetIsManualBuilder || sourceIsManualBuilder) {
-                updateManualBuilderUI(); // Atualiza o painel manual, seja ele origem ou destino.
-                renderAllUI(); // Atualiza todo o resto, incluindo a carga automática de origem/destino.
-            }  else {
-                renderAllUI();
+                updateManualBuilderUI();
             }
+
+            // Update the source and target cards
+            if (!sourceIsGeral && !sourceIsLeftovers && !sourceIsManualBuilder) {
+                const sourceCard = document.getElementById(sourceId);
+                if (sourceCard) {
+                    const newSourceCardHTML = renderLoadCard(sourceLoad, sourceLoad.vehicleType, vehicleInfo[sourceLoad.vehicleType]);
+                    sourceCard.outerHTML = newSourceCardHTML;
+                }
+            }
+
+            if (!targetIsGeral && !targetIsLeftovers && !targetIsManualBuilder) {
+                const targetCard = document.getElementById(targetId);
+                if (targetCard) {
+                    const newTargetCardHTML = renderLoadCard(targetLoad, targetLoad.vehicleType, vehicleInfo[targetLoad.vehicleType]);
+                    targetCard.outerHTML = newTargetCardHTML;
+                }
+            }
+
+            // Update the "Pedidos Disponíveis" list
+            const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
+            displayGerais(document.getElementById('resultado-geral'), gruposGerais);
+
+            updateAndRenderKPIs();
+            updateAndRenderChart();
+            saveStateToLocalStorage();
         }
 
         function highlightClientRows(event) {
