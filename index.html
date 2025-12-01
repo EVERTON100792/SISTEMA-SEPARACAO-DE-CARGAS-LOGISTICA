@@ -26,6 +26,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
     <style>
+        /* --- AJUSTE GLOBAL DE FONTE --- */
+        html {
+            font-size: 15px; /* Reduz a fonte base para 15px (padrão é 16px), diminuindo o tamanho de todas as unidades 'rem' */
+        }
+
         :root {
             /* Paleta de Cores "Onyx" - REFINADA */
             --dark-bg: #0a0a0a; /* Fundo principal super escuro */
@@ -109,6 +114,7 @@
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
+            font-size: 0.9rem; /* Reduz o tamanho da fonte do corpo para uma aparência mais compacta */
         }        
 
         ::-webkit-scrollbar { width: 8px; }
@@ -119,10 +125,10 @@
         h1, h2, h3, h4, h5 { font-weight: 700; letter-spacing: -0.5px; }
 
         /* --- TIPOGRAFIA RESPONSIVA (Valores ajustados para uma aparência mais compacta e profissional) --- */
-        h1.h2 { font-size: clamp(1.1rem, 1.8vw, 1.3rem); } /* Reduzido */
-        h3 { font-size: clamp(0.9rem, 1.5vw, 1.05rem); } /* Reduzido */
-        .card-title.h5, .modal-title { font-size: clamp(0.8rem, 1.1vw, 0.9rem); } /* Reduzido */
-        #sidebar .fs-4 { font-size: clamp(0.9rem, 1.4vw, 1.05rem); } /* Reduzido */
+        h1.h2 { font-size: clamp(1.3rem, 1.5vw, 1.5rem); } /* Reajustado para nova base */
+        h3 { font-size: clamp(1.1rem, 1.2vw, 1.2rem); } /* Reajustado para nova base */
+        .card-title.h5, .modal-title { font-size: clamp(0.9rem, 1.0vw, 1.0rem); } /* Reajustado para nova base */
+        #sidebar .fs-4 { font-size: clamp(1.1rem, 1.2vw, 1.25rem); } /* Reajustado para nova base */
 
 
         /* --- ANIMAÇÕES --- */
@@ -514,7 +520,7 @@
             border-bottom: 2px solid var(--dark-border);
             padding: 0.5rem 0.75rem; /* Adicionado padding ao header */
         }
-        tbody td { padding: 0.4rem 0.75rem; vertical-align: middle; font-size: 0.85rem; } /* Padding e fonte reduzidos */
+        tbody td { padding: 0.4rem 0.75rem; vertical-align: middle; font-size: 0.8rem; } /* Fonte reduzida */
         tbody tr { transition: background-color 0.2s ease; }
 
         .nav-tabs .nav-link {
@@ -778,88 +784,75 @@
     </style>
 
     <style>
-        /* --- ANIMAÇÃO DE CARREGAMENTO V5 - "SYNAPTIC CORE" --- */
+        /* --- ANIMAÇÃO DE CARREGAMENTO V8 - "QUANTUM FLUX" --- */
         .loading-animation-container {
             position: relative;
             width: 100%;
-            height: 200px; /* Altura aumentada para o novo efeito */
+            height: 220px;
             overflow: hidden;
             margin-bottom: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: radial-gradient(ellipse at center, rgba(10, 132, 255, 0.1), transparent 70%);
+            background: 
+                radial-gradient(ellipse at center, rgba(10, 132, 255, 0.1), transparent 70%),
+                url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="p" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="%231C1C1E"/></pattern></defs><rect width="100%" height="100%" fill="url(%23p)"/></svg>');
+            background-size: 100% 100%, 300px 300px;
+            animation: bg-pan 60s linear infinite;
         }
 
-        #synaptic-core {
-            width: 50px;
-            height: 50px;
+        #quantum-core {
+            width: 40px;
+            height: 40px;
             background: var(--dark-primary);
             border-radius: 50%;
-            position: absolute;
-            box-shadow: 0 0 20px var(--dark-primary), 0 0 40px var(--dark-primary-glow), inset 0 0 10px rgba(255,255,255,0.5);
-            animation: core-pulse-v2 2s ease-in-out infinite;
+            position: relative;
+            box-shadow: 0 0 20px var(--dark-primary-glow), 0 0 40px var(--dark-primary), inset 0 0 10px rgba(255,255,255,0.7);
+            animation: core-pulse 2.5s ease-in-out infinite;
         }
 
-        #particle-field {
-            width: 300px;
-            height: 300px;
+        .particle-orbit {
             position: absolute;
-            animation: rotate-field 30s linear infinite;
+            top: 50%; left: 50%;
+            border: 1px solid var(--dark-border);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: orbit-rotate var(--duration) linear infinite;
         }
 
-        .data-node {
+        .data-particle {
             position: absolute;
-            width: 6px;
-            height: 6px;
+            top: 50%; left: 0;
+            width: 6px; height: 6px;
             background: var(--dark-accent-secondary);
             border-radius: 50%;
-            box-shadow: 0 0 10px var(--dark-accent-glow);
-            /* Posições iniciais e finais são definidas via JS/CSS vars */
-            top: var(--start-y);
-            left: var(--start-x);
-            animation: orbit 10s var(--delay) linear infinite, pulse-node 2s var(--delay) ease-in-out infinite;
+            box-shadow: 0 0 8px var(--dark-accent-glow);
+            transform: translateY(-50%);
         }
 
-        .data-node::before {
+        .data-particle::after {
             content: '';
             position: absolute;
-            width: 150px; /* Comprimento da linha */
-            height: 1px;
-            background: linear-gradient(to left, var(--dark-accent-secondary), transparent);
-            top: 50%;
-            left: 50%;
-            transform-origin: 0 50%;
-            transform: rotate(var(--angle));
-            opacity: 0;
-            animation: connect-line 10s var(--delay) linear infinite;
+            left: 3px; top: 50%;
+            width: 50px; height: 1px;
+            background: linear-gradient(to right, var(--dark-accent-secondary), transparent);
+            transform: translateY(-50%);
+            opacity: 0.8;
         }
 
-        @keyframes core-pulse-v2 {
-            0% { transform: scale(1); box-shadow: 0 0 20px var(--dark-primary), 0 0 40px var(--dark-primary-glow), inset 0 0 10px rgba(255,255,255,0.5); }
-            50% { transform: scale(1.1); box-shadow: 0 0 30px var(--dark-primary), 0 0 60px var(--dark-primary-glow), inset 0 0 15px rgba(255,255,255,0.8); }
-            100% { transform: scale(1); box-shadow: 0 0 20px var(--dark-primary), 0 0 40px var(--dark-primary-glow), inset 0 0 10px rgba(255,255,255,0.5); }
+        @keyframes core-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px var(--dark-primary-glow), 0 0 40px var(--dark-primary), inset 0 0 10px rgba(255,255,255,0.7); }
+            50% { transform: scale(1.1); box-shadow: 0 0 30px var(--dark-primary-glow), 0 0 60px var(--dark-primary), inset 0 0 15px rgba(255,255,255,0.9); }
         }
 
-        @keyframes rotate-field {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        @keyframes orbit-rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
-        @keyframes orbit {
-            from { transform: translate(0, 0); }
-            to { transform: translate(var(--orbit-x), var(--orbit-y)); }
-        }
-
-        @keyframes pulse-node {
-            0%, 100% { opacity: 0.7; transform: scale(0.8); }
-            50% { opacity: 1; transform: scale(1.2); }
-        }
-
-        @keyframes connect-line {
-            0%, 100% { opacity: 0; }
-            40% { opacity: 0.7; }
-            60% { opacity: 0.7; }
+        @keyframes bg-pan {
+            from { background-position: 0% 0%, 0% 0%; }
+            to { background-position: 0% 0%, -300px -300px; }
         }
 
         #thinking-text {
@@ -1360,12 +1353,9 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="background-color: var(--dark-surface); backdrop-filter: blur(12px);">
                 <div class="modal-body text-center p-4">
-                    <!-- Nova Animação de Carregamento V4 -->
-                    <div class="loading-animation-container" id="synaptic-animation-container">
-                        <div id="synaptic-core"></div>
-                        <div id="particle-field">
-                            <!-- Partículas serão geradas pelo JS -->
-                        </div>
+                    <!-- Nova Animação de Carregamento V8 -->
+                    <div class="loading-animation-container">
+                        <div id="quantum-core"></div>
                     </div>
 
                     <h5 id="processing-status-text" class="mb-2">Montando Cargas...</h5>
@@ -2385,7 +2375,7 @@
             }
 
             // --- LÓGICA DE BUSCA REFEITA ---
-            const searchPredicate = p => p && (String(p.Num_Pedido).toLowerCase().includes(searchTerm) || String(p.Nome_Cliente).toLowerCase().includes(searchTerm) || String(p.Cidade).toLowerCase().includes(searchTerm));
+            const searchPredicate = p => p && (String(p.Num_Pedido).toLowerCase().includes(searchTerm) || String(p.Nome_Cliente).toLowerCase().includes(searchTerm) || String(p.Cidade).toLowerCase().includes(searchTerm) || String(p.CF).toLowerCase().includes(searchTerm));
             const foundInPlanilha = planilhaData.filter(searchPredicate);
 
             if (foundInPlanilha.length === 0) {
@@ -6341,40 +6331,36 @@
             }
         }
 
-        // --- Script para a nova animação "Synaptic Core" (V5) ---
+        // --- Script para a nova animação "Quantum Flux" (V8) ---
         const processingModal = document.getElementById('processing-modal');
-        const particleField = document.getElementById('particle-field');
-        const numParticles = 20;
+        const animationContainer = document.querySelector('.loading-animation-container');
 
-        function createParticles() {
-            if (!particleField) return;
-            particleField.innerHTML = ''; // Limpa partículas antigas para evitar duplicação
-            for (let i = 0; i < numParticles; i++) {
-                const node = document.createElement('div');
-                node.className = 'data-node';
+        function createQuantumFlux() {
+            if (!animationContainer) return;
+            // Limpa órbitas antigas, mas mantém o núcleo
+            animationContainer.querySelectorAll('.particle-orbit').forEach(el => el.remove());
 
-                // Posição inicial aleatória perto do centro
-                const angle = Math.random() * 2 * Math.PI;
-                const startRadius = 20; // Começa perto do núcleo
-                node.style.setProperty('--start-x', `${150 + startRadius * Math.cos(angle)}px`);
-                node.style.setProperty('--start-y', `${150 + startRadius * Math.sin(angle)}px`);
-
-                // Posição final em órbita
-                const orbitRadius = 80 + Math.random() * 60; // Raio da órbita
-                const orbitAngle = Math.random() * 2 * Math.PI;
-                node.style.setProperty('--orbit-x', `${150 + orbitRadius * Math.cos(orbitAngle)}px`);
-                node.style.setProperty('--orbit-y', `${150 + orbitRadius * Math.sin(orbitAngle)}px`);
-
-                // Ângulo da linha de conexão
-                node.style.setProperty('--angle', `${Math.random() * 360}deg`);
-                // Atraso aleatório para dessincronizar as animações
-                node.style.setProperty('--delay', `-${(Math.random() * 10).toFixed(2)}s`);
+            const numOrbits = 7;
+            for (let i = 0; i < numOrbits; i++) {
+                const orbit = document.createElement('div');
+                orbit.className = 'particle-orbit';
                 
-                particleField.appendChild(node);
+                const size = 80 + Math.random() * 120; // Tamanho da órbita
+                const duration = 5 + Math.random() * 10; // Duração da rotação
+                const initialRotation = Math.random() * 360; // Rotação inicial para não sobrepor
+
+                orbit.style.width = `${size}px`;
+                orbit.style.height = `${size * (0.5 + Math.random() * 0.3)}px`; // Elipses
+                orbit.style.setProperty('--duration', `${duration}s`);
+                orbit.style.transform = `translate(-50%, -50%) rotate(${initialRotation}deg)`;
+                orbit.innerHTML = '<div class="data-particle"></div>';
+                animationContainer.appendChild(orbit);
             }
         }
-        // Recria as partículas sempre que o modal de processamento for exibido
-        if (processingModal) processingModal.addEventListener('show.bs.modal', createParticles);
+
+        if (processingModal) {
+            processingModal.addEventListener('show.bs.modal', createQuantumFlux);
+        }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
