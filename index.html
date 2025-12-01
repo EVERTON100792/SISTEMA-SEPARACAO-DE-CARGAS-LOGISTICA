@@ -3717,7 +3717,45 @@
                 printWindow.close(); 
             }, 500);
         }
-        
+
+        function imprimirGeneric(content, title) {
+            const printWindow = createPrintWindow(title);
+            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + (typeof content === 'string' ? content : content.outerHTML);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
+        }
+
+        /**
+         * Imprime um card de carga individual (seja de rota ou manual).
+         * @param {string} loadId O ID da carga a ser impressa.
+         */
+        function imprimirCargaIndividual(loadId) {
+            const load = activeLoads[loadId];
+            const cardToPrint = document.getElementById(loadId);
+
+            if (!load || !cardToPrint) {
+                showToast(`Erro: Carga com ID ${loadId} não encontrada para impressão.`, 'error');
+                return;
+            }
+
+            const cardClone = cardToPrint.cloneNode(true);
+            const observationText = load.observation || '';
+            const clonePrintDiv = cardClone.querySelector('.print-only-observation');
+            if (clonePrintDiv && observationText) {
+                const printParagraph = clonePrintDiv.querySelector('p');
+                if (printParagraph) printParagraph.innerHTML = `<strong>Observações:</strong><br>${observationText.replace(/\n/g, '<br>')}`;
+                clonePrintDiv.style.display = 'block';
+            }
+
+            imprimirGeneric(cardClone.outerHTML, `Impressão - Carga ${load.numero} (${load.vehicleType})`);
+        }
+
+
+
         function isMoveValid(load, groupToAdd, vehicleType) {
             const config = getVehicleConfig(vehicleType);
 
