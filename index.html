@@ -5634,15 +5634,21 @@
 
             const numerosPedidos = input.value.split('\n').map(n => n.trim()).filter(Boolean);
 
-            if (numerosPedidos.length === 0) { // prettier-ignore
+            if (numerosPedidos.length === 0) {
                 alert(`Nenhum número de pedido foi inserido para a ${nomeCarga}.`);
                 return;
             }
 
             const pedidosSelecionados = [];
             const pedidosNaoEncontrados = [];
+            const pedidosJaProcessados = [];
 
             numerosPedidos.forEach(num => {
+                const isAlreadyInLoad = Object.values(activeLoads).some(load => load.pedidos.some(p => String(p.Num_Pedido) === num));
+                if (isAlreadyInLoad) {
+                    pedidosJaProcessados.push(num);
+                    return;
+                }
                 const pedidoEncontrado = planilhaData.find(p => String(p.Num_Pedido) === num);
                 if (pedidoEncontrado) {
                     pedidosSelecionados.push(pedidoEncontrado);
@@ -5651,8 +5657,13 @@
                 }
             });
 
+            if (pedidosJaProcessados.length > 0) {
+                showToast(`Pedidos já alocados em outras cargas foram ignorados: ${pedidosJaProcessados.join(', ')}`, 'warning');
+            }
             if (pedidosNaoEncontrados.length > 0) {
-                showToast(`Pedidos não encontrados: ${pedidosNaoEncontrados.join(', ')}`, 'error');
+                showToast(`Pedidos não encontrados na planilha: ${pedidosNaoEncontrados.join(', ')}`, 'error');
+            }
+            if (pedidosSelecionados.length === 0) {
                 return;
             }
 
@@ -5674,18 +5685,17 @@
                 }
             }
 
-            // CORREÇÃO: Se nenhum veículo comportar, classifica como 'Carreta/Truck' e permite a criação.
             if (!veiculoEscolhido) {
                 veiculoEscolhido = { tipo: 'toco', nome: 'Carreta/Truck (Excedeu Capacidade)' };
             }
 
             if (veiculoEscolhido) {
-                numerosPedidos.forEach(num => processedSet.add(num));
-                pedidosSelecionados.forEach(p => processedSet.add(String(p.Num_Pedido)));
+                const pedidosSelecionadosIds = new Set(pedidosSelecionados.map(p => String(p.Num_Pedido)));
+                pedidosSelecionadosIds.forEach(id => processedSet.add(id));
 
                 const loadId = `${nomeCarga.toLowerCase().replace(/\s+/g, '-')}-1`;
                 const load = {
-                    id: loadId, // ID Fixo para que possa ser substituído se a carga for remontada
+                    id: loadId,
                     pedidos: pedidosSelecionados,
                     totalKg: totalKg,
                     totalCubagem: totalCubagem,
@@ -5704,17 +5714,21 @@
                 resultadoDiv.innerHTML = `
                     <div class="alert alert-success d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>Carga ${nomeCarga} montada com sucesso!</strong> Estes ${pedidosSelecionados.length} pedidos foram agrupados em um(a) <strong>${veiculoEscolhido.nome}</strong>.
-                            <br>Eles serão removidos da análise geral quando você clicar em "Processar Cargas". 
+                            <strong>Carga ${nomeCarga} montada com sucesso!</strong> ${pedidosSelecionados.length} pedidos foram agrupados em um(a) <strong>${veiculoEscolhido.nome}</strong>.
                         </div>
-                        <button class="btn btn-light btn-sm no-print" onclick="imprimirGeneric('${resultadoId}', 'Carga ${nomeCarga}')"><i class="bi bi-printer-fill me-1"></i> Imprimir Carga</button>
+                        <button class="btn btn-light btn-sm no-print" onclick="imprimirCargaIndividual('${loadId}')"><i class="bi bi-printer-fill me-1"></i> Imprimir Carga</button>
                     </div>
                     ${renderLoadCard(load, veiculoEscolhido.tipo, vehicleInfo[veiculoEscolhido.tipo])}
-                `;                
-                // Se o processamento principal já ocorreu, remove os pedidos da lista de disponíveis
-                if (pedidosGeraisAtuais.length > 0) {
-                    processar();
-                }
+                `;
+                
+                pedidosGeraisAtuais = pedidosGeraisAtuais.filter(p => !pedidosSelecionadosIds.has(String(p.Num_Pedido)));
+                
+                const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
+                displayGerais(document.getElementById('resultado-geral'), gruposGerais);
+                
+                updateAndRenderKPIs();
+                updateAndRenderChart();
+                
                 saveStateToLocalStorage();
 
             } else {
