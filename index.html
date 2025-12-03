@@ -523,6 +523,12 @@
         tbody td { padding: 0.4rem 0.75rem; vertical-align: middle; font-size: 0.8rem; } /* Fonte reduzida */
         tbody tr { transition: background-color 0.2s ease; }
 
+        /* NOVO: Efeito de brilho e fonte menor para a tabela de disponíveis */
+        #resultado-geral .table tbody td {
+            font-size: 0.75rem; /* Fonte ainda menor para compactar */
+            padding: 0.3rem 0.5rem; /* Padding reduzido */
+        }
+
         .nav-tabs .nav-link {
             color: var(--dark-text-secondary);
             border: none;
@@ -1014,7 +1020,7 @@
             <!-- ======================================================================================= -->
             <div id="workspace-view" class="main-view">
                 <h1 class="h2 mb-4 animated-entry">Mesas de Trabalho</h1> <!-- p-4 removido -->
-                <div class="row">
+                <div class="row g-3">
                 <div class="col-lg-5 mb-4 animated-entry"> 
                     <div class="card h-100"> 
                         <div class="card-header d-flex justify-content-between align-items-center">
@@ -1092,7 +1098,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-4 mb-4 animated-entry">
+                <div class="col-lg-5 mb-4 animated-entry">
                     <div class="card h-100" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos & Consultas Rápidas</h2>
@@ -1127,7 +1133,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 mb-4 animated-entry">
+                <div class="col-lg-2 mb-4 animated-entry">
                     <!-- NOVO: Acordeão para Montagens Especiais em sua própria coluna -->
                     <div class="accordion" id="montagensEspeciaisAccordion">
                         <div class="accordion-item card">
@@ -5623,10 +5629,10 @@
         }
 
         function montarCargaPredefinida(inputId, resultadoId, processedSet, nomeCarga) {
-            const resultadoDiv = document.getElementById(resultadoId);
             const input = document.getElementById(inputId);
-            resultadoDiv.innerHTML = '';
-
+            const resultadoDivOriginal = document.getElementById(resultadoId);
+            if (resultadoDivOriginal) resultadoDivOriginal.innerHTML = ''; // Limpa a área de resultado antiga
+            
             if (planilhaData.length === 0) {
                 showToast("Por favor, carregue a planilha primeiro.", 'warning');
                 return;
@@ -5689,6 +5695,25 @@
                 veiculoEscolhido = { tipo: 'toco', nome: 'Carreta/Truck (Excedeu Capacidade)' };
             }
 
+            // --- LÓGICA DE DIRECIONAMENTO PARA ABA ATIVA ---
+            const vehicleType = veiculoEscolhido.tipo;
+            
+            // Encontra a aba ativa na Mesa de Trabalho
+            const activeTabPane = document.querySelector('#vehicleTabsContent .tab-pane.active');
+            let targetContainer;
+
+            if (activeTabPane) {
+                // Procura por um container de resultado dentro da aba ativa
+                targetContainer = activeTabPane.querySelector('[id^="resultado-"]');
+            }
+
+            // Fallback: se não encontrar um container na aba ativa, usa a lógica antiga baseada no tipo de veículo
+            if (!targetContainer) {
+                const fallbackContainerId = vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : vehicleType === 'van' ? 'resultado-van-geral' : vehicleType === 'tresQuartos' ? 'resultado-34-geral' : 'resultado-toco';
+                targetContainer = document.getElementById(fallbackContainerId);
+            }
+            // --- FIM DA LÓGICA DE DIRECIONAMENTO ---
+
             if (veiculoEscolhido) {
                 const pedidosSelecionadosIds = new Set(pedidosSelecionados.map(p => String(p.Num_Pedido)));
                 pedidosSelecionadosIds.forEach(id => processedSet.add(id));
@@ -5711,15 +5736,18 @@
                     toco: { name: 'Carreta/Truck', colorClass: 'bg-secondary', textColor: 'text-white', icon: 'bi-inboxes-fill' }
                 };
 
-                resultadoDiv.innerHTML = `
-                    <div class="alert alert-success d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>Carga ${nomeCarga} montada com sucesso!</strong> ${pedidosSelecionados.length} pedidos foram agrupados em um(a) <strong>${veiculoEscolhido.nome}</strong>.
-                        </div>
-                        <button class="btn btn-light btn-sm no-print" onclick="imprimirCargaIndividual('${loadId}')"><i class="bi bi-printer-fill me-1"></i> Imprimir Carga</button>
-                    </div>
-                    ${renderLoadCard(load, veiculoEscolhido.tipo, vehicleInfo[veiculoEscolhido.tipo])}
-                `;
+                // --- NOVA LÓGICA DE RENDERIZAÇÃO ---
+                if (targetContainer) {
+                    const newCardHTML = renderLoadCard(load, vehicleType, vehicleInfo[vehicleType]);
+                    targetContainer.insertAdjacentHTML('beforeend', newCardHTML);
+
+                    // Rola para o novo card
+                    setTimeout(() => {
+                        const newCardElement = document.getElementById(loadId);
+                        if (newCardElement) newCardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 300); // Delay para garantir que o card foi renderizado
+                }
+                showToast(`Carga ${nomeCarga} montada com sucesso em um(a) ${veiculoEscolhido.nome}!`, 'success');
                 
                 pedidosGeraisAtuais = pedidosGeraisAtuais.filter(p => !pedidosSelecionadosIds.has(String(p.Num_Pedido)));
                 
