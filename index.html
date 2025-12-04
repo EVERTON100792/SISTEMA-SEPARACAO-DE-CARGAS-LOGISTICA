@@ -2324,7 +2324,7 @@
         function pasteToSpecialLoad(inputId) {
             if (specialLoadClipboard.length === 0) { showToast("Nenhum pedido na área de transferência especial.", 'warning'); return; }
             document.getElementById(inputId).value = specialLoadClipboard.join('\n');
-        });
+        };
 
         function copiarParaClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
