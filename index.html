@@ -1438,7 +1438,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger" onclick="limparTudo()">Sim, Limpar Tudo</button>
+                    <button type="button" class="btn btn-danger" onclick="limparTudoCompletamente().then(() => location.reload())">Sim, Limpar Tudo</button>
                 </div>
             </div>
         </div>
@@ -1471,6 +1471,51 @@
 
         // Chama a função para aplicar o tema salvo assim que a página carrega.
         applyInitialTheme();
+    </script>
+
+    <script>
+        // ================================================================================================
+        //  NOVO: LÓGICA DE PERSISTÊNCIA DE DADOS DA PLANILHA COM IndexedDB
+        //  Isso garante que os dados brutos da planilha não se percam ao recarregar a página.
+        // ================================================================================================
+        const dbName = "ApexLogDB";
+        const storeName = "planilhaStore";
+
+        function openDb() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName, 1);
+                request.onerror = (event) => reject("Erro ao abrir o IndexedDB.");
+                request.onsuccess = (event) => resolve(event.target.result);
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(storeName)) {
+                        db.createObjectStore(storeName, { keyPath: "id" });
+                    }
+                };
+            });
+        }
+
+        async function savePlanilhaToDb(data) {
+            const db = await openDb();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], "readwrite");
+                const store = transaction.objectStore(storeName);
+                const request = store.put({ id: "lastPlanilha", data: data });
+                request.onsuccess = () => resolve();
+                request.onerror = (event) => reject("Erro ao salvar a planilha no DB: " + event.target.error);
+            });
+        }
+
+        async function loadPlanilhaFromDb() {
+            const db = await openDb();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], "readonly");
+                const store = transaction.objectStore(storeName);
+                const request = store.get("lastPlanilha");
+                request.onsuccess = (event) => resolve(event.target.result ? event.target.result.data : null);
+                request.onerror = (event) => reject("Erro ao carregar a planilha do DB: " + event.target.error);
+            });
+        }
     </script>
 
     <script>
@@ -2116,6 +2161,12 @@
          * Função principal de limpeza chamada pelo botão "Limpar Sistema".
          * Limpa o estado e recarrega a página para um reset completo.
          */
+        async function limparTudoCompletamente() {
+            limparEstadoAtual(); // Limpa variáveis e localStorage
+            const db = await openDb(); // Limpa o IndexedDB
+            const transaction = db.transaction([storeName], "readwrite");
+            transaction.objectStore(storeName).clear();
+        }
         function limparTudo() {
             console.log('Função "limparTudo" iniciada para reset completo.');
             limparEstadoAtual(); // Limpa o estado atual
@@ -2131,7 +2182,7 @@
             }
 
             document.getElementById('saveConfig').addEventListener('click', saveConfigurations);
-            document.getElementById('pedidoSearchInput').addEventListener('keyup', (event) => {
+            document.getElementById('pedidoSearchInput')?.addEventListener('keyup', (event) => {
                 // A busca em tempo real já é feita pelo onkeyup no HTML.
                 // Esta parte pode ser usada para ações específicas do Enter, se necessário,
                 // mas com a busca em tempo real, geralmente não é preciso.
@@ -2145,7 +2196,7 @@
             const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
             // Lógica de navegação por abas/views na sidebar
-            document.querySelectorAll('#sidebar-nav a[href^="#"]').forEach(link => {
+            document.querySelectorAll('#sidebar-nav a[href^="#"]')?.forEach(link => {
                 link.addEventListener('click', function(e) {
                     // Se o link clicado for um submenu, não faz nada (o bootstrap cuida do collapse)
                     if (this.getAttribute('data-bs-toggle') === 'collapse') {
@@ -2155,7 +2206,7 @@
                     e.preventDefault();
                     // Remove 'active' de todos os links e adiciona no que foi clicado
 
-                    // Remove 'active' de TODOS os links de navegação para um reset completo
+                    // Remove 'active' de TODOS os links de navegação para um reset completo // prettier-ignore
                     document.querySelectorAll('#sidebar-nav a.nav-link.active').forEach(activeLink => {
                         activeLink.classList.remove('active');
                     });
@@ -2184,7 +2235,7 @@
                 });
             });
             
-            document.getElementById('optimizationLevelSelect').addEventListener('change', updateOptimizationDescription);
+            document.getElementById('optimizationLevelSelect')?.addEventListener('change', updateOptimizationDescription);
             updateOptimizationDescription();
 
             // --- Lógica para Sidebar Recolhível ---
@@ -2207,7 +2258,7 @@
             }
 
             // Lógica para salvar a aba ativa da Mesa de Trabalho
-            const vehicleTabs = document.querySelectorAll('#vehicleTabs button[data-bs-toggle="tab"]');
+            const vehicleTabs = document.querySelectorAll('#vehicleTabs button[data-bs-toggle="tab"]'); // prettier-ignore
             vehicleTabs.forEach(tab => {
                 tab.addEventListener('shown.bs.tab', event => {
                     localStorage.setItem('lastActiveTab', event.target.getAttribute('data-bs-target'));
@@ -2227,7 +2278,7 @@
                 document.querySelector(`button[data-bs-target="${lastTab}"]`)?.click();
             }
 
-            document.addEventListener('shown.bs.collapse', function (event) {
+            document.addEventListener('shown.bs.collapse', function (event) { // prettier-ignore
                 const accordionCollapse = event.target;
                 const accordionHeader = accordionCollapse.previousElementSibling;
 
@@ -2260,7 +2311,7 @@
             // --- Lógica para Menu de Contexto ---
             const contextMenu = document.getElementById('context-menu');
 
-            document.addEventListener('contextmenu', function (e) {
+            document.addEventListener('contextmenu', function (e) { // prettier-ignore
                 const targetRow = e.target.closest('tr[data-pedido-id]');
                 if (!targetRow) {
                     contextMenu.style.display = 'none';
@@ -2292,7 +2343,7 @@
                 contextMenu.style.top = `${e.pageY}px`;
             });
 
-            document.addEventListener('click', function () {
+            document.addEventListener('click', function () { // prettier-ignore
                 contextMenu.style.display = 'none';
             });
 
@@ -2348,7 +2399,10 @@
 
         const rotaVeiculoMap = {
             // Novas rotas de São Paulo (Varejo - Van/3/4)
-            '2555': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2555' }, '2560': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2560' }, '2561': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2561' }, '2571': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2571' }, '2575': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2575' }, '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' }, '2735': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2735' }, '2745': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2745' },
+            '2555': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2555' }, '2560': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2560' }, '2561': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2561' }, 
+            '2565': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2565' }, '2566': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2566' },
+            '2571': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2571' }, '2575': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2575' }, 
+            '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' }, '2735': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2735' }, '2745': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2745' },
             // Rotas do Paraná (Varejo)
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
             '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
@@ -2359,12 +2413,23 @@
         const processarBtn = document.getElementById('processarBtn');
         const statusDiv = document.getElementById('status');
         const isNumeric = (str) => str && /^\d+$/.test(String(str).trim());
-
+        
         fileInput.addEventListener('change', (event) => { handleFile(event.target.files[0]); });
 
-        function handleFile(file) {
+        function handleFile(file, isReload = false) {
             if (!file) return;
-            limparEstadoAtual(); // CORREÇÃO: Limpa o estado atual sem recarregar a página.
+
+            // CORREÇÃO: A limpeza agora só ocorre se um arquivo for selecionado manualmente,
+            // e não durante um recarregamento de página (isReload = false).
+            if (!isReload) {
+                console.log("Novo arquivo selecionado. Limpando estado anterior.");
+                limparEstadoAtual();
+                openDb().then(db => {
+                    const transaction = db.transaction([storeName], "readwrite");
+                    transaction.objectStore(storeName).clear();
+                });
+            }
+
             statusDiv.innerHTML = '<p class="text-info">Carregando planilha...</p>';
             processarBtn.disabled = true;
             const reader = new FileReader();
@@ -2421,10 +2486,20 @@
                         return pedido; 
                     });
                     planilhaData.forEach(checkAgendamento);
+
+                    // NOVO: Salva os dados da planilha no IndexedDB para persistência
+                    savePlanilhaToDb(planilhaData).then(() => {
+                        console.log("Dados da planilha salvos no IndexedDB com sucesso.");
+                    }).catch(err => {
+                        console.error(err);
+                    });
+
                     statusDiv.innerHTML = `<p class="text-success">Planilha "${file.name}" carregada.</p>`;
+                    if (isReload) statusDiv.innerHTML = `<p class="text-success">Planilha "${file.name}" restaurada.</p>`;
                     processarBtn.disabled = false;
                     
                     popularFiltrosDeRota();
+                    if (isReload) return; // Se for recarregamento, não processa automaticamente.
 
                     if (document.getElementById('autoProcessCheckbox').checked) {
                         processar();
@@ -2646,10 +2721,9 @@
             numPedido = String(numPedido).trim();
             if (!pedidosPrioritarios.includes(numPedido)) {
                 console.log(`Priorizando pedido: ${numPedido}`);
-                pedidosPrioritarios.push(numPedido);
-                // Se a planilha já foi processada, reprocessa para aplicar a prioridade.
-                saveStateToLocalStorage(); // Salva a prioridade imediatamente
-                if (planilhaData.length > 0) processar();
+                pedidosPrioritarios.push(numPedido); 
+                saveStateToLocalStorage();
+                atualizarUIAposAcao(`Pedido ${numPedido} priorizado.`);
             }
         }
 
@@ -2659,7 +2733,7 @@
                 console.log(`Priorizando para Recall: ${numPedido}`);
                 pedidosRecall.push(numPedido);
                 saveStateToLocalStorage();
-                if (planilhaData.length > 0) processar();
+                atualizarUIAposAcao(`Pedido ${numPedido} marcado para Recall.`);
             }
         }
 
@@ -2669,8 +2743,8 @@
             if (index > -1) {
                 console.log(`Removendo prioridade de Recall: ${numPedido}`);
                 pedidosRecall.splice(index, 1);
-                saveStateToLocalStorage();
-                if (planilhaData.length > 0) processar();
+                saveStateToLocalStorage(); 
+                atualizarUIAposAcao(`Marcação de Recall removida do pedido ${numPedido}.`);
             }
         }
 
@@ -2680,9 +2754,8 @@
             if (index > -1) {
                 console.log(`Removendo prioridade do pedido: ${numPedido}`);
                 pedidosPrioritarios.splice(index, 1);
-                // Se a planilha já foi processada, reprocessa para remover a prioridade
-                saveStateToLocalStorage(); // Salva a remoção da prioridade imediatamente
-                if (planilhaData.length > 0) processar();
+                saveStateToLocalStorage();
+                atualizarUIAposAcao(`Prioridade removida do pedido ${numPedido}.`);
             }
         }
 
@@ -2810,17 +2883,76 @@
 
             if (pedidoParaBloquear) {
                 pedidosBloqueados.add(String(pedidoParaBloquear));
+
+                // NOVO: Move o pedido da sua lista atual para a lista de bloqueados manualmente.
+                // Isso garante que ele suma da lista de disponíveis/cargas e apareça na tela de análise.
+                let pedidoMovido = false;
+
+                // Função auxiliar para encontrar e mover o pedido de uma lista
+                const moverDeLista = (lista) => {
+                    const index = lista.findIndex(p => String(p.Num_Pedido) === pedidoParaBloquear);
+                    if (index > -1) {
+                        const [pedido] = lista.splice(index, 1);
+                        pedidosManualmenteBloqueadosAtuais.push(pedido);
+                        pedidoMovido = true;
+                    }
+                };
+
+                // Procura em todas as listas possíveis
+                moverDeLista(pedidosGeraisAtuais);
+
+                if (!pedidoMovido) {
+                    moverDeLista(pedidosComCFNumericoIsolado);
+                }
+                if (!pedidoMovido) {
+                    moverDeLista(rota1SemCarga);
+                }
+                // Procura dentro das cargas ativas
+                if (!pedidoMovido) {
+                    for (const loadId in activeLoads) {
+                        const load = activeLoads[loadId];
+                        const indexCarga = load.pedidos.findIndex(p => String(p.Num_Pedido) === pedidoParaBloquear);
+                        if (indexCarga > -1) {
+                            const [pedido] = load.pedidos.splice(indexCarga, 1);
+                            load.totalKg -= pedido.Quilos_Saldo;
+                            load.totalCubagem -= pedido.Cubagem;
+                            pedidosManualmenteBloqueadosAtuais.push(pedido);
+                            pedidoMovido = true;
+                            break; // Sai do loop de cargas
+                        }
+                    }
+                }
+
+                // Se o pedido não foi encontrado em nenhuma lista, mas existe na planilha original,
+                // adiciona-o à lista de bloqueados (caso de um pedido que ainda não foi processado/exibido).
+                if (!pedidoMovido) {
+                    const pedidoOriginal = planilhaData.find(p => String(p.Num_Pedido) === pedidoParaBloquear);
+                    if (pedidoOriginal) {
+                        pedidosManualmenteBloqueadosAtuais.push(pedidoOriginal);
+                    }
+                }
+
                 saveStateToLocalStorage();
-                atualizarListaBloqueados();
-                if (planilhaData.length > 0) processar();
+                atualizarUIAposAcao(`Pedido ${pedidoParaBloquear} bloqueado.`);
             }
         }
 
         function desbloquearPedido(numPedido) {
             pedidosBloqueados.delete(numPedido);
+
+            // NOVO: Move o pedido da lista de bloqueados de volta para a lista de disponíveis.
+            const indexBloqueado = pedidosManualmenteBloqueadosAtuais.findIndex(p => String(p.Num_Pedido) === numPedido);
+            if (indexBloqueado > -1) {
+                const pedidoDesbloqueado = pedidosManualmenteBloqueadosAtuais.splice(indexBloqueado, 1)[0];
+                // Adiciona de volta à lista principal de pedidos de varejo disponíveis.
+                // O sistema o colocará no grupo de rota correto na próxima renderização.
+                if (pedidoDesbloqueado) {
+                    pedidosGeraisAtuais.push(pedidoDesbloqueado);
+                }
+            }
+
             saveStateToLocalStorage();
-            atualizarListaBloqueados();
-            if (planilhaData.length > 0) processar();
+            atualizarUIAposAcao(`Pedido ${numPedido} desbloqueado.`);
         }
 
         function atualizarListaSemCorte() {
@@ -2846,16 +2978,36 @@
             const numeros = input.value.split('\n').map(n => n.trim()).filter(Boolean);
             numeros.forEach(num => pedidosSemCorte.add(num));
             saveStateToLocalStorage();
-            input.value = '';
-            atualizarListaSemCorte();
-            if (planilhaData.length > 0) processar();
+            input.value = ''; 
+            atualizarUIAposAcao(`${numeros.length} pedido(s) marcado(s) como 'Sem Corte'.`);
         }
 
         function removerMarcacaoSemCorte(numPedido) {
             pedidosSemCorte.delete(numPedido);
             saveStateToLocalStorage();
-            atualizarListaSemCorte();
-            if (planilhaData.length > 0) processar();
+            atualizarUIAposAcao(`Marcação 'Sem Corte' removida do pedido ${numPedido}.`);
+        }
+
+        /**
+         * NOVO: Atualiza a UI de forma inteligente após uma ação (bloquear, priorizar, etc.)
+         * sem reprocessar tudo. Apenas redesenha as seções afetadas.
+         */
+        function atualizarUIAposAcao(mensagemToast) {
+            // Se não houver dados carregados, não faz nada.
+            if (planilhaData.length === 0) {
+                // Apenas atualiza as listas nos modais, se aplicável
+                atualizarListaBloqueados();
+                atualizarListaSemCorte();
+                return;
+            }
+
+            // A função renderAllUI() já é inteligente o suficiente para redesenhar
+            // a interface com base no estado atual das variáveis globais.
+            // Ela também salva o estado no localStorage.
+            renderAllUI();
+
+            // Mostra uma notificação para o usuário.
+            showToast(mensagemToast, 'info');
         }
 
         function resetarEstadoGlobal() {
@@ -4538,8 +4690,10 @@
                 currentLeftoversForPrinting = allSobrasPedidos; // Atualiza a variável global de sobras
                 const rotas = Array.isArray(rotasProcessadas) ? rotasProcessadas : [String(rotasProcessadas)];
 
-                const spRoutes = new Set(['2555', '2560', '2561', '2571', '2575', '2705', '2735', '2745']);
-                const isSaoPauloRoute = rotas.some(r => spRoutes.has(r));
+                // CORREÇÃO DEFINITIVA: Identifica uma rota de SP se ela começar com '25', '26' ou '27'.
+                // Isso garante que todas as rotas de varejo de SP, incluindo as novas, sejam capturadas.
+                const isSaoPauloRoute = rotas.some(r => 
+                    String(r).startsWith('25') || String(r).startsWith('26') || String(r).startsWith('27'));
                 
                 // NOVO: Acumula as sobras de SP e habilita o botão de exportação
                 if (isSaoPauloRoute) {
@@ -5206,13 +5360,18 @@
                 mapStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Obtendo coordenadas das paradas...';
                 const locations = [{ name: "SELMIL", coords: origemCoords, isOrigin: true }];
                 const uniqueCities = [...new Set(load.pedidos.map(p => `${p.Cidade}, ${p.UF}`))];
+                
+                // Função de delay para evitar o erro "429 Too Many Requests"
+                const delay = ms => new Promise(res => setTimeout(res, ms));
 
                 for (const city of uniqueCities) {
-                    const geoResponse = await fetch(`https://graphhopper.com/api/1/geocode?q=${encodeURIComponent(city)}&key=${apiKey}`);
+                    const cleanedCity = city.replace(/\s+/g, ' ').trim(); // Limpa espaços extras
+                    const geoResponse = await fetch(`https://graphhopper.com/api/1/geocode?q=${encodeURIComponent(cleanedCity)}&key=${apiKey}`);
                     const geoData = await geoResponse.json();
                     if (geoData.hits && geoData.hits.length > 0) {
                         locations.push({ name: city, coords: { lat: geoData.hits[0].point.lat, lng: geoData.hits[0].point.lng } });
                     }
+                    await delay(300); // Adiciona uma pausa de 300ms entre as requisições
                 }
 
                 if (locations.length <= 1) {
@@ -5234,12 +5393,28 @@
                 });
 
                 // 4. Calcular e desenhar a rota otimizada
-                mapStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Calculando rota otimizada...';
-                const pointsForRoute = locations.map(loc => `point=${loc.coords.lat},${loc.coords.lng}`);
-                // Adiciona o ponto de origem novamente ao final para criar uma rota de ida e volta (round trip)
-                pointsForRoute.push(`point=${origemCoords.lat},${origemCoords.lng}`);
-                const routeUrl = `https://graphhopper.com/api/1/route?${pointsForRoute.join('&')}&vehicle=car&key=${apiKey}&points_encoded=true&optimize=true`;
+                // CORREÇÃO: Verifica o número de paradas para decidir se usa a otimização.
+                // A API gratuita do GraphHopper geralmente limita a otimização a 5 pontos.
+                const useOptimization = locations.length <= 5;
+                let routeUrl;
+                let orderedLocations = [...locations]; // Clona para poder reordenar
 
+                if (useOptimization) {
+                    mapStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Calculando rota otimizada...';
+                    const pointsForRoute = orderedLocations.map(loc => `point=${loc.coords.lat},${loc.coords.lng}`);
+                    pointsForRoute.push(`point=${origemCoords.lat},${origemCoords.lng}`); // Adiciona o ponto de origem novamente ao final para criar uma rota de ida e volta
+                    routeUrl = `https://graphhopper.com/api/1/route?${pointsForRoute.join('&')}&vehicle=car&key=${apiKey}&points_encoded=true&optimize=true`;
+                } else {
+                    showToast(`A carga tem mais de 5 paradas. A rota será traçada em ordem alfabética, sem otimização.`, 'info');
+                    mapStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Traçando rota (sem otimização)...';
+                    // Ordena as paradas (exceto a origem) alfabeticamente
+                    const destinations = orderedLocations.slice(1).sort((a, b) => a.name.localeCompare(b.name));
+                    orderedLocations = [orderedLocations[0], ...destinations]; // Mantém a origem em primeiro
+                    const pointsForRoute = orderedLocations.map(loc => `point=${loc.coords.lat},${loc.coords.lng}`);
+                    pointsForRoute.push(`point=${origemCoords.lat},${origemCoords.lng}`); // Adiciona o ponto de origem novamente ao final para criar uma rota de ida e volta
+                    routeUrl = `https://graphhopper.com/api/1/route?${pointsForRoute.join('&')}&vehicle=car&key=${apiKey}&points_encoded=true&optimize=false`;
+                }
+                
                 const routeResponse = await fetch(routeUrl);
                 const routeData = await routeResponse.json();
 
@@ -5259,11 +5434,17 @@
                 const tempoViagem = formatTime(routePath.time);
 
                 // 6. Salvar informações da rota para compartilhamento
-                const googleMapsUrl = `https://www.google.com/maps/dir/${locations.map(loc => `${loc.coords.lat},${loc.coords.lng}`).join('/')}`;
+                // Usa a ordem das localizações (otimizada ou alfabética) para gerar a URL do Google Maps
+                const allPointsForUrl = orderedLocations.map(loc => `${loc.coords.lat},${loc.coords.lng}`);
+                if (orderedLocations.length > 0) {
+                    allPointsForUrl.push(`${orderedLocations[0].coords.lat},${orderedLocations[0].coords.lng}`); // Adiciona a origem no final para ida e volta
+                }
+                const googleMapsUrl = `https://www.google.com/maps/dir/${allPointsForUrl.join('/')}`;
+
                 currentRouteInfo = {
                     loadName: `Carga ${load.numero || load.id}`,
-                    stops: locations.slice(1).map(loc => loc.name), // Pega apenas os destinos, não a origem
-                    googleMapsUrl: googleMapsUrl,
+                    stops: orderedLocations.slice(1).map(loc => loc.name), // Pega apenas os destinos, na ordem correta
+                    googleMapsUrl: googleMapsUrl, // URL corrigida
                     distancia: distanciaKm,
                     tempo: tempoViagem
                 };
@@ -5916,11 +6097,7 @@
 
             switch(action) {
                 case 'prioritize':
-                    selectedPedidos.forEach(num => { if (!pedidosPrioritarios.includes(num)) pedidosPrioritarios.push(num); });
-                    requiresReprocessing = true;
-                    break;
-                case 'recall':
-                    selectedPedidos.forEach(num => { if (!pedidosRecall.includes(num)) pedidosRecall.push(num); });
+                    selectedPedidos.forEach(num => { if (!pedidosPrioritarios.includes(num)) pedidosPrioritarios.push(num); if (!pedidosRecall.includes(num)) pedidosRecall.push(num); });
                     requiresReprocessing = true;
                     break;
                 case 'block':
@@ -5942,12 +6119,8 @@
             }
 
             if (requiresReprocessing) {
-                alert(`${selectedPedidos.length} pedidos foram atualizados.`);
                 saveStateToLocalStorage();
-                // Se a planilha já foi processada, reprocessa para aplicar as mudanças
-                if (planilhaData.length > 0) {
-                    processar();
-                }
+                atualizarUIAposAcao(`${selectedPedidos.length} pedido(s) foram atualizados.`);
             }
 
             clearBulkSelection();
@@ -6455,7 +6628,7 @@
         //  LÓGICA DE PERSISTÊNCIA DE ESTADO
         // ================================================================================================
         
-        function saveStateToLocalStorage() {
+        async function saveStateToLocalStorage() {
             if (typeof(Storage) === "undefined") {
                 console.warn("Seu navegador não suporta Local Storage. O progresso não será salvo.");
                 return;
@@ -6499,7 +6672,7 @@
             }
         }
 
-        function saveRouteContext(context) {
+        async function saveRouteContext(context) {
             // Agora apenas atualiza a variável global. O salvamento ocorre em saveStateToLocalStorage.
             if (!processedRouteContexts) {
                 processedRouteContexts = {};
@@ -6507,7 +6680,7 @@
             processedRouteContexts[context.routesKey] = context;
         }
 
-        function loadStateFromLocalStorage() {
+        async function loadStateFromLocalStorage() {
             if (typeof(Storage) === "undefined") return;
 
             const savedStateJSON = localStorage.getItem('logisticsAppState');
@@ -6517,6 +6690,21 @@
             }
 
             try {
+                // NOVO: Carrega os dados brutos da planilha do IndexedDB
+                const savedPlanilha = await loadPlanilhaFromDb();
+                if (savedPlanilha) {
+                    planilhaData = savedPlanilha;
+                    console.log("Dados da planilha restaurados do IndexedDB.");
+                    // Simula o evento de carregamento de arquivo para re-popular a UI,
+                    // mas com um flag para não limpar o estado.
+                    const fileInfo = { name: localStorage.getItem('lastFileName') || 'planilha-salva.xlsx' };
+                    if (fileInput) fileInput.files[0] = new File([], fileInfo.name); // Apenas para UI
+                    handleFile(new File([], fileInfo.name), true);
+
+                } else {
+                    console.log("Nenhum dado de planilha encontrado no IndexedDB.");
+                }
+
                 const savedState = JSON.parse(savedStateJSON);
                 
                 // Função auxiliar para garantir que as datas sejam objetos Date
@@ -6528,8 +6716,6 @@
                         return item;
                     });
                 };
-
-                planilhaData = savedState.planilhaData || [];
 
                 originalColumnHeaders = savedState.originalColumnHeaders || [];
                 pedidosGeraisAtuais = savedState.pedidosGeraisAtuais || [];
@@ -6561,8 +6747,9 @@
                 localStorage.setItem('lastActiveTab', savedState.lastActiveTab); // Restaura a aba salva
 
                 // NOVO: Habilita o botão se houver sobras de SP salvas
-                if (allSaoPauloLeftovers.length > 0) {
-                    document.getElementById('export-sobras-sp-btn').disabled = false;
+                const exportBtn = document.getElementById('export-sobras-sp-btn');
+                if (exportBtn) {
+                    exportBtn.disabled = !allSaoPauloLeftovers || allSaoPauloLeftovers.length === 0;
                 }
 
                 // Reconverte as strings de data para objetos Date em todas as listas relevantes
@@ -6582,8 +6769,8 @@
                 Object.values(gruposToco).forEach(group => group.pedidos = reviveDates(group.pedidos));
                 Object.values(gruposPorCFGlobais).forEach(group => group.pedidos = reviveDates(group.pedidos));
 
-                // Se não houver dados da planilha, não há estado para restaurar.
-                if (pedidosGeraisAtuais.length === 0 && Object.keys(activeLoads).length === 0 && currentLeftoversForPrinting.length === 0) {
+                // Se não houver dados da planilha E nenhum estado salvo, não há o que restaurar.
+                if (planilhaData.length === 0 && (pedidosGeraisAtuais.length === 0 && Object.keys(activeLoads).length === 0 && currentLeftoversForPrinting.length === 0)) {
                     console.log("Nenhum estado processado para restaurar.");
                     return;
                 }
