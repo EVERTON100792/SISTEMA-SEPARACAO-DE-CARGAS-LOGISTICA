@@ -15,6 +15,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <!-- NOVA BIBLIOTECA: Leaflet.js para Mapas Interativos -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
@@ -690,6 +695,14 @@
         .accordion-button.route-tresQuartos { border-left: 5px solid #ffc107; }
 
         @media print { .print-only { display: block !important; } }
+
+        /* --- NOVO: Estilos para impressão do mapa --- */
+        @media print {
+            body.print-map-active .modal-backdrop,
+            body.print-map-active > *:not(#mapModal) {
+                display: none !important;
+            }
+        }
     </style>
 </head>
     <style>
@@ -1147,8 +1160,11 @@
                                     <div class="card mb-3">
                                         <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-cash-coin me-2"></i>Venda Antecipada</h2></div>
                                         <div class="card-body">
-                                            <label for="vendaAntecipadaInput" class="form-label small">Cole os números dos pedidos (um por linha):</label>
-                                            <textarea class="form-control" id="vendaAntecipadaInput" rows="3" placeholder="Ex: 12345&#10;12346&#10;12347"></textarea>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <label for="vendaAntecipadaInput" class="form-label small">Números dos pedidos:</label>
+                                                <button class="btn btn-sm btn-outline-secondary mb-1" onclick="pasteToSpecialLoad('vendaAntecipadaInput')"><i class="bi bi-clipboard-plus-fill me-1"></i>Colar</button>
+                                            </div>
+                                            <textarea class="form-control" id="vendaAntecipadaInput" rows="3" placeholder="Copie pedidos com o botão direito e cole aqui..."></textarea>
                                             <button class="btn btn-success w-100 mt-3" type="button" onclick="montarCargaPredefinida('vendaAntecipadaInput', 'resultado-venda-antecipada', pedidosVendaAntecipadaProcessados, 'Venda Antecipada')"><i class="bi bi-box-seam me-2"></i>Montar Carga Antecipada</button>
                                         </div>
                                     </div>
@@ -1157,8 +1173,11 @@
                                     <div class="card">
                                         <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-star-fill me-2"></i>Carga Especial</h2></div>
                                         <div class="card-body">
-                                            <label for="pedidosEspeciaisInput" class="form-label small">Cole os números dos pedidos (um por linha):</label>
-                                            <textarea class="form-control" id="pedidosEspeciaisInput" rows="3" placeholder="Ex: 54321&#10;54322&#10;54323"></textarea>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <label for="pedidosEspeciaisInput" class="form-label small">Números dos pedidos:</label>
+                                                <button class="btn btn-sm btn-outline-secondary mb-1" onclick="pasteToSpecialLoad('pedidosEspeciaisInput')"><i class="bi bi-clipboard-plus-fill me-1"></i>Colar</button>
+                                            </div>
+                                            <textarea class="form-control" id="pedidosEspeciaisInput" rows="3" placeholder="Copie pedidos com o botão direito e cole aqui..."></textarea>
                                             <button class="btn btn-info w-100 mt-3" type="button" onclick="montarCargaPredefinida('pedidosEspeciaisInput', 'resultado-carga-especial', pedidosEspeciaisProcessados, 'Especial')"><i class="bi bi-magic me-2"></i>Montar Carga Especial</button>
                                         </div>
                                     </div>
@@ -1214,6 +1233,7 @@
                     <div class="btn-group btn-group-sm">
                         <button class="btn btn-outline-warning" onclick="bulkAction('prioritize')"><i class="bi bi-star-fill me-1"></i> Priorizar</button>
                         <button class="btn btn-outline-info" onclick="bulkAction('recall')"><i class="bi bi-arrow-repeat me-1"></i> Marcar Recall</button>
+                        <button class="btn btn-outline-secondary" onclick="bulkAction('copy')"><i class="bi bi-clipboard-check me-1"></i> Copiar Números</button>
                         <button class="btn btn-outline-danger" onclick="bulkAction('block')"><i class="bi bi-slash-circle me-1"></i> Bloquear</button>
                     </div>
                     <button type="button" class="btn-close ms-3" aria-label="Fechar" onclick="clearBulkSelection()"></button>
@@ -1221,6 +1241,30 @@
             </div>
 
         </main>
+    </div>
+
+    <!-- ======================================================================================= -->
+    <!-- NOVO: MODAL PARA VISUALIZAÇÃO DE ROTA NO MAPA -->
+    <!-- ======================================================================================= -->
+    <div class="modal fade" id="mapModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mapModalTitle"><i class="bi bi-map-fill me-2"></i> Visualização de Rota</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- O container do mapa precisa de uma altura definida -->
+                    <div id="map-container" style="height: 75vh; width: 100%;"></div>
+                </div>
+                <div class="modal-footer">
+                    <div id="map-status" class="me-auto text-muted small"></div>
+                    <button type="button" class="btn btn-outline-secondary" onclick="printMap()"><i class="bi bi-printer-fill me-1"></i> Imprimir Rota</button>
+                    <button type="button" class="btn btn-success" onclick="shareRouteOnWhatsApp()"><i class="bi bi-whatsapp me-1"></i> Compartilhar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal de Roteirização Manual -->
@@ -1784,6 +1828,8 @@
         let kpiData = {}; // Objeto para armazenar dados dos KPIs
         let processedRoutes = new Set();
         let processedRouteContexts = {};
+        let specialLoadClipboard = []; // NOVO: Clipboard interno para montagem especial
+        let currentRouteInfo = {}; // NOVO: Armazena informações da rota atual para compartilhamento
         let origemCoords = null; // NOVO: Variável para armazenar as coordenadas da origem em cache
         let manualLoadInProgress = null;
 
@@ -1826,6 +1872,10 @@
                         configs[key] = parseFloat(element.value);
                     }
                 });
+                // NOVO: Salva a chave da API do GraphHopper
+                const apiKey = document.getElementById('graphhopperApiKey').value;
+                localStorage.setItem('graphhopperApiKey', apiKey);
+
                 localStorage.setItem('vehicleConfigs', JSON.stringify(configs));
                 configStatus.innerHTML = '<p class="text-success">Configurações salvas com sucesso!</p>';
                 setTimeout(() => { configStatus.innerHTML = ''; }, 3000);
@@ -1842,6 +1892,10 @@
             try { // prettier-ignore
                 const savedConfigs = localStorage.getItem('vehicleConfigs');
                 const configs = savedConfigs ? JSON.parse(savedConfigs) : defaultConfigs;
+
+                // NOVO: Carrega a chave da API do GraphHopper
+                const savedApiKey = localStorage.getItem('graphhopperApiKey');
+                if (savedApiKey) document.getElementById('graphhopperApiKey').value = savedApiKey;
 
                 Object.keys(defaultConfigs).forEach(key => {
                     const element = document.getElementById(key);
@@ -1940,6 +1994,7 @@
         kpiData = {};
         processedRoutes = new Set();
         processedRouteContexts = {};
+        specialLoadClipboard = [];
         origemCoords = null;
         manualLoadInProgress = null;
         console.log('Variáveis globais resetadas.');
@@ -2213,14 +2268,23 @@
                 }
 
                 e.preventDefault();
-                const pedidoId = targetRow.dataset.pedidoId;
+                
+                // Verifica se há múltiplos pedidos selecionados (via checkbox)
+                const selectedCheckboxes = Array.from(document.querySelectorAll('.row-checkbox:checked'));
+                const isMultiSelect = selectedCheckboxes.length > 0;
+                const pedidoId = targetRow.dataset.pedidoId; // Pega o ID da linha clicada
 
                 contextMenu.innerHTML = `
-                    <a class="dropdown-item" href="#" onclick="priorizarPedido('${pedidoId}')"><i class="bi bi-star-fill text-warning me-2"></i>Priorizar Pedido</a>
-                    <a class="dropdown-item" href="#" onclick="priorizarRecall('${pedidoId}')"><i class="bi bi-arrow-repeat text-info me-2"></i>Marcar para Recall</a>
-                    <a class="dropdown-item" href="#" onclick="bloquearPedido('${pedidoId}')"><i class="bi bi-slash-circle-fill text-danger me-2"></i>Bloquear Pedido</a>
+                    ${isMultiSelect ? 
+                        `<a class="dropdown-item" href="#" onclick="copyForSpecialLoad()"><i class="bi bi-clipboard-plus-fill text-info me-2"></i>Copiar ${selectedCheckboxes.length} Pedido(s) para Montagem</a>` :
+                        `<a class="dropdown-item" href="#" onclick="copyForSpecialLoad('${pedidoId}')"><i class="bi bi-clipboard-plus-fill text-info me-2"></i>Copiar para Montagem</a>`
+                    }
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#" onclick="copiarParaClipboard('${pedidoId}')"><i class="bi bi-clipboard-check me-2"></i>Copiar Nº do Pedido</a>
+                    <a class="dropdown-item" href="#" onclick="priorizarPedido('${pedidoId}')"><i class="bi bi-star-fill text-warning me-2"></i>Priorizar este Pedido</a>
+                    <a class="dropdown-item" href="#" onclick="priorizarRecall('${pedidoId}')"><i class="bi bi-arrow-repeat text-info me-2"></i>Marcar este para Recall</a>
+                    <a class="dropdown-item" href="#" onclick="bloquearPedido('${pedidoId}')"><i class="bi bi-slash-circle-fill text-danger me-2"></i>Bloquear este Pedido</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#" onclick="copiarParaClipboard('${pedidoId}')"><i class="bi bi-clipboard-check me-2"></i>Copiar Nº deste Pedido</a>
                 `;
 
                 contextMenu.style.display = 'block';
@@ -2231,6 +2295,35 @@
             document.addEventListener('click', function () {
                 contextMenu.style.display = 'none';
             });
+
+            // NOVO: Adiciona os event listeners para os botões do modal do mapa
+            const printMapBtn = document.getElementById('printMapBtn');
+            const shareWhatsAppBtn = document.getElementById('shareWhatsAppBtn');
+            if(printMapBtn) printMapBtn.addEventListener('click', printMap);
+            if(shareWhatsAppBtn) shareWhatsAppBtn.addEventListener('click', shareRouteOnWhatsApp);
+        });
+
+        /**
+         * NOVO: Copia os números de pedido selecionados para o clipboard de montagem especial.
+         * @param {string|null} singlePedidoId - Se fornecido, copia apenas este pedido.
+         */
+        function copyForSpecialLoad(singlePedidoId = null) {
+            let pedidosACopiar = [];
+            if (singlePedidoId) {
+                pedidosACopiar = [singlePedidoId];
+            } else {
+                pedidosACopiar = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+            }
+
+            if (pedidosACopiar.length === 0) return;
+
+            specialLoadClipboard = [...pedidosACopiar]; // Substitui o clipboard com a nova seleção
+            showToast(`${specialLoadClipboard.length} pedido(s) copiado(s) para a montagem especial.`, 'success');
+        }
+
+        function pasteToSpecialLoad(inputId) {
+            if (specialLoadClipboard.length === 0) { showToast("Nenhum pedido na área de transferência especial.", 'warning'); return; }
+            document.getElementById(inputId).value = specialLoadClipboard.join('\n');
         });
 
         function copiarParaClipboard(text) {
@@ -4691,9 +4784,10 @@
             const isOverloaded = maxKg > 0 && load.totalKg > maxKg;
             const pesoPercentual = maxKg > 0 ? (load.totalKg / maxKg) * 100 : 0;
             let progressColor = 'bg-primary';
-            if (isOverloaded || pesoPercentual > 100) progressColor = 'bg-danger';
-            else if (pesoPercentual > 95) progressColor = 'bg-danger';
-            else if (pesoPercentual > 75) progressColor = 'bg-warning';
+            if (isOverloaded || pesoPercentual > 100) progressColor = 'bg-danger'; // Acima do limite rígido
+            else if (pesoPercentual > (config.softMaxKg / maxKg * 100)) progressColor = 'bg-warning'; // Acima do preferencial
+            else if (pesoPercentual >= (config.minKg / maxKg * 100)) progressColor = 'bg-success'; // Acima do mínimo
+            else progressColor = 'bg-secondary'; // Abaixo do mínimo
 
             const progressBar = `
                 <div class="progress mt-2" role="progressbar" aria-label="Capacidade da carga" aria-valuenow="${pesoPercentual}" aria-valuemin="0" aria-valuemax="100" style="height: 10px;">
@@ -4703,8 +4797,9 @@
             const headerColorClass = isOverloaded ? 'bg-danger' : vInfo.colorClass;
             
             // O botão de imprimir agora é genérico para todas as cargas.
-            const printButton = `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargaIndividual('${load.id}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>`;
-            const mapButton = `<button class="btn btn-sm btn-outline-light ms-2" onclick="abrirMapaCarga('${load.id}')"><i class="bi bi-map-fill me-1"></i>Roteirizar</button>`;
+            const printButton = `<button class="btn btn-sm btn-outline-light" onclick="imprimirCargaIndividual('${load.id}')" title="Imprimir Carga"><i class="bi bi-printer-fill"></i></button>`;
+            const internalMapButton = `<button class="btn btn-sm btn-outline-light ms-2" onclick="showRouteOnMap('${load.id}')" title="Visualizar Rota no Sistema"><i class="bi bi-geo-alt-fill"></i></button>`;
+            const externalMapButton = `<button class="btn btn-sm btn-outline-light ms-2" onclick="abrirMapaCarga('${load.id}')" title="Roteirizar no GraphHopper"><i class="bi bi-signpost-split-fill"></i></button>`;
 
             // RESTAURADO: Dropdown para alterar o tipo de veículo
             const vehicleSelectDropdown = `
@@ -4717,8 +4812,9 @@
 
             const cardHeaderActions = `
                 <div class="card-header-actions no-print d-flex align-items-center">
+                    ${internalMapButton}
+                    ${externalMapButton}
                     ${printButton}
-                    ${mapButton}
                 </div>
             `;
 
@@ -4963,6 +5059,221 @@
             
             // Abre a URL em uma nova aba
             window.open(url, '_blank');
+        }
+
+        /**
+         * Decodifica uma string de polilinha (formato do Google/GraphHopper) em um array de coordenadas.
+         * @param {string} str A string da polilinha codificada.
+         * @returns {Array<[number, number]>} Um array de pares [latitude, longitude].
+         */
+        function decodePolyline(str) {
+            let index = 0, lat = 0, lng = 0, array = [];
+            let shift = 0, result = 0, byte, latitude_change, longitude_change;
+            const factor = Math.pow(10, 5);
+
+            while (index < str.length) {
+                byte = null; shift = 0; result = 0;
+                do {
+                    byte = str.charCodeAt(index++) - 63;
+                    result |= (byte & 0x1f) << shift;
+                    shift += 5;
+                } while (byte >= 0x20);
+
+                latitude_change = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                lat += latitude_change;
+
+                shift = 0; result = 0;
+                do {
+                    byte = str.charCodeAt(index++) - 63;
+                    result |= (byte & 0x1f) << shift;
+                    shift += 5;
+                } while (byte >= 0x20);
+
+                longitude_change = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                lng += longitude_change;
+
+                array.push([lat / factor, lng / factor]);
+            }
+            return array;
+        }
+
+        /**
+         * Formata milissegundos em uma string legível de horas e minutos.
+         * @param {number} millis - O tempo em milissegundos.
+         * @returns {string} O tempo formatado (ex: "2h 30min").
+         */
+        function formatTime(millis) {
+            if (!millis || millis < 0) return "0min";
+            const totalMinutes = Math.floor(millis / 60000);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            let result = '';
+            if (hours > 0) result += `${hours}h `;
+            if (minutes > 0 || hours === 0) result += `${minutes}min`;
+            return result.trim();
+        }
+        
+        /**
+         * NOVO: Prepara e imprime o conteúdo do modal do mapa.
+         */
+        function printMap() {
+            const mapModal = document.getElementById('mapModal');
+            if (!mapModal) return;
+
+            // Adiciona uma classe ao body para controlar a visibilidade na impressão
+            document.body.classList.add('print-map-active');
+
+            // Usa um pequeno timeout para garantir que o CSS seja aplicado antes da impressão
+            setTimeout(() => {
+                window.print();
+                // Remove a classe após a impressão ser acionada
+                document.body.classList.remove('print-map-active');
+            }, 250);
+        }
+
+        /**
+         * NOVO: Compartilha a rota atual no WhatsApp.
+         */
+        function shareRouteOnWhatsApp() {
+            if (!currentRouteInfo || !currentRouteInfo.loadName) {
+                showToast("Nenhuma informação de rota para compartilhar. Calcule a rota primeiro.", 'warning');
+                return;
+            }
+
+            const { loadName, stops, googleMapsUrl, distancia, tempo } = currentRouteInfo;
+
+            let message = `*Previsão de Rota - ${loadName}*\n\n`;
+            message += `*Paradas:*\n`;
+            stops.forEach((stop, index) => {
+                message += `${index + 1}. ${stop}\n`;
+            });
+            message += `\n*Distância Total:* ${distancia} km`;
+            message += `\n*Tempo Estimado:* ${tempo}`;
+            message += `\n\n*Ver no Mapa:*\n${googleMapsUrl}`;
+
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+
+
+
+        let mapInstance = null; // Variável global para a instância do mapa
+        async function showRouteOnMap(loadId) {
+            const mapModalEl = document.getElementById('mapModal');
+            const mapModal = bootstrap.Modal.getOrCreateInstance(mapModalEl);
+            const mapContainer = document.getElementById('map-container');
+            const mapStatus = document.getElementById('map-status');
+            const mapTitle = document.getElementById('mapModalTitle');
+
+            // Limpa as informações da rota anterior
+            currentRouteInfo = {};
+
+            mapStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Carregando dados da rota...';
+            mapTitle.textContent = 'Visualização de Rota';
+            mapModal.show();
+
+            // Destrói a instância anterior do mapa para garantir uma reinicialização limpa
+            if (mapInstance) {
+                mapInstance.remove();
+                mapInstance = null;
+            }
+
+            const apiKey = document.getElementById('graphhopperApiKey').value;
+            if (!apiKey) {
+                mapStatus.innerHTML = '<span class="text-danger">Chave da API do GraphHopper não configurada.</span>';
+                return;
+            }
+
+            const load = activeLoads[loadId];
+            if (!load || !load.pedidos || load.pedidos.length === 0) {
+                mapStatus.innerHTML = '<span class="text-warning">Nenhum pedido encontrado nesta carga.</span>';
+                return;
+            }
+
+            mapTitle.textContent = `Visualização de Rota - Carga ${load.numero || load.id}`;
+
+            try {
+                // 1. Obter coordenadas da origem (com cache)
+                if (!origemCoords) {
+                    const origemResponse = await fetch(`https://graphhopper.com/api/1/geocode?q=${encodeURIComponent("Empresa Selmi, Rolândia, Paraná")}&key=${apiKey}`);
+                    const origemData = await origemResponse.json();
+                    if (!origemData.hits || origemData.hits.length === 0) throw new Error("Coordenadas da origem não encontradas.");
+                    origemCoords = { lat: origemData.hits[0].point.lat, lng: origemData.hits[0].point.lng };
+                }
+
+                // 2. Obter coordenadas dos destinos
+                mapStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Obtendo coordenadas das paradas...';
+                const locations = [{ name: "SELMIL", coords: origemCoords, isOrigin: true }];
+                const uniqueCities = [...new Set(load.pedidos.map(p => `${p.Cidade}, ${p.UF}`))];
+
+                for (const city of uniqueCities) {
+                    const geoResponse = await fetch(`https://graphhopper.com/api/1/geocode?q=${encodeURIComponent(city)}&key=${apiKey}`);
+                    const geoData = await geoResponse.json();
+                    if (geoData.hits && geoData.hits.length > 0) {
+                        locations.push({ name: city, coords: { lat: geoData.hits[0].point.lat, lng: geoData.hits[0].point.lng } });
+                    }
+                }
+
+                if (locations.length <= 1) {
+                    mapStatus.innerHTML = '<span class="text-warning">Não foi possível encontrar coordenadas para os destinos.</span>';
+                    return;
+                }
+
+                // 3. Inicializar o mapa e adicionar marcadores
+                mapInstance = L.map(mapContainer).setView(origemCoords, 6);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(mapInstance);
+
+                const bounds = L.latLngBounds();
+                locations.forEach((loc, index) => {
+                    const marker = L.marker(loc.coords).addTo(mapInstance).bindPopup(`<b>${index === 0 ? 'Origem' : 'Parada ' + index}:</b><br>${loc.name}`);
+                    if (loc.isOrigin) marker.setIcon(L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }));
+                    bounds.extend(loc.coords);
+                });
+
+                // 4. Calcular e desenhar a rota otimizada
+                mapStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Calculando rota otimizada...';
+                const pointsForRoute = locations.map(loc => `point=${loc.coords.lat},${loc.coords.lng}`);
+                // Adiciona o ponto de origem novamente ao final para criar uma rota de ida e volta (round trip)
+                pointsForRoute.push(`point=${origemCoords.lat},${origemCoords.lng}`);
+                const routeUrl = `https://graphhopper.com/api/1/route?${pointsForRoute.join('&')}&vehicle=car&key=${apiKey}&points_encoded=true&optimize=true`;
+
+                const routeResponse = await fetch(routeUrl);
+                const routeData = await routeResponse.json();
+
+                if (!routeData.paths || routeData.paths.length === 0) {
+                    throw new Error(routeData.message || "Não foi possível calcular a rota.");
+                }
+
+                const routePath = routeData.paths[0];
+                const decodedPoints = decodePolyline(routePath.points);
+
+                // Adiciona a linha da rota ao mapa
+                L.polyline(decodedPoints, { color: 'var(--dark-primary)', weight: 5, opacity: 0.8 }).addTo(mapInstance);
+
+                // 5. Ajustar o zoom e exibir o resultado final
+                mapInstance.fitBounds(bounds, { padding: [50, 50] });
+                const distanciaKm = (routePath.distance / 1000).toFixed(1);
+                const tempoViagem = formatTime(routePath.time);
+
+                // 6. Salvar informações da rota para compartilhamento
+                const googleMapsUrl = `https://www.google.com/maps/dir/${locations.map(loc => `${loc.coords.lat},${loc.coords.lng}`).join('/')}`;
+                currentRouteInfo = {
+                    loadName: `Carga ${load.numero || load.id}`,
+                    stops: locations.slice(1).map(loc => loc.name), // Pega apenas os destinos, não a origem
+                    googleMapsUrl: googleMapsUrl,
+                    distancia: distanciaKm,
+                    tempo: tempoViagem
+                };
+
+                mapStatus.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> Rota de <strong>${distanciaKm} km</strong> (aprox. <strong>${tempoViagem}</strong>) traçada com sucesso.</span>`;
+
+            } catch (error) {
+                console.error("Erro ao mostrar rota no mapa:", error);
+                mapStatus.innerHTML = `<span class="text-danger">Erro: ${error.message}</span>`;
+            }
         }
 
         // ... (código existente) ...
@@ -5601,31 +5912,45 @@
             const selectedPedidos = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
             if (selectedPedidos.length === 0) return;
 
-            let actionTaken = false;
-            switch (action) {
+            let requiresReprocessing = false;
+
+            switch(action) {
                 case 'prioritize':
                     selectedPedidos.forEach(num => { if (!pedidosPrioritarios.includes(num)) pedidosPrioritarios.push(num); });
-                    actionTaken = true;
+                    requiresReprocessing = true;
                     break;
                 case 'recall':
                     selectedPedidos.forEach(num => { if (!pedidosRecall.includes(num)) pedidosRecall.push(num); });
-                    actionTaken = true;
+                    requiresReprocessing = true;
                     break;
                 case 'block':
                     selectedPedidos.forEach(num => pedidosBloqueados.add(num));
-                    actionTaken = true;
+                    requiresReprocessing = true;
+                    break;
+                case 'copy':
+                    const textToCopy = selectedPedidos.join('\n');
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        showToast(`${selectedPedidos.length} número(s) de pedido copiado(s) para a área de transferência.`, 'success');
+                    }).catch(err => {
+                        console.error('Erro ao copiar números dos pedidos: ', err);
+                        showToast('Falha ao copiar os números. Verifique o console para mais detalhes.', 'danger');
+                    });
+                    // A ação de copiar não requer reprocessamento.
+                    clearBulkSelection();
+                    return; // Sai da função aqui.
                     break;
             }
 
-            if (actionTaken) {
+            if (requiresReprocessing) {
                 alert(`${selectedPedidos.length} pedidos foram atualizados.`);
-                clearBulkSelection(); // prettier-ignore
                 saveStateToLocalStorage();
                 // Se a planilha já foi processada, reprocessa para aplicar as mudanças
                 if (planilhaData.length > 0) {
                     processar();
                 }
             }
+
+            clearBulkSelection();
         }
 
         function montarCargaPredefinida(inputId, resultadoId, processedSet, nomeCarga) {
