@@ -174,37 +174,52 @@ function createSolutionFromHeuristic(itemsParaEmpacotar, vehicleType, configs, p
 }
 
 function runHeuristicOptimization(packableGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall) {
+    // Função de ordenação principal que prioriza a data mais antiga.
+    const dateSorter = (a, b) => {
+        if (a.oldestDate && b.oldestDate) {
+            if (a.oldestDate < b.oldestDate) return -1;
+            if (a.oldestDate > b.oldestDate) return 1;
+        } else if (a.oldestDate) {
+            return -1; // Grupos com data vêm antes dos sem data.
+        } else if (b.oldestDate) {
+            return 1;
+        }
+        return 0; // Se as datas forem iguais ou ambas nulas, não há preferência.
+    };
+
     const strategies = [
         { name: 'priority-weight-desc', sorter: (a, b) => {
-            if (a.oldestDate && b.oldestDate) {
-                if (a.oldestDate < b.oldestDate) return -1;
-                if (a.oldestDate > b.oldestDate) return 1;
-            } else if (a.oldestDate) { return -1; } 
-              else if (b.oldestDate) { return 1; }
+            const dateCompare = dateSorter(a, b);
+            if (dateCompare !== 0) return dateCompare;
+            // Desempate por prioridade manual
             const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
             const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
             if (aHasPrio && !bHasPrio) return -1;
             if (!aHasPrio && bHasPrio) return 1;
+            // Desempate final por peso
             return b.totalKg - a.totalKg;
         }},
         { name: 'scheduled-weight-desc', sorter: (a, b) => {
-            if (a.oldestDate && b.oldestDate) {
-                if (a.oldestDate < b.oldestDate) return -1;
-                if (a.oldestDate > b.oldestDate) return 1;
-            } else if (a.oldestDate) { return -1; } 
-              else if (b.oldestDate) { return 1; }
+            const dateCompare = dateSorter(a, b);
+            if (dateCompare !== 0) return dateCompare;
+            // Desempate por agendamento
             const aHasSched = a.pedidos.some(p => p.Agendamento === 'Sim');
             const bHasSched = b.pedidos.some(p => p.Agendamento === 'Sim');
             if (aHasSched && !bHasSched) return -1;
             if (!aHasSched && bHasSched) return 1;
+            // Desempate final por peso
             return b.totalKg - a.totalKg;
         }},
         { name: 'weight-desc', sorter: (a, b) => {
-            if (a.oldestDate && b.oldestDate) { if (a.oldestDate < b.oldestDate) return -1; if (a.oldestDate > b.oldestDate) return 1; } else if (a.oldestDate) { return -1; } else if (b.oldestDate) { return 1; }
+            const dateCompare = dateSorter(a, b);
+            if (dateCompare !== 0) return dateCompare;
+            // Desempate por peso
             return b.totalKg - a.totalKg;
         }},
         { name: 'weight-asc', sorter: (a, b) => {
-            if (a.oldestDate && b.oldestDate) { if (a.oldestDate < b.oldestDate) return -1; if (a.oldestDate > b.oldestDate) return 1; } else if (a.oldestDate) { return -1; } else if (b.oldestDate) { return 1; }
+            const dateCompare = dateSorter(a, b);
+            if (dateCompare !== 0) return dateCompare;
+            // Desempate por peso
             return a.totalKg - b.totalKg;
         }}
     ];
@@ -254,14 +269,18 @@ async function runSimulatedAnnealing(packableGroups, vehicleType, configs, pedid
         const initialTemp = 1000;
         const coolingRate = 0.993;
         const iterationsPerTemp = 200;
-        
+
+        // A ordenação inicial agora também prioriza a data mais antiga como critério principal.
         const initialSortedGroups = [...packableGroups].sort((a, b) => {
-              if (a.oldestDate && b.oldestDate) {
-                  if (a.oldestDate < b.oldestDate) return -1;
-                  if (a.oldestDate > b.oldestDate) return 1;
-              } else if (a.oldestDate) { return -1; } 
-                else if (b.oldestDate) { return 1; }
-              return b.totalKg - a.totalKg;
+            if (a.oldestDate && b.oldestDate) {
+                if (a.oldestDate < b.oldestDate) return -1;
+                if (a.oldestDate > b.oldestDate) return 1;
+            } else if (a.oldestDate) {
+                return -1;
+            } else if (b.oldestDate) {
+                return 1;
+            }
+            return b.totalKg - a.totalKg; // Desempate por peso
         });
 
         let bestSolution = createSolutionFromHeuristic(initialSortedGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall);
