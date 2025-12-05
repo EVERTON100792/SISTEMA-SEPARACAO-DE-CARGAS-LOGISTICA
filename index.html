@@ -2887,6 +2887,7 @@
                 // NOVO: Move o pedido da sua lista atual para a lista de bloqueados manualmente.
                 // Isso garante que ele suma da lista de disponíveis/cargas e apareça na tela de análise.
                 let pedidoMovido = false;
+                let affectedLoadId = null; // NOVO: Rastreia a carga afetada
 
                 // Função auxiliar para encontrar e mover o pedido de uma lista
                 const moverDeLista = (lista) => {
@@ -2918,6 +2919,10 @@
                             load.totalCubagem -= pedido.Cubagem;
                             pedidosManualmenteBloqueadosAtuais.push(pedido);
                             pedidoMovido = true;
+                            affectedLoadId = loadId; // MODIFICADO: Captura o ID da carga afetada
+                            if (load.pedidos.length === 0) {
+                                delete activeLoads[loadId];
+                            }
                             break; // Sai do loop de cargas
                         }
                     }
@@ -2932,8 +2937,8 @@
                     }
                 }
 
-                saveStateToLocalStorage();
-                atualizarUIAposAcao(`Pedido ${pedidoParaBloquear} bloqueado.`);
+                // MODIFICADO: Chama a função de atualização com o ID da carga afetada
+                atualizarUIAposAcao(`Pedido ${pedidoParaBloquear} bloqueado.`, affectedLoadId);
             }
         }
 
@@ -2992,7 +2997,7 @@
          * NOVO: Atualiza a UI de forma inteligente após uma ação (bloquear, priorizar, etc.)
          * sem reprocessar tudo. Apenas redesenha as seções afetadas.
          */
-        function atualizarUIAposAcao(mensagemToast) {
+        function atualizarUIAposAcao(mensagemToast, affectedLoadId = null) {
             // Se não houver dados carregados, não faz nada.
             if (planilhaData.length === 0) {
                 // Apenas atualiza as listas nos modais, se aplicável
@@ -3001,12 +3006,44 @@
                 return;
             }
 
-            // A função renderAllUI() já é inteligente o suficiente para redesenhar
-            // a interface com base no estado atual das variáveis globais.
-            // Ela também salva o estado no localStorage.
-            renderAllUI();
+            // 1. Atualiza a lista de pedidos disponíveis (de onde o pedido bloqueado pode ter vindo)
+            // Isso também redesenha os botões de rota, o que é aceitável.
+            const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
+            displayGerais(document.getElementById('resultado-geral'), gruposGerais);
 
-            // Mostra uma notificação para o usuário.
+            // 2. Atualiza as listas de pedidos bloqueados (na view de análise e no modal)
+            displayPedidosBloqueados(document.getElementById('resultado-bloqueados'), pedidosManualmenteBloqueadosAtuais);
+            atualizarListaBloqueados();
+
+            // 3. Se uma carga foi afetada, renderiza novamente apenas aquele card
+            if (affectedLoadId) {
+                const load = activeLoads[affectedLoadId];
+                const cardElement = document.getElementById(affectedLoadId);
+                if (load && cardElement) { // A carga ainda existe, renderiza novamente
+                    const vehicleInfo = {
+                        fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
+                        van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
+                        tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' },
+                        toco: { name: 'Toco', colorClass: 'bg-secondary', textColor: 'text-white', icon: 'bi-inboxes-fill' }
+                    };
+                    const vInfo = vehicleInfo[load.vehicleType];
+                    if (vInfo) {
+                        const newCardHTML = renderLoadCard(load, load.vehicleType, vInfo);
+                        cardElement.outerHTML = newCardHTML;
+                    }
+                } else if (cardElement) { // A carga foi deletada (ficou vazia), remove o card
+                    cardElement.remove();
+                }
+            }
+
+            // 4. Atualiza os KPIs e o gráfico
+            updateAndRenderKPIs();
+            updateAndRenderChart();
+
+            // 5. Salva o estado atual
+            saveStateToLocalStorage();
+
+            // 6. Mostra a notificação para o usuário
             showToast(mensagemToast, 'info');
         }
 
