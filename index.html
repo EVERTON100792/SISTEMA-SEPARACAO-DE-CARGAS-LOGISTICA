@@ -1752,6 +1752,28 @@
             return objCopy;
         }
 
+        /**
+         * NOVA FUNÇÃO CENTRALIZADA: Verifica todos os tipos de bloqueio para um pedido.
+         * Isso garante que a lógica seja a mesma em todos os lugares (KPIs, impressão, etc.).
+         * @param {object} pedido O objeto do pedido a ser verificado.
+         * @returns {boolean} Retorna true se o pedido estiver bloqueado, caso contrário false.
+         */
+        function isPedidoBloqueado(pedido) {
+            if (!pedido) return false;
+
+            // 1. Bloqueio manual pelo usuário
+            if (pedidosBloqueados.has(String(pedido.Num_Pedido))) return true;
+
+            // 2. Bloqueio financeiro (C) ou comercial (V) direto na planilha
+            const bloqueioPlanilha = String(pedido['BLOQ.'] || '').trim().toUpperCase();
+            if (bloqueioPlanilha === 'C' || bloqueioPlanilha === 'V') return true;
+
+            // 3. Bloqueio por regra de negócio (cliente tem outro pedido com CF numérico e bloqueio)
+            const clientesComBloqueioRegra = new Set(pedidosComCFNumericoIsolado.map(p => normalizeClientId(p.Cliente)));
+            const clienteId = normalizeClientId(pedido.Cliente);
+            return clienteId && clientesComBloqueioRegra.has(clienteId);
+        }
+
         // Função centralizada para ordenar rotas de forma consistente
         function getSortedVarejoRoutes(rotas) {
             const vehicleOrder = { 'fiorino': 1, 'van': 2, 'tresQuartos': 3 };
@@ -3387,45 +3409,28 @@
             const pedidosToco = Object.values(gruposToco).flatMap(g => g.pedidos);
             const todosPedidosParaAnalise = [...pedidosGeraisAtuais, ...pedidosComCFNumericoIsolado, ...pedidosManualmenteBloqueadosAtuais, ...rota1SemCarga, ...pedidosToco];
             const pedidosAPredatar = todosPedidosParaAnalise.filter(p => {
-                const bloqueio = String(p['BLOQ.'] || '').trim().toUpperCase();
-                return isOverdue(p.Predat) && (bloqueio === '' || bloqueio === 'C');
+                const bloqueio = String(p['BLOQ.'] || '').trim().toUpperCase(); return isOverdue(p.Predat) && (bloqueio === '' || bloqueio === 'C');
             });
 
             // 2. Separa os grupos de Toco em disponíveis e bloqueados
-            const clientesComBloqueio = new Set(pedidosComCFNumericoIsolado.map(p => normalizeClientId(p.Cliente)));
-            let pesoTocoDisponivel = 0;
-            let pedidosTocoDisponiveis = 0;
-            let pesoTocoBloqueado = 0;
-            let pedidosTocoBloqueados = 0;
-            Object.values(gruposToco).forEach(grupo => {
-                // Um grupo Toco é considerado bloqueado se QUALQUER pedido dentro dele atender a uma das condições de bloqueio.
-                const isGrupoBloqueado = grupo.pedidos.some(p => {
-                    const clienteId = normalizeClientId(p.Cliente);
-                    const bloqueioPlanilha = String(p['BLOQ.'] || '').trim().toUpperCase();
-                    
-                    return (clienteId && clientesComBloqueio.has(clienteId)) || // Cliente tem outro pedido bloqueado por regra
-                           (bloqueioPlanilha === 'C' || bloqueioPlanilha === 'V') || // Bloqueio direto na planilha
-                           pedidosBloqueados.has(String(p.Num_Pedido)); // Bloqueado manualmente
-                });
-
-                if (isGrupoBloqueado) {
-                    pesoTocoBloqueado += grupo.totalKg;
-                    pedidosTocoBloqueados += grupo.pedidos.length;
-                } else {
-                    pesoTocoDisponivel += grupo.totalKg;
-                    pedidosTocoDisponiveis += grupo.pedidos.length;
-                }
-            });
-
+            const { pesoTocoDisponivel, pedidosTocoDisponiveis, pesoTocoBloqueado, pedidosTocoBloqueados } = Object.values(gruposToco).reduce((acc, grupo) => { const isGrupoBloqueado = grupo.pedidos.some(p => isPedidoBloqueado(p)); if (isGrupoBloqueado) { acc.pesoTocoBloqueado += grupo.totalKg; acc.pedidosTocoBloqueados += grupo.pedidos.length; } else { acc.pesoTocoDisponivel += grupo.totalKg; acc.pedidosTocoDisponiveis += grupo.pedidos.length; } return acc; }, { pesoTocoDisponivel: 0, pedidosTocoDisponiveis: 0, pesoTocoBloqueado: 0, pedidosTocoBloqueados: 0 });
             // 3. Consolida os dados para os novos KPIs
             const kpis = {
                 varejoDisponivel: {
-                    pedidos: pedidosGeraisAtuais.length + pedidosTocoDisponiveis,
-                    peso: pedidosGeraisAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + pesoTocoDisponivel
+                    // CORREÇÃO: A lógica agora soma os pedidos de varejo gerais (Fiorino, Van, 3/4)
+                    // com os pedidos dos grupos de Toco que estão totalmente desbloqueados.
+                    pedidos: pedidosGeraisAtuais.length + pedidosTocoDisponiveis, // Usa o valor já calculado
+                    peso: pedidosGeraisAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + pesoTocoDisponivel // Usa o valor já calculado
                 },
                 varejoBloqueado: {
-                    pedidos: pedidosComCFNumericoIsolado.length + pedidosManualmenteBloqueadosAtuais.length + pedidosTocoBloqueados,
-                    peso: pedidosComCFNumericoIsolado.reduce((s, p) => s + p.Quilos_Saldo, 0) + pedidosManualmenteBloqueadosAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + pesoTocoBloqueado
+                    // CORREÇÃO: A lógica agora soma os bloqueios de varejo com os pedidos
+                    // dos grupos de Toco que contêm pelo menos um pedido bloqueado.
+                    pedidos: pedidosComCFNumericoIsolado.length + 
+                             pedidosManualmenteBloqueadosAtuais.length + 
+                             pedidosTocoBloqueados, // Usa o valor já calculado
+                    peso: pedidosComCFNumericoIsolado.reduce((s, p) => s + p.Quilos_Saldo, 0) + 
+                          pedidosManualmenteBloqueadosAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + 
+                          pesoTocoBloqueado // Usa o valor já calculado
                 },
                 cargasFechadasPR: {
                     pedidos: cargasFechadasPR.length,
@@ -3975,13 +3980,31 @@
         function imprimirTocoIndividual(cf) {
             if (!gruposToco[cf]) { showToast(`Nenhuma carga Toco encontrada para o CF: ${cf}`, 'warning'); return; }
             const grupo = gruposToco[cf];
+
+            // VERIFICAÇÃO: Impede a impressão e montagem se houver qualquer pedido bloqueado no grupo.
+            const hasBlockedOrder = grupo.pedidos.some(p => isPedidoBloqueado(p));
+            if (hasBlockedOrder) {
+                showToast(`Não é possível montar a carga Toco (CF: ${cf}) pois ela contém pedidos bloqueados.`, 'danger');
+                return;
+            }
+
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const printWindow = createPrintWindow('Imprimir Carga Toco CF: ' + cf);
-            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³</h3>` + createTable(grupo.pedidos, null, `toco-${cf}`);
-            printWindow.document.body.innerHTML = contentToPrint; printWindow.document.close(); printWindow.focus(); setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
-        }
+            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³</h3>` + createTable(grupo.pedidos, null, `toco-${cf}`); // prettier-ignore
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
 
+            // Remove o grupo Toco da lista de disponíveis e atualiza a UI
+            delete gruposToco[cf];
+            renderAllUI();
+            showToast(`Carga Toco (CF: ${cf}) impressa e considerada montada.`, 'success');
+        }
         function imprimirCargaManualIndividual(loadId) { const load = activeLoads[loadId]; const cardToPrint = document.getElementById(loadId); if (!load || !cardToPrint) { showToast(`Erro: Carga com ID ${loadId} não encontrada.`, 'error'); return; }
             const cardClone = cardToPrint.cloneNode(true);
             const observationText = load?.observation || '';
@@ -4529,9 +4552,11 @@
                     return;
                 }
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)) || pedidosRecall.includes(String(p.Num_Pedido)));
-                const allowPriorityOverride = true; // Permite para todos os veículos
+                // CORREÇÃO: A prioridade não deve mais forçar a criação de uma carga abaixo do peso mínimo.
+                const allowPriorityOverride = false; 
                 
-                if (load.totalKg >= config.minKg || (hasPriority && allowPriorityOverride)) {
+                // A condição agora é estritamente baseada no peso mínimo.
+                if (load.totalKg >= config.minKg) {
                     finalValidLoads.push(load);
                 } else {
                     const clientGroupsInFailedLoad = Object.values(load.pedidos.reduce((acc, p) => {
@@ -5533,7 +5558,7 @@
                 const progressBar = `<div class="progress mb-3" role="progressbar" style="height: 10px;"><div class="progress-bar ${progressColor}" style="width: ${Math.min(pesoPercentual, 100)}%"></div></div>`;
                 const headerColorClass = isOverloaded ? 'bg-danger' : '';
 
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length}</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionTocoMesa"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>${progressBar}${createTable(pedidos, null, loadId)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length}</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionTocoMesa"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}', event)"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>${progressBar}${createTable(pedidos, null, loadId)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }

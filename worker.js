@@ -151,10 +151,9 @@ function createSolutionFromHeuristic(itemsParaEmpacotar, vehicleType, configs, p
     let unplacedGroups = [];
 
     loads.forEach(load => {
-        const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)) || pedidosRecall.includes(String(p.Num_Pedido)));
-        const allowPriorityOverride = true; // Permite para todos os veículos
-
-        if (load.pedidos.length > 0 && (load.totalKg >= config.minKg || (hasPriority && allowPriorityOverride))) {
+        // A validação da carga agora depende apenas de atingir o peso mínimo.
+        // A prioridade de um pedido é usada para ordenar e tentar encaixá-lo primeiro, mas não para forçar uma carga sub-mínima.
+        if (load.pedidos.length > 0 && load.totalKg >= config.minKg) { 
             finalLoads.push(load);
         } else if (load.pedidos.length > 0) {
             const clientGroupsInFailedLoad = Object.values(load.pedidos.reduce((acc, p) => {
@@ -175,12 +174,12 @@ function createSolutionFromHeuristic(itemsParaEmpacotar, vehicleType, configs, p
 
 function runHeuristicOptimization(packableGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall) {
     // Função de ordenação principal que prioriza a data mais antiga.
-    const dateSorter = (a, b) => {
+    const dateSorter = (a, b) => { // prettier-ignore
         if (a.oldestDate && b.oldestDate) {
             if (a.oldestDate < b.oldestDate) return -1;
             if (a.oldestDate > b.oldestDate) return 1;
         } else if (a.oldestDate) {
-            return -1; // Grupos com data vêm antes dos sem data.
+            return -1;
         } else if (b.oldestDate) {
             return 1;
         }
@@ -188,40 +187,26 @@ function runHeuristicOptimization(packableGroups, vehicleType, configs, pedidosP
     };
 
     const strategies = [
-        { name: 'priority-weight-desc', sorter: (a, b) => {
-            const dateCompare = dateSorter(a, b);
-            if (dateCompare !== 0) return dateCompare;
-            // Desempate por prioridade manual
-            const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-            const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-            if (aHasPrio && !bHasPrio) return -1;
-            if (!aHasPrio && bHasPrio) return 1;
-            // Desempate final por peso
-            return b.totalKg - a.totalKg;
-        }},
-        { name: 'scheduled-weight-desc', sorter: (a, b) => {
-            const dateCompare = dateSorter(a, b);
-            if (dateCompare !== 0) return dateCompare;
-            // Desempate por agendamento
-            const aHasSched = a.pedidos.some(p => p.Agendamento === 'Sim');
-            const bHasSched = b.pedidos.some(p => p.Agendamento === 'Sim');
-            if (aHasSched && !bHasSched) return -1;
-            if (!aHasSched && bHasSched) return 1;
-            // Desempate final por peso
-            return b.totalKg - a.totalKg;
-        }},
-        { name: 'weight-desc', sorter: (a, b) => {
-            const dateCompare = dateSorter(a, b);
-            if (dateCompare !== 0) return dateCompare;
-            // Desempate por peso
-            return b.totalKg - a.totalKg;
-        }},
-        { name: 'weight-asc', sorter: (a, b) => {
-            const dateCompare = dateSorter(a, b);
-            if (dateCompare !== 0) return dateCompare;
-            // Desempate por peso
-            return a.totalKg - b.totalKg;
-        }}
+        { name: 'priority-weight-desc', sorter: (a, b) => { // prettier-ignore
+            const dateCompare = dateSorter(a, b); if (dateCompare !== 0) return dateCompare;
+            const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))); const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+            if (aHasPrio && !bHasPrio) return -1; if (!aHasPrio && bHasPrio) return 1;
+            return b.totalKg - a.totalKg; }
+        },
+        { name: 'scheduled-weight-desc', sorter: (a, b) => { // prettier-ignore
+            const dateCompare = dateSorter(a, b); if (dateCompare !== 0) return dateCompare;
+            const aHasSched = a.pedidos.some(p => p.Agendamento === 'Sim'); const bHasSched = b.pedidos.some(p => p.Agendamento === 'Sim');
+            if (aHasSched && !bHasSched) return -1; if (!aHasSched && bHasSched) return 1;
+            return b.totalKg - a.totalKg; }
+        },
+        { name: 'weight-desc', sorter: (a, b) => { // prettier-ignore
+            const dateCompare = dateSorter(a, b); if (dateCompare !== 0) return dateCompare;
+            return b.totalKg - a.totalKg; }
+        },
+        { name: 'weight-asc', sorter: (a, b) => { // prettier-ignore
+            const dateCompare = dateSorter(a, b); if (dateCompare !== 0) return dateCompare;
+            return a.totalKg - b.totalKg; }
+        }
     ];
 
     let bestResult = null;
@@ -270,17 +255,17 @@ async function runSimulatedAnnealing(packableGroups, vehicleType, configs, pedid
         const coolingRate = 0.993;
         const iterationsPerTemp = 200;
 
-        // A ordenação inicial agora também prioriza a data mais antiga como critério principal.
-        const initialSortedGroups = [...packableGroups].sort((a, b) => {
+        // A ordenação inicial agora também prioriza a data mais antiga como critério principal,
+        // seguido por prioridade manual e depois peso.
+        const initialSortedGroups = [...packableGroups].sort((a, b) => { // prettier-ignore
             if (a.oldestDate && b.oldestDate) {
                 if (a.oldestDate < b.oldestDate) return -1;
                 if (a.oldestDate > b.oldestDate) return 1;
-            } else if (a.oldestDate) {
-                return -1;
-            } else if (b.oldestDate) {
-                return 1;
-            }
-            return b.totalKg - a.totalKg; // Desempate por peso
+            } else if (a.oldestDate) { return -1; } 
+              else if (b.oldestDate) { return 1; }
+            const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))); const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+            if (aHasPrio && !bHasPrio) return -1; if (!aHasPrio && bHasPrio) return 1;
+            return b.totalKg - a.totalKg;
         });
 
         let bestSolution = createSolutionFromHeuristic(initialSortedGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall);
@@ -381,7 +366,8 @@ async function runSimulatedAnnealing(packableGroups, vehicleType, configs, pedid
                 return;
             }
 
-            if (load.pedidos.length > 0 && load.totalKg >= config.minKg) {
+        // A validação da carga agora depende apenas de atingir o peso mínimo.
+        if (load.pedidos.length > 0 && load.totalKg >= config.minKg) {
                 finalLoads.push(load);
             } else if (load.pedidos.length > 0) {
                 const groups = Object.values(load.pedidos.reduce((acc, p) => { 
