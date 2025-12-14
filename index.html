@@ -1115,9 +1115,14 @@
                     <div class="card h-100" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos & Consultas Rápidas</h2>
-                            <button class="btn btn-sm btn-outline-light ms-2" onclick="exportarRelatorioDisponiveisPDF()" title="Gerar relatório de pedidos pendentes ordenados por data">
-                                <i class="bi bi-file-earmark-pdf me-1"></i>Relatório de Fila (Data)
-                            </button>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-warning text-white" onclick="montarCargasPrioritarias()" title="Montar cargas automaticamente para rotas com pedidos prioritários">
+                                    <i class="bi bi-lightning-charge-fill me-1"></i>Montar Prioritários
+                                </button>
+                                <button class="btn btn-outline-light" onclick="exportarRelatorioDisponiveisPDF()" title="Gerar relatório de pedidos pendentes ordenados por data">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i>Relatório
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body p-0">
                             <div class="p-3 border-bottom no-print">
@@ -6806,6 +6811,59 @@
 
             doc.save(`Relatorio_Fila_Pedidos_${today.replace(/\//g, '-')}.pdf`);
             showToast("Relatório de fila gerado com sucesso!", 'success');
+        }
+
+        /**
+         * NOVO: Função para montar cargas automaticamente baseadas nos pedidos prioritários.
+         * Identifica as rotas que possuem pedidos marcados como prioridade e processa apenas elas.
+         */
+        async function montarCargasPrioritarias() {
+            // 1. Identificar pedidos prioritários que ainda estão disponíveis (não alocados)
+            const pedidosPrioritariosDisponiveis = pedidosGeraisAtuais.filter(p => 
+                pedidosPrioritarios.includes(String(p.Num_Pedido)) || 
+                pedidosRecall.includes(String(p.Num_Pedido))
+            );
+
+            if (pedidosPrioritariosDisponiveis.length === 0) {
+                showToast("Não há pedidos prioritários pendentes na lista de disponíveis.", "info");
+                return;
+            }
+
+            // 2. Identificar as rotas únicas desses pedidos
+            const rotasParaProcessar = [...new Set(pedidosPrioritariosDisponiveis.map(p => String(p.Cod_Rota)))];
+            rotasParaProcessar.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+            const confirmMsg = `Encontrei ${pedidosPrioritariosDisponiveis.length} pedido(s) prioritário(s) distribuído(s) em ${rotasParaProcessar.length} rota(s):\n\nRotas: ${rotasParaProcessar.join(', ')}\n\nDeseja montar as cargas para essas rotas agora? O sistema tentará incluir os prioritários e completar a carga com outros pedidos da rota.`;
+
+            if (!confirm(confirmMsg)) return;
+
+            showToast(`Iniciando montagem automática para ${rotasParaProcessar.length} rotas...`, "info");
+
+            // 3. Processar cada rota sequencialmente
+            for (const rota of rotasParaProcessar) {
+                // Determina as configurações da rota (tipo de veículo, título, etc.)
+                let config = rotaVeiculoMap[rota];
+                
+                // Fallback para rotas de SP ou não mapeadas
+                if (!config) {
+                    config = { type: 'van', title: `Rota ${rota} (Automática)` };
+                }
+
+                // Determina o ID da div de destino baseado no tipo de veículo
+                const divId = config.type === 'fiorino' ? 'resultado-fiorino-geral' : 
+                              (config.type === 'van' ? 'resultado-van-geral' : 'resultado-34-geral');
+
+                // Chama a função de separação existente
+                // Passamos 'null' no botão pois é uma chamada automática
+                await separarCargasGeneric(rota, divId, config.title, config.type, null);
+                
+                // Pequena pausa para a UI respirar e não travar
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            // 4. Atualiza a interface geral para garantir que tudo esteja sincronizado
+            renderAllUI();
+            showToast("Processamento de cargas prioritárias concluído!", "success");
         }
 
         // ================================================================================================
