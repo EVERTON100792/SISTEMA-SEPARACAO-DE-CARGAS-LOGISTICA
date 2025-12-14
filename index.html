@@ -4349,9 +4349,11 @@
             return { refinedLoads: loads, remainingLeftovers: leftovers };
         }
         
-        async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
+        async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement, isBatchMode = false) {
             // NOVO: Remove mensagens de sucesso de rotas anteriores para manter a interface limpa.
-            document.querySelectorAll('.route-success-message').forEach(el => el.remove());
+            if (!isBatchMode) {
+                document.querySelectorAll('.route-success-message').forEach(el => el.remove());
+            }
 
             // NOVO: Se o painel de carga manual estiver aberto, fecha-o antes de processar uma nova rota.
             if (document.getElementById('manual-load-builder-wrapper')) cancelManualLoad();
@@ -4365,7 +4367,13 @@
             // CORREÇÃO: Limpa a área de resultado antes de processar uma nova rota.
             // Isso garante que apenas as cargas da rota atual sejam exibidas.
             const resultadoDiv = document.getElementById(divId);
-            resultadoDiv.innerHTML = '';
+            if (!isBatchMode) {
+                resultadoDiv.innerHTML = '';
+            } else {
+                // Se for modo batch, remove apenas o estado vazio se existir para adicionar as novas cargas
+                const emptyState = resultadoDiv.querySelector('.empty-state');
+                if (emptyState) emptyState.remove();
+            }
             // Restaura o feedback visual no botão da rota processada
 
             if (planilhaData.length === 0) {
@@ -4662,7 +4670,11 @@
                     html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType] || vehicleInfo['van']);
                 });
             }            
-            resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;            
+            if (!isBatchMode) {
+                resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
+            } else {
+                resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${html}</div>`);
+            }
             
             // CORREÇÃO: As chamadas de atualização da UI foram movidas para o final,
             // e a chamada para `handlePostProcessingUI` foi ajustada para lidar com as sobras
@@ -6839,6 +6851,9 @@
 
             showToast(`Iniciando montagem automática para ${rotasParaProcessar.length} rotas...`, "info");
 
+            // Limpa mensagens de sucesso antigas antes de começar o lote para evitar acúmulo
+            document.querySelectorAll('.route-success-message').forEach(el => el.remove());
+
             // 3. Processar cada rota sequencialmente
             for (const rota of rotasParaProcessar) {
                 // Determina as configurações da rota (tipo de veículo, título, etc.)
@@ -6855,7 +6870,8 @@
 
                 // Chama a função de separação existente
                 // Passamos 'null' no botão pois é uma chamada automática
-                await separarCargasGeneric(rota, divId, config.title, config.type, null);
+                // Passamos 'true' para isBatchMode para não limpar as cargas anteriores
+                await separarCargasGeneric(rota, divId, config.title, config.type, null, true);
                 
                 // Pequena pausa para a UI respirar e não travar
                 await new Promise(r => setTimeout(r, 500));
