@@ -1115,6 +1115,9 @@
                     <div class="card h-100" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos & Consultas Rápidas</h2>
+                            <button class="btn btn-sm btn-outline-light ms-2" onclick="exportarRelatorioDisponiveisPDF()" title="Gerar relatório de pedidos pendentes ordenados por data">
+                                <i class="bi bi-file-earmark-pdf me-1"></i>Relatório de Fila (Data)
+                            </button>
                         </div>
                         <div class="card-body p-0">
                             <div class="p-3 border-bottom no-print">
@@ -4369,63 +4372,6 @@
             const routes = Array.isArray(routeOrRoutes) ? routeOrRoutes : [String(routeOrRoutes)];
             let pedidosRota = pedidosGeraisAtuais.filter(p => routes.includes(String(p.Cod_Rota)));
 
-            // --- LÓGICA ESPECIAL PARA ROTA 11711 (KM > 500 -> VAN) ---
-            if (routes.includes('11711')) {
-                const apiKey = document.getElementById('graphhopperApiKey').value;
-                if (apiKey) {
-                    try {
-                        const resultadoDiv = document.getElementById(divId);
-                        resultadoDiv.innerHTML = '<div class="d-flex align-items-center justify-content-center p-5"><div class="spinner-border text-info" role="status"></div><span class="ms-3">Verificando quilometragem da Rota 11711...</span></div>';
-
-                        if (!origemCoords) {
-                            const origemResponse = await fetch(`https://graphhopper.com/api/1/geocode?q=${encodeURIComponent("Empresa Selmi, Rolândia, Paraná")}&key=${apiKey}`);
-                            const origemData = await origemResponse.json();
-                            if (origemData.hits && origemData.hits.length > 0) origemCoords = origemData.hits[0].point;
-                        }
-
-                        if (origemCoords) {
-                            const uniqueCities = [...new Set(pedidosRota.map(p => {
-                                const c = (String(p.Cidade || '')).split(',')[0].trim();
-                                const u = (String(p.UF || '')).trim().toUpperCase();
-                                return c && u ? `${c}, ${u}, Brasil` : null;
-                            }).filter(Boolean))];
-
-                            const locations = [{ id: "start", name: "Origem", ...origemCoords }];
-                            const delay = ms => new Promise(res => setTimeout(res, ms));
-                            
-                            for (const cityStr of uniqueCities) {
-                                const geoResponse = await fetch(`https://graphhopper.com/api/1/geocode?q=${encodeURIComponent(cityStr)}&key=${apiKey}`);
-                                const geoData = await geoResponse.json();
-                                if (geoData.hits && geoData.hits.length > 0) locations.push({ id: cityStr, name: cityStr, ...geoData.hits[0].point });
-                                await delay(150);
-                            }
-
-                            if (locations.length > 1) {
-                                const requestBody = {
-                                    vehicles: [{ vehicle_id: 'veiculo_check', start_address: { location_id: 'start', lon: origemCoords.lng, lat: origemCoords.lat } }],
-                                    services: locations.slice(1).map(loc => ({ id: loc.id, name: loc.name, address: { location_id: loc.id, lon: loc.lng, lat: loc.lat } })),
-                                    objectives: [{ type: "min-max", value: "completion_time" }]
-                                };
-                                const vrpResponse = await fetch(`https://graphhopper.com/api/1/vrp?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
-                                const vrpData = await vrpResponse.json();
-
-                                if (vrpData.solution) {
-                                    const distanceKm = vrpData.solution.distance / 1000;
-                                    if (distanceKm > 400) {
-                                        vehicleType = 'van';
-                                        title = `${title} (Van - ${distanceKm.toFixed(0)}km)`;
-                                        showToast(`Rota 11711: ${distanceKm.toFixed(0)}km > 400km. Alterando para VAN.`, 'warning');
-                                    } else {
-                                        vehicleType = 'fiorino';
-                                        showToast(`Rota 11711: ${distanceKm.toFixed(0)}km <= 400km. Mantendo FIORINO.`, 'success');
-                                    }
-                                }
-                            }
-                        }
-                    } catch (e) { console.error("Erro ao verificar KM da rota 11711:", e); showToast("Não foi possível verificar a KM. Usando padrão.", 'warning'); }
-                }
-            }
-
             const clientGroupsMap = pedidosRota.reduce((acc, pedido) => {
                 const clienteId = normalizeClientId(pedido.Cliente);
                 if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(pedido) }; }
@@ -4434,9 +4380,10 @@
                 acc[clienteId].totalCubagem += pedido.Cubagem;
                 return acc;
             }, {});
-            const packableGroups = Object.values(clientGroupsMap);
+            let packableGroups = Object.values(clientGroupsMap);
 
             // NOVO: Calcula a data de pedido mais antiga para cada grupo de cliente.
+            // (Movido para antes da lógica da rota 11711 para garantir que os grupos excluídos também tenham a data calculada para a cascata)
             packableGroups.forEach(group => {
                 group.oldestDate = group.pedidos.reduce((oldest, p) => {
                     const pDate = p.Dat_Ped;
@@ -4449,6 +4396,37 @@
                     return oldest;
                 }, null);
             });
+
+            // --- LÓGICA ESPECIAL PARA ROTA 11711 (Priorizar Fiorino para Cidades Específicas) ---
+            let groupsExcludedFromFiorino = [];
+            if (routes.includes('11711')) {
+                const cidadesPermitidasFiorino = new Set([
+                    'MANDAGUACU', 'SAO JORGE DO IVAI', 'TAMBOARA', 'GUAIRACA', 
+                    'PARANAVAI', 'NOVA ESPERANCA', 'FLORAI', 
+                    'PRESIDENTE CASTELO BRANCO'
+                ]);
+                const normalizeCity = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+
+                const fiorinoGroups = [];
+                const otherGroups = [];
+
+                packableGroups.forEach(group => {
+                    const city = normalizeCity(String(group.pedidos[0].Cidade || '').split(',')[0]);
+                    if (cidadesPermitidasFiorino.has(city)) {
+                        fiorinoGroups.push(group);
+                    } else {
+                        otherGroups.push(group);
+                    }
+                });
+
+                if (otherGroups.length > 0) {
+                    packableGroups = fiorinoGroups;
+                    groupsExcludedFromFiorino = otherGroups;
+                    showToast(`Rota 11711: Separando ${otherGroups.length} clientes para Van (cidades mistas).`, 'info');
+                }
+                // Garante que a primeira tentativa seja Fiorino apenas com as cidades permitidas
+                vehicleType = 'fiorino';
+            }
 
             packableGroups.forEach(group => {
                 group.Quilos_Saldo = group.totalKg;
@@ -4528,6 +4506,11 @@
             
             // Tenta encaixar sobras em cargas existentes que ainda têm espaço.
             const { refinedLoads: initialRefinedLoads, remainingLeftovers: initialLeftovers } = refineLoadsWithSimpleFit(optimizationResult.loads, optimizationResult.leftovers);
+
+            // Reintegra os grupos excluídos da otimização inicial (Rota 11711) para serem processados na cascata (Van)
+            if (groupsExcludedFromFiorino.length > 0) {
+                initialLeftovers.push(...groupsExcludedFromFiorino);
+            }
 
             // ========================================================================
             // INÍCIO DA NOVA LÓGICA DE CASCATA (Fiorino -> Van -> 3/4 -> Toco)
@@ -6742,6 +6725,87 @@
             }
 
             doc.save(`Previsao_Expedicao_${today.replace(/\//g, '-')}.pdf`);
+        }
+
+        function exportarRelatorioDisponiveisPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // 1. Coletar todos os pedidos disponíveis (Varejo + Toco) com identificação de tipo
+            let todosPedidos = pedidosGeraisAtuais.map(p => {
+                const tipo = String(p.Cod_Rota || '').startsWith('2') ? 'Varejo São Paulo' : 'Varejo';
+                return { data: p, tipo: tipo };
+            });
+            
+            // Adiciona pedidos de Toco disponíveis
+            Object.values(gruposToco).forEach(grupo => {
+                grupo.pedidos.forEach(p => {
+                    todosPedidos.push({ data: p, tipo: 'Carga de Toco' });
+                });
+            });
+
+            if (todosPedidos.length === 0) {
+                showToast("Não há pedidos disponíveis para gerar o relatório.", 'warning');
+                return;
+            }
+
+            // 2. Ordenar estritamente por Dat_Ped (Mais antigo primeiro)
+            todosPedidos.sort((a, b) => {
+                const pA = a.data;
+                const pB = b.data;
+                const dateA = pA.Dat_Ped instanceof Date ? pA.Dat_Ped : new Date(pA.Dat_Ped || '9999-12-31');
+                const dateB = pB.Dat_Ped instanceof Date ? pB.Dat_Ped : new Date(pB.Dat_Ped || '9999-12-31');
+                return dateA - dateB;
+            });
+
+            // 3. Configuração do PDF
+            const today = new Date().toLocaleDateString('pt-BR');
+            doc.setFontSize(16);
+            doc.text("Relatório de Fila de Pedidos (Por Data)", 14, 20);
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Gerado em: ${today} - Total Pendente: ${todosPedidos.length} pedidos`, 14, 28);
+
+            const tableColumn = ["Data Ped.", "Rota", "Cód.", "Cliente", "Pedido", "Tipo", "Peso (kg)"];
+            const tableRows = [];
+
+            todosPedidos.forEach(item => {
+                const p = item.data;
+                let dataFormatada = "S/ Data";
+                if (p.Dat_Ped) {
+                    const d = p.Dat_Ped instanceof Date ? p.Dat_Ped : new Date(p.Dat_Ped);
+                    if (!isNaN(d)) {
+                        dataFormatada = d.toLocaleDateString('pt-BR');
+                    }
+                }
+
+                const rowData = [
+                    dataFormatada,
+                    String(p.Cod_Rota || ''),
+                    normalizeClientId(p.Cliente),
+                    String(p.Nome_Cliente || '').substring(0, 25), // Limita tamanho do nome
+                    String(p.Num_Pedido),
+                    item.tipo,
+                    p.Quilos_Saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+                ];
+                tableRows.push(rowData);
+            });
+
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 35,
+                theme: 'striped',
+                styles: { fontSize: 9, cellPadding: 2 },
+                headStyles: { fillColor: [41, 128, 185] },
+                columnStyles: {
+                    0: { fontStyle: 'bold' }, // Data em negrito
+                    6: { halign: 'right' }    // Peso alinhado à direita
+                }
+            });
+
+            doc.save(`Relatorio_Fila_Pedidos_${today.replace(/\//g, '-')}.pdf`);
+            showToast("Relatório de fila gerado com sucesso!", 'success');
         }
 
         // ================================================================================================
