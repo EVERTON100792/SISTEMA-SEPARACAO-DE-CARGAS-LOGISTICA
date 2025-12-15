@@ -1119,9 +1119,16 @@
                                 <button class="btn btn-outline-warning text-white" onclick="montarCargasPrioritarias()" title="Montar cargas automaticamente para rotas com pedidos prioritários">
                                     <i class="bi bi-lightning-charge-fill me-1"></i>Montar Prioritários
                                 </button>
-                                <button class="btn btn-outline-light" onclick="exportarRelatorioDisponiveisPDF()" title="Gerar relatório de pedidos pendentes ordenados por data">
-                                    <i class="bi bi-file-earmark-pdf me-1"></i>Relatório
+                                <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#bulkPriorityModal" title="Colar lista de pedidos para priorizar">
+                                    <i class="bi bi-clipboard-plus me-1"></i>Colar Prioritários
                                 </button>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-file-text me-1"></i>Relatórios</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioDisponiveisPDF()"><i class="bi bi-file-pdf me-2"></i>Relatório PDF</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioDisponiveisExcel()"><i class="bi bi-file-excel me-2"></i>Relatório Excel (Copiar)</a></li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                         <div class="card-body p-0">
@@ -1408,6 +1415,26 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Priorização em Massa -->
+    <div class="modal fade" id="bulkPriorityModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-star-fill text-warning me-2"></i>Priorização em Massa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Cole abaixo os números dos pedidos que deseja priorizar (um por linha ou separados por espaço/vírgula). Você pode copiar esta lista do Relatório Excel.</p>
+                    <textarea class="form-control" id="bulkPriorityInput" rows="10" placeholder="Ex: 12345&#10;67890&#10;11223"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" onclick="processarPriorizacaoEmMassa()"><i class="bi bi-check-circle-fill me-2"></i>Priorizar Todos</button>
                 </div>
             </div>
         </div>
@@ -6823,6 +6850,75 @@
 
             doc.save(`Relatorio_Fila_Pedidos_${today.replace(/\//g, '-')}.pdf`);
             showToast("Relatório de fila gerado com sucesso!", 'success');
+        }
+
+        function exportarRelatorioDisponiveisExcel() {
+            // 1. Coletar todos os pedidos disponíveis (Varejo + Toco)
+            let todosPedidos = pedidosGeraisAtuais.map(p => ({ ...p, Tipo: String(p.Cod_Rota || '').startsWith('2') ? 'Varejo São Paulo' : 'Varejo' }));
+            
+            Object.values(gruposToco).forEach(grupo => {
+                grupo.pedidos.forEach(p => {
+                    todosPedidos.push({ ...p, Tipo: 'Carga de Toco' });
+                });
+            });
+
+            if (todosPedidos.length === 0) {
+                showToast("Não há pedidos disponíveis para gerar o relatório.", 'warning');
+                return;
+            }
+
+            // 2. Ordenar por Data
+            todosPedidos.sort((a, b) => {
+                const dateA = a.Dat_Ped instanceof Date ? a.Dat_Ped : new Date(a.Dat_Ped || '9999-12-31');
+                const dateB = b.Dat_Ped instanceof Date ? b.Dat_Ped : new Date(b.Dat_Ped || '9999-12-31');
+                return dateA - dateB;
+            });
+
+            // 3. Preparar dados para Excel
+            const dataToExport = todosPedidos.map(p => ({
+                'Data Pedido': p.Dat_Ped,
+                'Rota': p.Cod_Rota,
+                'Código Cliente': normalizeClientId(p.Cliente),
+                'Nome Cliente': p.Nome_Cliente,
+                'Número Pedido': p.Num_Pedido,
+                'Tipo': p.Tipo,
+                'Peso (kg)': p.Quilos_Saldo,
+                'Cidade': p.Cidade,
+                'UF': p.UF
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { cellDates: true });
+            const wscols = [{wch: 12}, {wch: 8}, {wch: 10}, {wch: 30}, {wch: 12}, {wch: 15}, {wch: 10}, {wch: 20}, {wch: 5}];
+            worksheet['!cols'] = wscols;
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Fila de Pedidos");
+            
+            const today = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+            XLSX.writeFile(workbook, `Relatorio_Fila_Pedidos_${today}.xlsx`);
+            showToast("Relatório Excel gerado com sucesso!", 'success');
+        }
+
+        function processarPriorizacaoEmMassa() {
+            const input = document.getElementById('bulkPriorityInput');
+            if (!input) return;
+            const orderNumbers = input.value.split(/[\n,\s\t]+/).map(s => s.trim()).filter(s => s.length > 0);
+
+            if (orderNumbers.length === 0) { showToast("Nenhum número de pedido encontrado.", "warning"); return; }
+
+            let countAdded = 0;
+            orderNumbers.forEach(num => {
+                if (!pedidosPrioritarios.includes(num)) { pedidosPrioritarios.push(num); countAdded++; }
+            });
+
+            if (countAdded > 0) {
+                saveStateToLocalStorage();
+                renderAllUI(); // Atualiza toda a interface para refletir as prioridades
+                showToast(`${countAdded} pedidos priorizados com sucesso!`, "success");
+                input.value = '';
+                const modal = bootstrap.Modal.getInstance(document.getElementById('bulkPriorityModal'));
+                if (modal) modal.hide();
+            } else { showToast("Todos os pedidos informados já eram prioritários.", "info"); }
         }
 
         /**
