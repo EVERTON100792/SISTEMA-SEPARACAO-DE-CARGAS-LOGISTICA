@@ -5057,6 +5057,13 @@
             }
         }
 
+        function updateLoadRomaneios(loadId, value) {
+            if (activeLoads[loadId]) {
+                activeLoads[loadId].romaneios = value;
+                saveStateToLocalStorage();
+            }
+        }
+
         function renderLoadCard(load, vehicleType, vInfo) {
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
@@ -5070,6 +5077,22 @@
             const totalCubagemFormatado = (load.totalCubagem || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)) || pedidosRecall.includes(String(p.Num_Pedido)));
             
+            // NOVO: Cálculo de dias em atraso (Predat)
+            let maxOverdue = 0;
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            load.pedidos.forEach(p => {
+                if(p.Predat) {
+                    const pDate = p.Predat instanceof Date ? p.Predat : new Date(p.Predat);
+                    if(!isNaN(pDate) && pDate < today) {
+                        const diffTime = Math.abs(today - pDate);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                        if(diffDays > maxOverdue) maxOverdue = diffDays;
+                    }
+                }
+            });
+            const overdueBadge = maxOverdue > 0 ? `<span class="badge bg-danger ms-2" title="Pedido mais antigo com ${maxOverdue} dias de atraso"><i class="bi bi-alarm-fill me-1"></i>${maxOverdue} dias atraso</span>` : '';
+
             // NOVO: Adiciona um placeholder para a distância da rota
             const distanciaHtml = `<span id="distancia-${load.id}" class="ms-3"></span>`;
 
@@ -5140,11 +5163,24 @@
                             <div>
                                 <i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero}${spDescription} - 
                                 <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / 
-                                <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${distanciaHtml} ${priorityBadge} ${hardLimitBadge}
+                                <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${distanciaHtml} ${priorityBadge} ${overdueBadge} ${hardLimitBadge}
                             </div>
                             <div class="ms-auto no-print d-flex align-items-center">${vehicleSelectDropdown}${cardHeaderActions}</div>
                         </div>
-                        <div class="card-body">${cardBodyActions}${progressBar}<div class="mt-3 no-print" id="obs-container-${load.id}">${initialObservationHtml}</div>${observationForPrint}${createTable(load.pedidos, null, load.id)}</div>
+                        <div class="card-body">
+                            ${cardBodyActions}${progressBar}
+                            <div class="mt-3 no-print" id="obs-container-${load.id}">${initialObservationHtml}</div>
+                            ${observationForPrint}
+                            ${createTable(load.pedidos, null, load.id)}
+                            <div class="mt-3 border-top pt-2">
+                                <label class="form-label small fw-bold mb-1"><i class="bi bi-upc-scan me-1"></i>Romaneios:</label>
+                                <input type="text" class="form-control form-control-sm" 
+                                       placeholder="Ex: 240125, 240126..." 
+                                       value="${load.romaneios || ''}" 
+                                       onchange="updateLoadRomaneios('${load.id}', this.value)"
+                                       style="border: 1px solid var(--dark-border); background-color: var(--dark-surface-secondary); color: var(--dark-text-primary);">
+                            </div>
+                        </div>
                     </div>`;
         }
         
