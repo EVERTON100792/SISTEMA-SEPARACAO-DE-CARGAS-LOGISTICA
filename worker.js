@@ -228,8 +228,26 @@ function runHeuristicOptimization(packableGroups, vehicleType, configs, pedidosP
 function getSolutionEnergy(solution, vehicleType, configs) {
     const config = getVehicleConfig(vehicleType, configs);
     const balancingFactor = 0.01;
+    const dateAgingFactor = 1.5; // Fator de envelhecimento para dar mais peso a pedidos antigos.
 
-    const leftoverWeight = solution.leftovers.reduce((sum, group) => sum + group.totalKg, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // A penalidade por itens não alocados agora considera a idade do pedido.
+    const leftoverPenalty = solution.leftovers.reduce((sum, group) => {
+        let penalty = group.totalKg;
+        if (group.oldestDate) {
+            const orderDate = new Date(group.oldestDate);
+            orderDate.setHours(0, 0, 0, 0);
+            const ageInDays = Math.max(0, (today - orderDate) / (1000 * 60 * 60 * 24));
+            
+            // A penalidade aumenta com a idade do pedido.
+            if (ageInDays > 1) {
+                penalty += group.totalKg * Math.pow(ageInDays, dateAgingFactor);
+            }
+        }
+        return sum + penalty;
+    }, 0);
     
     const loadPenalty = solution.loads.reduce((sum, load) => {
         if (load.totalKg > 0 && load.totalKg < config.minKg) {
@@ -246,7 +264,7 @@ function getSolutionEnergy(solution, vehicleType, configs) {
         balancePenalty = variance * balancingFactor;
     }
 
-    return leftoverWeight + loadPenalty + balancePenalty;
+    return leftoverPenalty + loadPenalty + balancePenalty;
 }
 
 async function runSimulatedAnnealing(packableGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall) {
