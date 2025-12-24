@@ -2705,9 +2705,6 @@
                     const tocoTPs = new Set(['14', '014', '214', '274', '284', '294']);
                     if (tocoTPs.has(tp) && isNumeric(cf)) {
                         col5 = "TOCO " + col5; // Força a identificação como Toco no início para garantir
-                    } else {
-                        // Remove "TOCO" se existir, para garantir que só seja Toco se cumprir a regra do TP
-                        if (col5) col5 = col5.replace(/\bTOCO\b/gi, '').trim();
                     }
 
                     pedidos.push({
@@ -2939,10 +2936,11 @@
 
                         // 6. Regra Toco baseada no TP
                         const tocoTPs = new Set(['14', '014', '214', '274', '284', '294']);
-                        if (tocoTPs.has(tp) && isNumeric(cf)) {
-                            col5 = "TOCO " + col5;
-                        } else {
-                            if (col5) col5 = col5.replace(/\bTOCO\b/gi, '').trim();
+                        const coluna4 = findVal('COLUNA4');
+                        if ((tocoTPs.has(tp) || tocoTPs.has(coluna4)) && isNumeric(cf)) {
+                            if (!col5.toUpperCase().includes("TOCO")) {
+                                col5 = "TOCO " + col5;
+                            }
                         }
 
                         pedido.CF = cf;
