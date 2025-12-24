@@ -30,6 +30,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
+    <!-- NOVA BIBLIOTECA: Mammoth.js para ler arquivos .docx -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+    <!-- NOVA BIBLIOTECA: PDF.js para ler arquivos .pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Configura o worker do PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
     <style>
         /* --- AJUSTE GLOBAL DE FONTE --- */
         html {
@@ -916,7 +926,7 @@
                 <div id="sidebar-controls">
                     <div class="sidebar-step">
                         <label for="fileInput" class="form-label small"><span class="step-number">1</span> Carregar Arquivo</label>
-                        <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv">
+                        <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv, .docx, .pdf">
                         <div class="form-check form-switch mt-2">
                             <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
                             <label class="form-check-label small" for="autoProcessCheckbox">Processar ao selecionar</label>
@@ -1096,6 +1106,8 @@
                                     <div id="resultado-cargas-fechadas-rest-br"><div class="empty-state"><i class="bi bi-globe-americas"></i><p>Nenhuma Carga Fechada (Resto do Brasil) encontrada. Processe um arquivo.</p></div></div>
                                 </div>
                                 <div class="tab-pane fade" id="outros-pedidos-tab-pane" role="tabpanel">
+                                    <div id="resultado-farelo" class="mb-3"><div class="empty-state"><i class="bi bi-flower1"></i><p>Nenhum Pedido Farelo encontrado.</p></div></div>
+                                    <hr>
                                     <div id="resultado-moinho" class="mb-3"><div class="empty-state"><i class="bi bi-gear-wide-connected"></i><p>Nenhum pedido "Moinho" encontrado.</p></div></div>
                                     <hr>
                                     <div id="resultado-funcionarios" class="mb-3"><div class="empty-state"><i class="bi bi-people-fill"></i><p>Nenhum pedido de funcionário encontrado.</p></div></div>
@@ -2172,7 +2184,7 @@
         // Adicionado: Resetar a aba "Outros Pedidos" para o estado inicial
         const outrosPedidosTab = document.getElementById('outros-pedidos-tab-pane');
         if (outrosPedidosTab) {
-            outrosPedidosTab.innerHTML = `<div id="resultado-moinho" class="mb-3"><div class="empty-state"><i class="bi bi-gear-wide-connected"></i><p>Nenhum pedido "Moinho" encontrado.</p></div></div><hr><div id="resultado-funcionarios" class="mb-3"><div class="empty-state"><i class="bi bi-people-fill"></i><p>Nenhum pedido de funcionário encontrado.</p></div></div><hr><div id="resultado-transferencias" class="mb-3"><div class="empty-state"><i class="bi bi-arrow-left-right"></i><p>Nenhum pedido de transferência encontrado.</p></div></div><hr><div id="resultado-exportacao" class="mb-3"><div class="empty-state"><i class="bi bi-box-arrow-up-right"></i><p>Nenhum pedido de exportação encontrado.</p></div></div><hr><div id="resultado-marca-propria"><div class="empty-state"><i class="bi bi-tags-fill"></i><p>Nenhum pedido de Marca Própria encontrado.</p></div></div>`;
+            outrosPedidosTab.innerHTML = `<div id="resultado-farelo" class="mb-3"><div class="empty-state"><i class="bi bi-flower1"></i><p>Nenhum Pedido Farelo encontrado.</p></div></div><hr><div id="resultado-moinho" class="mb-3"><div class="empty-state"><i class="bi bi-gear-wide-connected"></i><p>Nenhum pedido "Moinho" encontrado.</p></div></div><hr><div id="resultado-funcionarios" class="mb-3"><div class="empty-state"><i class="bi bi-people-fill"></i><p>Nenhum pedido de funcionário encontrado.</p></div></div><hr><div id="resultado-transferencias" class="mb-3"><div class="empty-state"><i class="bi bi-arrow-left-right"></i><p>Nenhum pedido de transferência encontrado.</p></div></div><hr><div id="resultado-exportacao" class="mb-3"><div class="empty-state"><i class="bi bi-box-arrow-up-right"></i><p>Nenhum pedido de exportação encontrado.</p></div></div><hr><div id="resultado-marca-propria"><div class="empty-state"><i class="bi bi-tags-fill"></i><p>Nenhum pedido de Marca Própria encontrado.</p></div></div>`;
         }
 
         // Resetar Pedidos & Consultas
@@ -2471,7 +2483,310 @@
         const processarBtn = document.getElementById('processarBtn');
         const statusDiv = document.getElementById('status');
         const isNumeric = (str) => str && /^\d+$/.test(String(str).trim());
+
+        // --- NOVO: Função para processar o texto do arquivo .docx (e agora .pdf também) ---
+        function parseDocxText(text) {
+            const lines = text.split(/\r\n|\r|\n/);
+            const pedidos = [];
+            let currentRota = '';
+            let currentUF = 'PR'; // Padrão para PR, ajustado conforme a rota
+
+            // Helper para converter números PT-BR (ex: 1.234,56 -> 1234.56)
+            const parsePtBr = (s) => {
+                if (!s) return 0;
+                return parseFloat(s.replace(/\./g, '').replace(',', '.'));
+            };
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+
+                // 1. Detectar Cabeçalho da Rota
+                // Ex: EMPRESA - 22 ... ROTA - 1 GERAL
+                // Ajustado para aceitar variações como "ROTA 11311", "ROTA: 11311", "ROTA 11.311" e hífens especiais (–, —)
+                const rotaMatch = trimmed.match(/ROTA\s*[-:.\u2013\u2014]?\s*([\d.]+)(?:\s+(.*))?/i);
+                if (rotaMatch) {
+                    currentRota = rotaMatch[1].replace(/\./g, ''); // Remove pontos (ex: 11.311 -> 11311)
+                    const rotaDesc = (rotaMatch[2] || '').toUpperCase();
+                    
+                    // Tenta inferir o UF baseado na descrição da rota
+                    if (rotaDesc.includes('- MG')) currentUF = 'MG';
+                    else if (rotaDesc.includes('- SPI') || rotaDesc.includes('- SP')) currentUF = 'SP';
+                    else if (rotaDesc.includes('- SC')) currentUF = 'SC';
+                    else currentUF = 'PR'; // Padrão
+                    continue;
+                }
+
+                // 2. Detectar Linha de Pedido (Começa com código de cliente numérico)
+                // Regex para capturar o início estruturado da linha
+                // Captura: Cliente, Nome, Pedido, Saldo, %Atd, Predat
+                // Ajustado para aceitar vírgulas nos números (formato PT-BR)
+                // ESTRATÉGIA ROBUSTA: Captura apenas os 4 primeiros campos obrigatórios e processa o resto separadamente
+                const startRegex = /^(\d+)\s+(.+?)\s+(\d+)\s+([-]?[\d\.,]+)/;
+                const startMatch = trimmed.match(startRegex);
+                
+                if (startMatch) {
+                    const cliente = startMatch[1];
+                    const nomeCliente = startMatch[2];
+                    const numPedido = startMatch[3];
+                    const quilosSaldo = parsePtBr(startMatch[4]);
+                    
+                    // Remove o início já processado para analisar o resto
+                    let remainder = trimmed.substring(startMatch[0].length).trim();
+                    
+                    // 1. Tenta capturar e remover o final da linha (Cubagem, Qtd, %Frac)
+                    let cubagem = 0;
+                    const endRegex = /([\d\.,]+)\s+(\d+)\s+([\d\.,]+)$/;
+                    const endMatch = remainder.match(endRegex);
+                    
+                    if (endMatch) {
+                        cubagem = parsePtBr(endMatch[1]);
+                        remainder = remainder.substring(0, remainder.length - endMatch[0].length).trim();
+                    }
+
+                    // 2. Tenta capturar e remover o CEP do fim (xxxxx-xxx)
+                    const cepRegex = /(\d{5}-\d{3})$/;
+                    const cepMatch = remainder.match(cepRegex);
+                    if (cepMatch) {
+                        remainder = remainder.substring(0, remainder.length - cepMatch[0].length).trim();
+                    }
+                    
+                    // 3. Procura por datas no que sobrou (Predat e Dat_Ped)
+                    // Assume que a primeira data encontrada é Predat (se houver duas) ou Dat_Ped (se houver uma e contexto permitir)
+                    // Mas no padrão do arquivo: ... Saldo [%ATD] [Predat] ... Dat_Ped ...
+                    
+                    let predat = null;
+                    let datPed = null;
+                    
+                    // Regex global para achar todas as datas
+                    const dates = [...remainder.matchAll(/(\d{1,2}\/\d{1,2}\/\d{2,4})/g)];
+                    
+                    let splitIndex = 0;
+
+                    if (dates.length >= 2) {
+                        // Duas datas: primeira é Predat, segunda é Dat_Ped
+                        const d1 = dates[0][0];
+                        const d2 = dates[1][0];
+                        
+                        const [pd, pm, py] = d1.split('/');
+                        predat = new Date((py.length===2?'20'+py:py), pm - 1, pd);
+                        
+                        const [dd, dm, dy] = d2.split('/');
+                        datPed = new Date((dy.length===2?'20'+dy:dy), dm - 1, dd);
+                        
+                        // O ponto de corte para Itinerário é antes da Dat_Ped (segunda data)
+                        splitIndex = remainder.indexOf(d2);
+                    } else if (dates.length === 1) {
+                        // Apenas uma data. Geralmente é Dat_Ped que fica no meio dos detalhes.
+                        const d1 = dates[0][0];
+                        const [dd, dm, dy] = d1.split('/');
+                        datPed = new Date((dy.length===2?'20'+dy:dy), dm - 1, dd);
+                        
+                        splitIndex = remainder.indexOf(d1);
+                    } else {
+                        // Nenhuma data encontrada (caso raro)
+                        splitIndex = remainder.length; 
+                    }
+
+                    // Se achamos Predat (dates[0]), precisamos removê-lo do início do remainder para achar o Itinerário
+                    if (predat && dates.length >= 2) {
+                        const predatStr = dates[0][0];
+                        const predatIdx = remainder.indexOf(predatStr);
+                        // Remove tudo até o fim do Predat
+                        remainder = remainder.substring(predatIdx + predatStr.length).trim();
+                        // Recalcula splitIndex no novo remainder (Dat_Ped agora é a primeira data restante)
+                        const datPedStr = dates[1][0];
+                        splitIndex = remainder.indexOf(datPedStr);
+                    }
+
+                    // Agora remainder começa com Roteiro/Itinerario
+                    let itinerarioPart = remainder.substring(0, splitIndex).trim();
+                    let detailsPart = remainder.substring(splitIndex).trim(); // Começa com Dat_Ped
+                    
+                    // Remove Dat_Ped do início de detailsPart
+                    const dateRegex = /(\d{1,2}\/\d{1,2}\/\d{2,4})/;
+                    const dateMatch = detailsPart.match(dateRegex);
+                    if (dateMatch) {
+                        detailsPart = detailsPart.substring(dateMatch[0].length).trim();
+                    }
+                    
+                    // Processar Itinerário para extrair Cidade
+                    // Geralmente: "1 COLOMBO 0 MAUA 999" -> Cidade é COLOMBO
+                    const itinTokens = itinerarioPart.split(/\s+/);
+                    // Remove o primeiro (Roteiro) e o último (CP)
+                    let itinerarioText = itinTokens.length > 2 ? itinTokens.slice(1, -1).join(' ') : itinerarioPart;
+                    // Pega tudo antes de " 0 " se existir, senão pega tudo
+                    let cidade = itinerarioText.split(' 0 ')[0].trim();
+                    if (!cidade) cidade = itinerarioText;
+
+                    // Processar Detalhes para extrair Bloqueio, CF e Descrição
+                    let bloq = '';
+                    let detailsTokens = detailsPart.split(/\s+/).filter(Boolean);
+                    
+                    // Verifica Bloqueio (Letra única logo após a data: C, V, B)
+                    if (detailsTokens.length > 0 && /^[A-Z]$/.test(detailsTokens[0]) && detailsTokens[0].length === 1) {
+                        bloq = detailsTokens[0];
+                        detailsTokens.shift();
+                    }
+
+                    // Extrair TAB e TP
+                    let tab = '';
+                    let tp = '';
+                    if (detailsTokens.length >= 2) {
+                        tab = detailsTokens[0];
+                        tp = detailsTokens[1];
+                    }
+                    
+                    // Procura por CF (número de 5 ou 6 dígitos)
+                    let cf = '';
+                    let descricao = '';
+                    
+                    for (let i = 0; i < detailsTokens.length; i++) {
+                        const t = detailsTokens[i];
+                        // CORREÇÃO: Relaxado para 4 ou mais dígitos para capturar CFs menores
+                        if (/^\d{4,}$/.test(t)) {
+                            cf = t;
+                            // A descrição é o que vem depois do CF
+                            // Remove o último token se for numérico (provavelmente Quilos_Sum)
+                            let descTokens = detailsTokens.slice(i + 1);
+                            if (descTokens.length > 0 && /[\d\.]+$/.test(descTokens[descTokens.length - 1])) {
+                                descTokens.pop();
+                            }
+                            descricao = descTokens.join(' ');
+                            break;
+                        }
+                    }
+
+                    // Aplicar regra de Varejo baseada no TP
+                    const varejoTPs = new Set(['08', '8', '91', '210', '203', '209']);
+                    if (varejoTPs.has(tp)) {
+                        // Se o TP indica varejo, forçamos o CF a ser não-numérico
+                        // para que a lógica de `processar()` o classifique como varejo.
+                        if (isNumeric(cf)) {
+                            cf = `VAREJO-${cf}`; // Adiciona um prefixo para torná-lo não-numérico
+                        }
+                    }
+                    
+                    // Se não achou CF, tenta pegar o texto como Coluna5 (ex: TRUCK sem numero)
+                    let col5 = cf ? descricao : detailsTokens.join(' ');
+                    // Limpeza final da Coluna5 se tiver números soltos no fim
+                    if (!cf && col5) {
+                         col5 = col5.replace(/\s+[\d\.]+$/, '');
+                    }
+
+                    // NOVA REGRA: Se TAB for 15, é carga fechada.
+                    // Forçamos um CF numérico se não houver um, para que a lógica principal o capture.
+                    if ((tab === '15' || tab === '015') && !isNumeric(cf)) {
+                        cf = '151515'; // Dummy CF para forçar a classificação como Carga Fechada
+                        col5 = "CARGA FECHADA (TAB 15) " + col5; // Adiciona uma nota para clareza
+                    }
+
+                    // NOVA REGRA: Se TAB for 29 ou 219, é Condor (Carga Fechada PR)
+                    if (tab === '29' || tab === '029' || tab === '219') {
+                        col5 = "CONDOR (TRUCK) " + col5;
+                    }
+
+                    // NOVA REGRA: Se TAB for 23, é Pedido Farelo
+                    if (tab === '23' || tab === '023' || currentRota === '1122') {
+                        col5 = "PEDIDOS FARELO " + col5;
+                    }
+
+                    // NOVA REGRA: Se TAB for 500, é transferência
+                    if (tab === '500') {
+                        col5 = "TABELA TRANSFER " + col5;
+                    }
+
+                    // NOVA REGRA: Rotas de Transferência (2005, 2007, 3101)
+                    if (['2005', '2007', '3101'].includes(currentRota)) {
+                        col5 = "TABELA TRANSFER " + col5;
+                    }
+
+                    // NOVA REGRA: Toco baseado no TP
+                    const tocoTPs = new Set(['14', '014', '214', '274', '284', '294']);
+                    if (tocoTPs.has(tp) && isNumeric(cf)) {
+                        col5 = "TOCO " + col5; // Força a identificação como Toco no início para garantir
+                    } else {
+                        // Remove "TOCO" se existir, para garantir que só seja Toco se cumprir a regra do TP
+                        if (col5) col5 = col5.replace(/\bTOCO\b/gi, '').trim();
+                    }
+
+                    pedidos.push({
+                        Cod_Rota: currentRota,
+                        Cliente: cliente,
+                        Nome_Cliente: nomeCliente,
+                        Num_Pedido: numPedido,
+                        Quilos_Saldo: quilosSaldo,
+                        Cubagem: cubagem,
+                        Cidade: cidade,
+                        UF: currentUF,
+                        Predat: predat,
+                        Dat_Ped: datPed,
+                        'BLOQ.': bloq,
+                        CF: cf,
+                        Coluna5: col5,
+                        Agendamento: 'Não' // Padrão, pois não tem essa info no docx
+                    });
+                }
+            }
+            return pedidos;
+        }
         
+        // --- NOVO: Função para extrair texto de PDF mantendo o layout de linhas ---
+        async function extractTextFromPdf(data) {
+            // Verifica se a biblioteca foi carregada
+            if (typeof pdfjsLib === 'undefined') {
+                throw new Error("A biblioteca de leitura de PDF não foi carregada. Verifique sua conexão com a internet.");
+            }
+
+            // Configura o worker se ainda não estiver configurado
+            if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            }
+
+            try {
+                const loadingTask = pdfjsLib.getDocument(data);
+                const pdf = await loadingTask.promise;
+                let fullText = '';
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    
+                    // Agrupa itens por linha (coordenada Y)
+                    const lines = {};
+                    const tolerance = 5; // Tolerância ajustada para agrupar itens na mesma linha
+
+                    content.items.forEach(item => {
+                        const y = item.transform[5]; // Coordenada Y
+                        // Encontra uma linha existente próxima ou cria uma nova
+                        let lineY = Object.keys(lines).find(key => Math.abs(key - y) < tolerance);
+                        if (!lineY) {
+                            lineY = y;
+                            lines[lineY] = [];
+                        }
+                        lines[lineY].push(item);
+                    });
+
+                    // Ordena as linhas de cima para baixo (Y decrescente no PDF)
+                    const sortedYs = Object.keys(lines).sort((a, b) => b - a);
+
+                    sortedYs.forEach(y => {
+                        // Ordena os itens da linha da esquerda para a direita (X crescente)
+                        const lineItems = lines[y].sort((a, b) => a.transform[4] - b.transform[4]);
+                        // Junta os textos com espaço para garantir separação de colunas
+                        // Filtra strings vazias para evitar espaços extras desnecessários
+                        const lineText = lineItems.map(item => item.str).filter(s => s.trim().length > 0).join(' ').trim();
+                        if (lineText) fullText += lineText + '\n';
+                    });
+                }
+                console.log("Texto extraído do PDF (primeiros 500 chars):", fullText.substring(0, 500));
+                return fullText;
+            } catch (error) {
+                console.error("Erro detalhado do PDF.js:", error);
+                throw new Error("Falha ao processar o PDF. Se estiver rodando localmente, pode ser um bloqueio de segurança do navegador. Tente usar um servidor local ou verifique o console.");
+            }
+        }
+
         fileInput.addEventListener('change', (event) => { handleFile(event.target.files[0]); });
 
         function handleFile(file, isReload = false) {
@@ -2491,8 +2806,50 @@
             statusDiv.innerHTML = '<p class="text-info">Carregando planilha...</p>';
             processarBtn.disabled = true;
             const reader = new FileReader();
+            
             reader.onload = (e) => {
                 try {
+                    const fileName = file.name.toLowerCase();
+                    
+                    // --- LÓGICA PARA ARQUIVOS .DOCX ---
+                    if (fileName.endsWith('.docx')) {
+                        mammoth.extractRawText({arrayBuffer: e.target.result})
+                            .then(function(result){
+                                const text = result.value;
+                                planilhaData = parseDocxText(text);
+                                
+                                // Salva no DB e finaliza
+                                savePlanilhaToDb(planilhaData);
+                                finalizarCarregamento(file, isReload);
+                            })
+                            .catch(function(err){
+                                throw new Error("Erro ao ler arquivo Word: " + err.message);
+                            });
+                        return; // Sai da função para esperar a promise do mammoth
+                    }
+
+                    // --- LÓGICA PARA ARQUIVOS .PDF ---
+                    if (fileName.endsWith('.pdf')) {
+                        console.log("Arquivo PDF detectado. Iniciando extração...");
+                        const typedarray = new Uint8Array(e.target.result);
+                        extractTextFromPdf(typedarray)
+                            .then(function(text){
+                                console.log("Extração de texto concluída. Tamanho:", text.length);
+                                planilhaData = parseDocxText(text); // Reutiliza a lógica robusta do DOCX
+                                console.log("Dados processados:", planilhaData.length, "pedidos encontrados.");
+                                
+                                // Salva no DB e finaliza
+                                savePlanilhaToDb(planilhaData);
+                                finalizarCarregamento(file, isReload);
+                            })
+                            .catch(function(err){
+                                statusDiv.innerHTML = `<p class="text-danger"><strong>Erro ao ler PDF:</strong> ${err.message}</p>`;
+                                console.error(err);
+                            });
+                        return;
+                    }
+
+                    // --- LÓGICA PARA EXCEL (Código Original) ---
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array', cellDates:true});
                     const firstSheetName = workbook.SheetNames[0];
@@ -2541,27 +2898,68 @@
                         }); 
                         pedido.Quilos_Saldo = parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
                         pedido.Cubagem = parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
+
+                        // --- REPLICAÇÃO DAS REGRAS DE NEGÓCIO DO DOCX PARA O EXCEL ---
+                        // Garante que o comportamento de filtragem seja idêntico
+                        let cf = String(pedido.CF || '').trim();
+                        let col5 = String(pedido.Coluna5 || '').trim();
+                        const rota = String(pedido.Cod_Rota || '').trim();
+                        
+                        // Helper para encontrar valores de colunas que podem variar (TAB, Tab, TP, Tp)
+                        const findVal = (k) => { const key = Object.keys(pedido).find(pk => pk.toUpperCase() === k); return key ? String(pedido[key] || '').trim() : ''; };
+                        const tab = findVal('TAB');
+                        const tp = findVal('TP');
+
+                        // 1. Regra de Varejo baseada no TP
+                        const varejoTPs = new Set(['08', '8', '91', '210', '203', '209']);
+                        if (varejoTPs.has(tp)) {
+                            if (isNumeric(cf)) cf = `VAREJO-${cf}`;
+                        }
+
+                        // 2. Regra TAB 15 (Carga Fechada)
+                        if ((tab === '15' || tab === '015') && !isNumeric(cf)) {
+                            cf = '151515'; 
+                            col5 = "CARGA FECHADA (TAB 15) " + col5;
+                        }
+
+                        // 3. Regra TAB 29/219 (Condor)
+                        if (tab === '29' || tab === '029' || tab === '219') {
+                            col5 = "CONDOR (TRUCK) " + col5;
+                        }
+
+                        // 4. Regra TAB 23 (Farelo)
+                        if (tab === '23' || tab === '023' || rota === '1122') {
+                            col5 = "PEDIDOS FARELO " + col5;
+                        }
+
+                        // 5. Regra TAB 500 e Rotas de Transferência
+                        if (tab === '500' || ['2005', '2007', '3101'].includes(rota)) {
+                            col5 = "TABELA TRANSFER " + col5;
+                        }
+
+                        // 6. Regra Toco baseada no TP
+                        const tocoTPs = new Set(['14', '014', '214', '274', '284', '294']);
+                        if (tocoTPs.has(tp) && isNumeric(cf)) {
+                            col5 = "TOCO " + col5;
+                        } else {
+                            if (col5) col5 = col5.replace(/\bTOCO\b/gi, '').trim();
+                        }
+
+                        pedido.CF = cf;
+                        pedido.Coluna5 = col5;
+
                         return pedido; 
                     });
                     planilhaData.forEach(checkAgendamento);
 
-                    // NOVO: Salva os dados da planilha no IndexedDB para persistência
+                    // Salva no DB e finaliza
                     savePlanilhaToDb(planilhaData).then(() => {
                         console.log("Dados da planilha salvos no IndexedDB com sucesso.");
                     }).catch(err => {
                         console.error(err);
                     });
 
-                    statusDiv.innerHTML = `<p class="text-success">Planilha "${file.name}" carregada.</p>`;
-                    if (isReload) statusDiv.innerHTML = `<p class="text-success">Planilha "${file.name}" restaurada.</p>`;
-                    processarBtn.disabled = false;
-                    
-                    popularFiltrosDeRota();
-                    if (isReload) return; // Se for recarregamento, não processa automaticamente.
-
-                    if (document.getElementById('autoProcessCheckbox').checked) {
-                        processar();
-                    }
+                    finalizarCarregamento(file, isReload);
 
                 } catch (error) {
                     statusDiv.innerHTML = `<p class="text-danger"><strong>Erro:</strong> ${error.message}</p>`;
@@ -2569,6 +2967,19 @@
                 }
             };
             reader.readAsArrayBuffer(file);
+        }
+
+        function finalizarCarregamento(file, isReload) {
+            statusDiv.innerHTML = `<p class="text-success">Arquivo "${file.name}" carregado.</p>`;
+            if (isReload) statusDiv.innerHTML = `<p class="text-success">Arquivo "${file.name}" restaurado.</p>`;
+            processarBtn.disabled = false;
+            
+            popularFiltrosDeRota();
+            if (isReload) return;
+
+            if (document.getElementById('autoProcessCheckbox').checked) {
+                processar();
+            }
         }
         
         function popularFiltrosDeRota() {
@@ -2671,6 +3082,7 @@
                     'Bloqueado Manualmente': { list: pedidosManualmenteBloqueadosAtuais, viewId: 'pedidos-bloqueados-view', cardId: 'card-bloqueados', accordionId: 'collapseBloqueados' },
                     'Pedidos da Rota 1 para Alteração': { list: rota1SemCarga, viewId: 'alteracao-rota-view', cardId: 'resultado-rota1' },                    'Bloqueados Varejo (Regra)': { list: pedidosComCFNumericoIsolado, viewId: 'workspace-view', tabId: 'bloqueados-regra-tab-pane', accordionId: `collapseCF-${pedido.Cod_Rota}` },
                     'Outros Pedidos (Moinho)': { list: pedidosMoinho, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseMoinho' },
+                    'Outros Pedidos (Farelo)': { list: pedidosFarelo, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseFarelo' },
                     'Outros Pedidos (Funcionários)': { list: pedidosFuncionarios, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseFuncionarios' },
                     'Outros Pedidos (Transferência)': { list: pedidosTransferencias, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseTransferencias' },
                     'Outros Pedidos (Exportação)': { list: pedidosExportacao, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseExportacao' },
@@ -2684,25 +3096,44 @@
                 }
 
                 // 5. Verificar Cargas Fechadas (PR e Resto BR)
-                for (const cf in gruposPorCFGlobais) {
-                    if (gruposPorCFGlobais[cf].pedidos.some(p => String(p.Num_Pedido) === numPedido)) {
+                // --- CORREÇÃO: Lógica de busca para Cargas Fechadas Resto BR (incluindo TBL ESPECIAL) ---
+                let gruposRestBr = { ...gruposPorCFGlobais };
+                if (pedidosCarretaSemCF && pedidosCarretaSemCF.length > 0) {
+                    gruposRestBr['TBL ESPECIAL SEM CF'] = { pedidos: pedidosCarretaSemCF };
+                }
+                
+                // Ordenação idêntica à displayCargasFechadasRestBrasil
+                const specialKeysOrderRest = ['TBL ESPECIAL SEM CF'];
+                const sortedKeysRest = Object.keys(gruposRestBr).sort((a, b) => {
+                    const aIsSpecial = specialKeysOrderRest.includes(a);
+                    const bIsSpecial = specialKeysOrderRest.includes(b);
+                    if (aIsSpecial && bIsSpecial) return specialKeysOrderRest.indexOf(a) - specialKeysOrderRest.indexOf(b);
+                    if (aIsSpecial) return -1; if (bIsSpecial) return 1;
+                    return a.localeCompare(b, undefined, {numeric: true});
+                });
+
+                for (const cf of sortedKeysRest) {
+                    if (gruposRestBr[cf].pedidos.some(p => String(p.Num_Pedido) === numPedido)) {
                         local = `Carga Resto BR (${cf})`;
                         viewId = 'workspace-view';
                         tabId = 'cargas-fechadas-rest-br-tab-pane';
-                        const sortedKeys = Object.keys(gruposPorCFGlobais).sort((a,b) => a.localeCompare(b, undefined, {numeric: true}));
-                        const index = sortedKeys.indexOf(cf);
+                        const index = sortedKeysRest.indexOf(cf);
                         if (index !== -1) accordionId = `collapseCargasFechadasRestBr-${index}`;
                         return { pedido, local, viewId, tabId, accordionId, cardId };
                     }
                 }
-                const gruposPR = cargasFechadasPR.reduce((acc, p) => { const key = (String(p.Coluna5 || '').toUpperCase().includes('CONDOR')) ? 'Condor Truck' : `CF: ${p.CF}`; if (!acc[key]) acc[key] = []; acc[key].push(p); return acc; }, {});
-                for (const key in gruposPR) {
+
+                // --- CORREÇÃO: Lógica de busca para Cargas Fechadas PR ---
+                const gruposPR = cargasFechadasPR.reduce((acc, p) => { const coluna5 = String(p.Coluna5 || '').toUpperCase(); let key; if (coluna5.includes('CONDOR (TRUCK)') || coluna5.includes('CONDOR TOD TRUC')) { key = 'Condor Truck'; } else if (coluna5.includes('TBL ESPECIAL') && !isNumeric(p.CF)) { key = 'TBL ESPECIAL SEM CF'; } else { key = `CF: ${p.CF}`; } if (!acc[key]) acc[key] = []; acc[key].push(p); return acc; }, {});
+                
+                const sortedKeysPR = Object.keys(gruposPR).sort((a, b) => { if (a === 'Condor Truck') return -1; if (b === 'Condor Truck') return 1; if (a === 'TBL ESPECIAL SEM CF') return -1; if (b === 'TBL ESPECIAL SEM CF') return 1; return a.localeCompare(b, undefined, { numeric: true }); });
+
+                for (const key of sortedKeysPR) {
                     if (gruposPR[key].some(p => String(p.Num_Pedido) === numPedido)) {
                         local = `Carga Fechada PR (${key})`;
                         viewId = 'workspace-view';
                         tabId = 'cargas-fechadas-pr-tab-pane';
-                        const sortedKeys = Object.keys(gruposPR).sort((a, b) => (a === 'Condor Truck') ? -1 : (b === 'Condor Truck') ? 1 : a.localeCompare(b, undefined, { numeric: true }));
-                        const index = sortedKeys.indexOf(key);
+                        const index = sortedKeysPR.indexOf(key);
                         if (index !== -1) accordionId = `collapseCargasFechadasPR-${index}`;
                         return { pedido, local, viewId, tabId, accordionId, cardId };
                     }
@@ -3117,6 +3548,7 @@
             pedidosExportacao = [];
             cargasFechadasPR = [];
             pedidosMoinho = [];
+        pedidosFarelo = [];
             pedidosMarcaPropria = [];
             pedidosManualmenteBloqueadosAtuais = [];
             tocoPedidoIds.clear();
@@ -3140,6 +3572,7 @@
                 const resultadoTransferenciasDiv = document.getElementById('resultado-transferencias');
                 const resultadoExportacaoDiv = document.getElementById('resultado-exportacao');
                 const resultadoCargasFechadasPRDiv = document.getElementById('resultado-cargas-fechadas-pr');
+                const resultadoFareloDiv = document.getElementById('resultado-farelo');
                 const resultadoMoinhoDiv = document.getElementById('resultado-moinho');
                 const resultadoMarcaPropriaDiv = document.getElementById('resultado-marca-propria');
                 const resultadoCargasFechadasRestBrDiv = document.getElementById('resultado-cargas-fechadas-rest-br');
@@ -3164,7 +3597,7 @@
                     
                     [
                         'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 
-                        'resultado-toco', 'resultado-cf-accordion-container', 'resultado-cf-numerico', 
+                        'resultado-toco', 'resultado-cf-accordion-container', 'resultado-cf-numerico', 'resultado-farelo',
                         'resultado-rota1', 'resultado-bloqueados', 'resultado-cargas-fechadas-pr', 'resultado-moinho', 'resultado-marca-propria',
                         'resultado-cargas-fechadas-rest-br', 'resultado-funcionarios', 'resultado-transferencias', 'resultado-exportacao'
                     ].forEach(id => {
@@ -3178,6 +3611,9 @@
                         if(coluna5.includes('TBL FUNCIONARIO')) {
                             pedidosFuncionarios.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
+                        } else if (coluna5.includes('PEDIDOS FARELO')) {
+                            pedidosFarelo.push(p);
+                            pedidosExcluidos.add(p.Num_Pedido);
                         } else if (coluna5.includes('TABELA TRANSFER') || coluna5.includes('TRANSF. TODESCH') || coluna5.includes('INSTITUCIONAL')) {
                             pedidosTransferencias.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
@@ -3190,17 +3626,20 @@
                         } else if (coluna5.includes('MARCA PROPRIA')) {
                             pedidosMarcaPropria.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
+                        } else if (['2005', '2007', '3101'].includes(String(p.Cod_Rota).trim())) {
+                            pedidosTransferencias.push(p);
+                            pedidosExcluidos.add(p.Num_Pedido);
                         }
                     });
                     
+                    const hasFarelo = displayPedidosFarelo(resultadoFareloDiv, pedidosFarelo);
                     const hasMoinho = displayPedidosMoinho(resultadoMoinhoDiv, pedidosMoinho); // prettier-ignore
                     const hasFuncionarios = displayPedidosFuncionarios(resultadoFuncionariosDiv, pedidosFuncionarios); // prettier-ignore
                     const hasTransferencias = displayPedidosTransferencias(resultadoTransferenciasDiv, pedidosTransferencias); // prettier-ignore
                     const hasExportacao = displayPedidosExportacao(resultadoExportacaoDiv, pedidosExportacao); // prettier-ignore
                     const hasMarcaPropria = displayPedidosMarcaPropria(resultadoMarcaPropriaDiv, pedidosMarcaPropria); // prettier-ignore
 
-                    // Se nenhuma das categorias especiais tiver pedidos, mostra um estado vazio unificado.
-                    if (!hasMoinho && !hasFuncionarios && !hasTransferencias && !hasExportacao && !hasMarcaPropria) {
+                    if (!hasFarelo && !hasMoinho && !hasFuncionarios && !hasTransferencias && !hasExportacao && !hasMarcaPropria) {
                         const outrosPedidosTab = document.getElementById('outros-pedidos-tab-pane');
                         if (outrosPedidosTab) {
                             outrosPedidosTab.innerHTML = '<div class="empty-state"><i class="bi bi-collection"></i><p>Nenhum pedido para as categorias especiais foi encontrado.</p></div>';
@@ -3228,13 +3667,10 @@
                     rota1SemCarga = pedidosAindaNaoProcessados.filter(p => {
                         const codRota = String(p.Cod_Rota || '').trim();
                         const cfValue = p.CF;
-                        const coluna5Value = String(p.Coluna5 || '').trim().toUpperCase();
 
                         if (codRota !== '1') { return false; }
                         if (isNumeric(cfValue)) { return false; }
-                        
-                        const filtroDescricoes = ['TBL 08', 'TBL TODESCHINI', 'PROMO BOLINHO'];
-                        return filtroDescricoes.some(termo => coluna5Value.includes(termo));
+                        return true;
                     });
 
                     const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
@@ -3245,45 +3681,10 @@
 
                     let pedidosParaProcessamentoGeral = pedidosAindaNaoProcessados;
 
-                    // CORRIGIDO: Separa Cargas Toco por peso (>= 4500 kg por cliente) APENAS de pedidos de VAREJO.
-                    // Um pedido de varejo é aquele que NÃO tem um CF numérico.
-                    const pedidosDeVarejo = pedidosParaProcessamentoGeral.filter(p => !isNumeric(p.CF));
-                    const outrosPedidos = pedidosParaProcessamentoGeral.filter(p => isNumeric(p.CF));
-
-                    const gruposDeClientesVarejo = pedidosDeVarejo.reduce((acc, p) => {
-                        const clienteId = normalizeClientId(p.Cliente);
-                        if (!acc[clienteId]) {
-                            // Inicializa o grupo para este cliente
-                            acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0 };
-                        }
-                        acc[clienteId].pedidos.push(p);
-                        acc[clienteId].totalKg += p.Quilos_Saldo;
-                        acc[clienteId].totalCubagem += p.Cubagem;
-                        return acc;
-                    }, {});
-
                     gruposToco = {};
                     tocoPedidoIds = new Set();
 
-                    Object.entries(gruposDeClientesVarejo).forEach(([clienteId, grupo]) => {
-                        // CONDIÇÃO ATUALIZADA: Verifica se o grupo de cliente tem o peso necessário E se NENHUM de seus pedidos
-                        // contém as palavras-chave de exclusão na Coluna5.
-                        const deveSerExcluido = grupo.pedidos.some(p => {
-                            const coluna5Upper = String(p.Coluna5 || '').toUpperCase();
-                            return coluna5Upper.includes('TBL ESP CARRETA') || coluna5Upper.includes('TRUCK') || coluna5Upper.includes('CARRETA');
-                        });
-
-                        if (grupo.totalKg >= 4500 && !deveSerExcluido) {
-                            const cf = grupo.pedidos[0]?.CF || `CLI-${clienteId}`; // Usa CF ou um ID de cliente
-                            gruposToco[cf] = grupo;
-                            grupo.pedidos.forEach(p => tocoPedidoIds.add(p.Num_Pedido));
-                        }
-                    });
-
-                    // Remonta a lista de processamento geral com os pedidos que não viraram Toco por peso.
-                    pedidosParaProcessamentoGeral = [...outrosPedidos, ...pedidosDeVarejo.filter(p => !tocoPedidoIds.has(p.Num_Pedido))];
-                    
-                    // Adiciona os grupos toco antigos (baseados em flag) se existirem
+                    // Adiciona os grupos toco APENAS baseados na flag TOCO vinda da regra do TP
                     const pedidosTocoPorFlag = pedidosParaProcessamentoGeral.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                     const pedidosTocoPorFlagIds = new Set(pedidosTocoPorFlag.map(p => String(p.Num_Pedido)));
                     
@@ -3294,18 +3695,13 @@
                         acc[cf].totalKg += p.Quilos_Saldo;
                         acc[cf].totalCubagem += p.Cubagem;
                         return acc;
-                    }, gruposToco); // Inicia o reduce com os gruposToco já existentes (do peso >= 4500kg)
+                    }, {}); // Inicia o reduce vazio, ignorando lógica antiga de peso
+
+                    // Adiciona os IDs dos pedidos Toco ao conjunto de exclusão
+                    pedidosTocoPorFlagIds.forEach(id => tocoPedidoIds.add(id));
 
                     pedidosParaProcessamentoGeral = pedidosParaProcessamentoGeral.filter(p => !pedidosTocoPorFlagIds.has(String(p.Num_Pedido)));
                     displayToco(resultadoTocoDiv, gruposToco);
-
-                    // Identifica clientes com qualquer tipo de bloqueio na planilha
-                    const clientesComBloqueio = new Set();
-                    pedidosParaProcessamentoGeral.forEach(p => {
-                        if (String(p['BLOQ.']).trim()) { 
-                            clientesComBloqueio.add(normalizeClientId(p.Cliente));
-                        }
-                    });
 
                     // Separa Cargas Fechadas PR (Condor e CFs numéricos do PR)
                     cargasFechadasPR = pedidosParaProcessamentoGeral.filter(p => {
@@ -3340,7 +3736,7 @@
                             gruposPorCFGlobais[cf].totalKg += p.Quilos_Saldo;
                             gruposPorCFGlobais[cf].totalCubagem += p.Cubagem;
                         } else {
-                            if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) { // Cliente com bloqueio -> Bloqueados por Regra
+                            if (String(p['BLOQ.']).trim().length > 0) { // Pedido bloqueado VAREJO -> Bloqueados Varejo
                                 pedidosComCFNumericoIsolado.push(p);
                             } else { // O que sobra é Varejo
                                 pedidosParaProcessamentoVarejo.push(p);
@@ -5679,7 +6075,13 @@
                 const progressBar = `<div class="progress mb-3" role="progressbar" style="height: 10px;"><div class="progress-bar ${progressColor}" style="width: ${Math.min(pesoPercentual, 100)}%"></div></div>`;
                 const headerColorClass = isOverloaded ? 'bg-danger' : '';
 
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length}</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionTocoMesa"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}', event)"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>${progressBar}${createTable(pedidos, null, loadId)}</div></div></div>`;
+                // Verifica se há pedidos bloqueados neste grupo
+                const hasBlocked = grupo.pedidos.some(p => String(p['BLOQ.'] || '').trim().length > 0);
+                const blockedBadge = hasBlocked 
+                    ? '<span class="badge bg-danger ms-2"><i class="bi bi-slash-circle"></i> Contém Bloqueados</span>' 
+                    : '';
+
+            accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length}</span> ${weightBadge} ${blockedBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionTocoMesa"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}', event)"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>${progressBar}${createTable(pedidos, null, loadId)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -5731,7 +6133,14 @@
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].join(', ');
-                const collapseId = `collapseCF-Mesa-${index}`;
+                
+                // Verifica se há pedidos bloqueados neste grupo
+                const hasBlocked = grupo.pedidos.some(p => String(p['BLOQ.']).trim().length > 0);
+                const blockedBadge = hasBlocked 
+                    ? '<span class="badge bg-danger ms-2"><i class="bi bi-slash-circle"></i> Contém Bloqueados</span>' 
+                    : '';
+                const headerClass = hasBlocked ? 'bg-danger-subtle text-danger-emphasis' : '';
+                const collapseId = `collapseCF-Mesa-${index}`; // ID único
 
                 accordionHtml += `
                     <div class="accordion-item">
@@ -5741,6 +6150,7 @@
                                 <span class="badge bg-secondary ms-2" title="Rotas">${rotas || 'N/A'}</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³</span>
+                                ${blockedBadge}
                             </button>
                         </h2>
                         <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCargasPorCF">
@@ -5800,6 +6210,12 @@
                 const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].filter(Boolean).join(', ');
                 const collapseId = `collapseCargasFechadasPR-${index}`;
                 const printAreaId = `print-area-pr-${index}`; // ID único para a área de impressão
+                
+                // Verifica se há pedidos bloqueados neste grupo
+                const hasBlocked = grupo.pedidos.some(p => String(p['BLOQ.']).trim().length > 0);
+                const blockedBadge = hasBlocked 
+                    ? '<span class="badge bg-danger ms-2"><i class="bi bi-slash-circle"></i> Contém Bloqueados</span>' 
+                    : '';
 
                 accordionHtml += `
                     <div class="accordion-item" id="${printAreaId}">
@@ -5809,6 +6225,7 @@
                                 <span class="badge bg-secondary ms-2" title="Rotas">${rotas || 'N/A'}</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³</span>
+                                ${blockedBadge}
                             </button>
                         </h2>
                         <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCargasFechadasPR">
@@ -5861,6 +6278,12 @@
                 const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].filter(Boolean).join(', ');
                 const collapseId = `collapseCargasFechadasRestBr-${index}`;
                 const displayName = isNumeric(key) ? `CF: ${key}` : key;
+                
+                // Verifica se há pedidos bloqueados neste grupo
+                const hasBlocked = grupo.pedidos.some(p => String(p['BLOQ.']).trim().length > 0);
+                const blockedBadge = hasBlocked 
+                    ? '<span class="badge bg-danger ms-2"><i class="bi bi-slash-circle"></i> Contém Bloqueados</span>' 
+                    : '';
 
                 accordionHtml += `
                     <div class="accordion-item">
@@ -5870,6 +6293,7 @@
                                 <span class="badge bg-secondary ms-2" title="Rotas">${rotas || 'N/A'}</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³</span>
+                                ${blockedBadge}
                             </button>
                         </h2>
                         <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCargasFechadasRestBr">
@@ -6630,6 +7054,42 @@
             return true; // Retorna true se houver pedidos
         }
 
+        function displayPedidosFarelo(div, pedidos) {
+            if (!div) return;
+            div.innerHTML = ''; // Limpa o container
+            if (pedidos.length === 0) {
+                return false; // Retorna false se não houver pedidos
+            }
+            
+            pedidos.sort((a, b) => {
+                const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
+                const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
+                const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
+                if (clienteCompare !== 0) return clienteCompare;
+                return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
+            });
+
+            const totalKg = pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
+            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const accordionId = 'accordionFarelo';
+            const collapseId = 'collapseFarelo';
+            const printAreaId = 'farelo-print-area';
+
+            let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
+                <div class="accordion-item" id="${printAreaId}">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                            <strong>Pedidos Farelo</strong> &nbsp;
+                            <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} Pedidos</span>
+                            <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
+                        </button>
+                    </h2>
+                    <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}"><div class="accordion-body"><div class="d-flex justify-content-between align-items-center mb-3 no-print"><p class="text-muted small mb-0">Pedidos com TAB 23.</p><button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos Farelo')"><i class="bi bi-printer-fill me-1"></i>Imprimir Lista</button></div>${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Dat_Ped', 'Coluna5', 'BLOQ.'])}</div></div></div></div>`;
+            div.innerHTML = accordionHtml;
+            return true; // Retorna true se houver pedidos
+        }
+
         function displayPedidosMarcaPropria(div, pedidos) {
             if (!div) return;
             div.innerHTML = ''; // Limpa o container
@@ -7044,6 +7504,7 @@
                     pedidosExportacao,
                     cargasFechadasPR,
                     pedidosMoinho,
+                    pedidosFarelo,
                     pedidosMarcaPropria,
                     tocoPedidoIds: Array.from(tocoPedidoIds),
                     allSaoPauloLeftovers, // NOVO: Salva as sobras de SP
@@ -7126,6 +7587,7 @@
                 pedidosExportacao = savedState.pedidosExportacao || [];
                 cargasFechadasPR = savedState.cargasFechadasPR || [];
                 pedidosMoinho = savedState.pedidosMoinho || [];
+                pedidosFarelo = savedState.pedidosFarelo || [];
                 pedidosMarcaPropria = savedState.pedidosMarcaPropria || [];
                 tocoPedidoIds = new Set(savedState.tocoPedidoIds || []);
                 allSaoPauloLeftovers = savedState.allSaoPauloLeftovers || []; // NOVO: Carrega as sobras de SP
@@ -7153,6 +7615,7 @@
                 pedidosExportacao = reviveDates(pedidosExportacao);
                 cargasFechadasPR = reviveDates(cargasFechadasPR);
                 pedidosMoinho = reviveDates(pedidosMoinho);
+                pedidosFarelo = reviveDates(pedidosFarelo);
                 pedidosMarcaPropria = reviveDates(pedidosMarcaPropria);
                 currentLeftoversForPrinting = reviveDates(currentLeftoversForPrinting);
                 Object.values(activeLoads).forEach(load => load.pedidos = reviveDates(load.pedidos));
@@ -7203,6 +7666,7 @@
                 displayPedidosTransferencias(document.getElementById('resultado-transferencias'), pedidosTransferencias);
                 displayPedidosExportacao(document.getElementById('resultado-exportacao'), pedidosExportacao);
                 displayPedidosMoinho(document.getElementById('resultado-moinho'), pedidosMoinho);
+                displayPedidosFarelo(document.getElementById('resultado-farelo'), pedidosFarelo);
                 displayPedidosMarcaPropria(document.getElementById('resultado-marca-propria'), pedidosMarcaPropria);
                 reRenderManualLoads();
 
