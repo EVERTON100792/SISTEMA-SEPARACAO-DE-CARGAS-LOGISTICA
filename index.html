@@ -30,16 +30,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
-    <!-- NOVA BIBLIOTECA: Mammoth.js para ler arquivos .docx -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-
-    <!-- NOVA BIBLIOTECA: PDF.js para ler arquivos .pdf -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-        // Configura o worker do PDF.js
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    </script>
-
     <style>
         /* --- AJUSTE GLOBAL DE FONTE --- */
         html {
@@ -926,7 +916,7 @@
                 <div id="sidebar-controls">
                     <div class="sidebar-step">
                         <label for="fileInput" class="form-label small"><span class="step-number">1</span> Carregar Arquivo</label>
-                        <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv, .docx, .pdf">
+                        <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv">
                         <div class="form-check form-switch mt-2">
                             <input class="form-check-input" type="checkbox" role="switch" id="autoProcessCheckbox">
                             <label class="form-check-label small" for="autoProcessCheckbox">Processar ao selecionar</label>
@@ -1106,8 +1096,6 @@
                                     <div id="resultado-cargas-fechadas-rest-br"><div class="empty-state"><i class="bi bi-globe-americas"></i><p>Nenhuma Carga Fechada (Resto do Brasil) encontrada. Processe um arquivo.</p></div></div>
                                 </div>
                                 <div class="tab-pane fade" id="outros-pedidos-tab-pane" role="tabpanel">
-                                    <div id="resultado-farelo" class="mb-3"><div class="empty-state"><i class="bi bi-flower1"></i><p>Nenhum Pedido Farelo encontrado.</p></div></div>
-                                    <hr>
                                     <div id="resultado-moinho" class="mb-3"><div class="empty-state"><i class="bi bi-gear-wide-connected"></i><p>Nenhum pedido "Moinho" encontrado.</p></div></div>
                                     <hr>
                                     <div id="resultado-funcionarios" class="mb-3"><div class="empty-state"><i class="bi bi-people-fill"></i><p>Nenhum pedido de funcionário encontrado.</p></div></div>
@@ -1127,21 +1115,6 @@
                     <div class="card h-100" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos & Consultas Rápidas</h2>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-warning text-white" onclick="montarCargasPrioritarias()" title="Montar cargas automaticamente para rotas com pedidos prioritários">
-                                    <i class="bi bi-lightning-charge-fill me-1"></i>Montar Prioritários
-                                </button>
-                                <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#bulkPriorityModal" title="Colar lista de pedidos para priorizar">
-                                    <i class="bi bi-clipboard-plus me-1"></i>Colar Prioritários
-                                </button>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <button type="button" class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-file-text me-1"></i>Relatórios</button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioDisponiveisPDF()"><i class="bi bi-file-pdf me-2"></i>Relatório PDF</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioDisponiveisExcel()"><i class="bi bi-file-excel me-2"></i>Relatório Excel (Copiar)</a></li>
-                                    </ul>
-                                </div>
-                            </div>
                         </div>
                         <div class="card-body p-0">
                             <div class="p-3 border-bottom no-print">
@@ -1344,7 +1317,7 @@
                                 </div>
                                 <div class="card-footer">
                                     <label for="graphhopperApiKey" class="form-label">Chave da API (GraphHopper):</label>
-                                    <input type="text" class="form-control" id="graphhopperApiKey" value="6aaa58ba-e39d-447e-86b4-34cc7eb03d85" placeholder="Insira sua chave para cálculo de KM">
+                                    <input type="text" class="form-control" id="graphhopperApiKey" placeholder="Insira sua chave para cálculo de KM">
                                     <div class="form-text small">
                                         <!-- A descrição será inserida aqui pelo JavaScript -->
                                     </div>
@@ -1427,26 +1400,6 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Priorização em Massa -->
-    <div class="modal fade" id="bulkPriorityModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-star-fill text-warning me-2"></i>Priorização em Massa</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted small">Cole abaixo os números dos pedidos que deseja priorizar (um por linha ou separados por espaço/vírgula). Você pode copiar esta lista do Relatório Excel.</p>
-                    <textarea class="form-control" id="bulkPriorityInput" rows="10" placeholder="Ex: 12345&#10;67890&#10;11223"></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-warning" onclick="processarPriorizacaoEmMassa()"><i class="bi bi-check-circle-fill me-2"></i>Priorizar Todos</button>
                 </div>
             </div>
         </div>
@@ -1799,28 +1752,6 @@
             return objCopy;
         }
 
-        /**
-         * NOVA FUNÇÃO CENTRALIZADA: Verifica todos os tipos de bloqueio para um pedido.
-         * Isso garante que a lógica seja a mesma em todos os lugares (KPIs, impressão, etc.).
-         * @param {object} pedido O objeto do pedido a ser verificado.
-         * @returns {boolean} Retorna true se o pedido estiver bloqueado, caso contrário false.
-         */
-        function isPedidoBloqueado(pedido) {
-            if (!pedido) return false;
-
-            // 1. Bloqueio manual pelo usuário
-            if (pedidosBloqueados.has(String(pedido.Num_Pedido))) return true;
-
-            // 2. Bloqueio financeiro (C) ou comercial (V) direto na planilha
-            const bloqueioPlanilha = String(pedido['BLOQ.'] || '').trim().toUpperCase();
-            if (bloqueioPlanilha === 'C' || bloqueioPlanilha === 'V') return true;
-
-            // 3. Bloqueio por regra de negócio (cliente tem outro pedido com CF numérico e bloqueio)
-            const clientesComBloqueioRegra = new Set(pedidosComCFNumericoIsolado.map(p => normalizeClientId(p.Cliente)));
-            const clienteId = normalizeClientId(pedido.Cliente);
-            return clienteId && clientesComBloqueioRegra.has(clienteId);
-        }
-
         // Função centralizada para ordenar rotas de forma consistente
         function getSortedVarejoRoutes(rotas) {
             const vehicleOrder = { 'fiorino': 1, 'van': 2, 'tresQuartos': 3 };
@@ -2008,9 +1939,8 @@
                 const configs = savedConfigs ? JSON.parse(savedConfigs) : defaultConfigs;
 
                 // NOVO: Carrega a chave da API do GraphHopper
-                const defaultApiKey = '6aaa58ba-e39d-447e-86b4-34cc7eb03d85';
                 const savedApiKey = localStorage.getItem('graphhopperApiKey');
-                document.getElementById('graphhopperApiKey').value = savedApiKey || defaultApiKey;
+                if (savedApiKey) document.getElementById('graphhopperApiKey').value = savedApiKey;
 
                 Object.keys(defaultConfigs).forEach(key => {
                     const element = document.getElementById(key);
@@ -2184,7 +2114,7 @@
         // Adicionado: Resetar a aba "Outros Pedidos" para o estado inicial
         const outrosPedidosTab = document.getElementById('outros-pedidos-tab-pane');
         if (outrosPedidosTab) {
-            outrosPedidosTab.innerHTML = `<div id="resultado-farelo" class="mb-3"><div class="empty-state"><i class="bi bi-flower1"></i><p>Nenhum Pedido Farelo encontrado.</p></div></div><hr><div id="resultado-moinho" class="mb-3"><div class="empty-state"><i class="bi bi-gear-wide-connected"></i><p>Nenhum pedido "Moinho" encontrado.</p></div></div><hr><div id="resultado-funcionarios" class="mb-3"><div class="empty-state"><i class="bi bi-people-fill"></i><p>Nenhum pedido de funcionário encontrado.</p></div></div><hr><div id="resultado-transferencias" class="mb-3"><div class="empty-state"><i class="bi bi-arrow-left-right"></i><p>Nenhum pedido de transferência encontrado.</p></div></div><hr><div id="resultado-exportacao" class="mb-3"><div class="empty-state"><i class="bi bi-box-arrow-up-right"></i><p>Nenhum pedido de exportação encontrado.</p></div></div><hr><div id="resultado-marca-propria"><div class="empty-state"><i class="bi bi-tags-fill"></i><p>Nenhum pedido de Marca Própria encontrado.</p></div></div>`;
+            outrosPedidosTab.innerHTML = `<div id="resultado-moinho" class="mb-3"><div class="empty-state"><i class="bi bi-gear-wide-connected"></i><p>Nenhum pedido "Moinho" encontrado.</p></div></div><hr><div id="resultado-funcionarios" class="mb-3"><div class="empty-state"><i class="bi bi-people-fill"></i><p>Nenhum pedido de funcionário encontrado.</p></div></div><hr><div id="resultado-transferencias" class="mb-3"><div class="empty-state"><i class="bi bi-arrow-left-right"></i><p>Nenhum pedido de transferência encontrado.</p></div></div><hr><div id="resultado-exportacao" class="mb-3"><div class="empty-state"><i class="bi bi-box-arrow-up-right"></i><p>Nenhum pedido de exportação encontrado.</p></div></div><hr><div id="resultado-marca-propria"><div class="empty-state"><i class="bi bi-tags-fill"></i><p>Nenhum pedido de Marca Própria encontrado.</p></div></div>`;
         }
 
         // Resetar Pedidos & Consultas
@@ -2475,7 +2405,7 @@
             '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' }, '2735': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2735' }, '2745': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2745' },
             // Rotas do Paraná (Varejo)
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
-            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'fiorino', title: 'Rota 11711' },
+            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
             '11361': { type: 'tresQuartos', title: 'Rota 11361' }, '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] }, '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] }, '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] }, '11541': { type: 'tresQuartos', title: 'Rota 11541' }
         };
         
@@ -2483,307 +2413,7 @@
         const processarBtn = document.getElementById('processarBtn');
         const statusDiv = document.getElementById('status');
         const isNumeric = (str) => str && /^\d+$/.test(String(str).trim());
-
-        // --- NOVO: Função para processar o texto do arquivo .docx (e agora .pdf também) ---
-        function parseDocxText(text) {
-            const lines = text.split(/\r\n|\r|\n/);
-            const pedidos = [];
-            let currentRota = '';
-            let currentUF = 'PR'; // Padrão para PR, ajustado conforme a rota
-
-            // Helper para converter números PT-BR (ex: 1.234,56 -> 1234.56)
-            const parsePtBr = (s) => {
-                if (!s) return 0;
-                return parseFloat(s.replace(/\./g, '').replace(',', '.'));
-            };
-
-            for (const line of lines) {
-                const trimmed = line.trim();
-                if (!trimmed) continue;
-
-                // 1. Detectar Cabeçalho da Rota
-                // Ex: EMPRESA - 22 ... ROTA - 1 GERAL
-                // Ajustado para aceitar variações como "ROTA 11311", "ROTA: 11311", "ROTA 11.311" e hífens especiais (–, —)
-                const rotaMatch = trimmed.match(/ROTA\s*[-:.\u2013\u2014]?\s*([\d.]+)(?:\s+(.*))?/i);
-                if (rotaMatch) {
-                    currentRota = rotaMatch[1].replace(/\./g, ''); // Remove pontos (ex: 11.311 -> 11311)
-                    const rotaDesc = (rotaMatch[2] || '').toUpperCase();
-                    
-                    // Tenta inferir o UF baseado na descrição da rota
-                    if (rotaDesc.includes('- MG')) currentUF = 'MG';
-                    else if (rotaDesc.includes('- SPI') || rotaDesc.includes('- SP')) currentUF = 'SP';
-                    else if (rotaDesc.includes('- SC')) currentUF = 'SC';
-                    else currentUF = 'PR'; // Padrão
-                    continue;
-                }
-
-                // 2. Detectar Linha de Pedido (Começa com código de cliente numérico)
-                // Regex para capturar o início estruturado da linha
-                // Captura: Cliente, Nome, Pedido, Saldo, %Atd, Predat
-                // Ajustado para aceitar vírgulas nos números (formato PT-BR)
-                // ESTRATÉGIA ROBUSTA: Captura apenas os 4 primeiros campos obrigatórios e processa o resto separadamente
-                const startRegex = /^(\d+)\s+(.+?)\s+(\d+)\s+([-]?[\d\.,]+)/;
-                const startMatch = trimmed.match(startRegex);
-                
-                if (startMatch) {
-                    const cliente = startMatch[1];
-                    const nomeCliente = startMatch[2];
-                    const numPedido = startMatch[3];
-                    const quilosSaldo = parsePtBr(startMatch[4]);
-                    
-                    // Remove o início já processado para analisar o resto
-                    let remainder = trimmed.substring(startMatch[0].length).trim();
-                    
-                    // 1. Tenta capturar e remover o final da linha (Cubagem, Qtd, %Frac)
-                    let cubagem = 0;
-                    const endRegex = /([\d\.,]+)\s+(\d+)\s+([\d\.,]+)$/;
-                    const endMatch = remainder.match(endRegex);
-                    
-                    if (endMatch) {
-                        cubagem = parsePtBr(endMatch[1]);
-                        remainder = remainder.substring(0, remainder.length - endMatch[0].length).trim();
-                    }
-
-                    // 2. Tenta capturar e remover o CEP do fim (xxxxx-xxx)
-                    const cepRegex = /(\d{5}-\d{3})$/;
-                    const cepMatch = remainder.match(cepRegex);
-                    if (cepMatch) {
-                        remainder = remainder.substring(0, remainder.length - cepMatch[0].length).trim();
-                    }
-                    
-                    // 3. Procura por datas no que sobrou (Predat e Dat_Ped)
-                    // Assume que a primeira data encontrada é Predat (se houver duas) ou Dat_Ped (se houver uma e contexto permitir)
-                    // Mas no padrão do arquivo: ... Saldo [%ATD] [Predat] ... Dat_Ped ...
-                    
-                    let predat = null;
-                    let datPed = null;
-                    
-                    // Regex global para achar todas as datas
-                    const dates = [...remainder.matchAll(/(\d{1,2}\/\d{1,2}\/\d{2,4})/g)];
-                    
-                    let splitIndex = 0;
-
-                    if (dates.length >= 2) {
-                        // Duas datas: primeira é Predat, segunda é Dat_Ped
-                        const d1 = dates[0][0];
-                        const d2 = dates[1][0];
-                        
-                        const [pd, pm, py] = d1.split('/');
-                        predat = new Date((py.length===2?'20'+py:py), pm - 1, pd);
-                        
-                        const [dd, dm, dy] = d2.split('/');
-                        datPed = new Date((dy.length===2?'20'+dy:dy), dm - 1, dd);
-                        
-                        // O ponto de corte para Itinerário é antes da Dat_Ped (segunda data)
-                        splitIndex = remainder.indexOf(d2);
-                    } else if (dates.length === 1) {
-                        // Apenas uma data. Geralmente é Dat_Ped que fica no meio dos detalhes.
-                        const d1 = dates[0][0];
-                        const [dd, dm, dy] = d1.split('/');
-                        datPed = new Date((dy.length===2?'20'+dy:dy), dm - 1, dd);
-                        
-                        splitIndex = remainder.indexOf(d1);
-                    } else {
-                        // Nenhuma data encontrada (caso raro)
-                        splitIndex = remainder.length; 
-                    }
-
-                    // Se achamos Predat (dates[0]), precisamos removê-lo do início do remainder para achar o Itinerário
-                    if (predat && dates.length >= 2) {
-                        const predatStr = dates[0][0];
-                        const predatIdx = remainder.indexOf(predatStr);
-                        // Remove tudo até o fim do Predat
-                        remainder = remainder.substring(predatIdx + predatStr.length).trim();
-                        // Recalcula splitIndex no novo remainder (Dat_Ped agora é a primeira data restante)
-                        const datPedStr = dates[1][0];
-                        splitIndex = remainder.indexOf(datPedStr);
-                    }
-
-                    // Agora remainder começa com Roteiro/Itinerario
-                    let itinerarioPart = remainder.substring(0, splitIndex).trim();
-                    let detailsPart = remainder.substring(splitIndex).trim(); // Começa com Dat_Ped
-                    
-                    // Remove Dat_Ped do início de detailsPart
-                    const dateRegex = /(\d{1,2}\/\d{1,2}\/\d{2,4})/;
-                    const dateMatch = detailsPart.match(dateRegex);
-                    if (dateMatch) {
-                        detailsPart = detailsPart.substring(dateMatch[0].length).trim();
-                    }
-                    
-                    // Processar Itinerário para extrair Cidade
-                    // Geralmente: "1 COLOMBO 0 MAUA 999" -> Cidade é COLOMBO
-                    const itinTokens = itinerarioPart.split(/\s+/);
-                    // Remove o primeiro (Roteiro) e o último (CP)
-                    let itinerarioText = itinTokens.length > 2 ? itinTokens.slice(1, -1).join(' ') : itinerarioPart;
-                    // Pega tudo antes de " 0 " se existir, senão pega tudo
-                    let cidade = itinerarioText.split(' 0 ')[0].trim();
-                    if (!cidade) cidade = itinerarioText;
-
-                    // Processar Detalhes para extrair Bloqueio, CF e Descrição
-                    let bloq = '';
-                    let detailsTokens = detailsPart.split(/\s+/).filter(Boolean);
-                    
-                    // Verifica Bloqueio (Letra única logo após a data: C, V, B)
-                    if (detailsTokens.length > 0 && /^[A-Z]$/.test(detailsTokens[0]) && detailsTokens[0].length === 1) {
-                        bloq = detailsTokens[0];
-                        detailsTokens.shift();
-                    }
-
-                    // Extrair TAB e TP
-                    let tab = '';
-                    let tp = '';
-                    if (detailsTokens.length >= 2) {
-                        tab = detailsTokens[0];
-                        tp = detailsTokens[1];
-                    }
-                    
-                    // Procura por CF (número de 5 ou 6 dígitos)
-                    let cf = '';
-                    let descricao = '';
-                    
-                    for (let i = 0; i < detailsTokens.length; i++) {
-                        const t = detailsTokens[i];
-                        // CORREÇÃO: Relaxado para 4 ou mais dígitos para capturar CFs menores
-                        if (/^\d{4,}$/.test(t)) {
-                            cf = t;
-                            // A descrição é o que vem depois do CF
-                            // Remove o último token se for numérico (provavelmente Quilos_Sum)
-                            let descTokens = detailsTokens.slice(i + 1);
-                            if (descTokens.length > 0 && /[\d\.]+$/.test(descTokens[descTokens.length - 1])) {
-                                descTokens.pop();
-                            }
-                            descricao = descTokens.join(' ');
-                            break;
-                        }
-                    }
-
-                    // Aplicar regra de Varejo baseada no TP
-                    const varejoTPs = new Set(['08', '8', '91', '210', '203', '209']);
-                    if (varejoTPs.has(tp)) {
-                        // Se o TP indica varejo, forçamos o CF a ser não-numérico
-                        // para que a lógica de `processar()` o classifique como varejo.
-                        if (isNumeric(cf)) {
-                            cf = `VAREJO-${cf}`; // Adiciona um prefixo para torná-lo não-numérico
-                        }
-                    }
-                    
-                    // Se não achou CF, tenta pegar o texto como Coluna5 (ex: TRUCK sem numero)
-                    let col5 = cf ? descricao : detailsTokens.join(' ');
-                    // Limpeza final da Coluna5 se tiver números soltos no fim
-                    if (!cf && col5) {
-                         col5 = col5.replace(/\s+[\d\.]+$/, '');
-                    }
-
-                    // NOVA REGRA: Se TAB for 15, é carga fechada.
-                    // Forçamos um CF numérico se não houver um, para que a lógica principal o capture.
-                    if ((tab === '15' || tab === '015') && !isNumeric(cf)) {
-                        cf = '151515'; // Dummy CF para forçar a classificação como Carga Fechada
-                        col5 = "CARGA FECHADA (TAB 15) " + col5; // Adiciona uma nota para clareza
-                    }
-
-                    // NOVA REGRA: Se TAB for 29 ou 219, é Condor (Carga Fechada PR)
-                    if (tab === '29' || tab === '029' || tab === '219') {
-                        col5 = "CONDOR (TRUCK) " + col5;
-                    }
-
-                    // NOVA REGRA: Se TAB for 23, é Pedido Farelo
-                    if (tab === '23' || tab === '023' || currentRota === '1122') {
-                        col5 = "PEDIDOS FARELO " + col5;
-                    }
-
-                    // NOVA REGRA: Se TAB for 500, é transferência
-                    if (tab === '500') {
-                        col5 = "TABELA TRANSFER " + col5;
-                    }
-
-                    // NOVA REGRA: Rotas de Transferência (2005, 2007, 3101)
-                    if (['2005', '2007', '3101'].includes(currentRota)) {
-                        col5 = "TABELA TRANSFER " + col5;
-                    }
-
-                    // NOVA REGRA: Toco baseado no TP
-                    const tocoTPs = new Set(['14', '014', '214', '274', '284', '294']);
-                    if (tocoTPs.has(tp) && isNumeric(cf)) {
-                        col5 = "TOCO " + col5; // Força a identificação como Toco no início para garantir
-                    }
-
-                    pedidos.push({
-                        Cod_Rota: currentRota,
-                        Cliente: cliente,
-                        Nome_Cliente: nomeCliente,
-                        Num_Pedido: numPedido,
-                        Quilos_Saldo: quilosSaldo,
-                        Cubagem: cubagem,
-                        Cidade: cidade,
-                        UF: currentUF,
-                        Predat: predat,
-                        Dat_Ped: datPed,
-                        'BLOQ.': bloq,
-                        CF: cf,
-                        Coluna5: col5,
-                        Agendamento: 'Não' // Padrão, pois não tem essa info no docx
-                    });
-                }
-            }
-            return pedidos;
-        }
         
-        // --- NOVO: Função para extrair texto de PDF mantendo o layout de linhas ---
-        async function extractTextFromPdf(data) {
-            // Verifica se a biblioteca foi carregada
-            if (typeof pdfjsLib === 'undefined') {
-                throw new Error("A biblioteca de leitura de PDF não foi carregada. Verifique sua conexão com a internet.");
-            }
-
-            // Configura o worker se ainda não estiver configurado
-            if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            }
-
-            try {
-                const loadingTask = pdfjsLib.getDocument(data);
-                const pdf = await loadingTask.promise;
-                let fullText = '';
-
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const content = await page.getTextContent();
-                    
-                    // Agrupa itens por linha (coordenada Y)
-                    const lines = {};
-                    const tolerance = 5; // Tolerância ajustada para agrupar itens na mesma linha
-
-                    content.items.forEach(item => {
-                        const y = item.transform[5]; // Coordenada Y
-                        // Encontra uma linha existente próxima ou cria uma nova
-                        let lineY = Object.keys(lines).find(key => Math.abs(key - y) < tolerance);
-                        if (!lineY) {
-                            lineY = y;
-                            lines[lineY] = [];
-                        }
-                        lines[lineY].push(item);
-                    });
-
-                    // Ordena as linhas de cima para baixo (Y decrescente no PDF)
-                    const sortedYs = Object.keys(lines).sort((a, b) => b - a);
-
-                    sortedYs.forEach(y => {
-                        // Ordena os itens da linha da esquerda para a direita (X crescente)
-                        const lineItems = lines[y].sort((a, b) => a.transform[4] - b.transform[4]);
-                        // Junta os textos com espaço para garantir separação de colunas
-                        // Filtra strings vazias para evitar espaços extras desnecessários
-                        const lineText = lineItems.map(item => item.str).filter(s => s.trim().length > 0).join(' ').trim();
-                        if (lineText) fullText += lineText + '\n';
-                    });
-                }
-                console.log("Texto extraído do PDF (primeiros 500 chars):", fullText.substring(0, 500));
-                return fullText;
-            } catch (error) {
-                console.error("Erro detalhado do PDF.js:", error);
-                throw new Error("Falha ao processar o PDF. Se estiver rodando localmente, pode ser um bloqueio de segurança do navegador. Tente usar um servidor local ou verifique o console.");
-            }
-        }
-
         fileInput.addEventListener('change', (event) => { handleFile(event.target.files[0]); });
 
         function handleFile(file, isReload = false) {
@@ -2803,50 +2433,8 @@
             statusDiv.innerHTML = '<p class="text-info">Carregando planilha...</p>';
             processarBtn.disabled = true;
             const reader = new FileReader();
-            
             reader.onload = (e) => {
                 try {
-                    const fileName = file.name.toLowerCase();
-                    
-                    // --- LÓGICA PARA ARQUIVOS .DOCX ---
-                    if (fileName.endsWith('.docx')) {
-                        mammoth.extractRawText({arrayBuffer: e.target.result})
-                            .then(function(result){
-                                const text = result.value;
-                                planilhaData = parseDocxText(text);
-                                
-                                // Salva no DB e finaliza
-                                savePlanilhaToDb(planilhaData);
-                                finalizarCarregamento(file, isReload);
-                            })
-                            .catch(function(err){
-                                throw new Error("Erro ao ler arquivo Word: " + err.message);
-                            });
-                        return; // Sai da função para esperar a promise do mammoth
-                    }
-
-                    // --- LÓGICA PARA ARQUIVOS .PDF ---
-                    if (fileName.endsWith('.pdf')) {
-                        console.log("Arquivo PDF detectado. Iniciando extração...");
-                        const typedarray = new Uint8Array(e.target.result);
-                        extractTextFromPdf(typedarray)
-                            .then(function(text){
-                                console.log("Extração de texto concluída. Tamanho:", text.length);
-                                planilhaData = parseDocxText(text); // Reutiliza a lógica robusta do DOCX
-                                console.log("Dados processados:", planilhaData.length, "pedidos encontrados.");
-                                
-                                // Salva no DB e finaliza
-                                savePlanilhaToDb(planilhaData);
-                                finalizarCarregamento(file, isReload);
-                            })
-                            .catch(function(err){
-                                statusDiv.innerHTML = `<p class="text-danger"><strong>Erro ao ler PDF:</strong> ${err.message}</p>`;
-                                console.error(err);
-                            });
-                        return;
-                    }
-
-                    // --- LÓGICA PARA EXCEL (Código Original) ---
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array', cellDates:true});
                     const firstSheetName = workbook.SheetNames[0];
@@ -2895,69 +2483,27 @@
                         }); 
                         pedido.Quilos_Saldo = parseFloat(String(pedido.Quilos_Saldo).replace(',', '.')) || 0;
                         pedido.Cubagem = parseFloat(String(pedido.Cubagem).replace(',', '.')) || 0;
-
-                        // --- REPLICAÇÃO DAS REGRAS DE NEGÓCIO DO DOCX PARA O EXCEL ---
-                        // Garante que o comportamento de filtragem seja idêntico
-                        let cf = String(pedido.CF || '').trim();
-                        let col5 = String(pedido.Coluna5 || '').trim();
-                        const rota = String(pedido.Cod_Rota || '').trim();
-                        
-                        // Helper para encontrar valores de colunas que podem variar (TAB, Tab, TP, Tp)
-                        const findVal = (k) => { const key = Object.keys(pedido).find(pk => pk.toUpperCase() === k); return key ? String(pedido[key] || '').trim() : ''; };
-                        const tab = findVal('TAB');
-                        const tp = findVal('TP');
-
-                        // 1. Regra de Varejo baseada no TP
-                        const varejoTPs = new Set(['08', '8', '91', '210', '203', '209']);
-                        if (varejoTPs.has(tp)) {
-                            if (isNumeric(cf)) cf = `VAREJO-${cf}`;
-                        }
-
-                        // 2. Regra TAB 15 (Carga Fechada)
-                        if ((tab === '15' || tab === '015') && !isNumeric(cf)) {
-                            cf = '151515'; 
-                            col5 = "CARGA FECHADA (TAB 15) " + col5;
-                        }
-
-                        // 3. Regra TAB 29/219 (Condor)
-                        if (tab === '29' || tab === '029' || tab === '219') {
-                            col5 = "CONDOR (TRUCK) " + col5;
-                        }
-
-                        // 4. Regra TAB 23 (Farelo)
-                        if (tab === '23' || tab === '023' || rota === '1122') {
-                            col5 = "PEDIDOS FARELO " + col5;
-                        }
-
-                        // 5. Regra TAB 500 e Rotas de Transferência
-                        if (tab === '500' || ['2005', '2007', '3101'].includes(rota)) {
-                            col5 = "TABELA TRANSFER " + col5;
-                        }
-
-                        // 6. Regra Toco baseada no TP
-                        const tocoTPs = new Set(['14', '014', '214', '274', '284', '294']);
-                        const coluna4 = findVal('COLUNA4');
-                        if ((tocoTPs.has(tp) || tocoTPs.has(coluna4)) && isNumeric(cf)) {
-                            if (!col5.toUpperCase().includes("TOCO")) {
-                                col5 = "TOCO " + col5;
-                            }
-                        }
-
-                        pedido.CF = cf;
-                        pedido.Coluna5 = col5;
-
                         return pedido; 
                     });
                     planilhaData.forEach(checkAgendamento);
 
-                    // Salva no DB e finaliza
+                    // NOVO: Salva os dados da planilha no IndexedDB para persistência
                     savePlanilhaToDb(planilhaData).then(() => {
                         console.log("Dados da planilha salvos no IndexedDB com sucesso.");
                     }).catch(err => {
                         console.error(err);
                     });
 
-                    finalizarCarregamento(file, isReload);
+                    statusDiv.innerHTML = `<p class="text-success">Planilha "${file.name}" carregada.</p>`;
+                    if (isReload) statusDiv.innerHTML = `<p class="text-success">Planilha "${file.name}" restaurada.</p>`;
+                    processarBtn.disabled = false;
+                    
+                    popularFiltrosDeRota();
+                    if (isReload) return; // Se for recarregamento, não processa automaticamente.
+
+                    if (document.getElementById('autoProcessCheckbox').checked) {
+                        processar();
+                    }
 
                 } catch (error) {
                     statusDiv.innerHTML = `<p class="text-danger"><strong>Erro:</strong> ${error.message}</p>`;
@@ -2965,19 +2511,6 @@
                 }
             };
             reader.readAsArrayBuffer(file);
-        }
-
-        function finalizarCarregamento(file, isReload) {
-            statusDiv.innerHTML = `<p class="text-success">Arquivo "${file.name}" carregado.</p>`;
-            if (isReload) statusDiv.innerHTML = `<p class="text-success">Arquivo "${file.name}" restaurado.</p>`;
-            processarBtn.disabled = false;
-            
-            popularFiltrosDeRota();
-            if (isReload) return;
-
-            if (document.getElementById('autoProcessCheckbox').checked) {
-                processar();
-            }
         }
         
         function popularFiltrosDeRota() {
@@ -3080,7 +2613,6 @@
                     'Bloqueado Manualmente': { list: pedidosManualmenteBloqueadosAtuais, viewId: 'pedidos-bloqueados-view', cardId: 'card-bloqueados', accordionId: 'collapseBloqueados' },
                     'Pedidos da Rota 1 para Alteração': { list: rota1SemCarga, viewId: 'alteracao-rota-view', cardId: 'resultado-rota1' },                    'Bloqueados Varejo (Regra)': { list: pedidosComCFNumericoIsolado, viewId: 'workspace-view', tabId: 'bloqueados-regra-tab-pane', accordionId: `collapseCF-${pedido.Cod_Rota}` },
                     'Outros Pedidos (Moinho)': { list: pedidosMoinho, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseMoinho' },
-                    'Outros Pedidos (Farelo)': { list: pedidosFarelo, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseFarelo' },
                     'Outros Pedidos (Funcionários)': { list: pedidosFuncionarios, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseFuncionarios' },
                     'Outros Pedidos (Transferência)': { list: pedidosTransferencias, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseTransferencias' },
                     'Outros Pedidos (Exportação)': { list: pedidosExportacao, viewId: 'workspace-view', tabId: 'outros-pedidos-tab-pane', accordionId: 'collapseExportacao' },
@@ -3094,44 +2626,25 @@
                 }
 
                 // 5. Verificar Cargas Fechadas (PR e Resto BR)
-                // --- CORREÇÃO: Lógica de busca para Cargas Fechadas Resto BR (incluindo TBL ESPECIAL) ---
-                let gruposRestBr = { ...gruposPorCFGlobais };
-                if (pedidosCarretaSemCF && pedidosCarretaSemCF.length > 0) {
-                    gruposRestBr['TBL ESPECIAL SEM CF'] = { pedidos: pedidosCarretaSemCF };
-                }
-                
-                // Ordenação idêntica à displayCargasFechadasRestBrasil
-                const specialKeysOrderRest = ['TBL ESPECIAL SEM CF'];
-                const sortedKeysRest = Object.keys(gruposRestBr).sort((a, b) => {
-                    const aIsSpecial = specialKeysOrderRest.includes(a);
-                    const bIsSpecial = specialKeysOrderRest.includes(b);
-                    if (aIsSpecial && bIsSpecial) return specialKeysOrderRest.indexOf(a) - specialKeysOrderRest.indexOf(b);
-                    if (aIsSpecial) return -1; if (bIsSpecial) return 1;
-                    return a.localeCompare(b, undefined, {numeric: true});
-                });
-
-                for (const cf of sortedKeysRest) {
-                    if (gruposRestBr[cf].pedidos.some(p => String(p.Num_Pedido) === numPedido)) {
+                for (const cf in gruposPorCFGlobais) {
+                    if (gruposPorCFGlobais[cf].pedidos.some(p => String(p.Num_Pedido) === numPedido)) {
                         local = `Carga Resto BR (${cf})`;
                         viewId = 'workspace-view';
                         tabId = 'cargas-fechadas-rest-br-tab-pane';
-                        const index = sortedKeysRest.indexOf(cf);
+                        const sortedKeys = Object.keys(gruposPorCFGlobais).sort((a,b) => a.localeCompare(b, undefined, {numeric: true}));
+                        const index = sortedKeys.indexOf(cf);
                         if (index !== -1) accordionId = `collapseCargasFechadasRestBr-${index}`;
                         return { pedido, local, viewId, tabId, accordionId, cardId };
                     }
                 }
-
-                // --- CORREÇÃO: Lógica de busca para Cargas Fechadas PR ---
-                const gruposPR = cargasFechadasPR.reduce((acc, p) => { const coluna5 = String(p.Coluna5 || '').toUpperCase(); let key; if (coluna5.includes('CONDOR (TRUCK)') || coluna5.includes('CONDOR TOD TRUC')) { key = 'Condor Truck'; } else if (coluna5.includes('TBL ESPECIAL') && !isNumeric(p.CF)) { key = 'TBL ESPECIAL SEM CF'; } else { key = `CF: ${p.CF}`; } if (!acc[key]) acc[key] = []; acc[key].push(p); return acc; }, {});
-                
-                const sortedKeysPR = Object.keys(gruposPR).sort((a, b) => { if (a === 'Condor Truck') return -1; if (b === 'Condor Truck') return 1; if (a === 'TBL ESPECIAL SEM CF') return -1; if (b === 'TBL ESPECIAL SEM CF') return 1; return a.localeCompare(b, undefined, { numeric: true }); });
-
-                for (const key of sortedKeysPR) {
+                const gruposPR = cargasFechadasPR.reduce((acc, p) => { const key = (String(p.Coluna5 || '').toUpperCase().includes('CONDOR')) ? 'Condor Truck' : `CF: ${p.CF}`; if (!acc[key]) acc[key] = []; acc[key].push(p); return acc; }, {});
+                for (const key in gruposPR) {
                     if (gruposPR[key].some(p => String(p.Num_Pedido) === numPedido)) {
                         local = `Carga Fechada PR (${key})`;
                         viewId = 'workspace-view';
                         tabId = 'cargas-fechadas-pr-tab-pane';
-                        const index = sortedKeysPR.indexOf(key);
+                        const sortedKeys = Object.keys(gruposPR).sort((a, b) => (a === 'Condor Truck') ? -1 : (b === 'Condor Truck') ? 1 : a.localeCompare(b, undefined, { numeric: true }));
+                        const index = sortedKeys.indexOf(key);
                         if (index !== -1) accordionId = `collapseCargasFechadasPR-${index}`;
                         return { pedido, local, viewId, tabId, accordionId, cardId };
                     }
@@ -3546,7 +3059,6 @@
             pedidosExportacao = [];
             cargasFechadasPR = [];
             pedidosMoinho = [];
-        pedidosFarelo = [];
             pedidosMarcaPropria = [];
             pedidosManualmenteBloqueadosAtuais = [];
             tocoPedidoIds.clear();
@@ -3570,7 +3082,6 @@
                 const resultadoTransferenciasDiv = document.getElementById('resultado-transferencias');
                 const resultadoExportacaoDiv = document.getElementById('resultado-exportacao');
                 const resultadoCargasFechadasPRDiv = document.getElementById('resultado-cargas-fechadas-pr');
-                const resultadoFareloDiv = document.getElementById('resultado-farelo');
                 const resultadoMoinhoDiv = document.getElementById('resultado-moinho');
                 const resultadoMarcaPropriaDiv = document.getElementById('resultado-marca-propria');
                 const resultadoCargasFechadasRestBrDiv = document.getElementById('resultado-cargas-fechadas-rest-br');
@@ -3595,7 +3106,7 @@
                     
                     [
                         'resultado-fiorino-geral', 'resultado-van-geral', 'resultado-34-geral', 'resultado-geral', 
-                        'resultado-toco', 'resultado-cf-accordion-container', 'resultado-cf-numerico', 'resultado-farelo',
+                        'resultado-toco', 'resultado-cf-accordion-container', 'resultado-cf-numerico', 
                         'resultado-rota1', 'resultado-bloqueados', 'resultado-cargas-fechadas-pr', 'resultado-moinho', 'resultado-marca-propria',
                         'resultado-cargas-fechadas-rest-br', 'resultado-funcionarios', 'resultado-transferencias', 'resultado-exportacao'
                     ].forEach(id => {
@@ -3609,9 +3120,6 @@
                         if(coluna5.includes('TBL FUNCIONARIO')) {
                             pedidosFuncionarios.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (coluna5.includes('PEDIDOS FARELO')) {
-                            pedidosFarelo.push(p);
-                            pedidosExcluidos.add(p.Num_Pedido);
                         } else if (coluna5.includes('TABELA TRANSFER') || coluna5.includes('TRANSF. TODESCH') || coluna5.includes('INSTITUCIONAL')) {
                             pedidosTransferencias.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
@@ -3624,20 +3132,17 @@
                         } else if (coluna5.includes('MARCA PROPRIA')) {
                             pedidosMarcaPropria.push(p);
                             pedidosExcluidos.add(p.Num_Pedido);
-                        } else if (['2005', '2007', '3101'].includes(String(p.Cod_Rota).trim())) {
-                            pedidosTransferencias.push(p);
-                            pedidosExcluidos.add(p.Num_Pedido);
                         }
                     });
                     
-                    const hasFarelo = displayPedidosFarelo(resultadoFareloDiv, pedidosFarelo);
                     const hasMoinho = displayPedidosMoinho(resultadoMoinhoDiv, pedidosMoinho); // prettier-ignore
                     const hasFuncionarios = displayPedidosFuncionarios(resultadoFuncionariosDiv, pedidosFuncionarios); // prettier-ignore
                     const hasTransferencias = displayPedidosTransferencias(resultadoTransferenciasDiv, pedidosTransferencias); // prettier-ignore
                     const hasExportacao = displayPedidosExportacao(resultadoExportacaoDiv, pedidosExportacao); // prettier-ignore
                     const hasMarcaPropria = displayPedidosMarcaPropria(resultadoMarcaPropriaDiv, pedidosMarcaPropria); // prettier-ignore
 
-                    if (!hasFarelo && !hasMoinho && !hasFuncionarios && !hasTransferencias && !hasExportacao && !hasMarcaPropria) {
+                    // Se nenhuma das categorias especiais tiver pedidos, mostra um estado vazio unificado.
+                    if (!hasMoinho && !hasFuncionarios && !hasTransferencias && !hasExportacao && !hasMarcaPropria) {
                         const outrosPedidosTab = document.getElementById('outros-pedidos-tab-pane');
                         if (outrosPedidosTab) {
                             outrosPedidosTab.innerHTML = '<div class="empty-state"><i class="bi bi-collection"></i><p>Nenhum pedido para as categorias especiais foi encontrado.</p></div>';
@@ -3665,10 +3170,13 @@
                     rota1SemCarga = pedidosAindaNaoProcessados.filter(p => {
                         const codRota = String(p.Cod_Rota || '').trim();
                         const cfValue = p.CF;
+                        const coluna5Value = String(p.Coluna5 || '').trim().toUpperCase();
 
                         if (codRota !== '1') { return false; }
                         if (isNumeric(cfValue)) { return false; }
-                        return true;
+                        
+                        const filtroDescricoes = ['TBL 08', 'TBL TODESCHINI', 'PROMO BOLINHO'];
+                        return filtroDescricoes.some(termo => coluna5Value.includes(termo));
                     });
 
                     const rota1PedidoIds = new Set(rota1SemCarga.map(p => p.Num_Pedido));
@@ -3679,10 +3187,45 @@
 
                     let pedidosParaProcessamentoGeral = pedidosAindaNaoProcessados;
 
+                    // CORRIGIDO: Separa Cargas Toco por peso (>= 4500 kg por cliente) APENAS de pedidos de VAREJO.
+                    // Um pedido de varejo é aquele que NÃO tem um CF numérico.
+                    const pedidosDeVarejo = pedidosParaProcessamentoGeral.filter(p => !isNumeric(p.CF));
+                    const outrosPedidos = pedidosParaProcessamentoGeral.filter(p => isNumeric(p.CF));
+
+                    const gruposDeClientesVarejo = pedidosDeVarejo.reduce((acc, p) => {
+                        const clienteId = normalizeClientId(p.Cliente);
+                        if (!acc[clienteId]) {
+                            // Inicializa o grupo para este cliente
+                            acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0 };
+                        }
+                        acc[clienteId].pedidos.push(p);
+                        acc[clienteId].totalKg += p.Quilos_Saldo;
+                        acc[clienteId].totalCubagem += p.Cubagem;
+                        return acc;
+                    }, {});
+
                     gruposToco = {};
                     tocoPedidoIds = new Set();
 
-                    // Adiciona os grupos toco APENAS baseados na flag TOCO vinda da regra do TP
+                    Object.entries(gruposDeClientesVarejo).forEach(([clienteId, grupo]) => {
+                        // CONDIÇÃO ATUALIZADA: Verifica se o grupo de cliente tem o peso necessário E se NENHUM de seus pedidos
+                        // contém as palavras-chave de exclusão na Coluna5.
+                        const deveSerExcluido = grupo.pedidos.some(p => {
+                            const coluna5Upper = String(p.Coluna5 || '').toUpperCase();
+                            return coluna5Upper.includes('TBL ESP CARRETA') || coluna5Upper.includes('TRUCK') || coluna5Upper.includes('CARRETA');
+                        });
+
+                        if (grupo.totalKg >= 4500 && !deveSerExcluido) {
+                            const cf = grupo.pedidos[0]?.CF || `CLI-${clienteId}`; // Usa CF ou um ID de cliente
+                            gruposToco[cf] = grupo;
+                            grupo.pedidos.forEach(p => tocoPedidoIds.add(p.Num_Pedido));
+                        }
+                    });
+
+                    // Remonta a lista de processamento geral com os pedidos que não viraram Toco por peso.
+                    pedidosParaProcessamentoGeral = [...outrosPedidos, ...pedidosDeVarejo.filter(p => !tocoPedidoIds.has(p.Num_Pedido))];
+                    
+                    // Adiciona os grupos toco antigos (baseados em flag) se existirem
                     const pedidosTocoPorFlag = pedidosParaProcessamentoGeral.filter(p => (p.Coluna4 && String(p.Coluna4).toUpperCase().includes('TOCO')) || (p.Coluna5 && String(p.Coluna5).toUpperCase().includes('TOCO')));
                     const pedidosTocoPorFlagIds = new Set(pedidosTocoPorFlag.map(p => String(p.Num_Pedido)));
                     
@@ -3693,13 +3236,18 @@
                         acc[cf].totalKg += p.Quilos_Saldo;
                         acc[cf].totalCubagem += p.Cubagem;
                         return acc;
-                    }, {}); // Inicia o reduce vazio, ignorando lógica antiga de peso
-
-                    // Adiciona os IDs dos pedidos Toco ao conjunto de exclusão
-                    pedidosTocoPorFlagIds.forEach(id => tocoPedidoIds.add(id));
+                    }, gruposToco); // Inicia o reduce com os gruposToco já existentes (do peso >= 4500kg)
 
                     pedidosParaProcessamentoGeral = pedidosParaProcessamentoGeral.filter(p => !pedidosTocoPorFlagIds.has(String(p.Num_Pedido)));
                     displayToco(resultadoTocoDiv, gruposToco);
+
+                    // Identifica clientes com qualquer tipo de bloqueio na planilha
+                    const clientesComBloqueio = new Set();
+                    pedidosParaProcessamentoGeral.forEach(p => {
+                        if (String(p['BLOQ.']).trim()) { 
+                            clientesComBloqueio.add(normalizeClientId(p.Cliente));
+                        }
+                    });
 
                     // Separa Cargas Fechadas PR (Condor e CFs numéricos do PR)
                     cargasFechadasPR = pedidosParaProcessamentoGeral.filter(p => {
@@ -3734,7 +3282,7 @@
                             gruposPorCFGlobais[cf].totalKg += p.Quilos_Saldo;
                             gruposPorCFGlobais[cf].totalCubagem += p.Cubagem;
                         } else {
-                            if (String(p['BLOQ.']).trim().length > 0) { // Pedido bloqueado VAREJO -> Bloqueados Varejo
+                            if (clientesComBloqueio.has(normalizeClientId(p.Cliente))) { // Cliente com bloqueio -> Bloqueados por Regra
                                 pedidosComCFNumericoIsolado.push(p);
                             } else { // O que sobra é Varejo
                                 pedidosParaProcessamentoVarejo.push(p);
@@ -3839,28 +3387,45 @@
             const pedidosToco = Object.values(gruposToco).flatMap(g => g.pedidos);
             const todosPedidosParaAnalise = [...pedidosGeraisAtuais, ...pedidosComCFNumericoIsolado, ...pedidosManualmenteBloqueadosAtuais, ...rota1SemCarga, ...pedidosToco];
             const pedidosAPredatar = todosPedidosParaAnalise.filter(p => {
-                const bloqueio = String(p['BLOQ.'] || '').trim().toUpperCase(); return isOverdue(p.Predat) && (bloqueio === '' || bloqueio === 'C');
+                const bloqueio = String(p['BLOQ.'] || '').trim().toUpperCase();
+                return isOverdue(p.Predat) && (bloqueio === '' || bloqueio === 'C');
             });
 
             // 2. Separa os grupos de Toco em disponíveis e bloqueados
-            const { pesoTocoDisponivel, pedidosTocoDisponiveis, pesoTocoBloqueado, pedidosTocoBloqueados } = Object.values(gruposToco).reduce((acc, grupo) => { const isGrupoBloqueado = grupo.pedidos.some(p => isPedidoBloqueado(p)); if (isGrupoBloqueado) { acc.pesoTocoBloqueado += grupo.totalKg; acc.pedidosTocoBloqueados += grupo.pedidos.length; } else { acc.pesoTocoDisponivel += grupo.totalKg; acc.pedidosTocoDisponiveis += grupo.pedidos.length; } return acc; }, { pesoTocoDisponivel: 0, pedidosTocoDisponiveis: 0, pesoTocoBloqueado: 0, pedidosTocoBloqueados: 0 });
+            const clientesComBloqueio = new Set(pedidosComCFNumericoIsolado.map(p => normalizeClientId(p.Cliente)));
+            let pesoTocoDisponivel = 0;
+            let pedidosTocoDisponiveis = 0;
+            let pesoTocoBloqueado = 0;
+            let pedidosTocoBloqueados = 0;
+            Object.values(gruposToco).forEach(grupo => {
+                // Um grupo Toco é considerado bloqueado se QUALQUER pedido dentro dele atender a uma das condições de bloqueio.
+                const isGrupoBloqueado = grupo.pedidos.some(p => {
+                    const clienteId = normalizeClientId(p.Cliente);
+                    const bloqueioPlanilha = String(p['BLOQ.'] || '').trim().toUpperCase();
+                    
+                    return (clienteId && clientesComBloqueio.has(clienteId)) || // Cliente tem outro pedido bloqueado por regra
+                           (bloqueioPlanilha === 'C' || bloqueioPlanilha === 'V') || // Bloqueio direto na planilha
+                           pedidosBloqueados.has(String(p.Num_Pedido)); // Bloqueado manualmente
+                });
+
+                if (isGrupoBloqueado) {
+                    pesoTocoBloqueado += grupo.totalKg;
+                    pedidosTocoBloqueados += grupo.pedidos.length;
+                } else {
+                    pesoTocoDisponivel += grupo.totalKg;
+                    pedidosTocoDisponiveis += grupo.pedidos.length;
+                }
+            });
+
             // 3. Consolida os dados para os novos KPIs
             const kpis = {
                 varejoDisponivel: {
-                    // CORREÇÃO: A lógica agora soma os pedidos de varejo gerais (Fiorino, Van, 3/4)
-                    // com os pedidos dos grupos de Toco que estão totalmente desbloqueados.
-                    pedidos: pedidosGeraisAtuais.length + pedidosTocoDisponiveis, // Usa o valor já calculado
-                    peso: pedidosGeraisAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + pesoTocoDisponivel // Usa o valor já calculado
+                    pedidos: pedidosGeraisAtuais.length + pedidosTocoDisponiveis,
+                    peso: pedidosGeraisAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + pesoTocoDisponivel
                 },
                 varejoBloqueado: {
-                    // CORREÇÃO: A lógica agora soma os bloqueios de varejo com os pedidos
-                    // dos grupos de Toco que contêm pelo menos um pedido bloqueado.
-                    pedidos: pedidosComCFNumericoIsolado.length + 
-                             pedidosManualmenteBloqueadosAtuais.length + 
-                             pedidosTocoBloqueados, // Usa o valor já calculado
-                    peso: pedidosComCFNumericoIsolado.reduce((s, p) => s + p.Quilos_Saldo, 0) + 
-                          pedidosManualmenteBloqueadosAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + 
-                          pesoTocoBloqueado // Usa o valor já calculado
+                    pedidos: pedidosComCFNumericoIsolado.length + pedidosManualmenteBloqueadosAtuais.length + pedidosTocoBloqueados,
+                    peso: pedidosComCFNumericoIsolado.reduce((s, p) => s + p.Quilos_Saldo, 0) + pedidosManualmenteBloqueadosAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + pesoTocoBloqueado
                 },
                 cargasFechadasPR: {
                     pedidos: cargasFechadasPR.length,
@@ -4410,31 +3975,13 @@
         function imprimirTocoIndividual(cf) {
             if (!gruposToco[cf]) { showToast(`Nenhuma carga Toco encontrada para o CF: ${cf}`, 'warning'); return; }
             const grupo = gruposToco[cf];
-
-            // VERIFICAÇÃO: Impede a impressão e montagem se houver qualquer pedido bloqueado no grupo.
-            const hasBlockedOrder = grupo.pedidos.some(p => isPedidoBloqueado(p));
-            if (hasBlockedOrder) {
-                showToast(`Não é possível montar a carga Toco (CF: ${cf}) pois ela contém pedidos bloqueados.`, 'danger');
-                return;
-            }
-
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const printWindow = createPrintWindow('Imprimir Carga Toco CF: ' + cf);
-            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³</h3>` + createTable(grupo.pedidos, null, `toco-${cf}`); // prettier-ignore
-            printWindow.document.body.innerHTML = contentToPrint;
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.close();
-            }, 500);
-
-            // Remove o grupo Toco da lista de disponíveis e atualiza a UI
-            delete gruposToco[cf];
-            renderAllUI();
-            showToast(`Carga Toco (CF: ${cf}) impressa e considerada montada.`, 'success');
+            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³</h3>` + createTable(grupo.pedidos, null, `toco-${cf}`);
+            printWindow.document.body.innerHTML = contentToPrint; printWindow.document.close(); printWindow.focus(); setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
         }
+
         function imprimirCargaManualIndividual(loadId) { const load = activeLoads[loadId]; const cardToPrint = document.getElementById(loadId); if (!load || !cardToPrint) { showToast(`Erro: Carga com ID ${loadId} não encontrada.`, 'error'); return; }
             const cardClone = cardToPrint.cloneNode(true);
             const observationText = load?.observation || '';
@@ -4770,11 +4317,9 @@
             return { refinedLoads: loads, remainingLeftovers: leftovers };
         }
         
-        async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement, isBatchMode = false) {
+        async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
             // NOVO: Remove mensagens de sucesso de rotas anteriores para manter a interface limpa.
-            if (!isBatchMode) {
-                document.querySelectorAll('.route-success-message').forEach(el => el.remove());
-            }
+            document.querySelectorAll('.route-success-message').forEach(el => el.remove());
 
             // NOVO: Se o painel de carga manual estiver aberto, fecha-o antes de processar uma nova rota.
             if (document.getElementById('manual-load-builder-wrapper')) cancelManualLoad();
@@ -4788,13 +4333,7 @@
             // CORREÇÃO: Limpa a área de resultado antes de processar uma nova rota.
             // Isso garante que apenas as cargas da rota atual sejam exibidas.
             const resultadoDiv = document.getElementById(divId);
-            if (!isBatchMode) {
-                resultadoDiv.innerHTML = '';
-            } else {
-                // Se for modo batch, remove apenas o estado vazio se existir para adicionar as novas cargas
-                const emptyState = resultadoDiv.querySelector('.empty-state');
-                if (emptyState) emptyState.remove();
-            }
+            resultadoDiv.innerHTML = '';
             // Restaura o feedback visual no botão da rota processada
 
             if (planilhaData.length === 0) {
@@ -4814,10 +4353,9 @@
                 acc[clienteId].totalCubagem += pedido.Cubagem;
                 return acc;
             }, {});
-            let packableGroups = Object.values(clientGroupsMap);
+            const packableGroups = Object.values(clientGroupsMap);
 
             // NOVO: Calcula a data de pedido mais antiga para cada grupo de cliente.
-            // (Movido para antes da lógica da rota 11711 para garantir que os grupos excluídos também tenham a data calculada para a cascata)
             packableGroups.forEach(group => {
                 group.oldestDate = group.pedidos.reduce((oldest, p) => {
                     const pDate = p.Dat_Ped;
@@ -4830,37 +4368,6 @@
                     return oldest;
                 }, null);
             });
-
-            // --- LÓGICA ESPECIAL PARA ROTA 11711 (Priorizar Fiorino para Cidades Específicas) ---
-            let groupsExcludedFromFiorino = [];
-            if (routes.includes('11711')) {
-                const cidadesPermitidasFiorino = new Set([
-                    'MANDAGUACU', 'SAO JORGE DO IVAI', 'TAMBOARA', 'GUAIRACA', 
-                    'PARANAVAI', 'NOVA ESPERANCA', 'FLORAI', 
-                    'PRESIDENTE CASTELO BRANCO'
-                ]);
-                const normalizeCity = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
-
-                const fiorinoGroups = [];
-                const otherGroups = [];
-
-                packableGroups.forEach(group => {
-                    const city = normalizeCity(String(group.pedidos[0].Cidade || '').split(',')[0]);
-                    if (cidadesPermitidasFiorino.has(city)) {
-                        fiorinoGroups.push(group);
-                    } else {
-                        otherGroups.push(group);
-                    }
-                });
-
-                if (otherGroups.length > 0) {
-                    packableGroups = fiorinoGroups;
-                    groupsExcludedFromFiorino = otherGroups;
-                    showToast(`Rota 11711: Separando ${otherGroups.length} clientes para Van (cidades mistas).`, 'info');
-                }
-                // Garante que a primeira tentativa seja Fiorino apenas com as cidades permitidas
-                vehicleType = 'fiorino';
-            }
 
             packableGroups.forEach(group => {
                 group.Quilos_Saldo = group.totalKg;
@@ -4940,11 +4447,6 @@
             
             // Tenta encaixar sobras em cargas existentes que ainda têm espaço.
             const { refinedLoads: initialRefinedLoads, remainingLeftovers: initialLeftovers } = refineLoadsWithSimpleFit(optimizationResult.loads, optimizationResult.leftovers);
-
-            // Reintegra os grupos excluídos da otimização inicial (Rota 11711) para serem processados na cascata (Van)
-            if (groupsExcludedFromFiorino.length > 0) {
-                initialLeftovers.push(...groupsExcludedFromFiorino);
-            }
 
             // ========================================================================
             // INÍCIO DA NOVA LÓGICA DE CASCATA (Fiorino -> Van -> 3/4 -> Toco)
@@ -5027,11 +4529,9 @@
                     return;
                 }
                 const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)) || pedidosRecall.includes(String(p.Num_Pedido)));
-                // CORREÇÃO: A prioridade não deve mais forçar a criação de uma carga abaixo do peso mínimo.
-                const allowPriorityOverride = false; 
+                const allowPriorityOverride = true; // Permite para todos os veículos
                 
-                // A condição agora é estritamente baseada no peso mínimo.
-                if (load.totalKg >= config.minKg) {
+                if (load.totalKg >= config.minKg || (hasPriority && allowPriorityOverride)) {
                     finalValidLoads.push(load);
                 } else {
                     const clientGroupsInFailedLoad = Object.values(load.pedidos.reduce((acc, p) => {
@@ -5091,11 +4591,7 @@
                     html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType] || vehicleInfo['van']);
                 });
             }            
-            if (!isBatchMode) {
-                resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
-            } else {
-                resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${html}</div>`);
-            }
+            resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;            
             
             // CORREÇÃO: As chamadas de atualização da UI foram movidas para o final,
             // e a chamada para `handlePostProcessingUI` foi ajustada para lidar com as sobras
@@ -5451,13 +4947,6 @@
             }
         }
 
-        function updateLoadRomaneios(loadId, value) {
-            if (activeLoads[loadId]) {
-                activeLoads[loadId].romaneios = value;
-                saveStateToLocalStorage();
-            }
-        }
-
         function renderLoadCard(load, vehicleType, vInfo) {
             load.pedidos.sort((a, b) => {
                 const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
@@ -5471,22 +4960,6 @@
             const totalCubagemFormatado = (load.totalCubagem || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const isPriorityLoad = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)) || pedidosRecall.includes(String(p.Num_Pedido)));
             
-            // NOVO: Cálculo de dias em atraso (Predat)
-            let maxOverdue = 0;
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            load.pedidos.forEach(p => {
-                if(p.Predat) {
-                    const pDate = p.Predat instanceof Date ? p.Predat : new Date(p.Predat);
-                    if(!isNaN(pDate) && pDate < today) {
-                        const diffTime = Math.abs(today - pDate);
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                        if(diffDays > maxOverdue) maxOverdue = diffDays;
-                    }
-                }
-            });
-            const overdueBadge = maxOverdue > 0 ? `<span class="badge bg-danger ms-2" title="Pedido mais antigo com ${maxOverdue} dias de atraso"><i class="bi bi-alarm-fill me-1"></i>${maxOverdue} dias atraso</span>` : '';
-
             // NOVO: Adiciona um placeholder para a distância da rota
             const distanciaHtml = `<span id="distancia-${load.id}" class="ms-3"></span>`;
 
@@ -5557,24 +5030,11 @@
                             <div>
                                 <i class="bi ${vInfo.icon} me-2"></i>${vInfo.name} #${load.numero}${spDescription} - 
                                 <i class="bi bi-database me-1"></i>Total: ${totalKgFormatado} kg / 
-                                <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${distanciaHtml} ${priorityBadge} ${overdueBadge} ${hardLimitBadge}
+                                <i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³ ${distanciaHtml} ${priorityBadge} ${hardLimitBadge}
                             </div>
                             <div class="ms-auto no-print d-flex align-items-center">${vehicleSelectDropdown}${cardHeaderActions}</div>
                         </div>
-                        <div class="card-body">
-                            ${cardBodyActions}${progressBar}
-                            <div class="mt-3 no-print" id="obs-container-${load.id}">${initialObservationHtml}</div>
-                            ${observationForPrint}
-                            ${createTable(load.pedidos, null, load.id)}
-                            <div class="mt-3 border-top pt-2">
-                                <label class="form-label small fw-bold mb-1"><i class="bi bi-upc-scan me-1"></i>Romaneios:</label>
-                                <input type="text" class="form-control form-control-sm" 
-                                       placeholder="Ex: 240125, 240126..." 
-                                       value="${load.romaneios || ''}" 
-                                       onchange="updateLoadRomaneios('${load.id}', this.value)"
-                                       style="border: 1px solid var(--dark-border); background-color: var(--dark-surface-secondary); color: var(--dark-text-primary);">
-                            </div>
-                        </div>
+                        <div class="card-body">${cardBodyActions}${progressBar}<div class="mt-3 no-print" id="obs-container-${load.id}">${initialObservationHtml}</div>${observationForPrint}${createTable(load.pedidos, null, load.id)}</div>
                     </div>`;
         }
         
@@ -6073,13 +5533,7 @@
                 const progressBar = `<div class="progress mb-3" role="progressbar" style="height: 10px;"><div class="progress-bar ${progressColor}" style="width: ${Math.min(pesoPercentual, 100)}%"></div></div>`;
                 const headerColorClass = isOverloaded ? 'bg-danger' : '';
 
-                // Verifica se há pedidos bloqueados neste grupo
-                const hasBlocked = grupo.pedidos.some(p => String(p['BLOQ.'] || '').trim().length > 0);
-                const blockedBadge = hasBlocked 
-                    ? '<span class="badge bg-danger ms-2"><i class="bi bi-slash-circle"></i> Contém Bloqueados</span>' 
-                    : '';
-
-            accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length}</span> ${weightBadge} ${blockedBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionTocoMesa"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}', event)"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>${progressBar}${createTable(pedidos, null, loadId)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length}</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionTocoMesa"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>${progressBar}${createTable(pedidos, null, loadId)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -6131,14 +5585,7 @@
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].join(', ');
-                
-                // Verifica se há pedidos bloqueados neste grupo
-                const hasBlocked = grupo.pedidos.some(p => String(p['BLOQ.']).trim().length > 0);
-                const blockedBadge = hasBlocked 
-                    ? '<span class="badge bg-danger ms-2"><i class="bi bi-slash-circle"></i> Contém Bloqueados</span>' 
-                    : '';
-                const headerClass = hasBlocked ? 'bg-danger-subtle text-danger-emphasis' : '';
-                const collapseId = `collapseCF-Mesa-${index}`; // ID único
+                const collapseId = `collapseCF-Mesa-${index}`;
 
                 accordionHtml += `
                     <div class="accordion-item">
@@ -6148,7 +5595,6 @@
                                 <span class="badge bg-secondary ms-2" title="Rotas">${rotas || 'N/A'}</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³</span>
-                                ${blockedBadge}
                             </button>
                         </h2>
                         <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCargasPorCF">
@@ -6208,12 +5654,6 @@
                 const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].filter(Boolean).join(', ');
                 const collapseId = `collapseCargasFechadasPR-${index}`;
                 const printAreaId = `print-area-pr-${index}`; // ID único para a área de impressão
-                
-                // Verifica se há pedidos bloqueados neste grupo
-                const hasBlocked = grupo.pedidos.some(p => String(p['BLOQ.']).trim().length > 0);
-                const blockedBadge = hasBlocked 
-                    ? '<span class="badge bg-danger ms-2"><i class="bi bi-slash-circle"></i> Contém Bloqueados</span>' 
-                    : '';
 
                 accordionHtml += `
                     <div class="accordion-item" id="${printAreaId}">
@@ -6223,7 +5663,6 @@
                                 <span class="badge bg-secondary ms-2" title="Rotas">${rotas || 'N/A'}</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³</span>
-                                ${blockedBadge}
                             </button>
                         </h2>
                         <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCargasFechadasPR">
@@ -6276,12 +5715,6 @@
                 const rotas = [...new Set(grupo.pedidos.map(p => p.Cod_Rota))].filter(Boolean).join(', ');
                 const collapseId = `collapseCargasFechadasRestBr-${index}`;
                 const displayName = isNumeric(key) ? `CF: ${key}` : key;
-                
-                // Verifica se há pedidos bloqueados neste grupo
-                const hasBlocked = grupo.pedidos.some(p => String(p['BLOQ.']).trim().length > 0);
-                const blockedBadge = hasBlocked 
-                    ? '<span class="badge bg-danger ms-2"><i class="bi bi-slash-circle"></i> Contém Bloqueados</span>' 
-                    : '';
 
                 accordionHtml += `
                     <div class="accordion-item">
@@ -6291,7 +5724,6 @@
                                 <span class="badge bg-secondary ms-2" title="Rotas">${rotas || 'N/A'}</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
                                 <span class="badge bg-light text-dark ms-2"><i class="bi bi-rulers me-1"></i>${totalCubagemFormatado} m³</span>
-                                ${blockedBadge}
                             </button>
                         </h2>
                         <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#accordionCargasFechadasRestBr">
@@ -7052,42 +6484,6 @@
             return true; // Retorna true se houver pedidos
         }
 
-        function displayPedidosFarelo(div, pedidos) {
-            if (!div) return;
-            div.innerHTML = ''; // Limpa o container
-            if (pedidos.length === 0) {
-                return false; // Retorna false se não houver pedidos
-            }
-            
-            pedidos.sort((a, b) => {
-                const clienteA = String(a.Cliente); const clienteB = String(b.Cliente);
-                const pedidoA = String(a.Num_Pedido); const pedidoB = String(b.Num_Pedido);
-                const clienteCompare = clienteA.localeCompare(clienteB, undefined, { numeric: true });
-                if (clienteCompare !== 0) return clienteCompare;
-                return pedidoA.localeCompare(pedidoB, undefined, { numeric: true });
-            });
-
-            const totalKg = pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
-            const totalKgFormatado = totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-            const accordionId = 'accordionFarelo';
-            const collapseId = 'collapseFarelo';
-            const printAreaId = 'farelo-print-area';
-
-            let accordionHtml = `<div class="accordion accordion-flush" id="${accordionId}">
-                <div class="accordion-item" id="${printAreaId}">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
-                            <strong>Pedidos Farelo</strong> &nbsp;
-                            <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length} Pedidos</span>
-                            <span class="badge bg-light text-dark ms-2"><i class="bi bi-database me-1"></i>${totalKgFormatado} kg</span>
-                        </button>
-                    </h2>
-                    <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}"><div class="accordion-body"><div class="d-flex justify-content-between align-items-center mb-3 no-print"><p class="text-muted small mb-0">Pedidos com TAB 23.</p><button class="btn btn-sm btn-outline-info" onclick="imprimirGeneric('${printAreaId}', 'Pedidos Farelo')"><i class="bi bi-printer-fill me-1"></i>Imprimir Lista</button></div>${createTable(pedidos, ['Num_Pedido', 'Cliente', 'Nome_Cliente', 'Quilos_Saldo', 'Cidade', 'Predat', 'Dat_Ped', 'Coluna5', 'BLOQ.'])}</div></div></div></div>`;
-            div.innerHTML = accordionHtml;
-            return true; // Retorna true se houver pedidos
-        }
-
         function displayPedidosMarcaPropria(div, pedidos) {
             if (!div) return;
             div.innerHTML = ''; // Limpa o container
@@ -7265,213 +6661,6 @@
             doc.save(`Previsao_Expedicao_${today.replace(/\//g, '-')}.pdf`);
         }
 
-        function exportarRelatorioDisponiveisPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            // 1. Coletar todos os pedidos disponíveis (Varejo + Toco) com identificação de tipo
-            let todosPedidos = pedidosGeraisAtuais.map(p => {
-                const tipo = String(p.Cod_Rota || '').startsWith('2') ? 'Varejo São Paulo' : 'Varejo';
-                return { data: p, tipo: tipo };
-            });
-            
-            // Adiciona pedidos de Toco disponíveis
-            Object.values(gruposToco).forEach(grupo => {
-                grupo.pedidos.forEach(p => {
-                    todosPedidos.push({ data: p, tipo: 'Carga de Toco' });
-                });
-            });
-
-            if (todosPedidos.length === 0) {
-                showToast("Não há pedidos disponíveis para gerar o relatório.", 'warning');
-                return;
-            }
-
-            // 2. Ordenar estritamente por Dat_Ped (Mais antigo primeiro)
-            todosPedidos.sort((a, b) => {
-                const pA = a.data;
-                const pB = b.data;
-                const dateA = pA.Dat_Ped instanceof Date ? pA.Dat_Ped : new Date(pA.Dat_Ped || '9999-12-31');
-                const dateB = pB.Dat_Ped instanceof Date ? pB.Dat_Ped : new Date(pB.Dat_Ped || '9999-12-31');
-                return dateA - dateB;
-            });
-
-            // 3. Configuração do PDF
-            const today = new Date().toLocaleDateString('pt-BR');
-            doc.setFontSize(16);
-            doc.text("Relatório de Fila de Pedidos (Por Data)", 14, 20);
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text(`Gerado em: ${today} - Total Pendente: ${todosPedidos.length} pedidos`, 14, 28);
-
-            const tableColumn = ["Data Ped.", "Rota", "Cód.", "Cliente", "Pedido", "Tipo", "Peso (kg)"];
-            const tableRows = [];
-
-            todosPedidos.forEach(item => {
-                const p = item.data;
-                let dataFormatada = "S/ Data";
-                if (p.Dat_Ped) {
-                    const d = p.Dat_Ped instanceof Date ? p.Dat_Ped : new Date(p.Dat_Ped);
-                    if (!isNaN(d)) {
-                        dataFormatada = d.toLocaleDateString('pt-BR');
-                    }
-                }
-
-                const rowData = [
-                    dataFormatada,
-                    String(p.Cod_Rota || ''),
-                    normalizeClientId(p.Cliente),
-                    String(p.Nome_Cliente || '').substring(0, 25), // Limita tamanho do nome
-                    String(p.Num_Pedido),
-                    item.tipo,
-                    p.Quilos_Saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
-                ];
-                tableRows.push(rowData);
-            });
-
-            doc.autoTable({
-                head: [tableColumn],
-                body: tableRows,
-                startY: 35,
-                theme: 'striped',
-                styles: { fontSize: 9, cellPadding: 2 },
-                headStyles: { fillColor: [41, 128, 185] },
-                columnStyles: {
-                    0: { fontStyle: 'bold' }, // Data em negrito
-                    6: { halign: 'right' }    // Peso alinhado à direita
-                }
-            });
-
-            doc.save(`Relatorio_Fila_Pedidos_${today.replace(/\//g, '-')}.pdf`);
-            showToast("Relatório de fila gerado com sucesso!", 'success');
-        }
-
-        function exportarRelatorioDisponiveisExcel() {
-            // 1. Coletar todos os pedidos disponíveis (Varejo + Toco)
-            let todosPedidos = pedidosGeraisAtuais.map(p => ({ ...p, Tipo: String(p.Cod_Rota || '').startsWith('2') ? 'Varejo São Paulo' : 'Varejo' }));
-            
-            Object.values(gruposToco).forEach(grupo => {
-                grupo.pedidos.forEach(p => {
-                    todosPedidos.push({ ...p, Tipo: 'Carga de Toco' });
-                });
-            });
-
-            if (todosPedidos.length === 0) {
-                showToast("Não há pedidos disponíveis para gerar o relatório.", 'warning');
-                return;
-            }
-
-            // 2. Ordenar por Data
-            todosPedidos.sort((a, b) => {
-                const dateA = a.Dat_Ped instanceof Date ? a.Dat_Ped : new Date(a.Dat_Ped || '9999-12-31');
-                const dateB = b.Dat_Ped instanceof Date ? b.Dat_Ped : new Date(b.Dat_Ped || '9999-12-31');
-                return dateA - dateB;
-            });
-
-            // 3. Preparar dados para Excel
-            const dataToExport = todosPedidos.map(p => ({
-                'Data Pedido': p.Dat_Ped,
-                'Rota': p.Cod_Rota,
-                'Código Cliente': normalizeClientId(p.Cliente),
-                'Nome Cliente': p.Nome_Cliente,
-                'Número Pedido': p.Num_Pedido,
-                'Tipo': p.Tipo,
-                'Peso (kg)': p.Quilos_Saldo,
-                'Cidade': p.Cidade,
-                'UF': p.UF
-            }));
-
-            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { cellDates: true });
-            const wscols = [{wch: 12}, {wch: 8}, {wch: 10}, {wch: 30}, {wch: 12}, {wch: 15}, {wch: 10}, {wch: 20}, {wch: 5}];
-            worksheet['!cols'] = wscols;
-
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Fila de Pedidos");
-            
-            const today = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-            XLSX.writeFile(workbook, `Relatorio_Fila_Pedidos_${today}.xlsx`);
-            showToast("Relatório Excel gerado com sucesso!", 'success');
-        }
-
-        function processarPriorizacaoEmMassa() {
-            const input = document.getElementById('bulkPriorityInput');
-            if (!input) return;
-            const orderNumbers = input.value.split(/[\n,\s\t]+/).map(s => s.trim()).filter(s => s.length > 0);
-
-            if (orderNumbers.length === 0) { showToast("Nenhum número de pedido encontrado.", "warning"); return; }
-
-            let countAdded = 0;
-            orderNumbers.forEach(num => {
-                if (!pedidosPrioritarios.includes(num)) { pedidosPrioritarios.push(num); countAdded++; }
-            });
-
-            if (countAdded > 0) {
-                saveStateToLocalStorage();
-                renderAllUI(); // Atualiza toda a interface para refletir as prioridades
-                showToast(`${countAdded} pedidos priorizados com sucesso!`, "success");
-                input.value = '';
-                const modal = bootstrap.Modal.getInstance(document.getElementById('bulkPriorityModal'));
-                if (modal) modal.hide();
-            } else { showToast("Todos os pedidos informados já eram prioritários.", "info"); }
-        }
-
-        /**
-         * NOVO: Função para montar cargas automaticamente baseadas nos pedidos prioritários.
-         * Identifica as rotas que possuem pedidos marcados como prioridade e processa apenas elas.
-         */
-        async function montarCargasPrioritarias() {
-            // 1. Identificar pedidos prioritários que ainda estão disponíveis (não alocados)
-            const pedidosPrioritariosDisponiveis = pedidosGeraisAtuais.filter(p => 
-                pedidosPrioritarios.includes(String(p.Num_Pedido)) || 
-                pedidosRecall.includes(String(p.Num_Pedido))
-            );
-
-            if (pedidosPrioritariosDisponiveis.length === 0) {
-                showToast("Não há pedidos prioritários pendentes na lista de disponíveis.", "info");
-                return;
-            }
-
-            // 2. Identificar as rotas únicas desses pedidos
-            const rotasParaProcessar = [...new Set(pedidosPrioritariosDisponiveis.map(p => String(p.Cod_Rota)))];
-            rotasParaProcessar.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-
-            const confirmMsg = `Encontrei ${pedidosPrioritariosDisponiveis.length} pedido(s) prioritário(s) distribuído(s) em ${rotasParaProcessar.length} rota(s):\n\nRotas: ${rotasParaProcessar.join(', ')}\n\nDeseja montar as cargas para essas rotas agora? O sistema tentará incluir os prioritários e completar a carga com outros pedidos da rota.`;
-
-            if (!confirm(confirmMsg)) return;
-
-            showToast(`Iniciando montagem automática para ${rotasParaProcessar.length} rotas...`, "info");
-
-            // Limpa mensagens de sucesso antigas antes de começar o lote para evitar acúmulo
-            document.querySelectorAll('.route-success-message').forEach(el => el.remove());
-
-            // 3. Processar cada rota sequencialmente
-            for (const rota of rotasParaProcessar) {
-                // Determina as configurações da rota (tipo de veículo, título, etc.)
-                let config = rotaVeiculoMap[rota];
-                
-                // Fallback para rotas de SP ou não mapeadas
-                if (!config) {
-                    config = { type: 'van', title: `Rota ${rota} (Automática)` };
-                }
-
-                // Determina o ID da div de destino baseado no tipo de veículo
-                const divId = config.type === 'fiorino' ? 'resultado-fiorino-geral' : 
-                              (config.type === 'van' ? 'resultado-van-geral' : 'resultado-34-geral');
-
-                // Chama a função de separação existente
-                // Passamos 'null' no botão pois é uma chamada automática
-                // Passamos 'true' para isBatchMode para não limpar as cargas anteriores
-                await separarCargasGeneric(rota, divId, config.title, config.type, null, true);
-                
-                // Pequena pausa para a UI respirar e não travar
-                await new Promise(r => setTimeout(r, 500));
-            }
-
-            // 4. Atualiza a interface geral para garantir que tudo esteja sincronizado
-            renderAllUI();
-            showToast("Processamento de cargas prioritárias concluído!", "success");
-        }
-
         // ================================================================================================
         //  LÓGICA DE PERSISTÊNCIA DE ESTADO
         // ================================================================================================
@@ -7502,7 +6691,6 @@
                     pedidosExportacao,
                     cargasFechadasPR,
                     pedidosMoinho,
-                    pedidosFarelo,
                     pedidosMarcaPropria,
                     tocoPedidoIds: Array.from(tocoPedidoIds),
                     allSaoPauloLeftovers, // NOVO: Salva as sobras de SP
@@ -7585,7 +6773,6 @@
                 pedidosExportacao = savedState.pedidosExportacao || [];
                 cargasFechadasPR = savedState.cargasFechadasPR || [];
                 pedidosMoinho = savedState.pedidosMoinho || [];
-                pedidosFarelo = savedState.pedidosFarelo || [];
                 pedidosMarcaPropria = savedState.pedidosMarcaPropria || [];
                 tocoPedidoIds = new Set(savedState.tocoPedidoIds || []);
                 allSaoPauloLeftovers = savedState.allSaoPauloLeftovers || []; // NOVO: Carrega as sobras de SP
@@ -7613,7 +6800,6 @@
                 pedidosExportacao = reviveDates(pedidosExportacao);
                 cargasFechadasPR = reviveDates(cargasFechadasPR);
                 pedidosMoinho = reviveDates(pedidosMoinho);
-                pedidosFarelo = reviveDates(pedidosFarelo);
                 pedidosMarcaPropria = reviveDates(pedidosMarcaPropria);
                 currentLeftoversForPrinting = reviveDates(currentLeftoversForPrinting);
                 Object.values(activeLoads).forEach(load => load.pedidos = reviveDates(load.pedidos));
@@ -7664,7 +6850,6 @@
                 displayPedidosTransferencias(document.getElementById('resultado-transferencias'), pedidosTransferencias);
                 displayPedidosExportacao(document.getElementById('resultado-exportacao'), pedidosExportacao);
                 displayPedidosMoinho(document.getElementById('resultado-moinho'), pedidosMoinho);
-                displayPedidosFarelo(document.getElementById('resultado-farelo'), pedidosFarelo);
                 displayPedidosMarcaPropria(document.getElementById('resultado-marca-propria'), pedidosMarcaPropria);
                 reRenderManualLoads();
 
