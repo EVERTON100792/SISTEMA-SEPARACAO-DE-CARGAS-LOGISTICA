@@ -1115,6 +1115,21 @@
                     <div class="card h-100" id="pedidos-disponiveis-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h2 class="card-title h5 mb-0"><i class="bi bi-list-check me-2"></i>Pedidos & Consultas Rápidas</h2>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-warning text-white" onclick="montarCargasPrioritarias()" title="Montar cargas automaticamente para rotas com pedidos prioritários">
+                                    <i class="bi bi-lightning-charge-fill me-1"></i>Montar Prioritários
+                                </button>
+                                <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#bulkPriorityModal" title="Colar lista de pedidos para priorizar">
+                                    <i class="bi bi-clipboard-plus me-1"></i>Colar Prioritários
+                                </button>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-file-text me-1"></i>Relatórios</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioDisponiveisPDF()"><i class="bi bi-file-pdf me-2"></i>Relatório PDF</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioDisponiveisExcel()"><i class="bi bi-file-excel me-2"></i>Relatório Excel (Copiar)</a></li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-body p-0">
                             <div class="p-3 border-bottom no-print">
@@ -1317,7 +1332,7 @@
                                 </div>
                                 <div class="card-footer">
                                     <label for="graphhopperApiKey" class="form-label">Chave da API (GraphHopper):</label>
-                                    <input type="text" class="form-control" id="graphhopperApiKey" placeholder="Insira sua chave para cálculo de KM">
+                                    <input type="text" class="form-control" id="graphhopperApiKey" value="6aaa58ba-e39d-447e-86b4-34cc7eb03d85" placeholder="Insira sua chave para cálculo de KM">
                                     <div class="form-text small">
                                         <!-- A descrição será inserida aqui pelo JavaScript -->
                                     </div>
@@ -1400,6 +1415,26 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Priorização em Massa -->
+    <div class="modal fade" id="bulkPriorityModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-star-fill text-warning me-2"></i>Priorização em Massa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Cole abaixo os números dos pedidos que deseja priorizar (um por linha ou separados por espaço/vírgula). Você pode copiar esta lista do Relatório Excel.</p>
+                    <textarea class="form-control" id="bulkPriorityInput" rows="10" placeholder="Ex: 12345&#10;67890&#10;11223"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" onclick="processarPriorizacaoEmMassa()"><i class="bi bi-check-circle-fill me-2"></i>Priorizar Todos</button>
                 </div>
             </div>
         </div>
@@ -1752,6 +1787,28 @@
             return objCopy;
         }
 
+        /**
+         * NOVA FUNÇÃO CENTRALIZADA: Verifica todos os tipos de bloqueio para um pedido.
+         * Isso garante que a lógica seja a mesma em todos os lugares (KPIs, impressão, etc.).
+         * @param {object} pedido O objeto do pedido a ser verificado.
+         * @returns {boolean} Retorna true se o pedido estiver bloqueado, caso contrário false.
+         */
+        function isPedidoBloqueado(pedido) {
+            if (!pedido) return false;
+
+            // 1. Bloqueio manual pelo usuário
+            if (pedidosBloqueados.has(String(pedido.Num_Pedido))) return true;
+
+            // 2. Bloqueio financeiro (C) ou comercial (V) direto na planilha
+            const bloqueioPlanilha = String(pedido['BLOQ.'] || '').trim().toUpperCase();
+            if (bloqueioPlanilha === 'C' || bloqueioPlanilha === 'V') return true;
+
+            // 3. Bloqueio por regra de negócio (cliente tem outro pedido com CF numérico e bloqueio)
+            const clientesComBloqueioRegra = new Set(pedidosComCFNumericoIsolado.map(p => normalizeClientId(p.Cliente)));
+            const clienteId = normalizeClientId(pedido.Cliente);
+            return clienteId && clientesComBloqueioRegra.has(clienteId);
+        }
+
         // Função centralizada para ordenar rotas de forma consistente
         function getSortedVarejoRoutes(rotas) {
             const vehicleOrder = { 'fiorino': 1, 'van': 2, 'tresQuartos': 3 };
@@ -1939,8 +1996,9 @@
                 const configs = savedConfigs ? JSON.parse(savedConfigs) : defaultConfigs;
 
                 // NOVO: Carrega a chave da API do GraphHopper
+                const defaultApiKey = '6aaa58ba-e39d-447e-86b4-34cc7eb03d85';
                 const savedApiKey = localStorage.getItem('graphhopperApiKey');
-                if (savedApiKey) document.getElementById('graphhopperApiKey').value = savedApiKey;
+                document.getElementById('graphhopperApiKey').value = savedApiKey || defaultApiKey;
 
                 Object.keys(defaultConfigs).forEach(key => {
                     const element = document.getElementById(key);
@@ -2405,7 +2463,7 @@
             '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' }, '2735': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2735' }, '2745': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2745' },
             // Rotas do Paraná (Varejo)
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
-            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
+            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'fiorino', title: 'Rota 11711' },
             '11361': { type: 'tresQuartos', title: 'Rota 11361' }, '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] }, '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] }, '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] }, '11541': { type: 'tresQuartos', title: 'Rota 11541' }
         };
         
@@ -2476,6 +2534,8 @@
                                     } else {
                                         pedido[header] = cellValue !== undefined ? cellValue : '';
                                     }
+                                } else if (header === 'Num_Pedido') {
+                                    pedido[header] = String(row[i] !== undefined ? row[i] : '').trim();
                                 } else {
                                     pedido[header] = row[i] !== undefined ? row[i] : ''; 
                                 }
@@ -3387,45 +3447,28 @@
             const pedidosToco = Object.values(gruposToco).flatMap(g => g.pedidos);
             const todosPedidosParaAnalise = [...pedidosGeraisAtuais, ...pedidosComCFNumericoIsolado, ...pedidosManualmenteBloqueadosAtuais, ...rota1SemCarga, ...pedidosToco];
             const pedidosAPredatar = todosPedidosParaAnalise.filter(p => {
-                const bloqueio = String(p['BLOQ.'] || '').trim().toUpperCase();
-                return isOverdue(p.Predat) && (bloqueio === '' || bloqueio === 'C');
+                const bloqueio = String(p['BLOQ.'] || '').trim().toUpperCase(); return isOverdue(p.Predat) && (bloqueio === '' || bloqueio === 'C');
             });
 
             // 2. Separa os grupos de Toco em disponíveis e bloqueados
-            const clientesComBloqueio = new Set(pedidosComCFNumericoIsolado.map(p => normalizeClientId(p.Cliente)));
-            let pesoTocoDisponivel = 0;
-            let pedidosTocoDisponiveis = 0;
-            let pesoTocoBloqueado = 0;
-            let pedidosTocoBloqueados = 0;
-            Object.values(gruposToco).forEach(grupo => {
-                // Um grupo Toco é considerado bloqueado se QUALQUER pedido dentro dele atender a uma das condições de bloqueio.
-                const isGrupoBloqueado = grupo.pedidos.some(p => {
-                    const clienteId = normalizeClientId(p.Cliente);
-                    const bloqueioPlanilha = String(p['BLOQ.'] || '').trim().toUpperCase();
-                    
-                    return (clienteId && clientesComBloqueio.has(clienteId)) || // Cliente tem outro pedido bloqueado por regra
-                           (bloqueioPlanilha === 'C' || bloqueioPlanilha === 'V') || // Bloqueio direto na planilha
-                           pedidosBloqueados.has(String(p.Num_Pedido)); // Bloqueado manualmente
-                });
-
-                if (isGrupoBloqueado) {
-                    pesoTocoBloqueado += grupo.totalKg;
-                    pedidosTocoBloqueados += grupo.pedidos.length;
-                } else {
-                    pesoTocoDisponivel += grupo.totalKg;
-                    pedidosTocoDisponiveis += grupo.pedidos.length;
-                }
-            });
-
+            const { pesoTocoDisponivel, pedidosTocoDisponiveis, pesoTocoBloqueado, pedidosTocoBloqueados } = Object.values(gruposToco).reduce((acc, grupo) => { const isGrupoBloqueado = grupo.pedidos.some(p => isPedidoBloqueado(p)); if (isGrupoBloqueado) { acc.pesoTocoBloqueado += grupo.totalKg; acc.pedidosTocoBloqueados += grupo.pedidos.length; } else { acc.pesoTocoDisponivel += grupo.totalKg; acc.pedidosTocoDisponiveis += grupo.pedidos.length; } return acc; }, { pesoTocoDisponivel: 0, pedidosTocoDisponiveis: 0, pesoTocoBloqueado: 0, pedidosTocoBloqueados: 0 });
             // 3. Consolida os dados para os novos KPIs
             const kpis = {
                 varejoDisponivel: {
-                    pedidos: pedidosGeraisAtuais.length + pedidosTocoDisponiveis,
-                    peso: pedidosGeraisAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + pesoTocoDisponivel
+                    // CORREÇÃO: A lógica agora soma os pedidos de varejo gerais (Fiorino, Van, 3/4)
+                    // com os pedidos dos grupos de Toco que estão totalmente desbloqueados.
+                    pedidos: pedidosGeraisAtuais.length + pedidosTocoDisponiveis, // Usa o valor já calculado
+                    peso: pedidosGeraisAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + pesoTocoDisponivel // Usa o valor já calculado
                 },
                 varejoBloqueado: {
-                    pedidos: pedidosComCFNumericoIsolado.length + pedidosManualmenteBloqueadosAtuais.length + pedidosTocoBloqueados,
-                    peso: pedidosComCFNumericoIsolado.reduce((s, p) => s + p.Quilos_Saldo, 0) + pedidosManualmenteBloqueadosAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + pesoTocoBloqueado
+                    // CORREÇÃO: A lógica agora soma os bloqueios de varejo com os pedidos
+                    // dos grupos de Toco que contêm pelo menos um pedido bloqueado.
+                    pedidos: pedidosComCFNumericoIsolado.length + 
+                             pedidosManualmenteBloqueadosAtuais.length + 
+                             pedidosTocoBloqueados, // Usa o valor já calculado
+                    peso: pedidosComCFNumericoIsolado.reduce((s, p) => s + p.Quilos_Saldo, 0) + 
+                          pedidosManualmenteBloqueadosAtuais.reduce((s, p) => s + p.Quilos_Saldo, 0) + 
+                          pesoTocoBloqueado // Usa o valor já calculado
                 },
                 cargasFechadasPR: {
                     pedidos: cargasFechadasPR.length,
@@ -3975,13 +4018,31 @@
         function imprimirTocoIndividual(cf) {
             if (!gruposToco[cf]) { showToast(`Nenhuma carga Toco encontrada para o CF: ${cf}`, 'warning'); return; }
             const grupo = gruposToco[cf];
+
+            // VERIFICAÇÃO: Impede a impressão e montagem se houver qualquer pedido bloqueado no grupo.
+            const hasBlockedOrder = grupo.pedidos.some(p => isPedidoBloqueado(p));
+            if (hasBlockedOrder) {
+                showToast(`Não é possível montar a carga Toco (CF: ${cf}) pois ela contém pedidos bloqueados.`, 'danger');
+                return;
+            }
+
             const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const totalCubagemFormatado = grupo.totalCubagem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             const printWindow = createPrintWindow('Imprimir Carga Toco CF: ' + cf);
-            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³</h3>` + createTable(grupo.pedidos, null, `toco-${cf}`);
-            printWindow.document.body.innerHTML = contentToPrint; printWindow.document.close(); printWindow.focus(); setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
-        }
+            let contentToPrint = `<h3>Carga Toco CF: ${cf} - Total: ${totalKgFormatado} kg / ${totalCubagemFormatado} m³</h3>` + createTable(grupo.pedidos, null, `toco-${cf}`); // prettier-ignore
+            printWindow.document.body.innerHTML = contentToPrint;
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
 
+            // Remove o grupo Toco da lista de disponíveis e atualiza a UI
+            delete gruposToco[cf];
+            renderAllUI();
+            showToast(`Carga Toco (CF: ${cf}) impressa e considerada montada.`, 'success');
+        }
         function imprimirCargaManualIndividual(loadId) { const load = activeLoads[loadId]; const cardToPrint = document.getElementById(loadId); if (!load || !cardToPrint) { showToast(`Erro: Carga com ID ${loadId} não encontrada.`, 'error'); return; }
             const cardClone = cardToPrint.cloneNode(true);
             const observationText = load?.observation || '';
@@ -4070,17 +4131,18 @@
         function runHeuristicOptimization(packableGroups, vehicleType) {
             const strategies = [
                 { name: 'priority-weight-desc', sorter: (a, b) => {
-                    // 1. Prioriza por data mais antiga
+                    // 1. Prioridade Manual (Vem antes da data)
+                    const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido).trim()) || pedidosRecall.includes(String(p.Num_Pedido).trim()));
+                    const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido).trim()) || pedidosRecall.includes(String(p.Num_Pedido).trim()));
+                    if (aHasPrio && !bHasPrio) return -1;
+                    if (!aHasPrio && bHasPrio) return 1;
+
+                    // 2. Prioriza por data mais antiga
                     if (a.oldestDate && b.oldestDate) {
                         if (a.oldestDate < b.oldestDate) return -1;
                         if (a.oldestDate > b.oldestDate) return 1;
                     } else if (a.oldestDate) { return -1; } 
                       else if (b.oldestDate) { return 1; }
-                    // 2. Desempate por prioridade manual
-                    const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                    const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-                    if (aHasPrio && !bHasPrio) return -1;
-                    if (!aHasPrio && bHasPrio) return 1;
                     // 3. Desempate final por peso
                     return b.totalKg - a.totalKg;
                 }},
@@ -4166,10 +4228,7 @@
             let unplacedGroups = [];
 
             loads.forEach(load => {
-                const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)) || pedidosRecall.includes(String(p.Num_Pedido)));
-                const allowPriorityOverride = true; // Permite para todos os veículos
-
-                if (load.pedidos.length > 0 && (load.totalKg >= config.minKg || (hasPriority && allowPriorityOverride))) {
+                if (load.pedidos.length > 0 && load.totalKg >= config.minKg) {
                     finalLoads.push(load);
                 } else if (load.pedidos.length > 0) {
                     const clientGroupsInFailedLoad = Object.values(load.pedidos.reduce((acc, p) => {
@@ -4317,9 +4376,11 @@
             return { refinedLoads: loads, remainingLeftovers: leftovers };
         }
         
-        async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement) {
+        async function separarCargasGeneric(routeOrRoutes, divId, title, vehicleType, buttonElement, isBatchMode = false) {
             // NOVO: Remove mensagens de sucesso de rotas anteriores para manter a interface limpa.
-            document.querySelectorAll('.route-success-message').forEach(el => el.remove());
+            if (!isBatchMode) {
+                document.querySelectorAll('.route-success-message').forEach(el => el.remove());
+            }
 
             // NOVO: Se o painel de carga manual estiver aberto, fecha-o antes de processar uma nova rota.
             if (document.getElementById('manual-load-builder-wrapper')) cancelManualLoad();
@@ -4333,7 +4394,13 @@
             // CORREÇÃO: Limpa a área de resultado antes de processar uma nova rota.
             // Isso garante que apenas as cargas da rota atual sejam exibidas.
             const resultadoDiv = document.getElementById(divId);
-            resultadoDiv.innerHTML = '';
+            if (!isBatchMode) {
+                resultadoDiv.innerHTML = '';
+            } else {
+                // Se for modo batch, remove apenas o estado vazio se existir para adicionar as novas cargas
+                const emptyState = resultadoDiv.querySelector('.empty-state');
+                if (emptyState) emptyState.remove();
+            }
             // Restaura o feedback visual no botão da rota processada
 
             if (planilhaData.length === 0) {
@@ -4353,9 +4420,10 @@
                 acc[clienteId].totalCubagem += pedido.Cubagem;
                 return acc;
             }, {});
-            const packableGroups = Object.values(clientGroupsMap);
+            let packableGroups = Object.values(clientGroupsMap);
 
             // NOVO: Calcula a data de pedido mais antiga para cada grupo de cliente.
+            // (Movido para antes da lógica da rota 11711 para garantir que os grupos excluídos também tenham a data calculada para a cascata)
             packableGroups.forEach(group => {
                 group.oldestDate = group.pedidos.reduce((oldest, p) => {
                     const pDate = p.Dat_Ped;
@@ -4368,6 +4436,37 @@
                     return oldest;
                 }, null);
             });
+
+            // --- LÓGICA ESPECIAL PARA ROTA 11711 (Priorizar Fiorino para Cidades Específicas) ---
+            let groupsExcludedFromFiorino = [];
+            if (routes.includes('11711')) {
+                const cidadesPermitidasFiorino = new Set([
+                    'MANDAGUACU', 'SAO JORGE DO IVAI', 'TAMBOARA', 'GUAIRACA', 
+                    'PARANAVAI', 'NOVA ESPERANCA', 'FLORAI', 
+                    'PRESIDENTE CASTELO BRANCO'
+                ]);
+                const normalizeCity = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+
+                const fiorinoGroups = [];
+                const otherGroups = [];
+
+                packableGroups.forEach(group => {
+                    const city = normalizeCity(String(group.pedidos[0].Cidade || '').split(',')[0]);
+                    if (cidadesPermitidasFiorino.has(city)) {
+                        fiorinoGroups.push(group);
+                    } else {
+                        otherGroups.push(group);
+                    }
+                });
+
+                if (otherGroups.length > 0) {
+                    packableGroups = fiorinoGroups;
+                    groupsExcludedFromFiorino = otherGroups;
+                    showToast(`Rota 11711: Separando ${otherGroups.length} clientes para Van (cidades mistas).`, 'info');
+                }
+                // Garante que a primeira tentativa seja Fiorino apenas com as cidades permitidas
+                vehicleType = 'fiorino';
+            }
 
             packableGroups.forEach(group => {
                 group.Quilos_Saldo = group.totalKg;
@@ -4447,6 +4546,11 @@
             
             // Tenta encaixar sobras em cargas existentes que ainda têm espaço.
             const { refinedLoads: initialRefinedLoads, remainingLeftovers: initialLeftovers } = refineLoadsWithSimpleFit(optimizationResult.loads, optimizationResult.leftovers);
+
+            // Reintegra os grupos excluídos da otimização inicial (Rota 11711) para serem processados na cascata (Van)
+            if (groupsExcludedFromFiorino.length > 0) {
+                initialLeftovers.push(...groupsExcludedFromFiorino);
+            }
 
             // ========================================================================
             // INÍCIO DA NOVA LÓGICA DE CASCATA (Fiorino -> Van -> 3/4 -> Toco)
@@ -4528,10 +4632,9 @@
                     finalLeftoverGroups.push(...clientGroupsInFailedLoad);
                     return;
                 }
-                const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)) || pedidosRecall.includes(String(p.Num_Pedido)));
-                const allowPriorityOverride = true; // Permite para todos os veículos
                 
-                if (load.totalKg >= config.minKg || (hasPriority && allowPriorityOverride)) {
+                // A condição volta a ser estrita para garantir que tentamos encher a carga primeiro
+                if (load.totalKg >= config.minKg) {
                     finalValidLoads.push(load);
                 } else {
                     const clientGroupsInFailedLoad = Object.values(load.pedidos.reduce((acc, p) => {
@@ -4546,6 +4649,53 @@
                 }
             });
 
+            // --- NOVA LÓGICA: FORÇAR PRIORIDADES RESTANTES ---
+            // Se após todas as tentativas (Worker + Cascata) ainda houver pedidos prioritários nas sobras,
+            // forçamos a criação de cargas para eles no veículo original, ignorando o peso mínimo.
+            
+            const priorityLeftovers = [];
+            const normalLeftovers = [];
+            
+            finalLeftoverGroups.forEach(group => {
+                const isPriority = group.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido).trim()) || pedidosRecall.includes(String(p.Num_Pedido).trim()));
+                if (isPriority) priorityLeftovers.push(group);
+                else normalLeftovers.push(group);
+            });
+            
+            if (priorityLeftovers.length > 0) {
+                // Ordena por peso para tentar agrupar melhor
+                priorityLeftovers.sort((a, b) => b.totalKg - a.totalKg);
+                
+                let forcedLoads = [];
+                
+                priorityLeftovers.forEach(group => {
+                    let placed = false;
+                    // Tenta encaixar em cargas forçadas já criadas
+                    for (const load of forcedLoads) {
+                        if (isMoveValid(load, group, vehicleType)) {
+                            load.pedidos.push(...group.pedidos);
+                            load.totalKg += group.totalKg;
+                            load.totalCubagem += group.totalCubagem;
+                            placed = true;
+                            break;
+                        }
+                    }
+                    // Se não couber, cria nova carga
+                    if (!placed) {
+                        forcedLoads.push({
+                            pedidos: [...group.pedidos],
+                            totalKg: group.totalKg,
+                            totalCubagem: group.totalCubagem,
+                            vehicleType: vehicleType, // Usa o veículo original da rota
+                            isForcedPriority: true
+                        });
+                    }
+                });
+                finalValidLoads.push(...forcedLoads);
+            }
+            
+            finalLeftoverGroups = normalLeftovers;
+            // --- FIM DA NOVA LÓGICA ---
             
             finalValidLoads.forEach((load, index) => {
                 load.numero = `${load.vehicleType.charAt(0).toUpperCase()}${index + 1}`;
@@ -4591,7 +4741,11 @@
                     html += renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType] || vehicleInfo['van']);
                 });
             }            
-            resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;            
+            if (!isBatchMode) {
+                resultadoDiv.innerHTML = `<div class="resultado-container">${html}</div>`;
+            } else {
+                resultadoDiv.insertAdjacentHTML('beforeend', `<div class="resultado-container">${html}</div>`);
+            }
             
             // CORREÇÃO: As chamadas de atualização da UI foram movidas para o final,
             // e a chamada para `handlePostProcessingUI` foi ajustada para lidar com as sobras
@@ -5533,7 +5687,7 @@
                 const progressBar = `<div class="progress mb-3" role="progressbar" style="height: 10px;"><div class="progress-bar ${progressColor}" style="width: ${Math.min(pesoPercentual, 100)}%"></div></div>`;
                 const headerColorClass = isOverloaded ? 'bg-danger' : '';
 
-                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length}</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionTocoMesa"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}')"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>${progressBar}${createTable(pedidos, null, loadId)}</div></div></div>`;
+                accordionHtml += `<div class="accordion-item"><h2 class="accordion-header" id="headingToco${index}"><button class="accordion-button collapsed ${headerColorClass}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseToco${index}"><strong>CF: ${cf}</strong> &nbsp; <span class="badge bg-secondary ms-2"><i class="bi bi-box me-1"></i>${pedidos.length}</span> ${weightBadge}</button></h2><div id="collapseToco${index}" class="accordion-collapse collapse" data-bs-parent="#accordionTocoMesa"><div class="accordion-body drop-zone-card" id="${loadId}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${loadId}" data-vehicle-type="toco"><button class="btn btn-sm btn-outline-info mb-3 no-print" onclick="imprimirTocoIndividual('${cf}', event)"><i class="bi bi-printer-fill me-1"></i>Imprimir</button>${progressBar}${createTable(pedidos, null, loadId)}</div></div></div>`;
             });
             accordionHtml += '</div>'; div.innerHTML = accordionHtml;
         }
@@ -6659,6 +6813,213 @@
             }
 
             doc.save(`Previsao_Expedicao_${today.replace(/\//g, '-')}.pdf`);
+        }
+
+        function exportarRelatorioDisponiveisPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // 1. Coletar todos os pedidos disponíveis (Varejo + Toco) com identificação de tipo
+            let todosPedidos = pedidosGeraisAtuais.map(p => {
+                const tipo = String(p.Cod_Rota || '').startsWith('2') ? 'Varejo São Paulo' : 'Varejo';
+                return { data: p, tipo: tipo };
+            });
+            
+            // Adiciona pedidos de Toco disponíveis
+            Object.values(gruposToco).forEach(grupo => {
+                grupo.pedidos.forEach(p => {
+                    todosPedidos.push({ data: p, tipo: 'Carga de Toco' });
+                });
+            });
+
+            if (todosPedidos.length === 0) {
+                showToast("Não há pedidos disponíveis para gerar o relatório.", 'warning');
+                return;
+            }
+
+            // 2. Ordenar estritamente por Dat_Ped (Mais antigo primeiro)
+            todosPedidos.sort((a, b) => {
+                const pA = a.data;
+                const pB = b.data;
+                const dateA = pA.Dat_Ped instanceof Date ? pA.Dat_Ped : new Date(pA.Dat_Ped || '9999-12-31');
+                const dateB = pB.Dat_Ped instanceof Date ? pB.Dat_Ped : new Date(pB.Dat_Ped || '9999-12-31');
+                return dateA - dateB;
+            });
+
+            // 3. Configuração do PDF
+            const today = new Date().toLocaleDateString('pt-BR');
+            doc.setFontSize(16);
+            doc.text("Relatório de Fila de Pedidos (Por Data)", 14, 20);
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Gerado em: ${today} - Total Pendente: ${todosPedidos.length} pedidos`, 14, 28);
+
+            const tableColumn = ["Data Ped.", "Rota", "Cód.", "Cliente", "Pedido", "Tipo", "Peso (kg)"];
+            const tableRows = [];
+
+            todosPedidos.forEach(item => {
+                const p = item.data;
+                let dataFormatada = "S/ Data";
+                if (p.Dat_Ped) {
+                    const d = p.Dat_Ped instanceof Date ? p.Dat_Ped : new Date(p.Dat_Ped);
+                    if (!isNaN(d)) {
+                        dataFormatada = d.toLocaleDateString('pt-BR');
+                    }
+                }
+
+                const rowData = [
+                    dataFormatada,
+                    String(p.Cod_Rota || ''),
+                    normalizeClientId(p.Cliente),
+                    String(p.Nome_Cliente || '').substring(0, 25), // Limita tamanho do nome
+                    String(p.Num_Pedido),
+                    item.tipo,
+                    p.Quilos_Saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+                ];
+                tableRows.push(rowData);
+            });
+
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 35,
+                theme: 'striped',
+                styles: { fontSize: 9, cellPadding: 2 },
+                headStyles: { fillColor: [41, 128, 185] },
+                columnStyles: {
+                    0: { fontStyle: 'bold' }, // Data em negrito
+                    6: { halign: 'right' }    // Peso alinhado à direita
+                }
+            });
+
+            doc.save(`Relatorio_Fila_Pedidos_${today.replace(/\//g, '-')}.pdf`);
+            showToast("Relatório de fila gerado com sucesso!", 'success');
+        }
+
+        function exportarRelatorioDisponiveisExcel() {
+            // 1. Coletar todos os pedidos disponíveis (Varejo + Toco)
+            let todosPedidos = pedidosGeraisAtuais.map(p => ({ ...p, Tipo: String(p.Cod_Rota || '').startsWith('2') ? 'Varejo São Paulo' : 'Varejo' }));
+            
+            Object.values(gruposToco).forEach(grupo => {
+                grupo.pedidos.forEach(p => {
+                    todosPedidos.push({ ...p, Tipo: 'Carga de Toco' });
+                });
+            });
+
+            if (todosPedidos.length === 0) {
+                showToast("Não há pedidos disponíveis para gerar o relatório.", 'warning');
+                return;
+            }
+
+            // 2. Ordenar por Data
+            todosPedidos.sort((a, b) => {
+                const dateA = a.Dat_Ped instanceof Date ? a.Dat_Ped : new Date(a.Dat_Ped || '9999-12-31');
+                const dateB = b.Dat_Ped instanceof Date ? b.Dat_Ped : new Date(b.Dat_Ped || '9999-12-31');
+                return dateA - dateB;
+            });
+
+            // 3. Preparar dados para Excel
+            const dataToExport = todosPedidos.map(p => ({
+                'Data Pedido': p.Dat_Ped,
+                'Rota': p.Cod_Rota,
+                'Código Cliente': normalizeClientId(p.Cliente),
+                'Nome Cliente': p.Nome_Cliente,
+                'Número Pedido': p.Num_Pedido,
+                'Tipo': p.Tipo,
+                'Peso (kg)': p.Quilos_Saldo,
+                'Cidade': p.Cidade,
+                'UF': p.UF
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { cellDates: true });
+            const wscols = [{wch: 12}, {wch: 8}, {wch: 10}, {wch: 30}, {wch: 12}, {wch: 15}, {wch: 10}, {wch: 20}, {wch: 5}];
+            worksheet['!cols'] = wscols;
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Fila de Pedidos");
+            
+            const today = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+            XLSX.writeFile(workbook, `Relatorio_Fila_Pedidos_${today}.xlsx`);
+            showToast("Relatório Excel gerado com sucesso!", 'success');
+        }
+
+        function processarPriorizacaoEmMassa() {
+            const input = document.getElementById('bulkPriorityInput');
+            if (!input) return;
+            const orderNumbers = input.value.split(/[\n,\s\t]+/).map(s => s.trim()).filter(s => s.length > 0);
+
+            if (orderNumbers.length === 0) { showToast("Nenhum número de pedido encontrado.", "warning"); return; }
+
+            let countAdded = 0;
+            orderNumbers.forEach(num => {
+                if (!pedidosPrioritarios.includes(num)) { pedidosPrioritarios.push(num); countAdded++; }
+            });
+
+            if (countAdded > 0) {
+                saveStateToLocalStorage();
+                renderAllUI(); // Atualiza toda a interface para refletir as prioridades
+                showToast(`${countAdded} pedidos priorizados com sucesso!`, "success");
+                input.value = '';
+                const modal = bootstrap.Modal.getInstance(document.getElementById('bulkPriorityModal'));
+                if (modal) modal.hide();
+            } else { showToast("Todos os pedidos informados já eram prioritários.", "info"); }
+        }
+
+        /**
+         * NOVO: Função para montar cargas automaticamente baseadas nos pedidos prioritários.
+         * Identifica as rotas que possuem pedidos marcados como prioridade e processa apenas elas.
+         */
+        async function montarCargasPrioritarias() {
+            // 1. Identificar pedidos prioritários que ainda estão disponíveis (não alocados)
+            const pedidosPrioritariosDisponiveis = pedidosGeraisAtuais.filter(p => 
+                pedidosPrioritarios.includes(String(p.Num_Pedido)) || 
+                pedidosRecall.includes(String(p.Num_Pedido))
+            );
+
+            if (pedidosPrioritariosDisponiveis.length === 0) {
+                showToast("Não há pedidos prioritários pendentes na lista de disponíveis.", "info");
+                return;
+            }
+
+            // 2. Identificar as rotas únicas desses pedidos
+            const rotasParaProcessar = [...new Set(pedidosPrioritariosDisponiveis.map(p => String(p.Cod_Rota)))];
+            rotasParaProcessar.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+            const confirmMsg = `Encontrei ${pedidosPrioritariosDisponiveis.length} pedido(s) prioritário(s) distribuído(s) em ${rotasParaProcessar.length} rota(s):\n\nRotas: ${rotasParaProcessar.join(', ')}\n\nDeseja montar as cargas para essas rotas agora? O sistema tentará incluir os prioritários e completar a carga com outros pedidos da rota.`;
+
+            if (!confirm(confirmMsg)) return;
+
+            showToast(`Iniciando montagem automática para ${rotasParaProcessar.length} rotas...`, "info");
+
+            // Limpa mensagens de sucesso antigas antes de começar o lote para evitar acúmulo
+            document.querySelectorAll('.route-success-message').forEach(el => el.remove());
+
+            // 3. Processar cada rota sequencialmente
+            for (const rota of rotasParaProcessar) {
+                // Determina as configurações da rota (tipo de veículo, título, etc.)
+                let config = rotaVeiculoMap[rota];
+                
+                // Fallback para rotas de SP ou não mapeadas
+                if (!config) {
+                    config = { type: 'van', title: `Rota ${rota} (Automática)` };
+                }
+
+                // Determina o ID da div de destino baseado no tipo de veículo
+                const divId = config.type === 'fiorino' ? 'resultado-fiorino-geral' : 
+                              (config.type === 'van' ? 'resultado-van-geral' : 'resultado-34-geral');
+
+                // Chama a função de separação existente
+                // Passamos 'null' no botão pois é uma chamada automática
+                // Passamos 'true' para isBatchMode para não limpar as cargas anteriores
+                await separarCargasGeneric(rota, divId, config.title, config.type, null, true);
+                
+                // Pequena pausa para a UI respirar e não travar
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            // 4. Atualiza a interface geral para garantir que tudo esteja sincronizado
+            renderAllUI();
+            showToast("Processamento de cargas prioritárias concluído!", "success");
         }
 
         // ================================================================================================
