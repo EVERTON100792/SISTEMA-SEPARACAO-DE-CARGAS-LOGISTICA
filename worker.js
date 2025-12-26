@@ -43,7 +43,7 @@ const rotaVeiculoMap = {
     '2555': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2555' }, '2560': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2560' }, '2561': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2561' }, '2571': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2571' }, '2575': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2575' }, '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' }, '2735': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2735' }, '2745': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2745' },
     // Rotas do Paraná (Varejo)
     '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
-    '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'fiorino', title: 'Rota 11711' },
+    '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'van', title: 'Rota 11711' },
     '11361': { type: 'tresQuartos', title: 'Rota 11361' }, '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] }, '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] }, '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] }, '11541': { type: 'tresQuartos', title: 'Rota 11541' }
 };
 
@@ -151,9 +151,10 @@ function createSolutionFromHeuristic(itemsParaEmpacotar, vehicleType, configs, p
     let unplacedGroups = [];
 
     loads.forEach(load => {
-        // A validação da carga agora depende apenas de atingir o peso mínimo.
-        // A prioridade de um pedido é usada para ordenar e tentar encaixá-lo primeiro, mas não para forçar uma carga sub-mínima.
-        if (load.pedidos.length > 0 && load.totalKg >= config.minKg) { 
+        const hasPriority = load.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)) || pedidosRecall.includes(String(p.Num_Pedido)));
+        const allowPriorityOverride = true; // Permite para todos os veículos
+
+        if (load.pedidos.length > 0 && (load.totalKg >= config.minKg || (hasPriority && allowPriorityOverride))) {
             finalLoads.push(load);
         } else if (load.pedidos.length > 0) {
             const clientGroupsInFailedLoad = Object.values(load.pedidos.reduce((acc, p) => {
@@ -174,12 +175,12 @@ function createSolutionFromHeuristic(itemsParaEmpacotar, vehicleType, configs, p
 
 function runHeuristicOptimization(packableGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall) {
     // Função de ordenação principal que prioriza a data mais antiga.
-    const dateSorter = (a, b) => { // prettier-ignore
+    const dateSorter = (a, b) => {
         if (a.oldestDate && b.oldestDate) {
             if (a.oldestDate < b.oldestDate) return -1;
             if (a.oldestDate > b.oldestDate) return 1;
         } else if (a.oldestDate) {
-            return -1;
+            return -1; // Grupos com data vêm antes dos sem data.
         } else if (b.oldestDate) {
             return 1;
         }
@@ -187,26 +188,40 @@ function runHeuristicOptimization(packableGroups, vehicleType, configs, pedidosP
     };
 
     const strategies = [
-        { name: 'priority-weight-desc', sorter: (a, b) => { // prettier-ignore
-            const dateCompare = dateSorter(a, b); if (dateCompare !== 0) return dateCompare;
-            const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))); const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-            if (aHasPrio && !bHasPrio) return -1; if (!aHasPrio && bHasPrio) return 1;
-            return b.totalKg - a.totalKg; }
-        },
-        { name: 'scheduled-weight-desc', sorter: (a, b) => { // prettier-ignore
-            const dateCompare = dateSorter(a, b); if (dateCompare !== 0) return dateCompare;
-            const aHasSched = a.pedidos.some(p => p.Agendamento === 'Sim'); const bHasSched = b.pedidos.some(p => p.Agendamento === 'Sim');
-            if (aHasSched && !bHasSched) return -1; if (!aHasSched && bHasSched) return 1;
-            return b.totalKg - a.totalKg; }
-        },
-        { name: 'weight-desc', sorter: (a, b) => { // prettier-ignore
-            const dateCompare = dateSorter(a, b); if (dateCompare !== 0) return dateCompare;
-            return b.totalKg - a.totalKg; }
-        },
-        { name: 'weight-asc', sorter: (a, b) => { // prettier-ignore
-            const dateCompare = dateSorter(a, b); if (dateCompare !== 0) return dateCompare;
-            return a.totalKg - b.totalKg; }
-        }
+        { name: 'priority-weight-desc', sorter: (a, b) => {
+            const dateCompare = dateSorter(a, b);
+            if (dateCompare !== 0) return dateCompare;
+            // Desempate por prioridade manual
+            const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+            const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
+            if (aHasPrio && !bHasPrio) return -1;
+            if (!aHasPrio && bHasPrio) return 1;
+            // Desempate final por peso
+            return b.totalKg - a.totalKg;
+        }},
+        { name: 'scheduled-weight-desc', sorter: (a, b) => {
+            const dateCompare = dateSorter(a, b);
+            if (dateCompare !== 0) return dateCompare;
+            // Desempate por agendamento
+            const aHasSched = a.pedidos.some(p => p.Agendamento === 'Sim');
+            const bHasSched = b.pedidos.some(p => p.Agendamento === 'Sim');
+            if (aHasSched && !bHasSched) return -1;
+            if (!aHasSched && bHasSched) return 1;
+            // Desempate final por peso
+            return b.totalKg - a.totalKg;
+        }},
+        { name: 'weight-desc', sorter: (a, b) => {
+            const dateCompare = dateSorter(a, b);
+            if (dateCompare !== 0) return dateCompare;
+            // Desempate por peso
+            return b.totalKg - a.totalKg;
+        }},
+        { name: 'weight-asc', sorter: (a, b) => {
+            const dateCompare = dateSorter(a, b);
+            if (dateCompare !== 0) return dateCompare;
+            // Desempate por peso
+            return a.totalKg - b.totalKg;
+        }}
     ];
 
     let bestResult = null;
@@ -228,26 +243,8 @@ function runHeuristicOptimization(packableGroups, vehicleType, configs, pedidosP
 function getSolutionEnergy(solution, vehicleType, configs) {
     const config = getVehicleConfig(vehicleType, configs);
     const balancingFactor = 0.01;
-    const dateAgingFactor = 1.5; // Fator de envelhecimento para dar mais peso a pedidos antigos.
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // A penalidade por itens não alocados agora considera a idade do pedido.
-    const leftoverPenalty = solution.leftovers.reduce((sum, group) => {
-        let penalty = group.totalKg;
-        if (group.oldestDate) {
-            const orderDate = new Date(group.oldestDate);
-            orderDate.setHours(0, 0, 0, 0);
-            const ageInDays = Math.max(0, (today - orderDate) / (1000 * 60 * 60 * 24));
-            
-            // A penalidade aumenta com a idade do pedido.
-            if (ageInDays > 1) {
-                penalty += group.totalKg * Math.pow(ageInDays, dateAgingFactor);
-            }
-        }
-        return sum + penalty;
-    }, 0);
+    const leftoverWeight = solution.leftovers.reduce((sum, group) => sum + group.totalKg, 0);
     
     const loadPenalty = solution.loads.reduce((sum, load) => {
         if (load.totalKg > 0 && load.totalKg < config.minKg) {
@@ -264,7 +261,7 @@ function getSolutionEnergy(solution, vehicleType, configs) {
         balancePenalty = variance * balancingFactor;
     }
 
-    return leftoverPenalty + loadPenalty + balancePenalty;
+    return leftoverWeight + loadPenalty + balancePenalty;
 }
 
 async function runSimulatedAnnealing(packableGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall) {
@@ -273,17 +270,17 @@ async function runSimulatedAnnealing(packableGroups, vehicleType, configs, pedid
         const coolingRate = 0.993;
         const iterationsPerTemp = 200;
 
-        // A ordenação inicial agora também prioriza a data mais antiga como critério principal,
-        // seguido por prioridade manual e depois peso.
-        const initialSortedGroups = [...packableGroups].sort((a, b) => { // prettier-ignore
+        // A ordenação inicial agora também prioriza a data mais antiga como critério principal.
+        const initialSortedGroups = [...packableGroups].sort((a, b) => {
             if (a.oldestDate && b.oldestDate) {
                 if (a.oldestDate < b.oldestDate) return -1;
                 if (a.oldestDate > b.oldestDate) return 1;
-            } else if (a.oldestDate) { return -1; } 
-              else if (b.oldestDate) { return 1; }
-            const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido))); const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido)));
-            if (aHasPrio && !bHasPrio) return -1; if (!aHasPrio && bHasPrio) return 1;
-            return b.totalKg - a.totalKg;
+            } else if (a.oldestDate) {
+                return -1;
+            } else if (b.oldestDate) {
+                return 1;
+            }
+            return b.totalKg - a.totalKg; // Desempate por peso
         });
 
         let bestSolution = createSolutionFromHeuristic(initialSortedGroups, vehicleType, configs, pedidosPrioritarios, pedidosRecall);
@@ -384,8 +381,7 @@ async function runSimulatedAnnealing(packableGroups, vehicleType, configs, pedid
                 return;
             }
 
-        // A validação da carga agora depende apenas de atingir o peso mínimo.
-        if (load.pedidos.length > 0 && load.totalKg >= config.minKg) {
+            if (load.pedidos.length > 0 && load.totalKg >= config.minKg) {
                 finalLoads.push(load);
             } else if (load.pedidos.length > 0) {
                 const groups = Object.values(load.pedidos.reduce((acc, p) => { 
