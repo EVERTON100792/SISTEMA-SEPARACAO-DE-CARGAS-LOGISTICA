@@ -2463,7 +2463,7 @@
             '2705': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2705' }, '2735': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2735' }, '2745': { type: 'van', title: 'Van / 3/4 São Paulo - Rota 2745' },
             // Rotas do Paraná (Varejo)
             '11101': { type: 'fiorino', title: 'Rota 11101' }, '11301': { type: 'fiorino', title: 'Rota 11301' }, '11311': { type: 'fiorino', title: 'Rota 11311' }, '11561': { type: 'fiorino', title: 'Rota 11561' }, '11721': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11731'] }, '11731': { type: 'fiorino', title: 'Rotas 11721 & 11731', combined: ['11721'] },
-            '11102': { type: 'van', title: 'Rota 11102' }, '11331': { type: 'van', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'van', title: 'Rota 11551' }, '11571': { type: 'van', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'fiorino', title: 'Rota 11711' },
+            '11102': { type: 'fiorino', title: 'Rota 11102' }, '11331': { type: 'fiorino', title: 'Rota 11331' }, '11341': { type: 'van', title: 'Rota 11341' }, '11342': { type: 'van', title: 'Rota 11342' }, '11351': { type: 'van', title: 'Rota 11351' }, '11521': { type: 'van', title: 'Rota 11521' }, '11531': { type: 'van', title: 'Rota 11531' }, '11551': { type: 'fiorino', title: 'Rota 11551' }, '11571': { type: 'fiorino', title: 'Rota 11571' }, '11701': { type: 'van', title: 'Rota 11701' }, '11711': { type: 'fiorino', title: 'Rota 11711' },
             '11361': { type: 'tresQuartos', title: 'Rota 11361' }, '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] }, '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] }, '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] }, '11541': { type: 'tresQuartos', title: 'Rota 11541' }
         };
         
@@ -4131,18 +4131,19 @@
         function runHeuristicOptimization(packableGroups, vehicleType) {
             const strategies = [
                 { name: 'priority-weight-desc', sorter: (a, b) => {
-                    // 1. Prioridade Manual (Vem antes da data)
-                    const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido).trim()) || pedidosRecall.includes(String(p.Num_Pedido).trim()));
-                    const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido).trim()) || pedidosRecall.includes(String(p.Num_Pedido).trim()));
-                    if (aHasPrio && !bHasPrio) return -1;
-                    if (!aHasPrio && bHasPrio) return 1;
-
-                    // 2. Prioriza por data mais antiga
+                    // 1. Prioriza por data mais antiga (Critério Principal)
                     if (a.oldestDate && b.oldestDate) {
                         if (a.oldestDate < b.oldestDate) return -1;
                         if (a.oldestDate > b.oldestDate) return 1;
                     } else if (a.oldestDate) { return -1; } 
                       else if (b.oldestDate) { return 1; }
+
+                    // 2. Prioridade Manual (Critério Secundário)
+                    const aHasPrio = a.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido).trim()) || pedidosRecall.includes(String(p.Num_Pedido).trim()));
+                    const bHasPrio = b.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido).trim()) || pedidosRecall.includes(String(p.Num_Pedido).trim()));
+                    if (aHasPrio && !bHasPrio) return -1;
+                    if (!aHasPrio && bHasPrio) return 1;
+
                     // 3. Desempate final por peso
                     return b.totalKg - a.totalKg;
                 }},
@@ -4437,14 +4438,39 @@
                 }, null);
             });
 
-            // --- LÓGICA ESPECIAL PARA ROTA 11711 (Priorizar Fiorino para Cidades Específicas) ---
+            // --- LÓGICA ESPECIAL PARA PRIORIZAR FIORINO EM ROTAS MISTAS ---
             let groupsExcludedFromFiorino = [];
-            if (routes.includes('11711')) {
-                const cidadesPermitidasFiorino = new Set([
+            
+            // Mapa de rotas e suas cidades permitidas para Fiorino
+            const rotasEspeciaisFiorino = {
+                '11711': [
                     'MANDAGUACU', 'SAO JORGE DO IVAI', 'TAMBOARA', 'GUAIRACA', 
                     'PARANAVAI', 'NOVA ESPERANCA', 'FLORAI', 
                     'PRESIDENTE CASTELO BRANCO'
-                ]);
+                ],
+                '11102': [
+                    'IBAITI', 'SIQUEIRA CAMPOS', 'FIGUEIRA', 'NOVA SANTA BARBARA', 
+                    'PINHALAO', 'CARLOPOLIS','CURTIUVA'
+                ],
+                '11331': [
+                    'TERRA BOA', 'ENGENHEIRO BELTRAO', 'PEABIRU', 'CAMPO MOURAO', 
+                    'BARBOSA FERRAZ', 'FENIX', 'ARARUNA', 'IRETAMA', 
+                    'ITAMBE', 'FLORESTA', 'IVATUBA', 'MAMBORE'
+                ],
+                '11551': [
+                    'IVAIPORA', 'JARDIM ALEGRE','SAO JOAO DO IVAI', 
+                    'NOVA TEBAS', 'CANDIDO DE ABREU'
+                ],
+                '11571': [
+                    'ORTIGUEIRA', 'IMBAU', 'TELEMACO BORBA'
+                ]
+            };
+
+            // Verifica se alguma das rotas atuais está no mapa especial
+            const rotaEspecialEncontrada = routes.find(r => rotasEspeciaisFiorino[r]);
+
+            if (rotaEspecialEncontrada) {
+                const cidadesPermitidasFiorino = new Set(rotasEspeciaisFiorino[rotaEspecialEncontrada]);
                 const normalizeCity = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
 
                 const fiorinoGroups = [];
@@ -4462,7 +4488,7 @@
                 if (otherGroups.length > 0) {
                     packableGroups = fiorinoGroups;
                     groupsExcludedFromFiorino = otherGroups;
-                    showToast(`Rota 11711: Separando ${otherGroups.length} clientes para Van (cidades mistas).`, 'info');
+                    showToast(`Rota ${rotaEspecialEncontrada}: Separando ${otherGroups.length} clientes para Van (cidades mistas).`, 'info');
                 }
                 // Garante que a primeira tentativa seja Fiorino apenas com as cidades permitidas
                 vehicleType = 'fiorino';
@@ -4649,54 +4675,6 @@
                 }
             });
 
-            // --- NOVA LÓGICA: FORÇAR PRIORIDADES RESTANTES ---
-            // Se após todas as tentativas (Worker + Cascata) ainda houver pedidos prioritários nas sobras,
-            // forçamos a criação de cargas para eles no veículo original, ignorando o peso mínimo.
-            
-            const priorityLeftovers = [];
-            const normalLeftovers = [];
-            
-            finalLeftoverGroups.forEach(group => {
-                const isPriority = group.pedidos.some(p => pedidosPrioritarios.includes(String(p.Num_Pedido).trim()) || pedidosRecall.includes(String(p.Num_Pedido).trim()));
-                if (isPriority) priorityLeftovers.push(group);
-                else normalLeftovers.push(group);
-            });
-            
-            if (priorityLeftovers.length > 0) {
-                // Ordena por peso para tentar agrupar melhor
-                priorityLeftovers.sort((a, b) => b.totalKg - a.totalKg);
-                
-                let forcedLoads = [];
-                
-                priorityLeftovers.forEach(group => {
-                    let placed = false;
-                    // Tenta encaixar em cargas forçadas já criadas
-                    for (const load of forcedLoads) {
-                        if (isMoveValid(load, group, vehicleType)) {
-                            load.pedidos.push(...group.pedidos);
-                            load.totalKg += group.totalKg;
-                            load.totalCubagem += group.totalCubagem;
-                            placed = true;
-                            break;
-                        }
-                    }
-                    // Se não couber, cria nova carga
-                    if (!placed) {
-                        forcedLoads.push({
-                            pedidos: [...group.pedidos],
-                            totalKg: group.totalKg,
-                            totalCubagem: group.totalCubagem,
-                            vehicleType: vehicleType, // Usa o veículo original da rota
-                            isForcedPriority: true
-                        });
-                    }
-                });
-                finalValidLoads.push(...forcedLoads);
-            }
-            
-            finalLeftoverGroups = normalLeftovers;
-            // --- FIM DA NOVA LÓGICA ---
-            
             finalValidLoads.forEach((load, index) => {
                 load.numero = `${load.vehicleType.charAt(0).toUpperCase()}${index + 1}`;
                 const loadId = `${load.vehicleType}-${Date.now()}-${index}`;
