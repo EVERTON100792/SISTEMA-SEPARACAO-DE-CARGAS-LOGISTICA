@@ -34,7 +34,51 @@ self.onmessage = async function(e) {
             self.postMessage({ status: 'error', message: error.message, stack: error.stack });
         }
     }
+
+    if (command === 'roteirizar-e-montar') {
+        try {
+            const { pedidosEncontrados, vehicleType, useGeo, apiKey, configs, initialCityCoordsCache } = e.data;
+            cityCoordsCache = initialCityCoordsCache || {}; // Initialize cache
+            const result = await processarRoteirizacaoNoWorker(pedidosEncontrados, vehicleType, useGeo, apiKey, configs);
+            self.postMessage({ status: 'complete', result: result });
+        } catch (error) {
+            console.error('WORKER: Erro durante a roteirização e montagem:', error);
+            self.postMessage({ status: 'error', message: error.message, stack: error.stack });
+        }
+    }
+    
+    if (command === 'optimize-route-sequence') {
+        try {
+            const result = runSequenceOptimization(packableGroups, vehicleType, configs);
+            self.postMessage({ status: 'complete', result: result });
+        } catch (error) {
+            self.postMessage({ status: 'error', message: error.message, stack: error.stack });
+        }
+    }
 };
+
+let cityCoordsCache = {};
+
+async function getCityCoordinates(cidade, uf, apiKey) {
+    const key = `${cidade.trim().toUpperCase()}-${uf.trim().toUpperCase()}`;
+    if (cityCoordsCache[key]) return cityCoordsCache[key];
+    if (!apiKey) return null;
+    try {
+        const query = `${cidade}, ${uf}, Brasil`;
+        const response = await fetch(`https://graphhopper.com/api/1/geocode?q=${encodeURIComponent(query)}&key=${apiKey}`);
+        if (!response.ok) return null;
+        const data = await response.json();
+        if (data.hits && data.hits.length > 0) {
+            const point = data.hits[0].point;
+            const coords = { lat: point.lat, lng: point.lng };
+            cityCoordsCache[key] = coords;
+            return coords;
+        }
+    } catch (e) {
+        console.error(`WORKER: Erro ao buscar coordenadas para ${key}:`, e);
+    }
+    return null;
+}
 
 const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA', 'CASA VISCARD S/A COM. E IMPORTACAO'];
 
@@ -381,4 +425,189 @@ async function runSimulatedAnnealing(packableGroups, vehicleType, configs, pedid
         });
         resolve({ loads: finalLoads, leftovers: finalLeftovers });
     });
+}
+
+function runSequenceOptimization(orderedGroups, vehicleType, configs) {
+    const config = getVehicleConfig(vehicleType, configs);
+    let loads = [];
+    let currentLoad = { pedidos: [], totalKg: 0, totalCubagem: 0, vehicleType: vehicleType };
+    let leftovers = [];
+
+    orderedGroups.forEach(group => {
+        // Verifica limites absolutos do grupo
+        if (group.totalKg > config.hardMaxKg || group.totalCubagem > config.hardMaxCubage) {
+            leftovers.push(group);
+            return;
+        }
+
+        // Tenta adicionar à carga atual respeitando TODAS as regras (peso, cubagem, mix de clientes, agendamento)
+        if (isMoveValid(currentLoad, group, vehicleType, configs)) {
+            currentLoad.pedidos.push(...group.pedidos);
+            currentLoad.totalKg += group.totalKg;
+            currentLoad.totalCubagem += group.totalCubagem;
+            currentLoad.usedHardLimit = (currentLoad.totalKg > config.softMaxKg || currentLoad.totalCubagem > config.softMaxCubage);
+        } else {
+            // Se não couber, fecha a carga atual (se tiver itens) e abre uma nova
+            if (currentLoad.pedidos.length > 0) {
+                loads.push(currentLoad);
+            }
+            // Inicia nova carga com o grupo atual
+            currentLoad = { 
+                pedidos: [...group.pedidos], 
+                totalKg: group.totalKg, 
+                totalCubagem: group.totalCubagem, 
+                vehicleType: vehicleType,
+                usedHardLimit: (group.totalKg > config.softMaxKg || group.totalCubagem > config.softMaxCubage)
+            };
+        }
+    });
+    
+    // Adiciona a última carga se não estiver vazia
+    if (currentLoad.pedidos.length > 0) {
+        loads.push(currentLoad);
+    }
+
+    // Filtra cargas que não atingem o peso mínimo
+    let finalLoads = [];
+    let unplacedGroups = [];
+
+    loads.forEach(load => {
+        if (load.totalKg >= config.minKg) {
+            finalLoads.push(load);
+        } else {
+            const clientGroupsInFailedLoad = Object.values(load.pedidos.reduce((acc, p) => {
+                const clienteId = normalizeClientId(p.Cliente);
+                if (!acc[clienteId]) { acc[clienteId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) }; }
+                acc[clienteId].pedidos.push(p);
+                acc[clienteId].totalKg += p.Quilos_Saldo;
+                acc[clienteId].totalCubagem += p.Cubagem;
+                return acc;
+            }, {}));
+            unplacedGroups.push(...clientGroupsInFailedLoad);
+        }
+    });
+
+    return { loads: finalLoads, leftovers: [...leftovers, ...unplacedGroups] };
+}
+
+function deg2rad(deg) { return deg * (Math.PI / 180); }
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Raio da Terra em km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+async function processarRoteirizacaoNoWorker(pedidosEncontrados, vehicleType, useGeo, apiKey, configs) {
+    // 1. Group by city
+    self.postMessage({ status: 'progress-update', text: 'Agrupando pedidos por cidade...' });
+    const cityGroups = {};
+    pedidosEncontrados.forEach(p => {
+        const key = `${(p.Cidade || '').trim().toUpperCase()} - ${(p.UF || '').trim().toUpperCase()}`;
+        if (!cityGroups[key]) cityGroups[key] = [];
+        cityGroups[key].push(p);
+    });
+
+    let sortedCities = Object.keys(cityGroups);
+
+    // 2. Geocode and sort cities
+    if (useGeo && apiKey) {
+        self.postMessage({ status: 'progress-update', text: 'Otimizando sequência de entrega...' });
+        const cityCoords = [];
+        for (let i = 0; i < sortedCities.length; i++) {
+            const cityKey = sortedCities[i];
+            const [cidade, uf] = cityKey.split(' - ');
+            const coords = await getCityCoordinates(cidade, uf, apiKey);
+            if (coords) cityCoords.push({ key: cityKey, ...coords });
+            else cityCoords.push({ key: cityKey, lat: 0, lng: 0 });
+            self.postMessage({ status: 'progress', progress: 30 + (i / sortedCities.length) * 40 });
+        }
+        
+        const depot = { lat: -23.31461, lng: -51.36963 };
+        let current = depot;
+        const unvisited = [...cityCoords];
+        const path = [];
+        
+        while (unvisited.length > 0) {
+            let nearestIdx = -1;
+            let minDist = Infinity;
+            for (let i = 0; i < unvisited.length; i++) {
+                const d = calculateDistance(current.lat, current.lng, unvisited[i].lat, unvisited[i].lng);
+                if (d < minDist) { minDist = d; nearestIdx = i; }
+            }
+            if (nearestIdx !== -1) {
+                path.push(unvisited[nearestIdx].key);
+                current = unvisited[nearestIdx];
+                unvisited.splice(nearestIdx, 1);
+            } else { 
+                path.push(unvisited[0].key); 
+                unvisited.splice(0, 1); 
+            }
+        }
+        sortedCities = path;
+    } else {
+        sortedCities.sort();
+    }
+
+    // 3. Create sorted order list and group by client
+    self.postMessage({ status: 'progress-update', text: 'Preparando dados para o otimizador...' });
+    const sortedOrders = [];
+    sortedCities.forEach(cityKey => {
+        const ordersInCity = cityGroups[cityKey].sort((a, b) => (a.Nome_Cliente || '').localeCompare(b.Nome_Cliente || ''));
+        sortedOrders.push(...ordersInCity);
+    });
+    
+    const packableGroups = [];
+    const clientMap = new Map();
+    
+    sortedOrders.forEach(p => {
+        const cId = normalizeClientId(p.Cliente);
+        if (!clientMap.has(cId)) {
+            const group = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+            clientMap.set(cId, group);
+            packableGroups.push(group);
+        }
+        const group = clientMap.get(cId);
+        group.pedidos.push(p);
+        group.totalKg += p.Quilos_Saldo;
+        group.totalCubagem += p.Cubagem;
+    });
+
+    // 4. Run packing optimization
+    self.postMessage({ status: 'progress-update', text: 'Montando cargas com algoritmo avançado...' });
+    self.postMessage({ status: 'progress', progress: 80 });
+    const packingResult = runSequenceOptimization(packableGroups, vehicleType, configs);
+    let loads = packingResult.loads;
+    packingResult.discardedMessages = [];
+
+    // 5. Distance check for Fiorino/Van
+    if ((vehicleType === 'fiorino' || vehicleType === 'van') && useGeo && apiKey) {
+        const distanceLimit = vehicleType === 'fiorino' ? 500 : 1000;
+        const validLoads = [];
+        const depot = { lat: -23.31461, lng: -51.36963 };
+        
+        for (const load of loads) {
+            const citiesInLoad = [...new Set(load.pedidos.map(p => `${(p.Cidade || '').trim().toUpperCase()} - ${(p.UF || '').trim().toUpperCase()}`))];
+            let totalDistKm = 0;
+            let currentPos = depot;
+            for (const cityKey of citiesInLoad) {
+                const [cidade, uf] = cityKey.split(' - ');
+                const coords = await getCityCoordinates(cidade, uf, apiKey);
+                if (coords) { totalDistKm += calculateDistance(currentPos.lat, currentPos.lng, coords.lat, coords.lng); currentPos = coords; }
+            }
+            totalDistKm += calculateDistance(currentPos.lat, currentPos.lng, depot.lat, depot.lng);
+            const estimatedRoadDist = totalDistKm * 1.3;
+            if (estimatedRoadDist <= distanceLimit) { validLoads.push(load); } 
+            else { packingResult.discardedMessages.push(`Carga ${vehicleType} descartada: Rota estimada em ${estimatedRoadDist.toFixed(0)}km (>${distanceLimit}km).`); }
+        }
+        loads = validLoads;
+    }
+    
+    self.postMessage({ status: 'progress', progress: 100 });
+    packingResult.loads = loads;
+    packingResult.sortedCities = sortedCities;
+    return packingResult;
 }

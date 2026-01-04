@@ -1126,8 +1126,9 @@
                                     <button type="button" class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-file-text me-1"></i>Relatórios</button>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li><a class="dropdown-item" href="#" onclick="exportarRelatorioDisponiveisPDF()"><i class="bi bi-file-pdf me-2"></i>Relatório PDF</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioCompletoPorRotaPDF()"><i class="bi bi-file-earmark-pdf me-2"></i>Relatório Completo (Por Rota)</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioDisponiveisExcel()"><i class="bi bi-file-excel me-2"></i>Relatório Excel (Copiar)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioCompletoPorRotaPDF()"><i class="bi bi-file-earmark-pdf me-2"></i>Relatório Completo (PDF)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioCompletoPorRotaExcel()"><i class="bi bi-file-excel me-2"></i>Relatório Completo (Excel)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioDisponiveisExcel()"><i class="bi bi-file-spreadsheet me-2"></i>Relatório Simples (Excel)</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -1141,6 +1142,7 @@
                                 <div id="search-result" class="mt-3"></div>
                                 <div class="d-grid gap-2 mt-2">
                                     <button class="btn btn-sm btn-outline-success" onclick="otimizarSobrasPorCidade()" title="Agrupar sobras por cidade e montar cargas automaticamente"><i class="bi bi-building-gear me-1"></i>Otimizar Sobras (Por Cidade)</button>
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#roteirizacaoModal" title="Roteirizar e montar cargas a partir de uma lista de pedidos"><i class="bi bi-map-fill me-1"></i>Roteirizar Lista</button>
                                     <button class="btn btn-sm btn-outline-secondary" onclick="imprimirCargasSobras()" title="Imprimir apenas as cargas geradas pela otimização de sobras"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas de Sobra</button>
                                 </div>
                             </div>
@@ -1440,6 +1442,34 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-warning" onclick="processarPriorizacaoEmMassa()"><i class="bi bi-check-circle-fill me-2"></i>Priorizar Todos</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Roteirização e Montagem por Lista -->
+    <div class="modal fade" id="roteirizacaoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-map-fill me-2"></i>Roteirizar e Montar (Lista)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Cole os números dos pedidos. O sistema irá roteirizar as cidades e montar as cargas sequencialmente respeitando a capacidade do veículo.</p>
+                    <div class="mb-3">
+                        <label for="roteiroPedidosInput" class="form-label">Pedidos:</label>
+                        <textarea class="form-control" id="roteiroPedidosInput" rows="5" placeholder="Cole os números aqui..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="roteiroVeiculoSelect" class="form-label">Tipo de Veículo:</label>
+                        <select class="form-select" id="roteiroVeiculoSelect"><option value="fiorino">Fiorino</option><option value="van" selected>Van</option><option value="tresQuartos">3/4</option><option value="toco">Toco</option></select>
+                    </div>
+                    <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="roteiroGeoCheck" checked><label class="form-check-label" for="roteiroGeoCheck">Usar Geolocalização (Agrupar cidades próximas)</label></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="processarRoteirizacaoLista()">Processar</button>
                 </div>
             </div>
         </div>
@@ -2472,6 +2502,31 @@
             '11361': { type: 'tresQuartos', title: 'Rota 11361' }, '11501': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11502', '11511'] }, '11502': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11511'] }, '11511': { type: 'tresQuartos', title: 'Rotas 11501, 11502 & 11511', combined: ['11501', '11502'] }, '11541': { type: 'tresQuartos', title: 'Rota 11541' }
         };
         
+        // Mapa de rotas e suas cidades permitidas para Fiorino (Global)
+        const rotasEspeciaisFiorino = {
+            '11711': [
+                'MANDAGUACU', 'SAO JORGE DO IVAI', 'TAMBOARA', 'GUAIRACA', 
+                'PARANAVAI', 'NOVA ESPERANCA', 'FLORAI', 
+                'PRESIDENTE CASTELO BRANCO'
+            ],
+            '11102': [
+                'IBAITI', 'FIGUEIRA', 'NOVA SANTA BARBARA', 
+                'PINHALAO','CURTIUVA'
+            ],
+            '11331': [
+                'TERRA BOA', 'ENGENHEIRO BELTRAO', 'PEABIRU', 'CAMPO MOURAO', 
+                'BARBOSA FERRAZ', 'FENIX', 'ARARUNA', 'IRETAMA', 
+                'ITAMBE', 'FLORESTA', 'IVATUBA', 'MAMBORE'
+            ],
+            '11551': [
+                'IVAIPORA', 'JARDIM ALEGRE','SAO JOAO DO IVAI', 
+                'NOVA TEBAS', 'CANDIDO DE ABREU'
+            ],
+            '11571': [
+                'ORTIGUEIRA', 'IMBAU', 'TELEMACO BORBA'
+            ]
+        };
+
         const fileInput = document.getElementById('fileInput');
         const processarBtn = document.getElementById('processarBtn');
         const statusDiv = document.getElementById('status');
@@ -4446,31 +4501,6 @@
             // --- LÓGICA ESPECIAL PARA PRIORIZAR FIORINO EM ROTAS MISTAS ---
             let groupsExcludedFromFiorino = [];
             
-            // Mapa de rotas e suas cidades permitidas para Fiorino
-            const rotasEspeciaisFiorino = {
-                '11711': [
-                    'MANDAGUACU', 'SAO JORGE DO IVAI', 'TAMBOARA', 'GUAIRACA', 
-                    'PARANAVAI', 'NOVA ESPERANCA', 'FLORAI', 
-                    'PRESIDENTE CASTELO BRANCO'
-                ],
-                '11102': [
-                    'IBAITI', 'FIGUEIRA', 'NOVA SANTA BARBARA', 
-                    'PINHALAO','CURTIUVA'
-                ],
-                '11331': [
-                    'TERRA BOA', 'ENGENHEIRO BELTRAO', 'PEABIRU', 'CAMPO MOURAO', 
-                    'BARBOSA FERRAZ', 'FENIX', 'ARARUNA', 'IRETAMA', 
-                    'ITAMBE', 'FLORESTA', 'IVATUBA', 'MAMBORE'
-                ],
-                '11551': [
-                    'IVAIPORA', 'JARDIM ALEGRE','SAO JOAO DO IVAI', 
-                    'NOVA TEBAS', 'CANDIDO DE ABREU'
-                ],
-                '11571': [
-                    'ORTIGUEIRA', 'IMBAU', 'TELEMACO BORBA'
-                ]
-            };
-
             // Verifica se alguma das rotas atuais está no mapa especial
             const rotaEspecialEncontrada = routes.find(r => rotasEspeciaisFiorino[r]);
 
@@ -6936,6 +6966,114 @@
             showToast("Relatório Excel gerado com sucesso!", 'success');
         }
 
+        function exportarRelatorioCompletoPorRotaExcel() {
+            const allAllocatedIds = new Set();
+            Object.values(activeLoads).forEach(l => l.pedidos.forEach(p => allAllocatedIds.add(String(p.Num_Pedido))));
+
+            // 1. Pedidos Varejo Disponíveis
+            const pedidosVarejoReais = pedidosGeraisAtuais.filter(p => !allAllocatedIds.has(String(p.Num_Pedido)));
+
+            // 2. Pedidos Toco Disponíveis
+            const pedidosTocoDisponiveis = [];
+            Object.values(gruposToco).forEach(grupo => {
+                grupo.pedidos.forEach(p => {
+                    if (!allAllocatedIds.has(String(p.Num_Pedido))) pedidosTocoDisponiveis.push(p);
+                });
+            });
+
+            const todosPedidos = [...pedidosVarejoReais, ...pedidosTocoDisponiveis];
+
+            if (todosPedidos.length === 0) {
+                showToast("Não há pedidos disponíveis para gerar o relatório.", 'warning');
+                return;
+            }
+
+            // Helper para nome da rota
+            const getRouteDisplayName = (rota) => {
+                const config = rotaVeiculoMap[rota] || { type: 'van', title: '' };
+                const veiculo = config.type;
+                
+                if (veiculo === 'van' && !config.title?.startsWith('Rota 1')) {
+                    return `Rota: ${rota} (VAN-3/4- SP)`;
+                } else {
+                    const veiculoNome = veiculo.replace('tresQuartos', '3/4').replace(/^\w/, c => c.toUpperCase());
+                    return `Rota: ${rota} (${veiculoNome})`;
+                }
+            };
+
+            // Ordenar para corresponder à sequência da UI "Disponíveis Varejo"
+            const vehicleOrder = { 'fiorino': 1, 'van': 2, 'tresQuartos': 3 };
+            const numericSort = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+
+            todosPedidos.sort((a, b) => {
+                const rotaA = String(a.Cod_Rota || '0');
+                const rotaB = String(b.Cod_Rota || '0');
+
+                if (rotaA === '0' && rotaB !== '0') return -1;
+                if (rotaB === '0' && rotaA !== '0') return 1;
+
+                const typeA = rotaVeiculoMap[rotaA]?.type || 'van';
+                const typeB = rotaVeiculoMap[rotaB]?.type || 'van';
+
+                const orderA = vehicleOrder[typeA] || 99;
+                const orderB = vehicleOrder[typeB] || 99;
+
+                if (orderA !== orderB) {
+                    return orderA - orderB;
+                }
+
+                if (typeA === 'van' && typeB === 'van') {
+                    const isParanaA = rotaVeiculoMap[rotaA]?.title.startsWith('Rota 1');
+                    const isParanaB = rotaVeiculoMap[rotaB]?.title.startsWith('Rota 1');
+                    if (isParanaA && !isParanaB) return -1;
+                    if (!isParanaA && isParanaB) return 1;
+                }
+
+                const rotaCompare = numericSort(rotaA, rotaB);
+                if (rotaCompare !== 0) return rotaCompare;
+
+                return (a.Nome_Cliente || '').localeCompare(b.Nome_Cliente || '');
+            });
+
+            // Preparar dados
+            const dataToExport = todosPedidos.map(p => ({
+                'Rota Descrição': getRouteDisplayName(p.Cod_Rota),
+                'Cód. Rota': p.Cod_Rota,
+                'Número Pedido': p.Num_Pedido,
+                'Cliente': normalizeClientId(p.Cliente),
+                'Nome Cliente': p.Nome_Cliente,
+                'Cidade': p.Cidade,
+                'UF': p.UF,
+                'Peso (kg)': p.Quilos_Saldo,
+                'Cubagem': p.Cubagem,
+                'Data Pedido': p.Dat_Ped
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport, { cellDates: true });
+            
+            // Ajuste de largura das colunas
+            const wscols = [
+                {wch: 30}, // Rota Descrição
+                {wch: 10}, // Cód. Rota
+                {wch: 15}, // Número Pedido
+                {wch: 10}, // Cliente
+                {wch: 30}, // Nome Cliente
+                {wch: 20}, // Cidade
+                {wch: 5},  // UF
+                {wch: 12}, // Peso
+                {wch: 10}, // Cubagem
+                {wch: 12}  // Data
+            ];
+            worksheet['!cols'] = wscols;
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Pedidos por Rota");
+            
+            const today = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+            XLSX.writeFile(workbook, `Relatorio_Completo_Rotas_${today}.xlsx`);
+            showToast("Relatório Excel (Por Rota) gerado com sucesso!", 'success');
+        }
+
         function exportarRelatorioCompletoPorRotaPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4'); // Paisagem para caber mais colunas
@@ -7393,6 +7531,312 @@
             // 4. Atualiza a interface geral para garantir que tudo esteja sincronizado
             renderAllUI();
             showToast("Processamento de cargas prioritárias concluído!", "success");
+        }
+
+        async function processarRoteirizacaoLista() {
+            const input = document.getElementById('roteiroPedidosInput');
+            const vehicleType = document.getElementById('roteiroVeiculoSelect').value;
+            const useGeo = document.getElementById('roteiroGeoCheck').checked;
+            
+            const orderNumbers = input.value.split(/[\n,\s]+/).map(s => s.trim()).filter(Boolean);
+            if (orderNumbers.length === 0) { showToast("Insira os números dos pedidos.", "warning"); return; }
+
+            // Show processing modal
+            const modalElement = document.getElementById('processing-modal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+            const progressBar = document.getElementById('processing-progress-bar');
+            const statusText = document.getElementById('processing-status-text');
+            const thinkingText = document.getElementById('thinking-text');
+            const detailsText = document.getElementById('processing-details-text');
+            
+            progressBar.style.width = '0%';
+            statusText.textContent = `Roteirizando e Montando Cargas...`;
+            thinkingText.textContent = "Identificando pedidos e calculando rotas...";
+            detailsText.textContent = "";
+            modal.show();
+            startThinkingText();
+
+            try {
+                // Allow UI to render modal
+                await new Promise(r => setTimeout(r, 100));
+
+                const pedidosEncontrados = [];
+                const pedidosNaoEncontrados = [];
+                
+                const availableMap = new Map(pedidosGeraisAtuais.map(p => [String(p.Num_Pedido), p]));
+                
+                orderNumbers.forEach(num => {
+                    if (availableMap.has(num)) {
+                        pedidosEncontrados.push(availableMap.get(num));
+                    } else {
+                        const leftover = currentLeftoversForPrinting.find(p => String(p.Num_Pedido) === num);
+                        if (leftover) pedidosEncontrados.push(leftover);
+                        else pedidosNaoEncontrados.push(num);
+                    }
+                });
+
+                if (pedidosEncontrados.length === 0) { 
+                    modal.hide(); stopThinkingText();
+                    showToast("Nenhum pedido encontrado na lista de disponíveis/sobras.", "error"); 
+                    return; 
+                }
+                
+                if (pedidosNaoEncontrados.length > 0) { 
+                    showToast(`${pedidosNaoEncontrados.length} pedidos não encontrados ou já alocados.`, "warning"); 
+                }
+
+                // FILTRO DE CIDADES PARA FIORINO (Lógica idêntica à montagem normal)
+                if (vehicleType === 'fiorino') {
+                    const normalizeCity = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+                    const pedidosValidos = [];
+                    const pedidosInvalidos = [];
+
+                    pedidosEncontrados.forEach(p => {
+                        const rota = String(p.Cod_Rota);
+                        if (rotasEspeciaisFiorino[rota]) {
+                            const cidadesPermitidas = new Set(rotasEspeciaisFiorino[rota]);
+                            const cidadePedido = normalizeCity(String(p.Cidade || '').split(',')[0]);
+                            if (cidadesPermitidas.has(cidadePedido)) {
+                                pedidosValidos.push(p);
+                            } else {
+                                pedidosInvalidos.push(p);
+                            }
+                        } else {
+                            pedidosValidos.push(p);
+                        }
+                    });
+
+                    if (pedidosInvalidos.length > 0) {
+                        showToast(`${pedidosInvalidos.length} pedidos removidos: Cidade não permitida para Fiorino nestas rotas.`, 'warning');
+                        // Atualiza a lista de pedidos encontrados
+                        pedidosEncontrados.length = 0;
+                        pedidosEncontrados.push(...pedidosValidos);
+                        if (pedidosEncontrados.length === 0) { modal.hide(); stopThinkingText(); return; }
+                    }
+                }
+
+                progressBar.style.width = '10%';
+                thinkingText.textContent = "Mapeando cidades...";
+        
+                // 2. Map cities and get coordinates
+                const uniqueCitiesMap = {};
+                pedidosEncontrados.forEach(p => {
+                    const key = `${(p.Cidade || 'N/A').trim().toUpperCase()} - ${(p.UF || '').trim().toUpperCase()}`;
+                    if (!uniqueCitiesMap[key]) uniqueCitiesMap[key] = { pedidos: [], coords: null, key: key };
+                    uniqueCitiesMap[key].pedidos.push(p);
+                });
+                
+                if (useGeo) {
+                    const apiKey = document.getElementById('graphhopperApiKey').value;
+                    if (apiKey) {
+                        thinkingText.textContent = "Buscando coordenadas geográficas...";
+                        const cityKeys = Object.keys(uniqueCitiesMap);
+                        for (let i = 0; i < cityKeys.length; i++) {
+                            const cityKey = cityKeys[i];
+                            const [cidade, uf] = cityKey.split(' - ');
+                            const coords = await getCityCoordinates(cidade, uf);
+                            if (coords) uniqueCitiesMap[cityKey].coords = coords;
+                            progressBar.style.width = `${10 + (i / cityKeys.length) * 20}%`; // Progress 10% -> 30%
+                        }
+                    } else {
+                        showToast("API Key não configurada. Agrupamento geográfico desativado.", "warning");
+                    }
+                }
+        
+                progressBar.style.width = '30%';
+                thinkingText.textContent = "Agrupando cidades próximas...";
+        
+                // 3. Create Clusters
+                const clusters = [];
+                const assignedCities = new Set();
+                const CLUSTER_RADIUS_KM = 50; // Raio de 50km para agrupar cidades
+        
+                for (const cityKey of Object.keys(uniqueCitiesMap)) {
+                    if (assignedCities.has(cityKey)) continue;
+        
+                    const currentCluster = { cities: [uniqueCitiesMap[cityKey]], pedidos: [...uniqueCitiesMap[cityKey].pedidos] };
+                    assignedCities.add(cityKey);
+        
+                    if (useGeo && uniqueCitiesMap[cityKey].coords) {
+                        let addedInIteration;
+                        do {
+                            addedInIteration = false;
+                            for (const otherCityKey of Object.keys(uniqueCitiesMap)) {
+                                if (assignedCities.has(otherCityKey)) continue;
+                                
+                                const otherCity = uniqueCitiesMap[otherCityKey];
+                                if (!otherCity.coords) continue;
+        
+                                const isClose = currentCluster.cities.some(clusterCity => {
+                                    if (!clusterCity.coords) return false;
+                                    const dist = calculateDistance(clusterCity.coords.lat, clusterCity.coords.lng, otherCity.coords.lat, otherCity.coords.lng);
+                                    return dist <= CLUSTER_RADIUS_KM;
+                                });
+        
+                                if (isClose) {
+                                    currentCluster.cities.push(otherCity);
+                                    currentCluster.pedidos.push(...otherCity.pedidos);
+                                    assignedCities.add(otherCityKey);
+                                    addedInIteration = true;
+                                }
+                            }
+                        } while (addedInIteration);
+                    }
+                    clusters.push(currentCluster);
+                }
+        
+                showToast(`${clusters.length} agrupamento(s) de cidades encontrado(s). Otimizando cada um...`, 'info');
+                progressBar.style.width = '40%';
+                
+                // 4. Process each cluster
+                const allCreatedLoads = [];
+                const allLeftoverGroups = [];
+
+                // Configurações para o Worker
+                const vehicleConfigs = {
+                    fiorinoMinCapacity: parseFloat(document.getElementById('fiorinoMinCapacity').value), fiorinoMaxCapacity: parseFloat(document.getElementById('fiorinoMaxCapacity').value), fiorinoCubage: parseFloat(document.getElementById('fiorinoCubage').value), fiorinoHardMaxCapacity: parseFloat(document.getElementById('fiorinoHardMaxCapacity').value), fiorinoHardCubage: parseFloat(document.getElementById('fiorinoHardCubage').value),
+                    vanMinCapacity: parseFloat(document.getElementById('vanMinCapacity').value), vanMaxCapacity: parseFloat(document.getElementById('vanMaxCapacity').value), vanCubage: parseFloat(document.getElementById('vanCubage').value), vanHardMaxCapacity: parseFloat(document.getElementById('vanHardMaxCapacity').value), vanHardCubage: parseFloat(document.getElementById('vanHardCubage').value),
+                    tresQuartosMinCapacity: parseFloat(document.getElementById('tresQuartosMinCapacity').value), tresQuartosMaxCapacity: parseFloat(document.getElementById('tresQuartosMaxCapacity').value), tresQuartosCubage: parseFloat(document.getElementById('tresQuartosCubage').value),
+                    tocoMinCapacity: parseFloat(document.getElementById('tocoMinCapacity').value), tocoMaxCapacity: parseFloat(document.getElementById('tocoMaxCapacity').value), tocoCubage: parseFloat(document.getElementById('tocoCubage').value)
+                };
+
+                for (let i = 0; i < clusters.length; i++) {
+                    const cluster = clusters[i];
+                    const clusterCityNames = cluster.cities.map(c => c.key.split(' - ')[0]).join(', ');
+                    detailsText.textContent = `Otimizando Agrupamento ${i + 1}/${clusters.length}: ${clusterCityNames}`;
+        
+                    // 4a. Create packable groups for the cluster
+                    const packableGroups = Object.values(cluster.pedidos.reduce((acc, p) => {
+                        const cId = normalizeClientId(p.Cliente);
+                        if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                        acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                        return acc;
+                    }, {}));
+        
+                    // 4b. Call worker to optimize this cluster
+                    const processingWorker = new Worker('worker.js');
+                    processingWorker.postMessage({
+                        command: 'start-optimization',
+                        packableGroups: packableGroups,
+                        vehicleType: vehicleType,
+                        optimizationLevel: '2',
+                        configs: vehicleConfigs,
+                        pedidosPrioritarios: pedidosPrioritarios,
+                        pedidosRecall: pedidosRecall
+                    });
+        
+                    const result = await new Promise((resolve, reject) => {
+                        processingWorker.onmessage = (e) => {
+                            if (e.data.status === 'complete') resolve(e.data.result);
+                            else if (e.data.status === 'progress') {
+                                const clusterProgress = (e.data.progress / 100) * (45 / clusters.length); // Each cluster contributes to 45% of the bar
+                                const baseProgress = 40 + (i / clusters.length) * 45;
+                                progressBar.style.width = `${baseProgress + clusterProgress}%`;
+                            }
+                            else if (e.data.status === 'error') reject(new Error(e.data.message));
+                        };
+                        processingWorker.onerror = (e) => reject(new Error(e.message));
+                    });
+                    processingWorker.terminate();
+        
+                    allCreatedLoads.push(...result.loads);
+                    allLeftoverGroups.push(...result.leftovers);
+                }
+        
+                let loads = allCreatedLoads;
+                
+                progressBar.style.width = '85%';
+                thinkingText.textContent = "Verificando limites de distância...";
+                detailsText.textContent = "";
+        
+                // 5. Distance Check
+                if ((vehicleType === 'fiorino' || vehicleType === 'van') && useGeo) {
+                    const distanceLimit = vehicleType === 'fiorino' ? 500 : 1400;
+                    const validLoads = [];
+                    const depot = { lat: -23.31461, lng: -51.36963 };
+                    
+                    for (const load of loads) {
+                        const citiesInLoad = [...new Set(load.pedidos.map(p => `${(p.Cidade || '').trim().toUpperCase()} - ${(p.UF || '').trim().toUpperCase()}`))];
+                        let totalDistKm = 0;
+                        let currentPos = depot;
+                        for (const cityKey of citiesInLoad) {
+                            const [cidade, uf] = cityKey.split(' - ');
+                            const coords = await getCityCoordinates(cidade, uf);
+                            if (coords) {
+                                totalDistKm += calculateDistance(currentPos.lat, currentPos.lng, coords.lat, coords.lng);
+                                currentPos = coords;
+                            }
+                        }
+                        // Retorno ao depósito
+                        totalDistKm += calculateDistance(currentPos.lat, currentPos.lng, depot.lat, depot.lng);
+                        const estimatedRoadDist = totalDistKm * 1.3; // Fator de correção para distância rodoviária
+                        if (estimatedRoadDist > distanceLimit) {
+                            showToast(`Carga ${vehicleType} descartada: Rota estimada em ${estimatedRoadDist.toFixed(0)}km (>${distanceLimit}km).`, 'warning');
+                        } else {
+                            validLoads.push(load);
+                        }
+                    }
+                    loads = validLoads;
+                }
+                
+                // 6. Finalize
+                progressBar.style.width = '95%';
+                thinkingText.textContent = "Finalizando...";
+                
+                // Pequeno delay para garantir que a UI atualize antes de travar na renderização
+                setTimeout(() => {
+                    try {
+                        const vehicleInfo = { fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' }, van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' }, tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }, toco: { name: 'Toco', colorClass: 'bg-secondary', textColor: 'text-white', icon: 'bi-inboxes-fill' } };
+                        let targetContainerId = vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : vehicleType === 'van' ? 'resultado-van-geral' : vehicleType === 'tresQuartos' ? 'resultado-34-geral' : 'resultado-toco';
+                        const targetContainer = document.getElementById(targetContainerId);
+                        if (!loads) loads = [];
+                        loads.forEach((load, idx) => { 
+                            load.numero = `R-${Date.now().toString().slice(-4)}-${idx+1}`; 
+                            load.id = `roteiro-${Date.now()}-${idx}`; 
+                            const citiesInLoad = [...new Set(load.pedidos.map(p => p.Cidade))];
+                            load.observation = `Roteirização por Lista (${citiesInLoad.length} cidades)`; 
+                            activeLoads[load.id] = load; 
+                            if (targetContainer) { 
+                                const cardHtml = renderLoadCard(load, vehicleType, vehicleInfo[vehicleType]); 
+                                targetContainer.insertAdjacentHTML('beforeend', cardHtml); 
+                            } 
+                        });
+                        
+                        // Remove apenas os pedidos que foram efetivamente alocados em cargas válidas
+                        const usedIds = new Set(loads.flatMap(l => l.pedidos.map(p => String(p.Num_Pedido))));
+                        pedidosGeraisAtuais = pedidosGeraisAtuais.filter(p => !usedIds.has(String(p.Num_Pedido)));
+                        currentLeftoversForPrinting = currentLeftoversForPrinting.filter(p => !usedIds.has(String(p.Num_Pedido)));
+                        
+                        const gruposGerais = pedidosGeraisAtuais.reduce((acc, p) => { const rota = p.Cod_Rota; if (!acc[rota]) { acc[rota] = { pedidos: [], totalKg: 0 }; } acc[rota].pedidos.push(p); acc[rota].totalKg += p.Quilos_Saldo; return acc; }, {});
+                        displayGerais(document.getElementById('resultado-geral'), gruposGerais);
+                        
+                        progressBar.style.width = '100%';
+                        updateAndRenderKPIs(); 
+                        updateAndRenderChart(); 
+                        saveStateToLocalStorage();
+                        
+                        modal.hide();
+                        stopThinkingText();
+                        
+                        const modalEl = document.getElementById('roteirizacaoModal'); 
+                        const inputModal = bootstrap.Modal.getInstance(modalEl); 
+                        if (inputModal) inputModal.hide();
+                        
+                        showToast(`${loads.length} cargas criadas com sucesso!`, "success");
+                    } catch (innerError) {
+                        console.error("Erro na renderização final:", innerError);
+                        modal.hide();
+                        stopThinkingText();
+                        showToast("Erro ao finalizar montagem: " + innerError.message, "error");
+                    }
+                }, 100);
+                
+            } catch (e) {
+                console.error(e);
+                modal.hide();
+                stopThinkingText();
+                showToast("Erro ao processar: " + e.message, "error");
+            }
         }
 
         // ================================================================================================
