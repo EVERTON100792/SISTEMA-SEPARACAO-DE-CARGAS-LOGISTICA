@@ -1461,10 +1461,6 @@
                         <label for="roteiroPedidosInput" class="form-label">Pedidos:</label>
                         <textarea class="form-control" id="roteiroPedidosInput" rows="5" placeholder="Cole os números aqui..."></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label for="roteiroVeiculoSelect" class="form-label">Tipo de Veículo:</label>
-                        <select class="form-select" id="roteiroVeiculoSelect"><option value="fiorino">Fiorino</option><option value="van" selected>Van</option><option value="tresQuartos">3/4</option><option value="toco">Toco</option></select>
-                    </div>
                     <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="roteiroGeoCheck" checked><label class="form-check-label" for="roteiroGeoCheck">Usar Geolocalização (Agrupar cidades próximas)</label></div>
                 </div>
                 <div class="modal-footer">
@@ -7535,7 +7531,6 @@
 
         async function processarRoteirizacaoLista() {
             const input = document.getElementById('roteiroPedidosInput');
-            const vehicleType = document.getElementById('roteiroVeiculoSelect').value;
             const useGeo = document.getElementById('roteiroGeoCheck').checked;
             
             const orderNumbers = input.value.split(/[\n,\s]+/).map(s => s.trim()).filter(Boolean);
@@ -7585,36 +7580,6 @@
                     showToast(`${pedidosNaoEncontrados.length} pedidos não encontrados ou já alocados.`, "warning"); 
                 }
 
-                // FILTRO DE CIDADES PARA FIORINO (Lógica idêntica à montagem normal)
-                if (vehicleType === 'fiorino') {
-                    const normalizeCity = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
-                    const pedidosValidos = [];
-                    const pedidosInvalidos = [];
-
-                    pedidosEncontrados.forEach(p => {
-                        const rota = String(p.Cod_Rota);
-                        if (rotasEspeciaisFiorino[rota]) {
-                            const cidadesPermitidas = new Set(rotasEspeciaisFiorino[rota]);
-                            const cidadePedido = normalizeCity(String(p.Cidade || '').split(',')[0]);
-                            if (cidadesPermitidas.has(cidadePedido)) {
-                                pedidosValidos.push(p);
-                            } else {
-                                pedidosInvalidos.push(p);
-                            }
-                        } else {
-                            pedidosValidos.push(p);
-                        }
-                    });
-
-                    if (pedidosInvalidos.length > 0) {
-                        showToast(`${pedidosInvalidos.length} pedidos removidos: Cidade não permitida para Fiorino nestas rotas.`, 'warning');
-                        // Atualiza a lista de pedidos encontrados
-                        pedidosEncontrados.length = 0;
-                        pedidosEncontrados.push(...pedidosValidos);
-                        if (pedidosEncontrados.length === 0) { modal.hide(); stopThinkingText(); return; }
-                    }
-                }
-
                 progressBar.style.width = '10%';
                 thinkingText.textContent = "Mapeando cidades...";
         
@@ -7626,6 +7591,7 @@
                     uniqueCitiesMap[key].pedidos.push(p);
                 });
                 
+                // Pré-carrega coordenadas para todas as cidades encontradas
                 if (useGeo) {
                     const apiKey = document.getElementById('graphhopperApiKey').value;
                     if (apiKey) {
@@ -7642,142 +7608,206 @@
                         showToast("API Key não configurada. Agrupamento geográfico desativado.", "warning");
                     }
                 }
-        
-                progressBar.style.width = '30%';
-                thinkingText.textContent = "Agrupando cidades próximas...";
-        
-                // 3. Create Clusters
-                const clusters = [];
-                const assignedCities = new Set();
-                const CLUSTER_RADIUS_KM = 50; // Raio de 50km para agrupar cidades
-        
-                for (const cityKey of Object.keys(uniqueCitiesMap)) {
-                    if (assignedCities.has(cityKey)) continue;
-        
-                    const currentCluster = { cities: [uniqueCitiesMap[cityKey]], pedidos: [...uniqueCitiesMap[cityKey].pedidos] };
-                    assignedCities.add(cityKey);
-        
-                    if (useGeo && uniqueCitiesMap[cityKey].coords) {
-                        let addedInIteration;
-                        do {
-                            addedInIteration = false;
-                            for (const otherCityKey of Object.keys(uniqueCitiesMap)) {
-                                if (assignedCities.has(otherCityKey)) continue;
-                                
-                                const otherCity = uniqueCitiesMap[otherCityKey];
-                                if (!otherCity.coords) continue;
-        
-                                const isClose = currentCluster.cities.some(clusterCity => {
-                                    if (!clusterCity.coords) return false;
-                                    const dist = calculateDistance(clusterCity.coords.lat, clusterCity.coords.lng, otherCity.coords.lat, otherCity.coords.lng);
-                                    return dist <= CLUSTER_RADIUS_KM;
-                                });
-        
-                                if (isClose) {
-                                    currentCluster.cities.push(otherCity);
-                                    currentCluster.pedidos.push(...otherCity.pedidos);
-                                    assignedCities.add(otherCityKey);
-                                    addedInIteration = true;
-                                }
-                            }
-                        } while (addedInIteration);
-                    }
-                    clusters.push(currentCluster);
-                }
-        
-                showToast(`${clusters.length} agrupamento(s) de cidades encontrado(s). Otimizando cada um...`, 'info');
-                progressBar.style.width = '40%';
-                
-                // 4. Process each cluster
-                const allCreatedLoads = [];
-                const allLeftoverGroups = [];
 
-                // Configurações para o Worker
-                const vehicleConfigs = {
-                    fiorinoMinCapacity: parseFloat(document.getElementById('fiorinoMinCapacity').value), fiorinoMaxCapacity: parseFloat(document.getElementById('fiorinoMaxCapacity').value), fiorinoCubage: parseFloat(document.getElementById('fiorinoCubage').value), fiorinoHardMaxCapacity: parseFloat(document.getElementById('fiorinoHardMaxCapacity').value), fiorinoHardCubage: parseFloat(document.getElementById('fiorinoHardCubage').value),
-                    vanMinCapacity: parseFloat(document.getElementById('vanMinCapacity').value), vanMaxCapacity: parseFloat(document.getElementById('vanMaxCapacity').value), vanCubage: parseFloat(document.getElementById('vanCubage').value), vanHardMaxCapacity: parseFloat(document.getElementById('vanHardMaxCapacity').value), vanHardCubage: parseFloat(document.getElementById('vanHardCubage').value),
-                    tresQuartosMinCapacity: parseFloat(document.getElementById('tresQuartosMinCapacity').value), tresQuartosMaxCapacity: parseFloat(document.getElementById('tresQuartosMaxCapacity').value), tresQuartosCubage: parseFloat(document.getElementById('tresQuartosCubage').value),
-                    tocoMinCapacity: parseFloat(document.getElementById('tocoMinCapacity').value), tocoMaxCapacity: parseFloat(document.getElementById('tocoMaxCapacity').value), tocoCubage: parseFloat(document.getElementById('tocoCubage').value)
+                // --- CLASSIFICAÇÃO DOS PEDIDOS POR VEÍCULO (Baseado na Rota) ---
+                thinkingText.textContent = "Classificando pedidos por veículo...";
+                const buckets = { fiorino: [], van: [], tresQuartos: [], toco: [] };
+                const normalizeCity = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+
+                pedidosEncontrados.forEach(p => {
+                    const rota = String(p.Cod_Rota);
+                    let type = 'van'; // Padrão
+
+                    // Verifica regras especiais de Fiorino (cidades permitidas)
+                    if (rotasEspeciaisFiorino[rota]) {
+                        const cidadePedido = normalizeCity(String(p.Cidade || '').split(',')[0]);
+                        if (new Set(rotasEspeciaisFiorino[rota]).has(cidadePedido)) {
+                            type = 'fiorino';
+                        } else {
+                            type = 'van'; // Se a cidade não pode Fiorino, vai pra Van
+                        }
+                    } else if (rotaVeiculoMap[rota]) {
+                        type = rotaVeiculoMap[rota].type;
+                    }
+                    
+                    if (buckets[type]) buckets[type].push(p);
+                    else buckets.van.push(p);
+                });
+
+                // --- FUNÇÃO AUXILIAR DE OTIMIZAÇÃO POR ESTÁGIO ---
+                const optimizeStage = async (orders, type) => {
+                    if (orders.length === 0) return { loads: [], leftovers: [] };
+                    
+                    // 1. Agrupar cidades próximas (Clusterização)
+                    const stageCitiesMap = {};
+                    orders.forEach(p => {
+                        const key = `${(p.Cidade || 'N/A').trim().toUpperCase()} - ${(p.UF || '').trim().toUpperCase()}`;
+                        if (!stageCitiesMap[key]) stageCitiesMap[key] = { pedidos: [], coords: uniqueCitiesMap[key]?.coords, key: key };
+                        stageCitiesMap[key].pedidos.push(p);
+                    });
+
+                    const clusters = [];
+                    const assignedCities = new Set();
+                    const CLUSTER_RADIUS_KM = 50;
+
+                    for (const cityKey of Object.keys(stageCitiesMap)) {
+                        if (assignedCities.has(cityKey)) continue;
+                        const currentCluster = { cities: [stageCitiesMap[cityKey]], pedidos: [...stageCitiesMap[cityKey].pedidos] };
+                        assignedCities.add(cityKey);
+
+                        if (useGeo && stageCitiesMap[cityKey].coords) {
+                            let addedInIteration;
+                            do {
+                                addedInIteration = false;
+                                for (const otherCityKey of Object.keys(stageCitiesMap)) {
+                                    if (assignedCities.has(otherCityKey)) continue;
+                                    const otherCity = stageCitiesMap[otherCityKey];
+                                    if (!otherCity.coords) continue;
+                                    const isClose = currentCluster.cities.some(clusterCity => {
+                                        if (!clusterCity.coords) return false;
+                                        const dist = calculateDistance(clusterCity.coords.lat, clusterCity.coords.lng, otherCity.coords.lat, otherCity.coords.lng);
+                                        return dist <= CLUSTER_RADIUS_KM;
+                                    });
+                                    if (isClose) {
+                                        currentCluster.cities.push(otherCity);
+                                        currentCluster.pedidos.push(...otherCity.pedidos);
+                                        assignedCities.add(otherCityKey);
+                                        addedInIteration = true;
+                                    }
+                                }
+                            } while (addedInIteration);
+                        }
+                        clusters.push(currentCluster);
+                    }
+
+                    // 2. Otimizar cada cluster
+                    const stageLoads = [];
+                    const stageLeftovers = [];
+
+                    // Configurações atuais
+                    const vehicleConfigs = {
+                        fiorinoMinCapacity: parseFloat(document.getElementById('fiorinoMinCapacity').value), fiorinoMaxCapacity: parseFloat(document.getElementById('fiorinoMaxCapacity').value), fiorinoCubage: parseFloat(document.getElementById('fiorinoCubage').value), fiorinoHardMaxCapacity: parseFloat(document.getElementById('fiorinoHardMaxCapacity').value), fiorinoHardCubage: parseFloat(document.getElementById('fiorinoHardCubage').value),
+                        vanMinCapacity: parseFloat(document.getElementById('vanMinCapacity').value), vanMaxCapacity: parseFloat(document.getElementById('vanMaxCapacity').value), vanCubage: parseFloat(document.getElementById('vanCubage').value), vanHardMaxCapacity: parseFloat(document.getElementById('vanHardMaxCapacity').value), vanHardCubage: parseFloat(document.getElementById('vanHardCubage').value),
+                        tresQuartosMinCapacity: parseFloat(document.getElementById('tresQuartosMinCapacity').value), tresQuartosMaxCapacity: parseFloat(document.getElementById('tresQuartosMaxCapacity').value), tresQuartosCubage: parseFloat(document.getElementById('tresQuartosCubage').value),
+                        tocoMinCapacity: parseFloat(document.getElementById('tocoMinCapacity').value), tocoMaxCapacity: parseFloat(document.getElementById('tocoMaxCapacity').value), tocoCubage: parseFloat(document.getElementById('tocoCubage').value)
+                    };
+
+                    for (const cluster of clusters) {
+                        const packableGroups = Object.values(cluster.pedidos.reduce((acc, p) => {
+                            const cId = normalizeClientId(p.Cliente);
+                            if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                            acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                            return acc;
+                        }, {}));
+
+                        const processingWorker = new Worker('worker.js');
+                        processingWorker.postMessage({
+                            command: 'start-optimization',
+                            packableGroups: packableGroups,
+                            vehicleType: type,
+                            optimizationLevel: '2',
+                            configs: vehicleConfigs,
+                            pedidosPrioritarios: pedidosPrioritarios,
+                            pedidosRecall: pedidosRecall
+                        });
+
+                        const result = await new Promise((resolve, reject) => {
+                            processingWorker.onmessage = (e) => {
+                                if (e.data.status === 'complete') resolve(e.data.result);
+                                else if (e.data.status === 'error') reject(new Error(e.data.message));
+                            };
+                            processingWorker.onerror = (e) => reject(new Error(e.message));
+                        });
+                        processingWorker.terminate();
+
+                        // 3. Verificação de Distância
+                        if ((type === 'fiorino' || type === 'van') && useGeo) {
+                            const distanceLimit = type === 'fiorino' ? 500 : 1400;
+                            const depot = { lat: -23.31461, lng: -51.36963 };
+                            
+                            result.loads.forEach(load => {
+                                const citiesInLoad = [...new Set(load.pedidos.map(p => `${(p.Cidade || '').trim().toUpperCase()} - ${(p.UF || '').trim().toUpperCase()}`))];
+                                let totalDistKm = 0;
+                                let currentPos = depot;
+                                let validDist = true;
+
+                                // Cálculo aproximado da rota
+                                for (const cityKey of citiesInLoad) {
+                                    const coords = uniqueCitiesMap[cityKey]?.coords;
+                                    if (coords) {
+                                        totalDistKm += calculateDistance(currentPos.lat, currentPos.lng, coords.lat, coords.lng);
+                                        currentPos = coords;
+                                    }
+                                }
+                                totalDistKm += calculateDistance(currentPos.lat, currentPos.lng, depot.lat, depot.lng);
+                                const estimatedRoadDist = totalDistKm * 1.3;
+
+                                if (estimatedRoadDist > distanceLimit) {
+                                    // Se exceder a distância, desmonta a carga e joga para sobras (para tentar upgrade)
+                                    const groups = Object.values(load.pedidos.reduce((acc, p) => {
+                                        const cId = normalizeClientId(p.Cliente);
+                                        if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
+                                        acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
+                                        return acc;
+                                    }, {}));
+                                    stageLeftovers.push(...groups);
+                                } else {
+                                    stageLoads.push(load);
+                                }
+                            });
+                        } else {
+                            stageLoads.push(...result.loads);
+                        }
+                        stageLeftovers.push(...result.leftovers);
+                    }
+                    return { loads: stageLoads, leftovers: stageLeftovers };
                 };
 
-                for (let i = 0; i < clusters.length; i++) {
-                    const cluster = clusters[i];
-                    const clusterCityNames = cluster.cities.map(c => c.key.split(' - ')[0]).join(', ');
-                    detailsText.textContent = `Otimizando Agrupamento ${i + 1}/${clusters.length}: ${clusterCityNames}`;
-        
-                    // 4a. Create packable groups for the cluster
-                    const packableGroups = Object.values(cluster.pedidos.reduce((acc, p) => {
-                        const cId = normalizeClientId(p.Cliente);
-                        if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) };
-                        acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem;
-                        return acc;
-                    }, {}));
-        
-                    // 4b. Call worker to optimize this cluster
-                    const processingWorker = new Worker('worker.js');
-                    processingWorker.postMessage({
-                        command: 'start-optimization',
-                        packableGroups: packableGroups,
-                        vehicleType: vehicleType,
-                        optimizationLevel: '2',
-                        configs: vehicleConfigs,
-                        pedidosPrioritarios: pedidosPrioritarios,
-                        pedidosRecall: pedidosRecall
-                    });
-        
-                    const result = await new Promise((resolve, reject) => {
-                        processingWorker.onmessage = (e) => {
-                            if (e.data.status === 'complete') resolve(e.data.result);
-                            else if (e.data.status === 'progress') {
-                                const clusterProgress = (e.data.progress / 100) * (45 / clusters.length); // Each cluster contributes to 45% of the bar
-                                const baseProgress = 40 + (i / clusters.length) * 45;
-                                progressBar.style.width = `${baseProgress + clusterProgress}%`;
-                            }
-                            else if (e.data.status === 'error') reject(new Error(e.data.message));
-                        };
-                        processingWorker.onerror = (e) => reject(new Error(e.message));
-                    });
-                    processingWorker.terminate();
-        
-                    allCreatedLoads.push(...result.loads);
-                    allLeftoverGroups.push(...result.leftovers);
-                }
-        
-                let loads = allCreatedLoads;
+                // --- EXECUÇÃO DO PIPELINE (CASCATA) ---
+                const allCreatedLoads = [];
                 
-                progressBar.style.width = '85%';
-                thinkingText.textContent = "Verificando limites de distância...";
-                detailsText.textContent = "";
-        
-                // 5. Distance Check
-                if ((vehicleType === 'fiorino' || vehicleType === 'van') && useGeo) {
-                    const distanceLimit = vehicleType === 'fiorino' ? 500 : 1400;
-                    const validLoads = [];
-                    const depot = { lat: -23.31461, lng: -51.36963 };
-                    
-                    for (const load of loads) {
-                        const citiesInLoad = [...new Set(load.pedidos.map(p => `${(p.Cidade || '').trim().toUpperCase()} - ${(p.UF || '').trim().toUpperCase()}`))];
-                        let totalDistKm = 0;
-                        let currentPos = depot;
-                        for (const cityKey of citiesInLoad) {
-                            const [cidade, uf] = cityKey.split(' - ');
-                            const coords = await getCityCoordinates(cidade, uf);
-                            if (coords) {
-                                totalDistKm += calculateDistance(currentPos.lat, currentPos.lng, coords.lat, coords.lng);
-                                currentPos = coords;
-                            }
-                        }
-                        // Retorno ao depósito
-                        totalDistKm += calculateDistance(currentPos.lat, currentPos.lng, depot.lat, depot.lng);
-                        const estimatedRoadDist = totalDistKm * 1.3; // Fator de correção para distância rodoviária
-                        if (estimatedRoadDist > distanceLimit) {
-                            showToast(`Carga ${vehicleType} descartada: Rota estimada em ${estimatedRoadDist.toFixed(0)}km (>${distanceLimit}km).`, 'warning');
-                        } else {
-                            validLoads.push(load);
-                        }
-                    }
-                    loads = validLoads;
+                // 1. FIORINO
+                progressBar.style.width = '30%';
+                thinkingText.textContent = "Processando cargas de Fiorino...";
+                detailsText.textContent = "Tentando montar Fiorinos e verificando limites...";
+                const fiorinoResult = await optimizeStage(buckets.fiorino, 'fiorino');
+                allCreatedLoads.push(...fiorinoResult.loads.map(l => ({...l, vehicleType: 'fiorino'})));
+                
+                // Sobras de Fiorino vão para Van
+                const ordersForVan = [...buckets.van, ...fiorinoResult.leftovers.flatMap(g => g.pedidos)];
+
+                // 2. VAN
+                progressBar.style.width = '50%';
+                thinkingText.textContent = "Processando cargas de Van...";
+                detailsText.textContent = "Incluindo sobras de Fiorino e rotas de Van...";
+                const vanResult = await optimizeStage(ordersForVan, 'van');
+                allCreatedLoads.push(...vanResult.loads.map(l => ({...l, vehicleType: 'van'})));
+
+                // Sobras de Van vão para 3/4
+                const ordersFor34 = [...buckets.tresQuartos, ...vanResult.leftovers.flatMap(g => g.pedidos)];
+
+                // 3. 3/4
+                progressBar.style.width = '70%';
+                thinkingText.textContent = "Processando cargas de 3/4...";
+                const tqResult = await optimizeStage(ordersFor34, 'tresQuartos');
+                allCreatedLoads.push(...tqResult.loads.map(l => ({...l, vehicleType: 'tresQuartos'})));
+
+                // Sobras de 3/4 vão para Toco
+                const ordersForToco = [...buckets.toco, ...tqResult.leftovers.flatMap(g => g.pedidos)];
+
+                // 4. TOCO
+                progressBar.style.width = '90%';
+                thinkingText.textContent = "Processando cargas de Toco...";
+                const tocoResult = await optimizeStage(ordersForToco, 'toco');
+                allCreatedLoads.push(...tocoResult.loads.map(l => ({...l, vehicleType: 'toco'})));
+
+                // Sobras finais (não couberam em nada)
+                const finalLeftovers = tocoResult.leftovers.flatMap(g => g.pedidos);
+                if (finalLeftovers.length > 0) {
+                    showToast(`${finalLeftovers.length} pedidos não couberam em nenhum veículo e voltaram para a lista.`, 'warning');
                 }
+
+                let loads = allCreatedLoads;
                 
                 // 6. Finalize
                 progressBar.style.width = '95%';
@@ -7787,8 +7817,6 @@
                 setTimeout(() => {
                     try {
                         const vehicleInfo = { fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' }, van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' }, tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' }, toco: { name: 'Toco', colorClass: 'bg-secondary', textColor: 'text-white', icon: 'bi-inboxes-fill' } };
-                        let targetContainerId = vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : vehicleType === 'van' ? 'resultado-van-geral' : vehicleType === 'tresQuartos' ? 'resultado-34-geral' : 'resultado-toco';
-                        const targetContainer = document.getElementById(targetContainerId);
                         if (!loads) loads = [];
                         loads.forEach((load, idx) => { 
                             load.numero = `R-${Date.now().toString().slice(-4)}-${idx+1}`; 
@@ -7796,8 +7824,11 @@
                             const citiesInLoad = [...new Set(load.pedidos.map(p => p.Cidade))];
                             load.observation = `Roteirização por Lista (${citiesInLoad.length} cidades)`; 
                             activeLoads[load.id] = load; 
+                            
+                            let targetContainerId = load.vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : load.vehicleType === 'van' ? 'resultado-van-geral' : load.vehicleType === 'tresQuartos' ? 'resultado-34-geral' : 'resultado-toco';
+                            const targetContainer = document.getElementById(targetContainerId);
                             if (targetContainer) { 
-                                const cardHtml = renderLoadCard(load, vehicleType, vehicleInfo[vehicleType]); 
+                                const cardHtml = renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType]); 
                                 targetContainer.insertAdjacentHTML('beforeend', cardHtml); 
                             } 
                         });
