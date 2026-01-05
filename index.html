@@ -4004,34 +4004,48 @@
             return printWindow;
         }
 
-        function imprimirGeneric(divId, title) {
-            const divToPrint = document.getElementById(divId);
-            if (!divToPrint) return;
+        function imprimirGeneric(source, title) {
+            let elementToPrint = null;
+            let htmlContent = '';
 
-            const divClone = divToPrint.cloneNode(true);
-
-            // Lógica para buscar o texto da observação salva e colocar na área de impressão
-            const allCardsInClone = divClone.querySelectorAll('.card[data-load-id]');
-            allCardsInClone.forEach(cardClone => {
-                const loadId = cardClone.dataset.loadId;
-                const load = activeLoads[loadId];
-                const observationText = load?.observation || '';
-
-                const clonePrintDiv = cardClone.querySelector('.print-only-observation');
-                if (clonePrintDiv) {
-                    const printParagraph = clonePrintDiv.querySelector('p');
-                    if (printParagraph && observationText) {
-                        printParagraph.innerHTML = `<strong>Observações:</strong><br>${observationText.replace(/\n/g, '<br>')}`;
-                        clonePrintDiv.style.display = 'block'; // Garante que seja visível
-                    } else if (printParagraph) {
-                        printParagraph.innerHTML = '';
-                        clonePrintDiv.style.display = 'none'; // Esconde se não houver texto
-                    }
+            if (source instanceof HTMLElement) {
+                elementToPrint = source;
+            } else if (typeof source === 'string') {
+                const el = document.getElementById(source);
+                if (el) {
+                    elementToPrint = el;
+                } else {
+                    htmlContent = source;
                 }
-            });
-            
+            }
+
+            if (elementToPrint) {
+                const clone = elementToPrint.cloneNode(true);
+
+                // Lógica para buscar o texto da observação salva e colocar na área de impressão
+                const allCardsInClone = clone.querySelectorAll('.card[data-load-id]');
+                allCardsInClone.forEach(cardClone => {
+                    const loadId = cardClone.dataset.loadId;
+                    const load = activeLoads[loadId];
+                    const observationText = load?.observation || '';
+
+                    const clonePrintDiv = cardClone.querySelector('.print-only-observation');
+                    if (clonePrintDiv) {
+                        const printParagraph = clonePrintDiv.querySelector('p');
+                        if (printParagraph && observationText) {
+                            printParagraph.innerHTML = `<strong>Observações:</strong><br>${observationText.replace(/\n/g, '<br>')}`;
+                            clonePrintDiv.style.display = 'block'; 
+                        } else if (printParagraph) {
+                            printParagraph.innerHTML = '';
+                            clonePrintDiv.style.display = 'none'; 
+                        }
+                    }
+                });
+                htmlContent = clone.outerHTML;
+            }
+
             const printWindow = createPrintWindow(title);
-            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + divClone.outerHTML;
+            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + htmlContent;
             printWindow.document.close();
             printWindow.focus(); 
             setTimeout(() => { 
@@ -4152,17 +4166,6 @@
             setTimeout(() => { 
                 printWindow.print(); 
                 printWindow.close(); 
-            }, 500);
-        }
-
-        function imprimirGeneric(content, title) {
-            const printWindow = createPrintWindow(title);
-            printWindow.document.body.innerHTML = `<h3>${title}</h3>` + (typeof content === 'string' ? content : content.outerHTML);
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.close();
             }, 500);
         }
 
