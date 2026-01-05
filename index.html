@@ -1052,6 +1052,7 @@
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#toco-tab-pane"><i class="bi bi-inboxes-fill me-2"></i>Toco</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cargas-fechadas-pr-tab-pane"><i class="bi bi-building-fill-check me-2"></i>Cargas Fechadas PR</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cargas-fechadas-rest-br-tab-pane"><i class="bi bi-globe-americas me-2"></i>Cargas Fechadas REST BR</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#roteirizados-tab-pane" id="roteirizados-tab-btn"><i class="bi bi-map-fill me-2"></i>Roteirizados</button></li>
                                  <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#outros-pedidos-tab-pane"><i class="bi bi-collection-fill me-2"></i>Outros pedidos</button></li>
                              </ul>
                             <div class="tab-content" id="vehicleTabsContent">
@@ -1095,6 +1096,13 @@
                                 <div class="tab-pane fade" id="cargas-fechadas-rest-br-tab-pane" role="tabpanel">
                                     <div id="resultado-cargas-fechadas-rest-br"><div class="empty-state"><i class="bi bi-globe-americas"></i><p>Nenhuma Carga Fechada (Resto do Brasil) encontrada. Processe um arquivo.</p></div></div>
                                 </div>
+                                <div class="tab-pane fade" id="roteirizados-tab-pane" role="tabpanel">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 no-print gap-2">
+                                        <p class="card-subtitle text-body-secondary small mb-0">Cargas geradas por Roteirização de Lista.</p>
+                                        <button class="btn btn-sm btn-outline-light" onclick="imprimirCargasGeneric('resultado-roteirizados', 'Cargas Roteirizadas')"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas</button>
+                                    </div>
+                                    <div id="resultado-roteirizados" class="mt-3"><div class="empty-state"><i class="bi bi-map"></i><p>Nenhuma carga roteirizada por lista.</p></div></div>
+                                </div>
                                 <div class="tab-pane fade" id="outros-pedidos-tab-pane" role="tabpanel">
                                     <div id="resultado-moinho" class="mb-3"><div class="empty-state"><i class="bi bi-gear-wide-connected"></i><p>Nenhum pedido "Moinho" encontrado.</p></div></div>
                                     <hr>
@@ -1125,10 +1133,10 @@
                                 <div class="btn-group btn-group-sm" role="group">
                                     <button type="button" class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-file-text me-1"></i>Relatórios</button>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioDisponiveisPDF()"><i class="bi bi-file-pdf me-2"></i>Relatório PDF</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioCompletoPorRotaPDF()"><i class="bi bi-file-earmark-pdf me-2"></i>Relatório Completo (PDF)</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioCompletoPorRotaExcel()"><i class="bi bi-file-excel me-2"></i>Relatório Completo (Excel)</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioDisponiveisExcel()"><i class="bi bi-file-spreadsheet me-2"></i>Relatório Simples (Excel)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioDisponiveisPDF()"><i class="bi bi-file-pdf me-2"></i>Relatório de Fila de Pedidos (Por Data) (PDF)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioDisponiveisExcel()"><i class="bi bi-file-spreadsheet me-2"></i>Relatório de Fila de Pedidos (Por Data) (Excel)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioCompletoPorRotaExcel()"><i class="bi bi-file-excel me-2"></i>Relatório Completo de Pedidos Disponíveis (Por Rota) (Excel)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportarRelatorioCompletoPorRotaPDF()"><i class="bi bi-file-earmark-pdf me-2"></i>Relatório Completo de Pedidos Disponíveis (Por Rota) (PDF)</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -1141,9 +1149,7 @@
                                 </div>
                                 <div id="search-result" class="mt-3"></div>
                                 <div class="d-grid gap-2 mt-2">
-                                    <button class="btn btn-sm btn-outline-success" onclick="otimizarSobrasPorCidade()" title="Agrupar sobras por cidade e montar cargas automaticamente"><i class="bi bi-building-gear me-1"></i>Otimizar Sobras (Por Cidade)</button>
                                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#roteirizacaoModal" title="Roteirizar e montar cargas a partir de uma lista de pedidos"><i class="bi bi-map-fill me-1"></i>Roteirizar Lista</button>
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="imprimirCargasSobras()" title="Imprimir apenas as cargas geradas pela otimização de sobras"><i class="bi bi-printer-fill me-1"></i>Imprimir Cargas de Sobra</button>
                                 </div>
                             </div>
                             <ul class="nav nav-tabs nav-fill px-3 pt-2" id="pedidosDisponiveisTabs" role="tablist">
@@ -2194,6 +2200,7 @@
         resetElement('resultado-cargas-fechadas-pr', emptyStateHTML('building-fill-check', 'Nenhuma Carga Fechada do Paraná encontrada.'));
         resetElement('resultado-cargas-fechadas-rest-br', emptyStateHTML('globe-americas', 'Nenhuma Carga Fechada (Resto do Brasil) encontrada.'));
         resetElement('resultado-moinho', emptyStateHTML('gear-wide-connected', 'Nenhum pedido "Moinho" encontrado.'));
+        resetElement('resultado-roteirizados', emptyStateHTML('map', 'Nenhuma carga roteirizada por lista.'));
         resetElement('resultado-funcionarios', emptyStateHTML('people-fill', 'Nenhum pedido de funcionário encontrado.'));
         resetElement('resultado-transferencias', emptyStateHTML('arrow-left-right', 'Nenhum pedido de transferência encontrado.'));
         document.getElementById('export-sobras-sp-btn').disabled = true; // NOVO: Desabilita o botão de exportar sobras
@@ -3444,7 +3451,7 @@
             for (const loadId in activeLoads) {
                 const load = activeLoads[loadId];
                 // Ignora cargas 'Toco', pois são tratadas por displayToco()
-                if (load.vehicleType === 'toco') continue;
+                if (load.vehicleType === 'toco' || load.id.startsWith('roteiro-')) continue;
 
                 const vInfo = vehicleInfo[load.vehicleType];
                 if (vInfo) {
@@ -3462,6 +3469,30 @@
             }
         }
 
+        function renderRoteiroLoads() {
+            const vehicleInfo = {
+                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
+                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
+                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' },
+                toco: { name: 'Toco', colorClass: 'bg-secondary', textColor: 'text-white', icon: 'bi-inboxes-fill' }
+            };
+
+            const container = document.getElementById('resultado-roteirizados');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const roteiroLoads = Object.values(activeLoads).filter(l => l.id.startsWith('roteiro-'));
+            if (roteiroLoads.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="bi bi-map"></i><p>Nenhuma carga roteirizada por lista.</p></div>';
+                return;
+            }
+
+            roteiroLoads.forEach(load => {
+                const vInfo = vehicleInfo[load.vehicleType] || vehicleInfo['van'];
+                container.insertAdjacentHTML('beforeend', renderLoadCard(load, load.vehicleType, vInfo));
+            });
+        }
+
         /**
          * NOVO: Função central para renderizar toda a interface do usuário.
          * Garante que todas as partes da tela estejam sempre sincronizadas com o estado atual dos dados.
@@ -3475,6 +3506,7 @@
             displayGerais(document.getElementById('resultado-geral'), gruposGerais);
 
             renderActiveLoadCards(); // NOVO: Renderiza os cards de cargas ativas (Fiorino, Van, 3/4)
+            renderRoteiroLoads(); // Renderiza cargas da aba Roteirizados
             // 2. Renderiza as outras seções da Mesa de Trabalho
             displayToco(document.getElementById('resultado-toco'), gruposToco);
             displayCargasFechadasPR(document.getElementById('resultado-cargas-fechadas-pr'), cargasFechadasPR);
@@ -7201,255 +7233,6 @@
             return null;
         }
 
-        function estimateClusterDistance(cityKeys, citiesMap) {
-            const depot = { lat: -23.31461, lng: -51.36963 }; // Depósito: Rolândia, PR
-            const points = cityKeys.map(k => citiesMap[k].coords).filter(c => c);
-            if (points.length === 0) return 0;
-
-            let current = depot;
-            let totalDist = 0;
-            const unvisited = [...points];
-
-            while (unvisited.length > 0) {
-                let nearestIdx = -1;
-                let minDist = Infinity;
-                for (let i = 0; i < unvisited.length; i++) {
-                    const d = calculateDistance(current.lat, current.lng, unvisited[i].lat, unvisited[i].lng);
-                    if (d < minDist) { minDist = d; nearestIdx = i; }
-                }
-                totalDist += minDist;
-                current = unvisited[nearestIdx];
-                unvisited.splice(nearestIdx, 1);
-            }
-            totalDist += calculateDistance(current.lat, current.lng, depot.lat, depot.lng);
-            return totalDist * 1.3; // Fator de correção aproximado para distância rodoviária (vs linear)
-        }
-
-        async function otimizarSobrasPorCidade() {
-            if (pedidosGeraisAtuais.length === 0) { showToast("Não há sobras para otimizar.", 'info'); return; }
-            
-            const useGeo = confirm("Deseja agrupar cidades próximas (Geolocalização)?\n\nOK: Agrupa cidades num raio de 50km (Requer API).\nCancelar: Agrupa apenas por nome exato da cidade.");
-            const apiKey = document.getElementById('graphhopperApiKey').value;
-
-            if (useGeo && !apiKey) { showToast("Chave de API não configurada. Usando agrupamento por nome.", 'warning'); }
-            showToast("Analisando cidades e agrupando...", 'info');
-
-            // 1. Mapear cidades únicas e seus pedidos
-            const uniqueCitiesMap = {};
-            pedidosGeraisAtuais.forEach(p => {
-                const key = `${(p.Cidade || 'N/A').trim().toUpperCase()} - ${(p.UF || '').trim().toUpperCase()}`;
-                if (!uniqueCitiesMap[key]) uniqueCitiesMap[key] = { pedidos: [], coords: null, key: key };
-                uniqueCitiesMap[key].pedidos.push(p);
-            });
-
-            // 2. Buscar coordenadas (se Geo ativado)
-            if (useGeo && apiKey) {
-                const cities = Object.keys(uniqueCitiesMap);
-                for (let i = 0; i < cities.length; i++) {
-                    const [cidade, uf] = cities[i].split(' - ');
-                    const coords = await getCityCoordinates(cidade, uf);
-                    if (coords) uniqueCitiesMap[cities[i]].coords = coords;
-                    if (i % 5 === 0) await new Promise(r => setTimeout(r, 100)); // Rate limit
-                }
-            }
-
-            // 3. Criar Clusters (Agrupamentos)
-            const clusters = [];
-            const cities = Object.keys(uniqueCitiesMap);
-            const assigned = new Set();
-
-            for (const cityKey of cities) {
-                if (assigned.has(cityKey)) continue;
-                
-                const cluster = { cities: [cityKey], pedidos: [...uniqueCitiesMap[cityKey].pedidos], totalKg: 0 };
-                assigned.add(cityKey);
-                const baseCoords = uniqueCitiesMap[cityKey].coords;
-
-                if (useGeo && baseCoords) {
-                    for (const otherCityKey of cities) {
-                        if (assigned.has(otherCityKey)) continue;
-                        const otherCoords = uniqueCitiesMap[otherCityKey].coords;
-                        if (otherCoords) {
-                            const dist = calculateDistance(baseCoords.lat, baseCoords.lng, otherCoords.lat, otherCoords.lng);
-                            if (dist <= 50) { // Raio de 50km
-                                cluster.cities.push(otherCityKey);
-                                cluster.pedidos.push(...uniqueCitiesMap[otherCityKey].pedidos);
-                                assigned.add(otherCityKey);
-                            }
-                        }
-                    }
-                }
-                cluster.totalKg = cluster.pedidos.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
-                clusters.push(cluster);
-            }
-
-            // 4. Filtrar clusters válidos e Otimizar
-            const fiorinoMin = parseFloat(document.getElementById('fiorinoMinCapacity').value) || 300;
-            const validClusters = clusters.filter(c => c.totalKg >= fiorinoMin);
-
-            if (validClusters.length === 0) { showToast("Nenhum agrupamento com peso suficiente para formar carga.", 'warning'); return; }
-            showToast(`Otimizando ${validClusters.length} agrupamentos de cidades...`, 'info');
-
-            const getBestVehicle = (weight) => {
-                const getVal = (id, fallbackId) => {
-                    const el = document.getElementById(id);
-                    if (el) return parseFloat(el.value);
-                    const fallback = document.getElementById(fallbackId);
-                    return fallback ? parseFloat(fallback.value) : 999999;
-                };
-                const configs = { fiorino: getVal('fiorinoHardMaxCapacity', 'fiorinoMaxCapacity'), van: getVal('vanHardMaxCapacity', 'vanMaxCapacity'), tresQuartos: getVal('tresQuartosHardMaxCapacity', 'tresQuartosMaxCapacity') };
-                if (weight <= configs.fiorino) return 'fiorino'; 
-                if (weight <= configs.van) return 'van'; 
-                return 'tresQuartos';
-            };
-
-            let loadsCreated = 0;
-            const vehicleHierarchy = ['tresQuartos', 'van', 'fiorino']; // Ordem de tentativa (downgrade)
-
-            for (const cluster of validClusters) {
-                let clusterOrders = [...cluster.pedidos];
-                let clusterTotalKg = cluster.totalKg;
-                let stuck = false;
-
-                // Verifica se o cluster contém pedidos de rotas 3/4
-                const isTresQuartosRoute = cluster.pedidos.some(p => {
-                    const config = rotaVeiculoMap[String(p.Cod_Rota)];
-                    return config && config.type === 'tresQuartos';
-                });
-
-                // Loop para tentar esgotar as sobras do cluster ("zerar a rota")
-                while (clusterTotalKg > 0 && !stuck) {
-                    let bestVehicle = getBestVehicle(clusterTotalKg);
-                    
-                    // Ajuste inicial de índice na hierarquia
-                    let startIndex = vehicleHierarchy.indexOf(bestVehicle);
-                    if (startIndex === -1) startIndex = 0;
-
-                    let loadsCreatedInLoop = 0;
-
-                    // Tenta montar carga com o veículo ideal, se falhar (ex: min capacity), tenta veículos menores
-                    for (let i = startIndex; i < vehicleHierarchy.length; i++) {
-                        const typeToTry = vehicleHierarchy[i];
-
-                        // REGRA: Rotas de 3/4 não podem ser montadas em Van ou Fiorino (Frete inviável)
-                        if (isTresQuartosRoute && (typeToTry === 'van' || typeToTry === 'fiorino')) {
-                            continue;
-                        }
-
-                        // Regra de Distância: Se Geo ativo e tentar Fiorino, verifica distância
-                        if (useGeo && typeToTry === 'fiorino') {
-                            const dist = estimateClusterDistance(cluster.cities, uniqueCitiesMap);
-                            if (dist > 500) continue; // Pula Fiorino se longe demais
-                        }
-
-                        const clientGroupsMap = clusterOrders.reduce((acc, p) => { 
-                            // SEGURANÇA: Garante que pedidos bloqueados não entrem na otimização de sobras
-                            if (isPedidoBloqueado(p)) return acc;
-
-                            const cId = normalizeClientId(p.Cliente); 
-                            if (!acc[cId]) acc[cId] = { pedidos: [], totalKg: 0, totalCubagem: 0, isSpecial: isSpecialClient(p) }; 
-                            acc[cId].pedidos.push(p); acc[cId].totalKg += p.Quilos_Saldo; acc[cId].totalCubagem += p.Cubagem; return acc; 
-                        }, {});
-                        const packableGroups = Object.values(clientGroupsMap);
-
-                        // CORREÇÃO: Calcula a data mais antiga para garantir que a priorização por data funcione
-                        packableGroups.forEach(group => {
-                            group.oldestDate = group.pedidos.reduce((oldest, p) => {
-                                const pDate = p.Dat_Ped instanceof Date ? p.Dat_Ped : new Date(p.Dat_Ped);
-                                if (!isNaN(pDate.getTime())) { if (!oldest || pDate < oldest) return pDate; }
-                                return oldest;
-                            }, null);
-                        });
-                        
-                        // Tenta otimizar com o veículo atual
-                        const result = runHeuristicOptimization(packableGroups, typeToTry);
-
-                        if (result.loads.length > 0) {
-                            result.loads.forEach((load, idx) => {
-                                const mainCity = cluster.cities[0].split(' - ')[0];
-                                load.vehicleType = typeToTry; 
-                                load.numero = `S-${mainCity.substring(0,3).toUpperCase()}-${Date.now().toString().slice(-4)}-${idx+1}`; 
-                                load.id = `sobra-${mainCity.replace(/\s/g,'')}-${Date.now()}-${idx}-${Math.random()}`; 
-                                const citiesInLoad = [...new Set(load.pedidos.map(p => p.Cidade))].join(', ');
-                                load.observation = `Carga de Sobra (Geo) - ${citiesInLoad}`;
-                                activeLoads[load.id] = load; 
-                                loadsCreated++;
-                            });
-
-                            // Atualiza as sobras para a próxima iteração do while
-                            clusterOrders = result.leftovers.flatMap(g => g.pedidos);
-                            clusterTotalKg = clusterOrders.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
-                            loadsCreatedInLoop = result.loads.length;
-                            break; // Sai do for (downgrade) e volta para o while (reavaliar peso restante)
-                        }
-                    }
-
-                    if (loadsCreatedInLoop === 0) stuck = true; // Não conseguiu criar carga com nenhum veículo
-                }
-                await new Promise(r => setTimeout(r, 20)); // Pequena pausa para UI
-            }
-            
-            // Atualiza a lista global removendo os pedidos alocados
-            const allAllocatedIds = new Set();
-            Object.values(activeLoads).forEach(l => l.pedidos.forEach(p => allAllocatedIds.add(p.Num_Pedido)));
-            pedidosGeraisAtuais = pedidosGeraisAtuais.filter(p => !allAllocatedIds.has(p.Num_Pedido));
-
-            renderAllUI(); showToast(`Otimização concluída. ${loadsCreated} cargas criadas.`, 'success');
-        }
-
-        function imprimirCargasSobras() {
-            const loadsToPrint = Object.values(activeLoads).filter(l => l.id.startsWith('sobra-'));
-            
-            if (loadsToPrint.length === 0) {
-                showToast("Nenhuma carga de sobra otimizada encontrada.", 'warning');
-                return;
-            }
-
-            // Ordena por tipo de veículo e depois por número
-            loadsToPrint.sort((a, b) => {
-                const typeOrder = { 'fiorino': 1, 'van': 2, 'tresQuartos': 3, 'toco': 4 };
-                const typeA = typeOrder[a.vehicleType] || 99;
-                const typeB = typeOrder[b.vehicleType] || 99;
-                if (typeA !== typeB) return typeA - typeB;
-                return a.numero.localeCompare(b.numero, undefined, { numeric: true });
-            });
-
-            const containerClone = document.createElement('div');
-            const vehicleInfo = {
-                fiorino: { name: 'Fiorino', colorClass: 'bg-success', textColor: 'text-white', icon: 'bi-box-seam-fill' },
-                van: { name: 'Van', colorClass: 'bg-primary', textColor: 'text-white', icon: 'bi-truck-front-fill' },
-                tresQuartos: { name: '3/4', colorClass: 'bg-warning', textColor: 'text-dark', icon: 'bi-truck-flatbed' },
-                toco: { name: 'Toco', colorClass: 'bg-secondary', textColor: 'text-white', icon: 'bi-inboxes-fill' }
-            };
-
-            loadsToPrint.forEach(load => {
-                const vInfo = vehicleInfo[load.vehicleType] || vehicleInfo['van'];
-                const cardHtml = renderLoadCard(load, load.vehicleType, vInfo);
-                const wrapper = document.createElement('div');
-                wrapper.innerHTML = cardHtml;
-                
-                // Ajustes para impressão: garante que observações apareçam se existirem
-                const cardClone = wrapper.firstElementChild;
-                const observationText = load.observation || '';
-                const clonePrintDiv = cardClone.querySelector('.print-only-observation');
-                if (clonePrintDiv && observationText) {
-                    const printParagraph = clonePrintDiv.querySelector('p');
-                    if (printParagraph) {
-                        printParagraph.innerHTML = `<strong>Observações:</strong><br>${observationText.replace(/\n/g, '<br>')}`;
-                        clonePrintDiv.style.display = 'block';
-                    }
-                }
-
-                containerClone.appendChild(cardClone);
-            });
-
-            const printWindow = createPrintWindow("Relatório de Cargas de Sobra Otimizadas");
-            printWindow.document.body.innerHTML = `<h3>Cargas de Sobra Otimizadas (${loadsToPrint.length})</h3>` + containerClone.innerHTML;
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
-        }
-
         function processarPriorizacaoEmMassa() {
             const input = document.getElementById('bulkPriorityInput');
             if (!input) return;
@@ -7812,6 +7595,10 @@
                 // 6. Finalize
                 progressBar.style.width = '95%';
                 thinkingText.textContent = "Finalizando...";
+
+                // Limpa o container de roteirizados antes de adicionar novos
+                const roteirizadosContainer = document.getElementById('resultado-roteirizados');
+                if (roteirizadosContainer) roteirizadosContainer.innerHTML = '';
                 
                 // Pequeno delay para garantir que a UI atualize antes de travar na renderização
                 setTimeout(() => {
@@ -7825,11 +7612,10 @@
                             load.observation = `Roteirização por Lista (${citiesInLoad.length} cidades)`; 
                             activeLoads[load.id] = load; 
                             
-                            let targetContainerId = load.vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : load.vehicleType === 'van' ? 'resultado-van-geral' : load.vehicleType === 'tresQuartos' ? 'resultado-34-geral' : 'resultado-toco';
-                            const targetContainer = document.getElementById(targetContainerId);
-                            if (targetContainer) { 
+                            // Agora direciona todas as cargas para o container de roteirizados
+                            if (roteirizadosContainer) { 
                                 const cardHtml = renderLoadCard(load, load.vehicleType, vehicleInfo[load.vehicleType]); 
-                                targetContainer.insertAdjacentHTML('beforeend', cardHtml); 
+                                roteirizadosContainer.insertAdjacentHTML('beforeend', cardHtml); 
                             } 
                         });
                         
@@ -7852,6 +7638,10 @@
                         const modalEl = document.getElementById('roteirizacaoModal'); 
                         const inputModal = bootstrap.Modal.getInstance(modalEl); 
                         if (inputModal) inputModal.hide();
+
+                        // Muda para a aba de Roteirizados
+                        const tabBtn = document.getElementById('roteirizados-tab-btn');
+                        if (tabBtn) { const tab = new bootstrap.Tab(tabBtn); tab.show(); }
                         
                         showToast(`${loads.length} cargas criadas com sucesso!`, "success");
                     } catch (innerError) {
