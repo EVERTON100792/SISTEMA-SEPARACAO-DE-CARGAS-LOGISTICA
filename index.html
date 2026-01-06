@@ -1039,6 +1039,9 @@
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h2 class="card-title h5 mb-0"><i class="bi bi-tools me-2"></i>Mesa de Trabalho: Montagem de Cargas</h2>                           
                             <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-success" onclick="montarTodasAsRotas()" title="Montar cargas para todas as rotas disponíveis automaticamente">
+                                    <i class="bi bi-magic me-1"></i>Montar Tudo
+                                </button>
                                 <button id="start-manual-routing-btn" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#manualRoutingModal">
                                     <i class="bi bi-signpost-split-fill me-1"></i>Roteirização Manual
                                 </button>
@@ -3781,7 +3784,17 @@
         }
 
         function displayGerais(div, grupos) {
-            if (Object.keys(grupos).length === 0) { 
+            // MODIFICADO: Agora considera também as rotas já processadas para exibir os botões,
+            // mesmo que não tenham pedidos pendentes (caso de alocação total sem sobras).
+            const rotasPendentes = Object.keys(grupos);
+            const rotasProcessadas = [];
+            processedRoutes.forEach(key => {
+                key.split(',').forEach(r => rotasProcessadas.push(r.trim()));
+            });
+            
+            const todasRotas = new Set([...rotasPendentes, ...rotasProcessadas]);
+
+            if (todasRotas.size === 0) { 
                 div.innerHTML = '<div class="empty-state"><i class="bi bi-file-earmark-excel"></i><p>Nenhum pedido de varejo disponível.</p></div>'; 
                 document.getElementById('botoes-fiorino').innerHTML = '<div class="empty-state"><i class="bi bi-box"></i><p>Nenhuma rota de Fiorino disponível. Processe um arquivo para começar.</p></div>';
                 document.getElementById('botoes-van').innerHTML = '<div class="empty-state"><i class="bi bi-truck-front-fill"></i><p>Nenhuma rota de Van disponível. Processe um arquivo para começar.</p></div>';
@@ -3798,7 +3811,7 @@
             // --- FIM DA MELHORIA ---
 
             // Usa a função centralizada para garantir a mesma ordem da busca
-            const rotasOrdenadas = getSortedVarejoRoutes(Object.keys(grupos));
+            const rotasOrdenadas = getSortedVarejoRoutes(Array.from(todasRotas));
 
             const botoes = { fiorino: '', van: '', tresQuartos: '' };
             const addedButtons = new Set();
@@ -3829,7 +3842,7 @@
                     const colorClass = vehicleType === 'fiorino' ? 'success' : (vehicleType === 'van' ? 'primary' : 'warning');
                     const divId = vehicleType === 'fiorino' ? 'resultado-fiorino-geral' : (vehicleType === 'van' ? 'resultado-van-geral' : 'resultado-34-geral');
                     const btnId = `btn-${vehicleType}-${rota}`;
-                    const routesKeyString = rotaValue.replace(/\[|\]|'/g, ''); // Transforma ['1','2'] em 1,2
+                    const routesKeyString = rotaValue.replace(/\[|\]|'|\s/g, ''); // Transforma ['1', '2'] em 1,2 (sem espaços)
 
                     // Verifica se a rota já foi processada para renderizar o botão no estado correto
                     if (processedRoutes.has(routesKeyString)) {
@@ -3848,9 +3861,12 @@
             document.getElementById('botoes-van').innerHTML = botoes.van || '<div class="empty-state"><i class="bi bi-truck-front-fill"></i><p>Nenhuma rota de Van encontrada.</p></div>';
             document.getElementById('botoes-34').innerHTML = botoes.tresQuartos || '<div class="empty-state"><i class="bi bi-truck-flatbed"></i><p>Nenhuma rota de 3/4 encontrada.</p></div>';
             let accordionHtml = '<div class="accordion accordion-flush" id="accordionGeral">';
+            let hasPendingItems = false;
             
             rotasOrdenadas.forEach((rota, index) => {
                 const grupo = grupos[rota];
+                if (!grupo) return; // Pula se não houver pedidos pendentes para esta rota
+                hasPendingItems = true;
                 const totalKgFormatado = grupo.totalKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const veiculo = rotaVeiculoMap[rota]?.type || 'van'; // Assume 'van' para rotas não mapeadas
                 let veiculoClass = '';
@@ -3873,7 +3889,12 @@
                                     <div class="accordion-body">${createTable(grupo.pedidos, null, 'geral')}</div></div></div>`;
             });
             accordionHtml += '</div>'; 
-            div.innerHTML = accordionHtml;
+            
+            if (!hasPendingItems) {
+                 div.innerHTML = '<div class="empty-state"><i class="bi bi-check-circle-fill"></i><p>Todos os pedidos disponíveis foram alocados.</p></div>';
+            } else {
+                 div.innerHTML = accordionHtml;
+            }
 
             // --- CORREÇÃO DE UX (Manter Acordeão Aberto) ---
             // Reabre o acordeão que estava aberto antes da atualização, usando o ID estável salvo.
@@ -7313,6 +7334,56 @@
             // 4. Atualiza a interface geral para garantir que tudo esteja sincronizado
             renderAllUI();
             showToast("Processamento de cargas prioritárias concluído!", "success");
+        }
+
+        /**
+         * NOVO: Função para montar todas as rotas disponíveis sequencialmente.
+         * Simula o clique manual em cada botão de rota.
+         */
+        async function montarTodasAsRotas() {
+            if (pedidosGeraisAtuais.length === 0) {
+                showToast("Não há pedidos disponíveis para montar.", "info");
+                return;
+            }
+
+            // Identifica rotas únicas presentes nos pedidos disponíveis
+            const rotasDisponiveis = [...new Set(pedidosGeraisAtuais.map(p => String(p.Cod_Rota)))];
+            
+            if (rotasDisponiveis.length === 0) return;
+
+            const rotasOrdenadas = getSortedVarejoRoutes(rotasDisponiveis);
+            
+            if (!confirm(`Deseja iniciar a montagem automática para ${rotasOrdenadas.length} rotas? O processo será executado sequencialmente.`)) return;
+
+            showToast(`Iniciando montagem automática de ${rotasOrdenadas.length} rotas...`, "info");
+
+            // Remove mensagens de sucesso anteriores
+            document.querySelectorAll('.route-success-message').forEach(el => el.remove());
+
+            const processedInThisBatch = new Set();
+
+            for (const rota of rotasOrdenadas) {
+                if (processedInThisBatch.has(rota)) continue;
+
+                let config = rotaVeiculoMap[rota];
+                if (!config) config = { type: 'van', title: `Rota ${rota} (Automática)` };
+
+                let rotasParaProcessar = rota;
+                if (config.combined) {
+                    const combinedRoutes = [rota, ...config.combined];
+                    if (combinedRoutes.some(r => rotasDisponiveis.includes(r))) {
+                        rotasParaProcessar = combinedRoutes;
+                        combinedRoutes.forEach(r => processedInThisBatch.add(r));
+                    } else processedInThisBatch.add(rota);
+                } else processedInThisBatch.add(rota);
+
+                const divId = config.type === 'fiorino' ? 'resultado-fiorino-geral' : (config.type === 'van' ? 'resultado-van-geral' : 'resultado-34-geral');
+                await separarCargasGeneric(rotasParaProcessar, divId, config.title, config.type, null, true);
+                await new Promise(r => setTimeout(r, 300));
+            }
+
+            renderAllUI();
+            showToast("Montagem automática de todas as rotas concluída!", "success");
         }
 
         async function processarRoteirizacaoLista() {
