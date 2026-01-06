@@ -38,20 +38,21 @@
 
         :root {
             /* Paleta de Cores "Onyx" - REFINADA */
-            --dark-bg: #0a0a0a; /* Fundo principal super escuro */
-            --dark-surface: rgba(28, 28, 30, 0.7); /* Superfície principal com transparência para o efeito de vidro */
-            --dark-surface-secondary: rgba(44, 44, 46, 0.8); /* Superfície secundária, um pouco mais opaca */
-            --dark-border: rgba(72, 72, 74, 0.5); /* Borda sutil e semi-transparente */
-            --dark-primary: #0A84FF;
-            --dark-primary-hover: #3399FF;
-            --dark-primary-glow: rgba(10, 132, 255, 0.3); /* Cor para efeitos de brilho */
-            --dark-accent: #5E5CE6;
-            --dark-accent-secondary: #BF5AF2;
-            --dark-accent-glow: rgba(94, 92, 230, 0.3); /* Cor de brilho para o acento */
-            --dark-text-primary: #FFFFFF;
-            --dark-text-secondary: #8A8A8E;
-            --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); /* Sombra padrão */
-            --backdrop-blur: 10px; /* Intensidade do desfoque de fundo */
+            --dark-bg: #09090b; /* Fundo principal ainda mais profundo */
+            --dark-surface: rgba(20, 20, 23, 0.6); /* Superfície principal mais transparente (Glass) */
+            --dark-surface-secondary: rgba(39, 39, 42, 0.4); /* Superfície secundária */
+            --dark-border: rgba(255, 255, 255, 0.08); /* Borda muito mais sutil e elegante */
+            --dark-primary: #3b82f6; /* Azul moderno (Tailwind Blue 500) */
+            --dark-primary-hover: #2563eb;
+            --dark-primary-glow: rgba(59, 130, 246, 0.25);
+            --dark-accent: #8b5cf6; /* Violeta moderno */
+            --dark-accent-secondary: #d946ef; /* Fuchsia */
+            --dark-accent-glow: rgba(139, 92, 246, 0.25);
+            --dark-text-primary: #f4f4f5; /* Zinco 100 */
+            --dark-text-secondary: #a1a1aa; /* Zinco 400 */
+            --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); /* Sombra mais profunda */
+            --backdrop-blur: 20px; /* Blur mais intenso */
+            --border-radius: 12px; /* Bordas mais arredondadas globalmente */
         }
 
         /* --- NOVO: Variáveis para o Tema Claro --- */
@@ -86,16 +87,16 @@
         /* --- NOVO FUNDO ANIMADO PARA TEMA ESCURO --- */
         [data-bs-theme="dark"] body {
             background-image: 
-                /* Efeito de gradiente aurora que se move */
-                radial-gradient(at 15% 85%, hsla(210, 100%, 50%, 0.15), transparent 40%),
-                radial-gradient(at 85% 15%, hsla(265, 88%, 60%, 0.15), transparent 40%),
-                /* Brilho central sutil */
-                radial-gradient(ellipse at center, rgba(10, 132, 255, 0.1), transparent 70%),
+                /* Gradientes mais vibrantes e definidos */
+                radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.15), transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.15), transparent 40%),
                 /* Linhas de grid diagonais */
-                linear-gradient(30deg, transparent 49.5%, rgba(10, 132, 255, 0.08) 50%, transparent 50.5%),
-                linear-gradient(150deg, transparent 49.5%, rgba(10, 132, 255, 0.08) 50%, transparent 50.5%),
+                linear-gradient(30deg, transparent 49.5%, rgba(255, 255, 255, 0.03) 50%, transparent 50.5%),
+                linear-gradient(150deg, transparent 49.5%, rgba(255, 255, 255, 0.03) 50%, transparent 50.5%),
                 /* Linhas de grid retas */
-                linear-gradient(90deg, transparent 49.5%, rgba(10, 132, 255, 0.08) 50%, transparent 50.5%);
+                linear-gradient(90deg, transparent 49.5%, rgba(255, 255, 255, 0.03) 50%, transparent 50.5%);
             background-size: 150% 150%, 150% 150%, 100% 100%, 86px 50px, 86px 50px, 86px 50px;
             animation: move-aurora-glow 20s ease-in-out infinite;
         }
@@ -127,7 +128,14 @@
         ::-webkit-scrollbar-thumb { background-color: var(--dark-primary); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background-color: var(--dark-primary-hover); }
 
-        h1, h2, h3, h4, h5 { font-weight: 700; letter-spacing: -0.5px; }
+        h1, h2, h3, h4, h5 { 
+            font-weight: 800; 
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #fff, #cbd5e1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
         /* --- TIPOGRAFIA RESPONSIVA (Valores ajustados para uma aparência mais compacta e profissional) --- */
         h1.h2 { font-size: clamp(1.3rem, 1.5vw, 1.5rem); } /* Reajustado para nova base */
@@ -195,7 +203,7 @@
             background: var(--dark-surface);
             backdrop-filter: blur(var(--backdrop-blur));
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
-            border-right: 1px solid var(--dark-border);
+            border-right: 1px solid rgba(255,255,255,0.05);
             transition: all 0.4s ease;
             display: flex;
             flex-direction: column;
@@ -246,10 +254,10 @@
             color: var(--dark-text-secondary);
             font-weight: 500; font-size: 0.9rem;
             padding: 0.6rem 1rem;
-            border-radius: 0.5rem;
+            border-radius: 8px; /* Arredondamento mais suave */
             position: relative;
             transition: all 0.3s ease;
-            border-left: 3px solid transparent;
+            border: 1px solid transparent; /* Mudança de borda lateral para borda total transparente */
             display: flex; 
             align-items: center; /* Adicionado para alinhar ícone e texto */
         }
@@ -257,16 +265,15 @@
             margin-right: 0.5rem; /* Margem padrão para ícones */
         }
         #sidebar .nav-link:hover {
-            background-color: var(--dark-surface-secondary);
+            background-color: rgba(255,255,255,0.05);
             color: var(--dark-text-primary);
-            border-left-color: var(--dark-primary-hover);
         }
         #sidebar .nav-link.active {
-            background: linear-gradient(90deg, var(--dark-primary-glow), transparent);
+            background: rgba(59, 130, 246, 0.1); /* Fundo sutil */
             color: var(--dark-text-primary);
             font-weight: 600;
-            box-shadow: 0 0 20px var(--dark-primary-glow);
-            border-left-color: var(--dark-primary);
+            border-color: rgba(59, 130, 246, 0.2); /* Borda sutil */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         /* --- ESTILOS PARA O NOVO LOGO ANIMADO --- */
@@ -385,10 +392,10 @@
         .card {
             position: relative;
             background-color: var(--dark-surface);
-            border: 1px solid var(--dark-border);
-            border-radius: 0.75rem;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Borda um pouco mais visível para contraste */
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
             backdrop-filter: blur(var(--backdrop-blur));
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
@@ -414,17 +421,17 @@
         }
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 30px var(--dark-primary-glow);
+            box-shadow: 0 20px 40px -5px rgba(0,0,0,0.3);
         }
         .card:hover::before {
             opacity: 1;
         }
 
         .card-header {
-            background-color: var(--dark-surface-secondary);
-            border-bottom: 1px solid var(--dark-border);
+            background-color: transparent; /* Header transparente para limpeza */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             font-weight: 600;
-            padding: 0.6rem 1rem;
+            padding: 1rem 1.25rem;
         }
         .card-body { padding: 1rem; }
 
@@ -449,15 +456,15 @@
             font-weight: 600;
             font-size: 0.85rem;
             transition: all 0.3s ease-in-out;
-            border-radius: 0.5rem;
-            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
         }
         .btn:hover {
             transform: translateY(-1px); /* Efeito mais sutil */
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         .btn-primary {
-            background: linear-gradient(45deg, var(--dark-primary), var(--dark-accent-secondary));
+            background: linear-gradient(135deg, var(--dark-primary), var(--dark-accent));
             border: none;
             box-shadow: 0 0 15px var(--dark-accent-glow);
         }
@@ -468,13 +475,14 @@
         .btn-primary:hover { transform: translateY(-2px) scale(1.02); }
         .btn-primary:hover { box-shadow: 0 4px 20px var(--dark-primary-glow); }
         .form-control, .form-select {
-            background-color: var(--dark-surface-secondary);
+            background-color: rgba(0,0,0,0.2); /* Input mais escuro */
             border: 1px solid var(--dark-border); 
             font-size: 0.85rem;
             color: var(--dark-text-primary);
+            border-radius: 8px;
         }
         .form-control:focus, .form-select:focus {
-            background-color: var(--dark-surface-secondary);
+            background-color: rgba(0,0,0,0.3);
             border-color: var(--dark-primary);
             box-shadow: 0 0 0 .2rem var(--dark-primary-glow);
             color: var(--dark-text-primary);
@@ -485,7 +493,7 @@
             font-size: 0.9rem;
             background-color: var(--dark-surface);
             backdrop-filter: blur(var(--backdrop-blur));
-            border-radius: 1rem;
+            border-radius: var(--border-radius);
             border: 1px solid var(--dark-border);
         }
         
@@ -494,19 +502,20 @@
             border-color: var(--dark-border);
         }
         .accordion-button {
-            background-color: var(--dark-surface-secondary);
+            background-color: rgba(255,255,255,0.02);
             color: var(--dark-text-primary);
             font-size: 0.9rem;
             font-weight: 600;
             transition: background-color 0.3s ease, color 0.3s ease;
+            border-radius: 8px;
         }
         .accordion-button:hover {
-            background-color: rgba(139, 132, 255, 0.1);
+            background-color: rgba(255,255,255,0.05);
         }
         .accordion-button:not(.collapsed) {
-            background: linear-gradient(45deg, var(--dark-primary), var(--dark-accent));
-            color: white;
-            box-shadow: 0 0 15px var(--dark-primary-glow);
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--dark-primary);
+            box-shadow: none;
         }
         .accordion-button::after { /* Ícone de seta do Bootstrap */
             transition: transform 0.3s ease-in-out; /* Suaviza a rotação do ícone */
@@ -520,9 +529,12 @@
             --bs-table-hover-bg: rgba(120, 111, 255, 0.1);
         }
         thead th { /* Cabeçalho da tabela com a nova cor primária */
-            background-color: var(--dark-surface-secondary);
-            font-weight: 600; font-size: 0.85rem;
-            border-bottom: 2px solid var(--dark-border);
+            background-color: rgba(0,0,0,0.2);
+            font-weight: 700; font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--dark-border);
+            color: var(--dark-text-secondary);
             padding: 0.5rem 0.75rem; /* Adicionado padding ao header */
         }
         tbody td { padding: 0.4rem 0.75rem; vertical-align: middle; font-size: 0.8rem; } /* Fonte reduzida */
@@ -534,25 +546,29 @@
             padding: 0.3rem 0.5rem; /* Padding reduzido */
         }
 
+        .nav-tabs {
+            border-bottom: none;
+            background: rgba(0,0,0,0.2);
+            padding: 0.5rem;
+            border-radius: 12px;
+            gap: 0.5rem;
+        }
         .nav-tabs .nav-link {
             color: var(--dark-text-secondary);
             border: none;
-            border-bottom: 3px solid transparent;
+            border-radius: 8px;
             font-weight: 600;
-            padding: 0.5rem 0.8rem; /* Menor */
+            padding: 0.5rem 1rem;
             transition: all 0.3s ease;
         }
-        .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
-            color: var(--dark-accent-secondary);
-            background-color: transparent;
-            border-color: var(--dark-accent-secondary);
+        .nav-tabs .nav-link:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: var(--dark-text-primary);
         }
-        .tab-content {
-            background-color: var(--dark-surface);
-            border: 1px solid var(--dark-border);
-            border-top: none; /* Remove a borda superior para se conectar às abas */
-            border-radius: 0 0 0.75rem 0.75rem;
-            padding: 1rem;
+        .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
+            color: white;
+            background: linear-gradient(135deg, var(--dark-primary), var(--dark-primary-hover));
+            box-shadow: 0 4px 12px var(--dark-primary-glow);
         }
 
         /* MELHORIA DE USABILIDADE */
@@ -708,9 +724,9 @@
     <style>
         /* --- ESTILOS PARA O NOVO DASHBOARD (SUMMARY VIEW) --- */
         .stat-card {
-            background: var(--dark-surface);
+            background: rgba(255,255,255,0.02);
             border: 1px solid var(--dark-border);
-            border-radius: 0.75rem;
+            border-radius: var(--border-radius);
             padding: 1rem; /* Reduzido */
             display: flex;
             align-items: center;
@@ -720,15 +736,15 @@
         }
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px var(--dark-primary-glow);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             border-color: var(--dark-primary-hover);
         }
         .stat-card .stat-icon {
             font-size: 2.2rem; /* Reduzido */
             padding: 0.8rem; /* Reduzido */
-            border-radius: 50%;
+            border-radius: 12px;
             margin-right: 1rem; /* Reduzido */
-            background: linear-gradient(145deg, var(--dark-surface-secondary), var(--dark-surface));
+            background: rgba(255,255,255,0.05);
             color: var(--dark-primary);
             display: flex;
             align-items: center;
@@ -787,10 +803,10 @@
     <style>
         /* --- ESTILOS PARA O NOVO LAYOUT DO DASHBOARD DE RESUMO --- */
         .kpi-card-main {
-            background: linear-gradient(145deg, var(--dark-surface-secondary), var(--dark-surface));
+            background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
             border: 1px solid var(--dark-border);
-            border-radius: 0.75rem;
-            padding: 1.25rem;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
             color: var(--dark-text-primary);
             position: relative;
             overflow: hidden;
