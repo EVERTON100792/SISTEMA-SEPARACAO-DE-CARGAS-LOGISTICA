@@ -37,40 +37,40 @@
         }
 
         :root {
-            /* Paleta de Cores "Onyx" - REFINADA */
-            --dark-bg: #09090b; /* Fundo principal ainda mais profundo */
-            --dark-surface: rgba(20, 20, 23, 0.6); /* Superfície principal mais transparente (Glass) */
-            --dark-surface-secondary: rgba(39, 39, 42, 0.4); /* Superfície secundária */
-            --dark-border: rgba(255, 255, 255, 0.08); /* Borda muito mais sutil e elegante */
-            --dark-primary: #3b82f6; /* Azul moderno (Tailwind Blue 500) */
-            --dark-primary-hover: #2563eb;
-            --dark-primary-glow: rgba(59, 130, 246, 0.25);
-            --dark-accent: #8b5cf6; /* Violeta moderno */
-            --dark-accent-secondary: #d946ef; /* Fuchsia */
-            --dark-accent-glow: rgba(139, 92, 246, 0.25);
-            --dark-text-primary: #f4f4f5; /* Zinco 100 */
-            --dark-text-secondary: #a1a1aa; /* Zinco 400 */
-            --box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); /* Sombra mais profunda */
-            --backdrop-blur: 20px; /* Blur mais intenso */
-            --border-radius: 12px; /* Bordas mais arredondadas globalmente */
+            /* Paleta de Cores "Midnight Pro" - Mais equilibrada, moderna e menos escura */
+            --dark-bg: #0f172a; /* Slate 900 - Azul profundo, não preto */
+            --dark-surface: rgba(30, 41, 59, 0.75); /* Slate 800 - Translúcido */
+            --dark-surface-secondary: rgba(51, 65, 85, 0.5); /* Slate 700 */
+            --dark-border: rgba(148, 163, 184, 0.15); /* Slate 400 sutil */
+            --dark-primary: #3b82f6; /* Blue 500 */
+            --dark-primary-hover: #2563eb; /* Blue 600 */
+            --dark-primary-glow: rgba(59, 130, 246, 0.35);
+            --dark-accent: #8b5cf6; /* Violet 500 */
+            --dark-accent-secondary: #ec4899; /* Pink 500 - Mais vibrante */
+            --dark-accent-glow: rgba(139, 92, 246, 0.35);
+            --dark-text-primary: #f8fafc; /* Slate 50 - Quase branco */
+            --dark-text-secondary: #94a3b8; /* Slate 400 - Cinza azulado */
+            --box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3); /* Sombra mais suave */
+            --backdrop-blur: 16px; /* Blur equilibrado */
+            --border-radius: 16px; /* Bordas mais arredondadas e modernas */
         }
 
         /* --- NOVO: Variáveis para o Tema Claro --- */
         [data-bs-theme="light"] {
-            --dark-bg: #f8f9fa; /* Um cinza muito claro para o fundo geral */
-            --dark-surface: #ffffff; /* Branco para a superfície principal (cards, modais) */
-            --dark-surface-secondary: #e9ecef; /* Um cinza um pouco mais escuro para cabeçalhos e elementos secundários */
-            --dark-border: #dee2e6;
-            --dark-primary: #0A84FF;
-            --dark-primary-hover: #0069d9;
-            --dark-primary-glow: rgba(10, 132, 255, 0.2);
-            --dark-accent: #5E5CE6;
-            --dark-accent-secondary: #BF5AF2;
-            --dark-accent-glow: rgba(94, 92, 230, 0.2);
-            --dark-text-primary: #212529;
-            --dark-text-secondary: #6c757d;
-            --box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.05);
-            --backdrop-blur: 10px;
+            --dark-bg: #f1f5f9; /* Slate 100 - Fundo claro e limpo */
+            --dark-surface: #ffffff; /* Branco puro */
+            --dark-surface-secondary: #f8fafc; /* Slate 50 */
+            --dark-border: #cbd5e1; /* Slate 300 */
+            --dark-primary: #2563eb; /* Blue 600 - Mais contraste no claro */
+            --dark-primary-hover: #1d4ed8;
+            --dark-primary-glow: rgba(37, 99, 235, 0.2);
+            --dark-accent: #7c3aed; /* Violet 600 */
+            --dark-accent-secondary: #db2777; /* Pink 600 */
+            --dark-accent-glow: rgba(124, 58, 237, 0.2);
+            --dark-text-primary: #0f172a; /* Slate 900 */
+            --dark-text-secondary: #64748b; /* Slate 500 */
+            --box-shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.2);
+            --backdrop-blur: 12px;
         }
 
         /* --- NOVAS ANIMAÇÕES DE FUNDO --- */
@@ -87,25 +87,17 @@
         /* --- NOVO FUNDO ANIMADO PARA TEMA ESCURO --- */
         [data-bs-theme="dark"] body {
             background-image: 
-                /* Gradientes mais vibrantes e definidos */
-                radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.15), transparent 40%),
-                radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.15), transparent 40%),
-                radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.15), transparent 40%),
-                radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.15), transparent 40%),
-                /* Linhas de grid diagonais */
-                linear-gradient(30deg, transparent 49.5%, rgba(255, 255, 255, 0.03) 50%, transparent 50.5%),
-                linear-gradient(150deg, transparent 49.5%, rgba(255, 255, 255, 0.03) 50%, transparent 50.5%),
-                /* Linhas de grid retas */
-                linear-gradient(90deg, transparent 49.5%, rgba(255, 255, 255, 0.03) 50%, transparent 50.5%);
-            background-size: 150% 150%, 150% 150%, 100% 100%, 86px 50px, 86px 50px, 86px 50px;
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.12), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.12), transparent 25%);
+            background-size: 100% 100%, 100% 100%;
             animation: move-aurora-glow 20s ease-in-out infinite;
         }
 
         /* --- Fundo para Tema Claro (mais sutil) --- */
         [data-bs-theme="light"] body {
             background-image: 
-                radial-gradient(at 15% 85%, hsla(210, 100%, 50%, 0.05), transparent 50%),
-                radial-gradient(at 85% 15%, hsla(265, 88%, 60%, 0.05), transparent 50%);
+                radial-gradient(at 0% 0%, hsla(210, 100%, 50%, 0.03), transparent 50%),
+                radial-gradient(at 100% 100%, hsla(265, 88%, 60%, 0.03), transparent 50%);
             background-size: 150% 150%, 150% 150%;
             animation: move-aurora-glow 20s ease-in-out infinite;
         }
@@ -131,7 +123,7 @@
         h1, h2, h3, h4, h5 { 
             font-weight: 800; 
             letter-spacing: -0.5px;
-            color: var(--dark-text-primary);
+            color: var(--dark-text-primary) !important;
         }
         [data-bs-theme="dark"] h1, [data-bs-theme="dark"] h2, [data-bs-theme="dark"] h3, [data-bs-theme="dark"] h4, [data-bs-theme="dark"] h5 {
             background: linear-gradient(to right, #fff, #cbd5e1);
@@ -206,7 +198,7 @@
             background: var(--dark-surface);
             backdrop-filter: blur(var(--backdrop-blur));
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
-            border-right: 1px solid rgba(255,255,255,0.05);
+            border-right: 1px solid var(--dark-border);
             transition: all 0.4s ease;
             display: flex;
             flex-direction: column;
@@ -265,19 +257,23 @@
             align-items: center; /* Adicionado para alinhar ícone e texto */
         }
         #sidebar .nav-link i {
-            margin-right: 0.5rem; /* Margem padrão para ícones */
+            margin-right: 0.75rem; /* Margem padrão para ícones */
+            color: var(--dark-text-secondary);
+            transition: color 0.3s ease;
         }
         #sidebar .nav-link:hover {
-            background-color: rgba(255,255,255,0.05);
+            background-color: var(--dark-surface-secondary);
             color: var(--dark-text-primary);
         }
+        #sidebar .nav-link:hover i { color: var(--dark-primary); }
         #sidebar .nav-link.active {
-            background: rgba(59, 130, 246, 0.1); /* Fundo sutil */
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.15), transparent); /* Fundo sutil com gradiente */
             color: var(--dark-text-primary);
             font-weight: 600;
-            border-color: rgba(59, 130, 246, 0.2); /* Borda sutil */
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-left: 3px solid var(--dark-primary); /* Indicador lateral */
+            border-radius: 4px 12px 12px 4px;
         }
+        #sidebar .nav-link.active i { color: var(--dark-primary); }
 
         /* --- ESTILOS PARA O NOVO LOGO ANIMADO --- */
         #logo-container {
@@ -327,7 +323,7 @@
         }
         #sidebar .nav-submenu {
             padding-left: 1.5rem; /* Indentação para itens do submenu */
-            background-color: rgba(0,0,0,0.15);
+            background-color: transparent;
         }
         #sidebar .nav-submenu .nav-link {
             padding: 0.45rem 1.25rem; /* Padding menor para itens de submenu */
@@ -395,7 +391,7 @@
         .card {
             position: relative;
             background-color: var(--dark-surface);
-            border: 1px solid rgba(255, 255, 255, 0.1); /* Borda um pouco mais visível para contraste */
+            border: 1px solid var(--dark-border); /* Borda um pouco mais visível para contraste */
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -432,7 +428,7 @@
 
         .card-header {
             background-color: transparent; /* Header transparente para limpeza */
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid var(--dark-border);
             font-weight: 600;
             padding: 1rem 1.25rem;
         }
@@ -479,7 +475,7 @@
         .btn-primary:hover { box-shadow: 0 4px 20px var(--dark-primary-glow); }
         .form-control, .form-select {
             background-color: rgba(0,0,0,0.2); /* Input mais escuro */
-            border: 1px solid var(--dark-border); 
+            border: 1px solid var(--dark-border);
             font-size: 0.85rem;
             color: var(--dark-text-primary);
             border-radius: 8px;
@@ -505,7 +501,7 @@
             border-color: var(--dark-border);
         }
         .accordion-button {
-            background-color: rgba(255,255,255,0.02);
+            background-color: var(--dark-surface-secondary);
             color: var(--dark-text-primary);
             font-size: 0.9rem;
             font-weight: 600;
@@ -514,10 +510,10 @@
             -webkit-text-fill-color: currentColor;
         }
         .accordion-button:hover {
-            background-color: rgba(255,255,255,0.05);
+            background-color: rgba(59, 130, 246, 0.05);
         }
         .accordion-button:not(.collapsed) {
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(59, 130, 246, 0.15);
             color: var(--dark-primary);
             box-shadow: none;
         }
@@ -529,11 +525,11 @@
         
         .table { 
             --bs-table-bg: transparent; /* Fundo transparente para herdar do card */
-            --bs-table-striped-bg: rgba(120, 111, 255, 0.04);
-            --bs-table-hover-bg: rgba(120, 111, 255, 0.1);
+            --bs-table-striped-bg: rgba(59, 130, 246, 0.03);
+            --bs-table-hover-bg: rgba(59, 130, 246, 0.08);
         }
         thead th { /* Cabeçalho da tabela com a nova cor primária */
-            background-color: rgba(0,0,0,0.2);
+            background-color: var(--dark-surface-secondary);
             font-weight: 700; font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -552,7 +548,7 @@
 
         .nav-tabs {
             border-bottom: none;
-            background: rgba(0,0,0,0.2);
+            background: var(--dark-surface-secondary);
             padding: 0.5rem;
             border-radius: 12px;
             gap: 0.5rem;
@@ -566,7 +562,7 @@
             transition: all 0.3s ease;
         }
         .nav-tabs .nav-link:hover {
-            background-color: rgba(255,255,255,0.1);
+            background-color: rgba(255,255,255,0.05);
             color: var(--dark-text-primary);
         }
         .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
@@ -579,7 +575,7 @@
         .empty-state {
             text-align: center;
             padding: 2rem;
-            background-color: rgba(0,0,0,0.1);
+            background-color: transparent;
             border-radius: 0.75rem;
             color: var(--dark-text-secondary);
         }
@@ -587,7 +583,7 @@
         
         tr.client-highlight > td {
             /* Cor de destaque diferente para cada tema para garantir visibilidade */
-            background-color: rgba(120, 111, 255, 0.2) !important;
+            background-color: rgba(139, 92, 246, 0.2) !important;
         }
         [data-bs-theme="light"] tr.client-highlight > td {
             background-color: rgba(10, 132, 255, 0.2) !important; /* Azul mais escuro e visível para o tema claro */
@@ -728,7 +724,7 @@
     <style>
         /* --- ESTILOS PARA O NOVO DASHBOARD (SUMMARY VIEW) --- */
         .stat-card {
-            background: rgba(255,255,255,0.02);
+            background: var(--dark-surface);
             border: 1px solid var(--dark-border);
             border-radius: var(--border-radius);
             padding: 1rem; /* Reduzido */
@@ -748,7 +744,7 @@
             padding: 0.8rem; /* Reduzido */
             border-radius: 12px;
             margin-right: 1rem; /* Reduzido */
-            background: rgba(255,255,255,0.05);
+            background: var(--dark-surface-secondary);
             color: var(--dark-primary);
             display: flex;
             align-items: center;
@@ -807,7 +803,7 @@
     <style>
         /* --- ESTILOS PARA O NOVO LAYOUT DO DASHBOARD DE RESUMO --- */
         .kpi-card-main {
-            background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+            background: linear-gradient(145deg, var(--dark-surface), var(--dark-surface-secondary));
             border: 1px solid var(--dark-border);
             border-radius: var(--border-radius);
             padding: 1.5rem;
@@ -823,75 +819,90 @@
     </style>
 
     <style>
-        /* --- ANIMAÇÃO DE CARREGAMENTO V8 - "QUANTUM FLUX" --- */
+        /* --- ANIMAÇÃO DE CARREGAMENTO V9 - "HOLOGRAPHIC NEXUS" --- */
         .loading-animation-container {
             position: relative;
             width: 100%;
-            height: 220px;
+            height: 260px;
             overflow: hidden;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
             background: 
-                radial-gradient(ellipse at center, rgba(10, 132, 255, 0.1), transparent 70%),
-                url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="p" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="%231C1C1E"/></pattern></defs><rect width="100%" height="100%" fill="url(%23p)"/></svg>');
-            background-size: 100% 100%, 300px 300px;
-            animation: bg-pan 60s linear infinite;
+                radial-gradient(circle at center, rgba(15, 23, 42, 0.8) 0%, #0f172a 100%),
+                linear-gradient(0deg, transparent 24%, rgba(59, 130, 246, 0.05) 25%, rgba(59, 130, 246, 0.05) 26%, transparent 27%, transparent 74%, rgba(59, 130, 246, 0.05) 75%, rgba(59, 130, 246, 0.05) 76%, transparent 77%, transparent),
+                linear-gradient(90deg, transparent 24%, rgba(59, 130, 246, 0.05) 25%, rgba(59, 130, 246, 0.05) 26%, transparent 27%, transparent 74%, rgba(59, 130, 246, 0.05) 75%, rgba(59, 130, 246, 0.05) 76%, transparent 77%, transparent);
+            background-size: 100% 100%, 50px 50px, 50px 50px;
+            border-radius: 16px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.6);
+            perspective: 1000px;
         }
 
-        #quantum-core {
+        .nexus-system {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            transform-style: preserve-3d;
+            animation: nexus-float 6s ease-in-out infinite;
+        }
+
+        .nexus-core {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
             width: 40px;
             height: 40px;
             background: var(--dark-primary);
             border-radius: 50%;
-            position: relative;
-            box-shadow: 0 0 20px var(--dark-primary-glow), 0 0 40px var(--dark-primary), inset 0 0 10px rgba(255,255,255,0.7);
-            animation: core-pulse 2.5s ease-in-out infinite;
+            box-shadow: 0 0 30px var(--dark-primary), 0 0 60px var(--dark-primary-glow), inset 0 0 15px rgba(255,255,255,0.8);
+            animation: core-pulse-v9 2s infinite;
+            z-index: 10;
         }
 
-        .particle-orbit {
+        .nexus-ring {
             position: absolute;
             top: 50%; left: 50%;
-            border: 1px solid var(--dark-border);
-            border-radius: 50%;
             transform: translate(-50%, -50%);
-            animation: orbit-rotate var(--duration) linear infinite;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-top-color: var(--dark-accent);
+            border-bottom-color: var(--dark-primary);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
         }
 
-        .data-particle {
+        .nexus-ring:nth-child(2) { width: 100%; height: 100%; animation: spin-v9 8s linear infinite; border-width: 1px; border-style: solid; opacity: 0.6; }
+        .nexus-ring:nth-child(3) { width: 75%; height: 75%; animation: spin-v9-reverse 5s linear infinite; border-width: 3px; border-left-color: transparent; border-right-color: transparent; }
+        .nexus-ring:nth-child(4) { width: 50%; height: 50%; animation: spin-v9 3s linear infinite; border-width: 2px; border-style: dashed; }
+
+        .data-packet {
             position: absolute;
             top: 50%; left: 0;
-            width: 6px; height: 6px;
-            background: var(--dark-accent-secondary);
+            width: 4px; height: 4px;
+            background: #fff;
             border-radius: 50%;
-            box-shadow: 0 0 8px var(--dark-accent-glow);
-            transform: translateY(-50%);
+            box-shadow: 0 0 10px var(--dark-accent-secondary);
+            opacity: 0;
+            z-index: 5;
         }
 
-        .data-particle::after {
-            content: '';
-            position: absolute;
-            left: 3px; top: 50%;
-            width: 50px; height: 1px;
-            background: linear-gradient(to right, var(--dark-accent-secondary), transparent);
-            transform: translateY(-50%);
-            opacity: 0.8;
+        @keyframes nexus-float {
+            0%, 100% { transform: translateY(0) rotateX(15deg); }
+            50% { transform: translateY(-15px) rotateX(-5deg); }
         }
 
-        @keyframes core-pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 20px var(--dark-primary-glow), 0 0 40px var(--dark-primary), inset 0 0 10px rgba(255,255,255,0.7); }
-            50% { transform: scale(1.1); box-shadow: 0 0 30px var(--dark-primary-glow), 0 0 60px var(--dark-primary), inset 0 0 15px rgba(255,255,255,0.9); }
+        @keyframes core-pulse-v9 {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; box-shadow: 0 0 30px var(--dark-primary), 0 0 60px var(--dark-primary-glow); }
+            50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.9; box-shadow: 0 0 50px var(--dark-primary), 0 0 80px var(--dark-primary-glow); }
         }
 
-        @keyframes orbit-rotate {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
+        @keyframes spin-v9 { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        @keyframes spin-v9-reverse { 0% { transform: translate(-50%, -50%) rotate(360deg); } 100% { transform: translate(-50%, -50%) rotate(0deg); } }
 
-        @keyframes bg-pan {
-            from { background-position: 0% 0%, 0% 0%; }
-            to { background-position: 0% 0%, -300px -300px; }
+        @keyframes packet-travel {
+            0% { transform: translate(-50%, -50%) rotate(var(--angle)) translateX(140px); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translate(-50%, -50%) rotate(var(--angle)) translateX(20px); opacity: 0; }
         }
 
         #thinking-text {
@@ -1504,9 +1515,14 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="background-color: var(--dark-surface); backdrop-filter: blur(12px);">
                 <div class="modal-body text-center p-4">
-                    <!-- Nova Animação de Carregamento V8 -->
+                    <!-- Nova Animação de Carregamento V9 - "HOLOGRAPHIC NEXUS" -->
                     <div class="loading-animation-container">
-                        <div id="quantum-core"></div>
+                        <div class="nexus-system">
+                            <div class="nexus-core"></div>
+                            <div class="nexus-ring"></div>
+                            <div class="nexus-ring"></div>
+                            <div class="nexus-ring"></div>
+                        </div>
                     </div>
 
                     <h5 id="processing-status-text" class="mb-2">Montando Cargas...</h5>
@@ -8053,35 +8069,35 @@
             }
         }
 
-        // --- Script para a nova animação "Quantum Flux" (V8) ---
+        // --- Script para a nova animação "Holographic Nexus" (V9) ---
         const processingModal = document.getElementById('processing-modal');
         const animationContainer = document.querySelector('.loading-animation-container');
 
-        function createQuantumFlux() {
+        function createHolographicNexus() {
             if (!animationContainer) return;
-            // Limpa órbitas antigas, mas mantém o núcleo
-            animationContainer.querySelectorAll('.particle-orbit').forEach(el => el.remove());
+            
+            const system = animationContainer.querySelector('.nexus-system');
+            if(!system) return;
+            
+            // Limpa pacotes antigos
+            system.querySelectorAll('.data-packet').forEach(el => el.remove());
 
-            const numOrbits = 7;
-            for (let i = 0; i < numOrbits; i++) {
-                const orbit = document.createElement('div');
-                orbit.className = 'particle-orbit';
+            const packetCount = 16; // Mais partículas para efeito mais rico
+            for (let i = 0; i < packetCount; i++) {
+                const packet = document.createElement('div');
+                packet.className = 'data-packet';
+                const angle = Math.random() * 360;
+                const delay = Math.random() * 2;
+                const duration = 1 + Math.random() * 1.5;
                 
-                const size = 80 + Math.random() * 120; // Tamanho da órbita
-                const duration = 5 + Math.random() * 10; // Duração da rotação
-                const initialRotation = Math.random() * 360; // Rotação inicial para não sobrepor
-
-                orbit.style.width = `${size}px`;
-                orbit.style.height = `${size * (0.5 + Math.random() * 0.3)}px`; // Elipses
-                orbit.style.setProperty('--duration', `${duration}s`);
-                orbit.style.transform = `translate(-50%, -50%) rotate(${initialRotation}deg)`;
-                orbit.innerHTML = '<div class="data-particle"></div>';
-                animationContainer.appendChild(orbit);
+                packet.style.setProperty('--angle', `${angle}deg`);
+                packet.style.animation = `packet-travel ${duration}s ease-in infinite ${delay}s`;
+                system.appendChild(packet);
             }
         }
 
         if (processingModal) {
-            processingModal.addEventListener('show.bs.modal', createQuantumFlux);
+            processingModal.addEventListener('show.bs.modal', createHolographicNexus);
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
