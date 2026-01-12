@@ -1072,44 +1072,6 @@
         .kpi-card-main.blocked .kpi-value { color: var(--dark-accent-secondary); }
         .list-group-item-kpi { background-color: transparent; border-color: var(--dark-border); }
     </style>
-    <style>
-        /* --- NOVOS ESTILOS PARA O DASHBOARD PREMIUM --- */
-        .hero-card {
-            background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 20px;
-            padding: 1.5rem;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .hero-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3);
-            border-color: var(--dark-primary-glow);
-        }
-        .hero-icon-wrapper {
-            width: 56px; height: 56px;
-            border-radius: 16px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.75rem;
-            margin-bottom: 1rem;
-            background: rgba(255,255,255,0.05);
-            box-shadow: inset 0 0 20px rgba(255,255,255,0.05);
-        }
-        .hero-value { font-size: 2.2rem; font-weight: 800; letter-spacing: -1px; line-height: 1; margin-bottom: 0.25rem; color: #fff; }
-        .hero-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--dark-text-secondary); }
-        .hero-sub { font-size: 0.85rem; color: var(--dark-text-secondary); display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
-        
-        .chart-card-premium {
-            background: var(--dark-surface);
-            border: 1px solid var(--dark-border);
-            border-radius: 24px;
-            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-    </style>
 
     <style>
         /* --- ANIMAÇÃO DE CARREGAMENTO V9 - "HOLOGRAPHIC NEXUS" --- */
@@ -1325,26 +1287,23 @@
 
                 <!-- Container para o conteúdo do dashboard que aparece após o processamento -->
                 <div id="dashboard-content-container" style="display: none;">
-                    <!-- Linha Superior: Hero KPIs -->
-                    <div class="row g-4 mb-4" id="hero-kpi-container"></div>
-
                     <div class="row g-4">
                         <!-- Coluna Esquerda: Gráfico Principal -->
                         <div class="col-lg-8 animated-entry">
-                            <div class="chart-card-premium h-100 p-4">
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <div>
-                                        <h3 class="h5 mb-1 fw-bold text-white"><i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>Performance da Frota</h3>
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h3 class="h5 mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Previsão de Veículos</h3>
                                     <span id="chart-subtitle" class="text-muted small"></span>
-                                    </div>
                                 </div>
+                                <div class="card-body">
                                     <div id="chart-resumo-veiculos" style="min-height: 450px;"></div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Coluna Direita: KPIs e Informações Rápidas -->
                         <div class="col-lg-4">
-                            <div class="row g-4" id="side-kpi-container">
+                            <div class="row g-4" id="kpi-container">
                                 <!-- KPIs serão inseridos aqui pelo JavaScript -->
                             </div>
                         </div>
@@ -1965,15 +1924,14 @@
                 const options = {
                     series: [
                         { name: 'Quantidade', type: 'column', data: countSeriesData },
-                        { name: 'Peso (kg)', type: 'area', data: weightSeriesData }
+                        { name: 'Peso (kg)', type: 'column', data: weightSeriesData }
                     ],
                     chart: {
-                        height: 400,
+                        height: 350,
                         type: 'line',
-                        fontFamily: 'Inter, sans-serif',
-                        background: 'transparent',
                         stacked: false, // prettier-ignore
                         toolbar: { show: false },
+                        foreColor: 'var(--dark-text-secondary)',
                         animations: {
                             enabled: true,
                             easing: 'easeinout',
@@ -1989,32 +1947,31 @@
                         }
                     },
                     fill: {
-                        type: ['gradient', 'gradient'],
+                        type: 'gradient',
                         gradient: {
                             shade: 'dark',
                             type: "vertical",
                             shadeIntensity: 0.5,
+                            gradientToColors: undefined,
                             inverseColors: false,
-                            opacityFrom: [0.9, 0.4],
-                            opacityTo: [0.6, 0.05],
+                            opacityFrom: 0.85,
+                            opacityTo: 0.95,
                             stops: [0, 100]
                         }
                     },
                     stroke: {
-                        width: [0, 4],
+                        width: [0, 0],
                         curve: 'smooth'
                     },
                     plotOptions: {
                         bar: {
-                            columnWidth: '50%',
-                            borderRadius: 8,
-                            borderRadiusApplication: 'end'
+                            columnWidth: '60%',
+                            borderRadius: 5
                         }
                     },
-                    colors: ['#3b82f6', '#8b5cf6'],
+                    colors: ['var(--dark-primary)', 'var(--dark-accent)'], /* Paleta dinâmica do CSS */
                     dataLabels: {
                         enabled: true,
-                        enabledOnSeries: [0], // Apenas nas barras
                         formatter: function (val, { seriesIndex }) {
                             if (seriesIndex === 0) { // Quantidade
                                 return val.toFixed(0);
@@ -2027,26 +1984,29 @@
                         },
                         offsetY: -25,
                         style: {
-                            fontSize: '12px',
+                            fontSize: '13px',
                             fontWeight: 'bold',
-                            colors: ['#fff']
+                            colors: [document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'var(--dark-text-primary)' : 'var(--dark-text-primary)']
                         },
                         background: {
-                          enabled: false
+                          enabled: true,
+                          foreColor: '#fff',
+                          borderRadius: 3,
+                          padding: 5,
+                          opacity: 0.7,
+                          borderWidth: 1,
+                          borderColor: '#666',
                         },
                     },
                     grid: {
-                        borderColor: 'rgba(255,255,255,0.05)',
+                        borderColor: 'var(--dark-border)',
                         strokeDashArray: 4,
                         yaxis: { lines: { show: true } }
                     },
                     xaxis: {
                         categories: categories,
-                        axisBorder: { show: false },
-                        axisTicks: { show: false },
                         labels: { 
                             style: { 
-                                colors: '#94a3b8',
                                 fontWeight: 600,
                                 fontSize: '13px',
                             } 
@@ -2055,29 +2015,38 @@
                     yaxis: [
                         {
                             seriesName: 'Quantidade',
-                            show: false,
+                            axisTicks: { show: true },
+                            axisBorder: { show: true, color: 'var(--dark-primary)' },
                             labels: { // Cor do texto do eixo adaptável
                                 style: { colors: 'var(--dark-text-secondary)' },
                                 formatter: function (val) {
                                     return val.toFixed(0);
                                 }
                             }, // prettier-ignore
+                            title: {
+                                text: "Quantidade de Veículos",
+                                style: { color: 'var(--dark-primary)', fontWeight: 600 }
+                            },
                         },
                         {
                             seriesName: 'Peso (kg)',
                             opposite: true,
-                            axisTicks: { show: false },
-                            axisBorder: { show: false },
+                            axisTicks: { show: true },
+                            axisBorder: { show: true, color: 'var(--dark-accent)' }, // prettier-ignore
                             labels: { // CORREÇÃO: Cor do texto do eixo adaptável
-                                style: { colors: '#8b5cf6', fontWeight: 600 },
+                                style: { colors: 'var(--dark-accent)' },
                                 formatter: function (val) {
                                     return (val / 1000).toFixed(1) + "k kg";
                                 }
                             },
+                            title: {
+                                text: "Peso Total (kg)",
+                                style: { color: 'var(--dark-accent)', fontWeight: 600 }
+                            }
                         }
                     ],
                     tooltip: {
-                        theme: 'dark',
+                        theme: document.documentElement.getAttribute('data-bs-theme'),
                         shared: true,
                         intersect: false,
                         y: {
@@ -3945,18 +3914,14 @@
             kpiData.pedidosAPredatar = pedidosAPredatar; // Armazena a lista completa
 
             // 4. Renderiza os KPIs no HTML
-            const heroContainer = document.getElementById('hero-kpi-container');
-            const sideContainer = document.getElementById('side-kpi-container');
-            
-            // Renderiza Hero Cards (Topo)
-            heroContainer.innerHTML = `
-                <div class="col-md-6 animated-entry">${renderHeroCard('Varejo Disponível', kpis.varejoDisponivel.peso, kpis.varejoDisponivel.pedidos, 'bi-cart-check-fill', 'text-success')}</div>
-                <div class="col-md-6 animated-entry">${renderHeroCard('Varejo Bloqueado', kpis.varejoBloqueado.peso, kpis.varejoBloqueado.pedidos, 'bi-shield-lock-fill', 'text-danger')}</div>
-            `;
-
-            // Renderiza Side Cards (Lateral)
-            sideContainer.innerHTML = `
+            const kpiContainer = document.getElementById('kpi-container');
+            kpiContainer.innerHTML = `
+                <!-- KPIs Principais -->
+                <div class="col-12 animated-entry">${renderMainKpiCard('Varejo Disponível', kpis.varejoDisponivel.peso, kpis.varejoDisponivel.pedidos, 'available')}</div>
+                <div class="col-12 animated-entry">${renderMainKpiCard('Varejo Bloqueado', kpis.varejoBloqueado.peso, kpis.varejoBloqueado.pedidos, 'blocked')}</div>
+                <!-- Alerta -->
                 <div class="col-12 animated-entry">${renderKpiCard('Pedidos a Predatar', null, kpiData.pedidosAPredatar.length, 'bi-calendar-x', 'danger', true)}</div>
+                <!-- Outras Categorias -->
                 <div class="col-12 animated-entry">${renderOtherCategoriesCard(kpis)}</div>
             `;
 
@@ -3967,20 +3932,14 @@
 
         }
 
-        function renderHeroCard(title, weight, count, icon, colorClass) {
-            const weightText = (weight / 1000).toFixed(2);
+        function renderMainKpiCard(title, weight, count, type) {
+            const weightText = `${(weight / 1000).toFixed(2)}<small class="fw-normal"> t</small>`;
+            const countText = `${count} pedidos`;
             return `
-                <div class="hero-card">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="hero-label">${title}</div>
-                            <div class="hero-value">${weightText}<span class="fs-5 fw-normal text-muted"> ton</span></div>
-                            <div class="hero-sub"><i class="bi bi-box-seam"></i> ${count} pedidos</div>
-                        </div>
-                        <div class="hero-icon-wrapper ${colorClass}">
-                            <i class="bi ${icon}"></i>
-                        </div>
-                    </div>
+                <div class="kpi-card-main ${type}">
+                    <div class="kpi-title">${title}</div>
+                    <div class="kpi-value">${weightText}</div>
+                    <div class="kpi-subvalue">${countText}</div>
                 </div>
             `;
         }
