@@ -435,13 +435,12 @@
         .card-body { padding: 1rem; }
 
         /* --- Ajuste para card de Pedidos Disponíveis rolável --- */
-        #pedidos-disponiveis-card .card-body {
-            max-height: calc(100vh - 220px); /* Altura dinâmica baseada na altura da tela */
+        #pedidosDisponiveisTabsContent {
+            flex: 1;
             overflow-y: auto;
         }
         @media (max-width: 992px) {
             #main-content { height: auto; }
-            #pedidos-disponiveis-card .card-body { max-height: 50vh; } /* Limita a altura no mobile */
         }
 
         /* --- Ajuste para card de Pedidos Filtrados rolável --- */
@@ -571,15 +570,45 @@
             box-shadow: 0 4px 12px var(--dark-primary-glow);
         }
 
-        /* MELHORIA DE USABILIDADE */
+        /* --- ESTADOS VAZIOS (EMPTY STATES) MODERNOS --- */
         .empty-state {
-            text-align: center;
-            padding: 2rem;
-            background-color: transparent;
-            border-radius: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+            background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
+            border: 2px dashed var(--dark-border);
+            border-radius: 16px;
             color: var(--dark-text-secondary);
+            transition: all 0.3s ease;
+            margin: 1rem 0;
         }
-        .empty-state .bi { font-size: 2.5rem; color: var(--dark-primary-glow); margin-bottom: 1rem; }
+        .empty-state:hover {
+            border-color: var(--dark-primary-glow);
+            background-color: rgba(255,255,255,0.04);
+            transform: scale(1.01);
+        }
+        .empty-state .bi { 
+            font-size: 3.5rem; 
+            margin-bottom: 1rem; 
+            color: var(--dark-text-secondary); 
+            opacity: 0.3; 
+            transition: all 0.3s ease; 
+        }
+        .empty-state:hover .bi {
+            opacity: 0.9;
+            color: var(--dark-primary);
+            transform: translateY(-5px) rotate(-10deg);
+            filter: drop-shadow(0 0 10px var(--dark-primary-glow));
+        }
+        .empty-state p {
+            font-size: 1rem;
+            font-weight: 500;
+            margin: 0;
+            text-align: center;
+            max-width: 80%;
+        }
         
         tr.client-highlight > td {
             /* Cor de destaque diferente para cada tema para garantir visibilidade */
@@ -731,7 +760,7 @@
             flex-direction: column;
         }
         .workspace-header {
-            background: rgba(0,0,0,0.2);
+            background: linear-gradient(to right, rgba(255,255,255,0.02), transparent);
             border-bottom: 1px solid var(--dark-border);
             padding: 1rem 1.5rem;
             display: flex;
@@ -756,45 +785,96 @@
         
         /* Abas Modernas */
         .nav-tabs-modern {
-            border-bottom: 1px solid var(--dark-border);
-            background: rgba(0,0,0,0.1);
-            padding: 0 0.5rem;
-            gap: 2px;
-            flex-wrap: nowrap;
-            overflow-x: auto;
+            border-bottom: none;
+            background: rgba(0,0,0,0.15); /* Fundo sutil para agrupar as abas */
+            border-radius: 12px;
+            margin: 0.75rem 1rem 0 1rem;
+            padding: 0.5rem;
+            gap: 0.5rem;
+            flex-wrap: wrap; /* Permite que as abas quebrem linha para exibir todas */
+            overflow-x: visible;
+            justify-content: flex-start;
             scrollbar-width: none; /* Firefox */
         }
         .nav-tabs-modern::-webkit-scrollbar { display: none; }
         
         .nav-tabs-modern .nav-link {
-            border: none;
-            border-bottom: 3px solid transparent;
-            border-radius: 0;
+            border: 1px solid var(--dark-border);
+            border-radius: 12px; /* Estilo Card/Pill */
             color: var(--dark-text-secondary);
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            padding: 1rem 1.2rem;
-            transition: all 0.3s ease;
-            background: transparent;
-            opacity: 0.7;
+            padding: 0.6rem 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--dark-surface-secondary);
+            opacity: 1;
             white-space: nowrap;
             display: flex;
             align-items: center;
+            flex: 0 0 auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .nav-tabs-modern .nav-link:hover {
             color: var(--dark-text-primary);
-            background: rgba(255,255,255,0.02);
-            opacity: 1;
+            background: var(--dark-surface);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-color: var(--dark-primary-glow);
         }
         .nav-tabs-modern .nav-link.active {
-            color: var(--dark-primary);
-            background: transparent;
-            border-bottom-color: var(--dark-primary);
-            opacity: 1;
+            color: #fff;
+            background: linear-gradient(135deg, var(--dark-primary), var(--dark-primary-hover));
+            border-color: transparent;
+            box-shadow: 0 4px 15px var(--dark-primary-glow);
         }
         .nav-tabs-modern .nav-link i {
-            font-size: 1.1rem;
+            font-size: 1rem;
             margin-right: 0.5rem;
+        }
+        
+        /* --- CORES DINÂMICAS PARA ABAS ATIVAS --- */
+        .nav-tabs-modern .nav-link.tab-fiorino.active {
+            background: linear-gradient(135deg, #28a745, #218838);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+        .nav-tabs-modern .nav-link.tab-van.active {
+            background: linear-gradient(135deg, var(--dark-primary), var(--dark-primary-hover));
+            box-shadow: 0 4px 15px var(--dark-primary-glow);
+        }
+        .nav-tabs-modern .nav-link.tab-tres-quartos.active {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #000; /* Texto preto para contraste no amarelo */
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        }
+        .nav-tabs-modern .nav-link.tab-toco.active {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+        }
+        .nav-tabs-modern .nav-link.tab-pr.active {
+            background: linear-gradient(135deg, #17a2b8, #117a8b);
+            box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
+        }
+        .nav-tabs-modern .nav-link.tab-br.active {
+            background: linear-gradient(135deg, #6610f2, #520dc2);
+            box-shadow: 0 4px 15px rgba(102, 16, 242, 0.4);
+        }
+        .nav-tabs-modern .nav-link.tab-roteirizados.active {
+            background: linear-gradient(135deg, #d63384, #a61e63);
+            box-shadow: 0 4px 15px rgba(214, 51, 132, 0.4);
+        }
+        .nav-tabs-modern .nav-link .badge {
+            font-size: 0.7rem;
+            padding: 0.35em 0.6em;
+            transition: all 0.3s ease;
+        }
+        /* Animação de pulso no badge ao passar o mouse na aba */
+        .nav-tabs-modern .nav-link:hover .badge:not(.d-none) {
+            animation: badge-pulse 0.6s ease-in-out infinite;
+        }
+        @keyframes badge-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
         }
 
         /* Search Box Moderno */
@@ -952,9 +1032,27 @@
     </style>
     <style>
         /* --- AJUSTE PARA ROLAGEM NA MESA DE TRABALHO --- */
+        .workspace-card .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
         #vehicleTabsContent {
-            max-height: calc(100vh - 280px); /* Altura dinâmica baseada na altura da tela */
+            flex: 1;
             overflow-y: auto;
+            max-height: none !important;
+            padding: 0.5rem;
+        }
+        /* Scrollbar personalizada para o conteúdo das abas */
+        #vehicleTabsContent::-webkit-scrollbar { width: 6px; }
+        #vehicleTabsContent::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); margin: 4px 0; }
+        #vehicleTabsContent::-webkit-scrollbar-thumb { background-color: var(--dark-border); border-radius: 10px; }
+        #vehicleTabsContent::-webkit-scrollbar-thumb:hover { background-color: var(--dark-text-secondary); }
+
+        /* Ajuste de padding para o conteúdo das abas */
+        .workspace-tab-pane {
+            padding: 0.5rem 0.5rem 2rem 0.5rem;
         }
     </style>
     <style>
@@ -973,6 +1071,44 @@
         .kpi-card-main .kpi-subvalue { font-size: 1rem; color: var(--dark-text-secondary); }
         .kpi-card-main.blocked .kpi-value { color: var(--dark-accent-secondary); }
         .list-group-item-kpi { background-color: transparent; border-color: var(--dark-border); }
+    </style>
+    <style>
+        /* --- NOVOS ESTILOS PARA O DASHBOARD PREMIUM --- */
+        .hero-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hero-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3);
+            border-color: var(--dark-primary-glow);
+        }
+        .hero-icon-wrapper {
+            width: 56px; height: 56px;
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            background: rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.05);
+        }
+        .hero-value { font-size: 2.2rem; font-weight: 800; letter-spacing: -1px; line-height: 1; margin-bottom: 0.25rem; color: #fff; }
+        .hero-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--dark-text-secondary); }
+        .hero-sub { font-size: 0.85rem; color: var(--dark-text-secondary); display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+        
+        .chart-card-premium {
+            background: var(--dark-surface);
+            border: 1px solid var(--dark-border);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
     </style>
 
     <style>
@@ -1189,23 +1325,26 @@
 
                 <!-- Container para o conteúdo do dashboard que aparece após o processamento -->
                 <div id="dashboard-content-container" style="display: none;">
+                    <!-- Linha Superior: Hero KPIs -->
+                    <div class="row g-4 mb-4" id="hero-kpi-container"></div>
+
                     <div class="row g-4">
                         <!-- Coluna Esquerda: Gráfico Principal -->
                         <div class="col-lg-8 animated-entry">
-                            <div class="card h-100">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h3 class="h5 mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Previsão de Veículos</h3>
+                            <div class="chart-card-premium h-100 p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <div>
+                                        <h3 class="h5 mb-1 fw-bold text-white"><i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>Performance da Frota</h3>
                                     <span id="chart-subtitle" class="text-muted small"></span>
+                                    </div>
                                 </div>
-                                <div class="card-body">
                                     <div id="chart-resumo-veiculos" style="min-height: 450px;"></div>
-                                </div>
                             </div>
                         </div>
 
                         <!-- Coluna Direita: KPIs e Informações Rápidas -->
                         <div class="col-lg-4">
-                            <div class="row g-4" id="kpi-container">
+                            <div class="row g-4" id="side-kpi-container">
                                 <!-- KPIs serão inseridos aqui pelo JavaScript -->
                             </div>
                         </div>
@@ -1237,14 +1376,14 @@
                         </div>
                         <div class="card-body p-0"> 
                              <ul class="nav nav-tabs-modern" id="vehicleTabs" role="tablist">
-                                 <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane"><i class="bi bi-box-seam"></i>Fiorino</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#van-tab-pane"><i class="bi bi-truck"></i>Van</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane"><i class="bi bi-truck-flatbed"></i>3/4</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#toco-tab-pane"><i class="bi bi-boxes"></i>Toco</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cargas-fechadas-pr-tab-pane"><i class="bi bi-geo-alt"></i>PR Fechado</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cargas-fechadas-rest-br-tab-pane"><i class="bi bi-globe"></i>BR Fechado</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#roteirizados-tab-pane" id="roteirizados-tab-btn"><i class="bi bi-map"></i>Roteirizados</button></li>
-                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#outros-pedidos-tab-pane"><i class="bi bi-collection"></i>Outros</button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link tab-fiorino active" data-bs-toggle="tab" data-bs-target="#fiorino-tab-pane"><i class="bi bi-box-seam"></i>Fiorino <span id="badge-fiorino" class="badge bg-white text-success ms-2 rounded-pill d-none">0</span></button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link tab-van" data-bs-toggle="tab" data-bs-target="#van-tab-pane"><i class="bi bi-truck"></i>Van <span id="badge-van" class="badge bg-white text-primary ms-2 rounded-pill d-none">0</span></button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link tab-tres-quartos" data-bs-toggle="tab" data-bs-target="#tres-quartos-tab-pane"><i class="bi bi-truck-flatbed"></i>3/4 <span id="badge-tres-quartos" class="badge bg-white text-dark ms-2 rounded-pill d-none">0</span></button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link tab-toco" data-bs-toggle="tab" data-bs-target="#toco-tab-pane"><i class="bi bi-boxes"></i>Toco <span id="badge-toco" class="badge bg-white text-secondary ms-2 rounded-pill d-none">0</span></button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link tab-pr" data-bs-toggle="tab" data-bs-target="#cargas-fechadas-pr-tab-pane"><i class="bi bi-geo-alt"></i>PR Fechado <span id="badge-pr" class="badge bg-white text-info ms-2 rounded-pill d-none">0</span></button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link tab-br" data-bs-toggle="tab" data-bs-target="#cargas-fechadas-rest-br-tab-pane"><i class="bi bi-globe"></i>BR Fechado <span id="badge-br" class="badge bg-white text-primary ms-2 rounded-pill d-none">0</span></button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link tab-roteirizados" data-bs-toggle="tab" data-bs-target="#roteirizados-tab-pane" id="roteirizados-tab-btn"><i class="bi bi-map"></i>Roteirizados <span id="badge-roteirizados" class="badge bg-white text-danger ms-2 rounded-pill d-none">0</span></button></li>
+                                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#outros-pedidos-tab-pane"><i class="bi bi-collection"></i>Outros <span id="badge-outros" class="badge bg-secondary text-white ms-2 rounded-pill d-none">0</span></button></li>
                              </ul>
                             <div class="tab-content" id="vehicleTabsContent">
                                 <div class="tab-pane fade show active workspace-tab-pane" id="fiorino-tab-pane" role="tabpanel">
@@ -1826,14 +1965,15 @@
                 const options = {
                     series: [
                         { name: 'Quantidade', type: 'column', data: countSeriesData },
-                        { name: 'Peso (kg)', type: 'column', data: weightSeriesData }
+                        { name: 'Peso (kg)', type: 'area', data: weightSeriesData }
                     ],
                     chart: {
-                        height: 350,
+                        height: 400,
                         type: 'line',
+                        fontFamily: 'Inter, sans-serif',
+                        background: 'transparent',
                         stacked: false, // prettier-ignore
                         toolbar: { show: false },
-                        foreColor: 'var(--dark-text-secondary)',
                         animations: {
                             enabled: true,
                             easing: 'easeinout',
@@ -1849,31 +1989,32 @@
                         }
                     },
                     fill: {
-                        type: 'gradient',
+                        type: ['gradient', 'gradient'],
                         gradient: {
                             shade: 'dark',
                             type: "vertical",
                             shadeIntensity: 0.5,
-                            gradientToColors: undefined,
                             inverseColors: false,
-                            opacityFrom: 0.85,
-                            opacityTo: 0.95,
+                            opacityFrom: [0.9, 0.4],
+                            opacityTo: [0.6, 0.05],
                             stops: [0, 100]
                         }
                     },
                     stroke: {
-                        width: [0, 0],
+                        width: [0, 4],
                         curve: 'smooth'
                     },
                     plotOptions: {
                         bar: {
-                            columnWidth: '60%',
-                            borderRadius: 5
+                            columnWidth: '50%',
+                            borderRadius: 8,
+                            borderRadiusApplication: 'end'
                         }
                     },
-                    colors: ['var(--dark-primary)', 'var(--dark-accent)'], /* Paleta dinâmica do CSS */
+                    colors: ['#3b82f6', '#8b5cf6'],
                     dataLabels: {
                         enabled: true,
+                        enabledOnSeries: [0], // Apenas nas barras
                         formatter: function (val, { seriesIndex }) {
                             if (seriesIndex === 0) { // Quantidade
                                 return val.toFixed(0);
@@ -1886,29 +2027,26 @@
                         },
                         offsetY: -25,
                         style: {
-                            fontSize: '13px',
+                            fontSize: '12px',
                             fontWeight: 'bold',
-                            colors: [document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'var(--dark-text-primary)' : 'var(--dark-text-primary)']
+                            colors: ['#fff']
                         },
                         background: {
-                          enabled: true,
-                          foreColor: '#fff',
-                          borderRadius: 3,
-                          padding: 5,
-                          opacity: 0.7,
-                          borderWidth: 1,
-                          borderColor: '#666',
+                          enabled: false
                         },
                     },
                     grid: {
-                        borderColor: 'var(--dark-border)',
+                        borderColor: 'rgba(255,255,255,0.05)',
                         strokeDashArray: 4,
                         yaxis: { lines: { show: true } }
                     },
                     xaxis: {
                         categories: categories,
+                        axisBorder: { show: false },
+                        axisTicks: { show: false },
                         labels: { 
                             style: { 
+                                colors: '#94a3b8',
                                 fontWeight: 600,
                                 fontSize: '13px',
                             } 
@@ -1917,38 +2055,29 @@
                     yaxis: [
                         {
                             seriesName: 'Quantidade',
-                            axisTicks: { show: true },
-                            axisBorder: { show: true, color: 'var(--dark-primary)' },
+                            show: false,
                             labels: { // Cor do texto do eixo adaptável
                                 style: { colors: 'var(--dark-text-secondary)' },
                                 formatter: function (val) {
                                     return val.toFixed(0);
                                 }
                             }, // prettier-ignore
-                            title: {
-                                text: "Quantidade de Veículos",
-                                style: { color: 'var(--dark-primary)', fontWeight: 600 }
-                            },
                         },
                         {
                             seriesName: 'Peso (kg)',
                             opposite: true,
-                            axisTicks: { show: true },
-                            axisBorder: { show: true, color: 'var(--dark-accent)' }, // prettier-ignore
+                            axisTicks: { show: false },
+                            axisBorder: { show: false },
                             labels: { // CORREÇÃO: Cor do texto do eixo adaptável
-                                style: { colors: 'var(--dark-accent)' },
+                                style: { colors: '#8b5cf6', fontWeight: 600 },
                                 formatter: function (val) {
                                     return (val / 1000).toFixed(1) + "k kg";
                                 }
                             },
-                            title: {
-                                text: "Peso Total (kg)",
-                                style: { color: 'var(--dark-accent)', fontWeight: 600 }
-                            }
                         }
                     ],
                     tooltip: {
-                        theme: document.documentElement.getAttribute('data-bs-theme'),
+                        theme: 'dark',
                         shared: true,
                         intersect: false,
                         y: {
@@ -3721,9 +3850,46 @@
 
             updateAndRenderKPIs();
             updateAndRenderChart();
+            updateTabCounts(); // Atualiza os contadores das abas
 
             // 5. Salva o estado consistente no Local Storage
             saveStateToLocalStorage();
+        }
+
+        function updateTabCounts() {
+            // Calcula os totais para cada aba
+            const counts = {
+                fiorino: Object.values(activeLoads).filter(l => l.vehicleType === 'fiorino' && !l.id.startsWith('roteiro-')).length,
+                van: Object.values(activeLoads).filter(l => l.vehicleType === 'van' && !l.id.startsWith('roteiro-')).length,
+                tresQuartos: Object.values(activeLoads).filter(l => l.vehicleType === 'tresQuartos' && !l.id.startsWith('roteiro-')).length,
+                toco: Object.keys(gruposToco).length,
+                pr: new Set(cargasFechadasPR.map(p => {
+                    const col5 = String(p.Coluna5 || '').toUpperCase();
+                    return (col5.includes('CONDOR') ? 'CONDOR' : p.CF);
+                })).size,
+                br: Object.keys(gruposPorCFGlobais).length,
+                roteirizados: Object.values(activeLoads).filter(l => l.id.startsWith('roteiro-')).length,
+                outros: pedidosMoinho.length + pedidosFuncionarios.length + pedidosTransferencias.length + pedidosExportacao.length + pedidosMarcaPropria.length
+            };
+
+            // Atualiza os badges na interface
+            const updateBadge = (id, count) => {
+                const badge = document.getElementById(id);
+                if (badge) {
+                    badge.textContent = count;
+                    if (count > 0) badge.classList.remove('d-none');
+                    else badge.classList.add('d-none');
+                }
+            };
+
+            updateBadge('badge-fiorino', counts.fiorino);
+            updateBadge('badge-van', counts.van);
+            updateBadge('badge-tres-quartos', counts.tresQuartos);
+            updateBadge('badge-toco', counts.toco);
+            updateBadge('badge-pr', counts.pr);
+            updateBadge('badge-br', counts.br);
+            updateBadge('badge-roteirizados', counts.roteirizados);
+            updateBadge('badge-outros', counts.outros);
         }
 
         function updateAndRenderKPIs() {
@@ -3779,14 +3945,18 @@
             kpiData.pedidosAPredatar = pedidosAPredatar; // Armazena a lista completa
 
             // 4. Renderiza os KPIs no HTML
-            const kpiContainer = document.getElementById('kpi-container');
-            kpiContainer.innerHTML = `
-                <!-- KPIs Principais -->
-                <div class="col-12 animated-entry">${renderMainKpiCard('Varejo Disponível', kpis.varejoDisponivel.peso, kpis.varejoDisponivel.pedidos, 'available')}</div>
-                <div class="col-12 animated-entry">${renderMainKpiCard('Varejo Bloqueado', kpis.varejoBloqueado.peso, kpis.varejoBloqueado.pedidos, 'blocked')}</div>
-                <!-- Alerta -->
+            const heroContainer = document.getElementById('hero-kpi-container');
+            const sideContainer = document.getElementById('side-kpi-container');
+            
+            // Renderiza Hero Cards (Topo)
+            heroContainer.innerHTML = `
+                <div class="col-md-6 animated-entry">${renderHeroCard('Varejo Disponível', kpis.varejoDisponivel.peso, kpis.varejoDisponivel.pedidos, 'bi-cart-check-fill', 'text-success')}</div>
+                <div class="col-md-6 animated-entry">${renderHeroCard('Varejo Bloqueado', kpis.varejoBloqueado.peso, kpis.varejoBloqueado.pedidos, 'bi-shield-lock-fill', 'text-danger')}</div>
+            `;
+
+            // Renderiza Side Cards (Lateral)
+            sideContainer.innerHTML = `
                 <div class="col-12 animated-entry">${renderKpiCard('Pedidos a Predatar', null, kpiData.pedidosAPredatar.length, 'bi-calendar-x', 'danger', true)}</div>
-                <!-- Outras Categorias -->
                 <div class="col-12 animated-entry">${renderOtherCategoriesCard(kpis)}</div>
             `;
 
@@ -3797,14 +3967,20 @@
 
         }
 
-        function renderMainKpiCard(title, weight, count, type) {
-            const weightText = `${(weight / 1000).toFixed(2)}<small class="fw-normal"> t</small>`;
-            const countText = `${count} pedidos`;
+        function renderHeroCard(title, weight, count, icon, colorClass) {
+            const weightText = (weight / 1000).toFixed(2);
             return `
-                <div class="kpi-card-main ${type}">
-                    <div class="kpi-title">${title}</div>
-                    <div class="kpi-value">${weightText}</div>
-                    <div class="kpi-subvalue">${countText}</div>
+                <div class="hero-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="hero-label">${title}</div>
+                            <div class="hero-value">${weightText}<span class="fs-5 fw-normal text-muted"> ton</span></div>
+                            <div class="hero-sub"><i class="bi bi-box-seam"></i> ${count} pedidos</div>
+                        </div>
+                        <div class="hero-icon-wrapper ${colorClass}">
+                            <i class="bi ${icon}"></i>
+                        </div>
+                    </div>
                 </div>
             `;
         }
