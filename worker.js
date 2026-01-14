@@ -80,7 +80,7 @@ async function getCityCoordinates(cidade, uf, apiKey) {
     return null;
 }
 
-const specialClientNames = ['IRMAOS MUFFATO S.A', 'FINCO & FINCO', 'BOM DIA', 'CASA VISCARD S/A COM. E IMPORTACAO'];
+const specialClientNames = ['IRMAOS MUFFATO S.A', 'IRMAOS MUFFATO & CIA LTDA', 'FINCO & FINCO', 'BOM DIA', 'CASA VISCARD S/A COM. E IMPORTACAO', 'PRIMATO COOPERATIVA AGROINDUSTRIAL'];
 
 const rotaVeiculoMap = {
     // Novas rotas de São Paulo (Varejo - Van/3/4)
