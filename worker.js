@@ -273,7 +273,23 @@ function getSolutionEnergy(solution, vehicleType, configs) {
     const config = getVehicleConfig(vehicleType, configs);
     const balancingFactor = 0.01;
 
-    const leftoverWeight = solution.leftovers.reduce((sum, group) => sum + group.totalKg, 0);
+    // MODIFICAÇÃO: Penalidade por idade para garantir prioridade aos pedidos antigos.
+    // Quanto mais antigo o pedido, maior o "peso" dele na sobra, incentivando o algoritmo a encaixá-lo.
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    const leftoverWeight = solution.leftovers.reduce((sum, group) => {
+        let weightMultiplier = 1;
+        if (group.oldestDate) {
+            const date = new Date(group.oldestDate);
+            if (!isNaN(date.getTime())) {
+                const ageInMillis = Math.max(0, now - date.getTime());
+                const ageInDays = ageInMillis / oneDay;
+                weightMultiplier = 1 + (ageInDays * 0.1); // 10% de penalidade extra por dia de atraso
+            }
+        }
+        return sum + (group.totalKg * weightMultiplier);
+    }, 0);
     
     const loadPenalty = solution.loads.reduce((sum, load) => {
         if (load.totalKg > 0 && load.totalKg < config.minKg) {
