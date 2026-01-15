@@ -1918,111 +1918,101 @@
             if (resumoChart) {
                 resumoChart.updateSeries([
                     { name: 'Quantidade', type: 'column', data: countSeriesData },
-                    { name: 'Peso (kg)', type: 'column', data: weightSeriesData }
+                    { name: 'Peso (kg)', type: 'area', data: weightSeriesData }
                 ]);
             } else {
                 const options = {
                     series: [
                         { name: 'Quantidade', type: 'column', data: countSeriesData },
-                        { name: 'Peso (kg)', type: 'column', data: weightSeriesData }
+                        { name: 'Peso (kg)', type: 'area', data: weightSeriesData }
                     ],
                     chart: {
-                        height: 350,
-                        type: 'line',
-                        stacked: false, // prettier-ignore
+                        height: 380,
+                        type: 'line', // Base type for mixed chart
+                        stacked: false,
                         toolbar: { show: false },
+                        fontFamily: 'Inter, sans-serif',
                         foreColor: 'var(--dark-text-secondary)',
+                        background: 'transparent',
                         animations: {
                             enabled: true,
                             easing: 'easeinout',
                             speed: 800,
-                            animateGradually: {
-                                enabled: true,
-                                delay: 150
-                            },
-                            dynamicAnimation: {
-                                enabled: true,
-                                speed: 350
-                            }
+                            animateGradually: { enabled: true, delay: 150 },
+                            dynamicAnimation: { enabled: true, speed: 350 }
+                        },
+                        dropShadow: {
+                            enabled: true,
+                            enabledOnSeries: [1], // Sombra apenas na linha de peso
+                            top: 5,
+                            left: 0,
+                            blur: 3,
+                            color: '#000',
+                            opacity: 0.2
                         }
                     },
-                    fill: {
-                        type: 'gradient',
-                        gradient: {
-                            shade: 'dark',
-                            type: "vertical",
-                            shadeIntensity: 0.5,
-                            gradientToColors: undefined,
-                            inverseColors: false,
-                            opacityFrom: 0.85,
-                            opacityTo: 0.95,
-                            stops: [0, 100]
-                        }
-                    },
+                    colors: ['var(--dark-primary)', 'var(--dark-accent)'],
                     stroke: {
-                        width: [0, 0],
+                        width: [0, 4], // 0 para barra, 4 para a linha da área
                         curve: 'smooth'
                     },
                     plotOptions: {
                         bar: {
-                            columnWidth: '60%',
-                            borderRadius: 5
+                            columnWidth: '50%',
+                            borderRadius: 6,
+                            borderRadiusApplication: 'end', // Arredonda apenas o topo
                         }
                     },
-                    colors: ['var(--dark-primary)', 'var(--dark-accent)'], /* Paleta dinâmica do CSS */
+                    fill: {
+                        type: ['gradient', 'gradient'],
+                        gradient: {
+                            shade: 'dark',
+                            type: "vertical",
+                            shadeIntensity: 0.5,
+                            inverseColors: false,
+                            opacityFrom: [0.85, 0.4], // Opacidade alta para barra, média para área
+                            opacityTo: [0.95, 0.05],  // Opacidade alta para barra, transparente para área
+                            stops: [0, 100]
+                        }
+                    },
                     dataLabels: {
                         enabled: true,
+                        enabledOnSeries: [0], // Apenas nas barras
                         formatter: function (val, { seriesIndex }) {
-                            if (seriesIndex === 0) { // Quantidade
-                                return val.toFixed(0);
-                            } else { // Peso
-                                if (val >= 1000) {
-                                    return (val / 1000).toFixed(1) + 'k';
-                                }
-                                return val.toFixed(0);
-                            }
+                            return val.toFixed(0);
                         },
-                        offsetY: -25,
+                        offsetY: -20,
                         style: {
-                            fontSize: '13px',
+                            fontSize: '12px',
                             fontWeight: 'bold',
-                            colors: [document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'var(--dark-text-primary)' : 'var(--dark-text-primary)']
+                            colors: ['var(--dark-text-primary)']
                         },
-                        background: {
-                          enabled: true,
-                          foreColor: '#fff',
-                          borderRadius: 3,
-                          padding: 5,
-                          opacity: 0.7,
-                          borderWidth: 1,
-                          borderColor: '#666',
-                        },
+                        background: { enabled: false }
                     },
                     grid: {
                         borderColor: 'var(--dark-border)',
-                        strokeDashArray: 4,
-                        yaxis: { lines: { show: true } }
+                        strokeDashArray: 5,
+                        xaxis: { lines: { show: false } },
+                        yaxis: { lines: { show: true } },
+                        padding: { top: 0, right: 0, bottom: 0, left: 10 }
                     },
                     xaxis: {
                         categories: categories,
-                        labels: { 
+                        axisBorder: { show: false },
+                        axisTicks: { show: false },
+                        labels: {
                             style: { 
+                                colors: 'var(--dark-text-secondary)',
+                                fontSize: '12px',
                                 fontWeight: 600,
-                                fontSize: '13px',
                             } 
                         }
                     },
                     yaxis: [
                         {
                             seriesName: 'Quantidade',
-                            axisTicks: { show: true },
-                            axisBorder: { show: true, color: 'var(--dark-primary)' },
-                            labels: { // Cor do texto do eixo adaptável
-                                style: { colors: 'var(--dark-text-secondary)' },
-                                formatter: function (val) {
-                                    return val.toFixed(0);
-                                }
-                            }, // prettier-ignore
+                            show: false, // Oculta eixo Y da esquerda para limpar o visual (já tem dataLabels)
+                            labels: { style: { colors: 'var(--dark-text-secondary)' } },
                             title: {
                                 text: "Quantidade de Veículos",
                                 style: { color: 'var(--dark-primary)', fontWeight: 600 }
@@ -2031,12 +2021,10 @@
                         {
                             seriesName: 'Peso (kg)',
                             opposite: true,
-                            axisTicks: { show: true },
-                            axisBorder: { show: true, color: 'var(--dark-accent)' }, // prettier-ignore
-                            labels: { // CORREÇÃO: Cor do texto do eixo adaptável
-                                style: { colors: 'var(--dark-accent)' },
+                            labels: {
+                                style: { colors: 'var(--dark-text-secondary)' },
                                 formatter: function (val) {
-                                    return (val / 1000).toFixed(1) + "k kg";
+                                    return (val / 1000).toFixed(1) + "k";
                                 }
                             },
                             title: {
@@ -2046,23 +2034,35 @@
                         }
                     ],
                     tooltip: {
-                        theme: document.documentElement.getAttribute('data-bs-theme'),
+                        theme: document.documentElement.getAttribute('data-bs-theme') || 'dark',
                         shared: true,
                         intersect: false,
+                        style: { fontSize: '12px' },
                         y: {
                             formatter: function (val, { seriesIndex }) {
                                 if (seriesIndex === 0) { // Quantidade
                                     return val.toFixed(0) + " veículos";
                                 } else { // Peso
-                                    return val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " kg";
+                                    return val.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + " kg";
                                 }
                             }
                         }
                     },
                     legend: {
+                        show: true,
                         position: 'top',
                         horizontalAlign: 'right',
-                        offsetY: -10
+                        floating: true,
+                        offsetY: -20,
+                        offsetX: -5,
+                        itemMargin: { horizontal: 10, vertical: 0 }
+                    },
+                    markers: {
+                        size: 5,
+                        colors: ['var(--dark-accent)'],
+                        strokeColors: '#fff',
+                        strokeWidth: 2,
+                        hover: { size: 7 }
                     }
                 };
 
