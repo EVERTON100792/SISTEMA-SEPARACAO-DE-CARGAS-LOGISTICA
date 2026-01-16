@@ -703,6 +703,7 @@
             .no-print, #sidebar, .sidebar-step { display: none !important; }
             .container, .card, .accordion-item, .accordion-body, .card-header, .modal-content { background-color: #fff !important; color: #000 !important; border: 1px solid #dee2e6 !important; box-shadow: none !important; }
             button, .status-message, .card-subtitle, .accordion-button.collapsed, .accordion-collapse.collapse, .nav-tabs, .tab-content { display: none !important; }
+            .card, .load-card { break-inside: avoid; page-break-inside: avoid; }
             .table-responsive { overflow: visible !important; }
             table, th, td { border: 1px solid #dee2e6 !important; color: #000 !important; padding: 0.25rem 0.4rem; font-size: 9pt; }
             h1, h2, h3, h4, h5 { color: #000 !important; }
@@ -2947,12 +2948,12 @@
             ],
             '11331': [
                 'TERRA BOA', 'ENGENHEIRO BELTRAO', 'PEABIRU', 'CAMPO MOURAO', 
-                'BARBOSA FERRAZ', 'FENIX', 'ARARUNA', 'IRETAMA', 
-                'ITAMBE', 'FLORESTA', 'IVATUBA', 'MAMBORE'
+                'BARBOSA FERRAZ', 'FENIX', 'ARARUNA', 
+                'ITAMBE', 'FLORESTA', 'IVATUBA'
             ],
             '11551': [
                 'IVAIPORA', 'JARDIM ALEGRE','SAO JOAO DO IVAI', 
-                'NOVA TEBAS', 'CANDIDO DE ABREU'
+                'NOVA TEBAS'
             ],
             '11571': [
                 'ORTIGUEIRA', 'IMBAU', 'TELEMACO BORBA'
@@ -4501,12 +4502,13 @@
             printWindow.document.write('<html><head><title>' + title + '</title>');
             printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">');
             printWindow.document.write(`<style>
-                body { margin: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: sans-serif; } 
-                .card, .load-card { break-inside: avoid; margin-bottom: 1rem; page-break-inside: avoid; border: 1px solid #ccc; border-radius: 8px; background-color: #fff; } 
-                .load-card-header { background-color: #f0f0f0; padding: 10px 15px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
-                .load-title { font-weight: bold; font-size: 1.1rem; color: #000; }
-                .load-meta { font-size: 0.9rem; color: #555; margin-top: 4px; }
-                .load-meta-item { margin-right: 15px; display: inline-flex; align-items: center; }
+                @page { size: auto; margin: 5mm; }
+                body { margin: 10px; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: sans-serif; font-size: 10pt; } 
+                .card, .load-card { break-inside: avoid; margin-bottom: 10px; page-break-inside: avoid; border: 1px solid #ccc; border-radius: 4px; background-color: #fff; } 
+                .load-card-header { background-color: #f0f0f0; padding: 5px 10px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
+                .load-title { font-weight: bold; font-size: 1rem; color: #000; }
+                .load-meta { font-size: 0.8rem; color: #555; margin-top: 2px; }
+                .load-meta-item { margin-right: 10px; display: inline-flex; align-items: center; }
                 .load-meta-item i { margin-right: 4px; }
                 .no-print { display: none !important; } 
                 .bg-success { background-color: #198754 !important; color: white !important; } 
@@ -4514,10 +4516,14 @@
                 .bg-warning { background-color: #ffc107 !important; color: black !important; } 
                 .bg-danger { background-color: #dc3545 !important; color: white !important; } 
                 .table-responsive { overflow: visible !important; } 
-                table, th, td { border: 1px solid #dee2e6 !important; } 
+                table, th, td { border: 1px solid #dee2e6 !important; padding: 2px 4px !important; font-size: 8pt !important; } 
                 .table-primary, .table-primary > th, .table-primary > td { --bs-table-bg: #cfe2ff !important; color: #000 !important; } 
-                h1, h2, h3, h4, h5 { margin-top: 1rem; margin-bottom: 0.5rem; }
+                h1, h2, h3, h4, h5 { margin-top: 0.5rem; margin-bottom: 0.5rem; }
                 .progress { display: none !important; } /* Esconde barra de progresso na impressão */
+                .card-body { padding: 5px !important; }
+                .px-3 { padding-left: 5px !important; padding-right: 5px !important; }
+                .pt-2 { padding-top: 5px !important; }
+                .pb-3 { padding-bottom: 5px !important; }
             </style></head><body>`);
             return printWindow;
         }
@@ -5732,6 +5738,44 @@
             else if (vehicleType === 'van') titleColorClass = 'text-primary';
             else if (vehicleType === 'tresQuartos') titleColorClass = 'text-warning';
 
+            // --- NOVA LÓGICA: Identificar Data Mais Antiga (Predat) ---
+            let oldestDate = null;
+            let oldestOrders = [];
+
+            load.pedidos.forEach(p => {
+                if (!p.Predat) return;
+                let pDate = p.Predat instanceof Date ? p.Predat : new Date(p.Predat);
+                if (isNaN(pDate.getTime())) return;
+                
+                // Normaliza para comparar apenas a data (zera horas)
+                const pDateOnly = new Date(pDate.getFullYear(), pDate.getMonth(), pDate.getDate());
+
+                if (oldestDate === null || pDateOnly < oldestDate) {
+                    oldestDate = pDateOnly;
+                    oldestOrders = [p.Num_Pedido];
+                } else if (pDateOnly.getTime() === oldestDate.getTime()) {
+                    oldestOrders.push(p.Num_Pedido);
+                }
+            });
+
+            let oldestDateHtml = '';
+            if (oldestDate) {
+                const dateStr = oldestDate.toLocaleDateString('pt-BR');
+                const ordersStr = oldestOrders.join(', ');
+                // Estilo destacado para chamar atenção do motorista/expedição
+                oldestDateHtml = `
+                    <div class="mt-2 pt-2 border-top border-secondary-subtle">
+                        <div class="d-flex align-items-center text-warning-emphasis">
+                            <i class="bi bi-calendar-event-fill me-2 fs-5"></i>
+                            <div>
+                                <span class="fw-bold d-block" style="line-height: 1.2;">Prazo Máximo de Entrega: ${dateStr}</span>
+                                <span class="small text-muted">Ref. Pedido(s): ${ordersStr}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+            // --- FIM NOVA LÓGICA ---
+
             return `<div id="${load.id}" class="load-card vehicle-${vehicleType} drop-zone-card ${isPriorityLoad ? 'shadow-lg' : ''}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" data-load-id="${load.id}" data-vehicle-type="${vehicleType}">
                         <div class="load-card-header">
                             <div class="d-flex flex-column">
@@ -5760,6 +5804,7 @@
                                 <div class="no-print" id="obs-container-${load.id}">${initialObservationHtml}</div>
                                 ${observationForPrint}
                                 <div class="mt-2">${createTable(load.pedidos, null, load.id)}</div>
+                                ${oldestDateHtml}
                             </div>
                         </div>
                     </div>`;
