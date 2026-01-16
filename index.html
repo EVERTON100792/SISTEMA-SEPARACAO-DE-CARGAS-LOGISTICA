@@ -5042,11 +5042,16 @@
             // (Movido para antes da lógica da rota 11711 para garantir que os grupos excluídos também tenham a data calculada para a cascata)
             packableGroups.forEach(group => {
                 group.oldestDate = group.pedidos.reduce((oldest, p) => {
-                    const pDate = p.Dat_Ped;
-                    // Garante que a data é um objeto Date válido
-                    if (pDate && pDate instanceof Date && !isNaN(pDate)) {
-                        if (!oldest || pDate < oldest) {
-                            return pDate;
+                    // Prioridade: Dat_Ped (Data do Pedido) para FIFO. Fallback para Predat se Dat_Ped estiver vazio.
+                    let pDate = p.Dat_Ped;
+                    if (!pDate || (pDate instanceof Date && isNaN(pDate.getTime()))) {
+                        pDate = p.Predat;
+                    }
+
+                    if (pDate) {
+                        const dateObj = pDate instanceof Date ? pDate : new Date(pDate);
+                        if (!isNaN(dateObj.getTime())) {
+                            if (!oldest || dateObj < oldest) return dateObj;
                         }
                     }
                     return oldest;
@@ -8113,9 +8118,15 @@
                         // Calcula a data mais antiga para priorização correta (Igual à montagem normal)
                         packableGroups.forEach(group => {
                             group.oldestDate = group.pedidos.reduce((oldest, p) => {
-                                const pDate = p.Dat_Ped;
-                                if (pDate && pDate instanceof Date && !isNaN(pDate)) {
-                                    if (!oldest || pDate < oldest) return pDate;
+                                let pDate = p.Dat_Ped;
+                                if (!pDate || (pDate instanceof Date && isNaN(pDate.getTime()))) {
+                                    pDate = p.Predat;
+                                }
+                                if (pDate) {
+                                    const dateObj = pDate instanceof Date ? pDate : new Date(pDate);
+                                    if (!isNaN(dateObj.getTime())) {
+                                        if (!oldest || dateObj < oldest) return dateObj;
+                                    }
                                 }
                                 return oldest;
                             }, null);
