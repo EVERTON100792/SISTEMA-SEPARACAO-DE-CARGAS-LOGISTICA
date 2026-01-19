@@ -3997,6 +3997,35 @@
             updateBadge('badge-outros', counts.outros);
         }
 
+        function navigateToSection(viewId, tabId, elementId) {
+            // 1. Navegar para a View principal
+            const targetLink = document.querySelector(`#sidebar-nav a.nav-link[href="#${viewId}"]`);
+            if (targetLink) targetLink.click();
+
+            // 2. Navegar para a aba interna (se houver)
+            if (tabId) {
+                setTimeout(() => {
+                    const tabEl = document.querySelector(`button[data-bs-target="#${tabId}"]`);
+                    if (tabEl) {
+                        const tabInstance = bootstrap.Tab.getOrCreateInstance(tabEl);
+                        tabInstance.show();
+                    }
+                }, 100);
+            }
+
+            // 3. Rolar para o elemento específico (se houver)
+            if (elementId) {
+                setTimeout(() => {
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        element.classList.add('highlight-change-animation');
+                        setTimeout(() => element.classList.remove('highlight-change-animation'), 2000);
+                    }
+                }, 300);
+            }
+        }
+
         function updateAndRenderKPIs() {
             // 1. Calcula os pedidos que precisam ser predatados (atrasados e sem bloqueio restritivo)
             const pedidosToco = Object.values(gruposToco).flatMap(g => g.pedidos);
@@ -4056,24 +4085,24 @@
                     <!-- Alerta (Se houver) -->
                     ${kpiData.pedidosAPredatar.length > 0 ? `<div class="col-12 animated-entry">${renderKpiCard('Pedidos a Predatar', null, kpiData.pedidosAPredatar.length, 'bi-calendar-x', 'danger', true)}</div>` : ''}
                     <!-- KPIs Principais -->
-                    <div class="col-12 animated-entry">${renderMainKpiCard('Varejo Disponível', kpis.varejoDisponivel.peso, kpis.varejoDisponivel.pedidos, 'available', 'bi-check-circle-fill')}</div>
-                    <div class="col-12 animated-entry">${renderMainKpiCard('Varejo Bloqueado', kpis.varejoBloqueado.peso, kpis.varejoBloqueado.pedidos, 'blocked', 'bi-shield-lock-fill')}</div>
+                    <div class="col-12 animated-entry">${renderMainKpiCard('Varejo Disponível', kpis.varejoDisponivel.peso, kpis.varejoDisponivel.pedidos, 'available', 'bi-check-circle-fill', "navigateToSection('workspace-view', 'disponiveis-tab-pane')")}</div>
+                    <div class="col-12 animated-entry">${renderMainKpiCard('Varejo Bloqueado', kpis.varejoBloqueado.peso, kpis.varejoBloqueado.pedidos, 'blocked', 'bi-shield-lock-fill', "navigateToSection('workspace-view', 'bloqueados-regra-tab-pane')")}</div>
                 `;
             }
 
             const kpiOtherContainer = document.getElementById('kpi-other-container');
             if (kpiOtherContainer) {
                 const categories = [
-                    { label: 'Cargas Fechadas PR', data: kpis.cargasFechadasPR, icon: 'bi-building-fill-check' },
-                    { label: 'Cargas Fechadas Resto BR', data: kpis.cargasFechadasRestBR, icon: 'bi-globe-americas' },
-                    { label: 'Transferências', data: kpis.transferencias, icon: 'bi-arrow-left-right' },
-                    { label: 'Exportação', data: kpis.exportacao, icon: 'bi-box-arrow-up-right' },
-                    { label: 'Funcionários', data: kpis.funcionarios, icon: 'bi-people-fill' }
+                    { label: 'Cargas Fechadas PR', data: kpis.cargasFechadasPR, icon: 'bi-building-fill-check', action: "navigateToSection('workspace-view', 'cargas-fechadas-pr-tab-pane')" },
+                    { label: 'Cargas Fechadas Resto BR', data: kpis.cargasFechadasRestBR, icon: 'bi-globe-americas', action: "navigateToSection('workspace-view', 'cargas-fechadas-rest-br-tab-pane')" },
+                    { label: 'Transferências', data: kpis.transferencias, icon: 'bi-arrow-left-right', action: "navigateToSection('workspace-view', 'outros-pedidos-tab-pane', 'resultado-transferencias')" },
+                    { label: 'Exportação', data: kpis.exportacao, icon: 'bi-box-arrow-up-right', action: "navigateToSection('workspace-view', 'outros-pedidos-tab-pane', 'resultado-exportacao')" },
+                    { label: 'Funcionários', data: kpis.funcionarios, icon: 'bi-people-fill', action: "navigateToSection('workspace-view', 'outros-pedidos-tab-pane', 'resultado-funcionarios')" }
                 ];
                 
                 kpiOtherContainer.innerHTML = categories.map(cat => `
                     <div class="col-sm-6 col-md-4 col-xl">
-                        <div class="modern-list-item h-100 flex-column align-items-center justify-content-center text-center p-3">
+                        <div class="modern-list-item h-100 flex-column align-items-center justify-content-center text-center p-3" style="cursor: pointer;" onclick="${cat.action}">
                             <div class="modern-list-icon mb-3 mx-auto" style="width: 48px; height: 48px; font-size: 1.5rem;"><i class="bi ${cat.icon}"></i></div>
                             <div class="modern-list-content w-100">
                                 <div class="modern-list-title mb-1 text-uppercase text-secondary small">${cat.label}</div>
@@ -4091,10 +4120,12 @@
 
         }
 
-        function renderMainKpiCard(title, weight, count, type, icon) {
+        function renderMainKpiCard(title, weight, count, type, icon, onClickAction) {
             const weightText = (weight / 1000).toFixed(2);
+            const cursorStyle = onClickAction ? 'cursor: pointer;' : '';
+            const clickAttr = onClickAction ? `onclick="${onClickAction}"` : '';
             return `
-                <div class="kpi-card-modern ${type}">
+                <div class="kpi-card-modern ${type}" style="${cursorStyle}" ${clickAttr}>
                     <i class="bi ${icon} kpi-icon-watermark"></i>
                     <div class="kpi-label"><i class="bi ${icon}"></i> ${title}</div>
                     <div class="kpi-metric-group">
