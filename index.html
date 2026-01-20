@@ -438,6 +438,7 @@
         #pedidosDisponiveisTabsContent {
             flex: 1;
             overflow-y: auto;
+            max-height: 60vh;
         }
         @media (max-width: 992px) {
             #main-content { height: auto; }
@@ -536,7 +537,7 @@
             color: var(--dark-text-secondary);
             padding: 0.5rem 0.75rem; /* Adicionado padding ao header */
         }
-        tbody td { padding: 0.4rem 0.75rem; vertical-align: middle; font-size: 0.8rem; } /* Fonte reduzida */
+        tbody td { padding: 0.4rem 0.75rem; vertical-align: middle; text-align: center; font-size: 0.8rem; } /* Fonte reduzida */
         tbody tr { transition: background-color 0.2s ease; }
 
         /* NOVO: Efeito de brilho e fonte menor para a tabela de disponíveis */
@@ -1042,7 +1043,7 @@
         #vehicleTabsContent {
             flex: 1;
             overflow-y: auto;
-            max-height: none !important;
+            max-height: 60vh;
             padding: 0.5rem;
         }
         /* Scrollbar personalizada para o conteúdo das abas */
@@ -5305,6 +5306,7 @@
                 load.numero = `${load.vehicleType.charAt(0).toUpperCase()}${index + 1}`;
                 const loadId = `${load.vehicleType}-${Date.now()}-${index}`;
                 load.id = loadId;
+                load.routesKey = routesKey; // Vincula a carga ao processamento desta rota
                 activeLoads[loadId] = load;
             });
             
@@ -5371,9 +5373,9 @@
             }
 
             // 1. Encontrar as cargas associadas a esta rota
-            const routes = routesKey.split(',');
+            // CORREÇÃO: Filtra apenas as cargas criadas por este processamento específico (routesKey)
             const loadsToUndo = Object.values(activeLoads).filter(load => 
-                load.pedidos.some(p => routes.includes(String(p.Cod_Rota)))
+                load.routesKey === routesKey
             );
 
             if (loadsToUndo.length === 0) {
@@ -5389,7 +5391,10 @@
             });
 
             // 4. Devolver os pedidos para a lista de `pedidosGeraisAtuais`
-            pedidosGeraisAtuais.push(...pedidosParaDevolver);
+            // CORREÇÃO: Evita duplicatas ao devolver pedidos para a lista de disponíveis
+            const currentIds = new Set(pedidosGeraisAtuais.map(p => String(p.Num_Pedido)));
+            const uniquePedidos = pedidosParaDevolver.filter(p => !currentIds.has(String(p.Num_Pedido)));
+            pedidosGeraisAtuais.push(...uniquePedidos);
 
             // 5. Remover a rota do conjunto de rotas processadas
             processedRoutes.delete(routesKey);
