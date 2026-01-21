@@ -536,8 +536,9 @@
             border-bottom: 1px solid var(--dark-border);
             color: var(--dark-text-secondary);
             padding: 0.5rem 0.75rem; /* Adicionado padding ao header */
+            white-space: nowrap !important; text-align: left !important; /* Garante cabeçalho em uma linha e à esquerda */
         }
-        tbody td { padding: 0.4rem 0.75rem; vertical-align: middle; text-align: center; font-size: 0.8rem; } /* Fonte reduzida */
+        tbody td { padding: 0.25rem 0.5rem; vertical-align: middle; text-align: left !important; font-size: 0.8rem; white-space: nowrap !important; } /* Forçado: Alinhamento à esquerda, sem quebra de linha */
         tbody tr { transition: background-color 0.2s ease; }
 
         /* NOVO: Efeito de brilho e fonte menor para a tabela de disponíveis */
@@ -4765,6 +4766,7 @@
                         .map(p => normalizeClientId(p.Cliente))
                 );
                 const groupToAddClientId = normalizeClientId(groupToAdd.pedidos[0].Cliente);
+                // REGRA: Permite no máximo 2 clientes especiais por carga (Volta ao padrão anterior).
                 if (!specialClientIdsInLoad.has(groupToAddClientId) && specialClientIdsInLoad.size >= 2) {
                     return false;
                 }
@@ -6806,15 +6808,18 @@
             const clientBlockKg = clientOrdersToMove.reduce((sum, p) => sum + p.Quilos_Saldo, 0);
             const clientBlockCubagem = clientOrdersToMove.reduce((sum, p) => sum + p.Cubagem, 0);
 
+            // CORREÇÃO: Validação completa da jogada usando isMoveValid
             if (!targetIsGeral && !targetIsLeftovers) {
-                const targetVehicleType = targetLoad.vehicleType;
-                const config = getVehicleConfig(targetVehicleType);
-                const isInvalidMove = (targetLoad.totalKg + clientBlockKg > config.hardMaxKg) || (targetLoad.totalCubagem + clientBlockCubagem > config.hardMaxCubage);
+                const groupToAdd = {
+                    pedidos: clientOrdersToMove,
+                    totalKg: clientBlockKg,
+                    totalCubagem: clientBlockCubagem,
+                    isSpecial: clientOrdersToMove.some(isSpecialClient)
+                };
 
-                if (isInvalidMove) {
-                    const overWeight = (targetLoad.totalKg + clientBlockKg) - config.hardMaxKg;
-                    alert(`Ação inválida! Mover este grupo excede a capacidade máxima do veículo.\nExcesso de peso: ${overWeight > 0 ? overWeight.toFixed(2) + ' kg' : 'N/A'}`);
-                    
+                const targetVehicleType = targetLoad.vehicleType;
+                if (!isMoveValid(targetLoad, groupToAdd, targetVehicleType)) {
+                    alert(`Ação inválida! O grupo não pode ser adicionado a esta carga.\nVerifique as regras de capacidade, clientes especiais e agendamento.`);
                     dropZoneCard.classList.add('drop-invalid');
                     setTimeout(() => dropZoneCard.classList.remove('drop-invalid'), 500);
                     return;

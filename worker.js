@@ -145,6 +145,7 @@ function isMoveValid(load, groupToAdd, vehicleType, configs) {
                 .map(p => normalizeClientId(p.Cliente))
         );
         const groupToAddClientId = normalizeClientId(groupToAdd.pedidos[0].Cliente);
+        // REGRA: Permite no máximo 2 clientes especiais por carga (Volta ao padrão anterior, mas com validação rigorosa).
         if (!specialClientIdsInLoad.has(groupToAddClientId) && specialClientIdsInLoad.size >= 2) {
             return false;
         }
